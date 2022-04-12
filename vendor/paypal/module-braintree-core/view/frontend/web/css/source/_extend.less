@@ -1,0 +1,414 @@
+//
+//  3D Secure Container
+//  _____________________________________________
+
+& when (@media-common = true) {
+
+  #braintree-three-d-modal {
+    .lib-vendor-prefix-display();
+    position: fixed;
+    top: 0;
+    left: 0;
+    align-items: center;
+    height: 100vh;
+    width: 100vw;
+    z-index: 100000;
+    visibility: visible;
+  }
+
+  #braintree-three-d-modal .bt-modal-frame {
+    height: 420px;
+    width: 440px;
+    margin: auto;
+    background-color: @color-white;
+    z-index: 2;
+    border-radius: 6px;
+  }
+
+  #braintree-three-d-modal .bt-modal-body {
+    height: 380px;
+    margin: 20px;
+    background-color: white;
+    border: 1px solid lightgray;
+  }
+
+  #braintree-three-d-modal .bt-mask {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    background-color: black;
+    opacity: 0.75;
+  }
+
+  //
+  //  Apple Pay button
+  //  _____________________________________________
+
+  .braintree-applepay-container-product {
+    display: inline-block;
+
+    .braintree-apple-pay-button {
+      padding: 10px 0;
+      margin: 0;
+      margin-bottom: 15px;
+    }
+  }
+
+  .braintree-apple-pay-button {
+    -webkit-appearance: -apple-pay-button;
+    -apple-pay-button-type: plain;
+    display: block;
+    width: 200px;
+    min-height: 40px;
+    border: 1px solid black;
+    background-image: -webkit-named-image(apple-pay-logo-black);
+    background-size: 100% ~'calc(60% + 2px)';
+    background-repeat: no-repeat;
+    background-color: black;
+    background-position: 50% 50%;
+    border-radius: 5px;
+    padding: 2px;
+    margin: 20px auto;
+    transition: background-color .15s;
+    cursor: pointer;
+  }
+
+  //
+  //  PP Credit Calculator
+  //  _____________________________________________
+
+  .ppcredit-summary {
+    background: linear-gradient(to right, #009CDE, #003087);
+    color: @color-white;
+    padding: 15px;
+    text-align: center;
+    margin: 10px 0px;
+  }
+
+  .ppcreditcalc-container {
+    border: 1px solid #dedede;
+    background: @color-white;
+  }
+
+  .ppcreditcalc-header {
+    background: @color-white;
+    padding: 15px;
+  }
+
+  .ppcreditcalc-legal {
+    background-color: #eee;
+    border-top: 1px solid #dedede;
+    padding: 15px;
+    font-size: 1.2rem;
+    line-height: 2rem;
+  }
+
+  .ppcreditcalc-instalments {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid #DEDEDE;
+    border-bottom: 1px solid #DEDEDE;
+    background-color: #eeeeee;
+  }
+
+  .ppcreditcalc-instalments li {
+    display: inline-block;
+    margin: 0;
+    padding: 0;
+  }
+
+  .ppcreditcalc-instalments-term {
+    display: block;
+    padding: 10px 15px;
+    color: #000;
+  }
+
+  .ppcreditcalc-instalments-term:hover {
+    background: #009CDE;
+    color: #FFF;
+    text-decoration: none;
+  }
+
+  .ppcreditcalc-instalments-term.active {
+    background: #003087;
+    color: #FFF;
+  }
+
+  .ppcreditcalc-instalment-summary {
+    padding: 15px;
+
+    dl {
+      margin: 0;
+    }
+
+    dt {
+      display: inline-block;
+      width: 50%;
+    }
+
+    dd {
+      display: inline-block;
+    }
+  }
+
+  //
+  //  CC FORM
+  //  _____________________________________________
+
+  #braintree_expirationDate {
+    width: 90px;
+  }
+
+  //
+  //  Google Pay
+  //  _____________________________________________
+
+  button.braintree-googlepay-button {
+    background-origin: content-box;
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-size: contain;
+    border: 0;
+    border-radius: 4px;
+    box-shadow: rgba(60, 64, 67, 0.3) 0 1px 1px 0, rgba(60, 64, 67, 0.15) 0 1px 3px 1px;
+    cursor: pointer;
+    height: 40px;
+    min-height: 40px;
+    padding: 11px 24px;
+  }
+
+  button.braintree-googlepay-button.black {
+    background-color: #000;
+    box-shadow: none;
+    padding: 12px 24px @indent__s;
+  }
+
+  button.braintree-googlepay-button.white {
+    background-color: @color-white;
+  }
+
+  button.braintree-googlepay-button.short {
+    min-width: 90px;
+    width: 160px;
+  }
+
+  button.braintree-googlepay-button.black.short {
+    background-image: url(https://www.gstatic.com/instantbuy/svg/dark_gpay.svg);
+  }
+
+  button.braintree-googlepay-button.white.short {
+    background-image: url(https://www.gstatic.com/instantbuy/svg/light_gpay.svg);
+  }
+
+  button.braintree-googlepay-button.black:active {
+    background-color: #5f6368;
+  }
+
+  button.braintree-googlepay-button.black:hover {
+    background-color: #3c4043;
+  }
+
+  button.braintree-googlepay-button.white:active {
+    background-color: @color-white;
+  }
+
+  button.braintree-googlepay-button.white:focus {
+    box-shadow: #e8e8e8 0 1px 1px 0, #e8e8e8 0 1px 3px;
+  }
+
+  button.braintree-googlepay-button.white:hover {
+    background-color: #f8f8f8;
+  }
+
+  button.braintree-googlepay-button.long {
+    min-width: 152px;
+    width: 240px;
+  }
+
+  button.braintree-googlepay-button.white.long {
+    background-image: url(https://www.gstatic.com/instantbuy/svg/light/en.svg);
+  }
+
+  button.braintree-googlepay-button.black.long {
+    background-image: url(https://www.gstatic.com/instantbuy/svg/dark/en.svg);
+  }
+
+  .googlepay-minicart-logo {
+    margin-top: 15px;
+    text-align: center;
+  }
+
+  .checkout-payment-method .credit-card-types.braintree-credit-card-types img {
+    width: 30px;
+    -webkit-filter: none;
+    -webkit-transition: none;
+  }
+
+  .braintree-card-control {
+    position: relative;
+  }
+
+  .braintree-credit-card-selected {
+    position: absolute;
+    z-index: 10;
+    left: @indent__s;
+  }
+
+  .braintree-paypal-logo.oneclick-container {
+    width: 100%;
+  }
+
+  #payment_form_braintree_ach_direct_debit {
+    .field > .fields {
+      .field {
+        .label {
+          font-weight: @font-weight__semibold;
+        }
+
+        &.required > .label:after {
+          content: '*';
+          color: @color-red10;
+          .lib-font-size(18px);
+          margin: 0 0 0 5px;
+        }
+
+        .control {
+          margin: @indent__s @indent__s 0 0;
+
+          input[type="text"]::placeholder, input[type="number"]::placeholder {
+            color: lightgrey;
+          }
+        }
+      }
+    }
+  }
+
+  #payment-method-braintree-lpm {
+    .primary {
+      width: 100%;
+
+      .action {
+        margin-bottom: 12px;
+        width: 100%;
+
+        img {
+          height: 40px;
+        }
+      }
+    }
+  }
+
+  #payment-method-braintree-cc-vault {
+    .field {
+      &.required {
+        .label {
+          font-weight: @font-weight__semibold;
+
+          &:after {
+            content: '*';
+            color: @color-red10;
+            .lib-font-size(18px);
+            margin: 0 0 0 5px;
+          }
+        }
+      }
+
+      .hosted-control {
+        background: @color-white;
+        background-clip: padding-box;
+        border: 1px solid @color-gray76;
+        border-radius: 1px;
+        font-family: @font-family__base;
+        .lib-font-size(14px);
+        height: 32px;
+        padding: 0 9px;
+        vertical-align: baseline;
+        box-sizing: border-box;
+        position: relative;
+        width: 5rem;
+
+        &.braintree-hosted-fields-invalid:not(.braintree-hosted-fields-focused) ~ .hosted-error {
+          height: auto;
+          opacity: 1;
+        }
+      }
+
+      .hosted-error {
+        clear: both;
+        color: @color-red10;
+        .lib-font-size(12px);
+        height: 0;
+        margin-top: 7px;
+        opacity: 0;
+      }
+    }
+  }
+
+  //
+  //  Paypal
+  //  _____________________________________________
+
+  .braintree-paypal-fieldset {
+    display: none;
+  }
+
+  //
+  //  Payment Method Braintree
+  //  _____________________________________________
+
+  .payment-method-braintree {
+    .hosted-control {
+      border: 1px solid @color-gray76;
+      height: 32px;
+      padding: 8px 15px;
+      max-width: 300px;
+
+      &.braintree-hosted-fields-invalid:not(.braintree-hosted-fields-focused) ~ .hosted-error {
+        height: auto;
+        opacity: 1;
+      }
+    }
+
+    .hosted-error {
+      clear: both;
+      color: @color-red10;
+      .lib-font-size(12px);
+      height: 0;
+      margin-top: 7px;
+      opacity: 0;
+    }
+  }
+
+  .payment-method-braintree .cvv {
+    max-width: 200px;
+    position: relative;
+
+    .field-tooltip {
+      top: @indent__s;
+      right: @indent__l;
+    }
+  }
+
+  #braintree_cc_number {
+    padding-left: 68px;
+  }
+}
+
+.media-width(@extremum, @break) when (@extremum = 'max') and (@break = @screen__s) {
+  #braintree-three-d-modal .bt-modal-frame {
+    width: 100%;
+  }
+}
+
+.media-width(@extremum, @break) when (@extremum = 'max') and (@break = @screen__m) {
+  .braintree-applepay-container-product {
+    display: block;
+
+    .braintree-apple-pay-button {
+      width: 100%;
+    }
+  }
+}

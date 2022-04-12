@@ -1,0 +1,10 @@
+{
+    "exclude": [
+        {
+            "name": "PHPUnit on PHP 8.1 with lowest dependencies"
+        }
+    ],
+    "ignore_php_platform_requirements": {
+        "8.1": true
+    }
+}

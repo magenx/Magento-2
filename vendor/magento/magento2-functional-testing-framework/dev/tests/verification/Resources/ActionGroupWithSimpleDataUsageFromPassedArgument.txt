@@ -1,0 +1,84 @@
+<?php
+namespace Magento\AcceptanceTest\_default\Backend;
+
+use Magento\FunctionalTestingFramework\AcceptanceTester;
+use \Codeception\Util\Locator;
+use Yandex\Allure\Adapter\Annotation\Features;
+use Yandex\Allure\Adapter\Annotation\Stories;
+use Yandex\Allure\Adapter\Annotation\Title;
+use Yandex\Allure\Adapter\Annotation\Description;
+use Yandex\Allure\Adapter\Annotation\Parameter;
+use Yandex\Allure\Adapter\Annotation\Severity;
+use Yandex\Allure\Adapter\Model\SeverityLevel;
+use Yandex\Allure\Adapter\Annotation\TestCaseId;
+
+/**
+ * @Title("[NO TESTCASEID]: Action Group With Simple Data Usage From Passed Argument")
+ * @Description("<h3>Test files</h3>verification/TestModule/Test/ActionGroupTest/ActionGroupWithSimpleDataUsageFromPassedArgument.xml<br>")
+ */
+class ActionGroupWithSimpleDataUsageFromPassedArgumentCest
+{
+	/**
+	 * @var bool
+	 */
+	private $isSuccess = false;
+
+	/**
+	  * @param AcceptanceTester $I
+	  * @throws \Exception
+	  */
+	public function _after(AcceptanceTester $I)
+	{
+		if ($this->isSuccess) {
+			unlink(__FILE__);
+		}
+	}
+
+	/**
+	 * @Severity(level = SeverityLevel::CRITICAL)
+	 * @Features({"TestModule"})
+	 * @Parameter(name = "AcceptanceTester", value="$I")
+	 * @param AcceptanceTester $I
+	 * @return void
+	 * @throws \Exception
+	 */
+	public function ActionGroupWithSimpleDataUsageFromPassedArgument(AcceptanceTester $I)
+	{
+		$I->comment("Entering Action Group [actionGroup1] actionGroupWithStringUsage");
+		$I->see("overrideString", "#element .overrideString"); // stepKey: see1ActionGroup1
+		$I->comment("Exiting Action Group [actionGroup1] actionGroupWithStringUsage");
+		$I->comment("Entering Action Group [actionGroup11] actionGroupWithStringUsage");
+		$I->see("1", "#element .1"); // stepKey: see1ActionGroup11
+		$I->comment("Exiting Action Group [actionGroup11] actionGroupWithStringUsage");
+		$I->comment("Entering Action Group [actionGroup12] actionGroupWithStringUsage");
+		$I->see("1.5", "#element .1.5"); // stepKey: see1ActionGroup12
+		$I->comment("Exiting Action Group [actionGroup12] actionGroupWithStringUsage");
+		$I->comment("Entering Action Group [actionGroup13] actionGroupWithStringUsage");
+		$I->see("true", "#element .true"); // stepKey: see1ActionGroup13
+		$I->comment("Exiting Action Group [actionGroup13] actionGroupWithStringUsage");
+		$I->comment("Entering Action Group [actionGroup2] actionGroupWithStringUsage");
+		$I->see("simpleData.firstname", "#element .simpleData.firstname"); // stepKey: see1ActionGroup2
+		$I->comment("Exiting Action Group [actionGroup2] actionGroupWithStringUsage");
+		$I->comment("Entering Action Group [actionGroup3] actionGroupWithStringUsage");
+		$I->see($I->retrieveEntityField('persisted', 'data', 'test'), "#element ." . $I->retrieveEntityField('persisted', 'data', 'test')); // stepKey: see1ActionGroup3
+		$I->comment("Exiting Action Group [actionGroup3] actionGroupWithStringUsage");
+		$I->comment("Entering Action Group [actionGroup4] actionGroupWithEntityUsage");
+		$I->see("John", "#element .John"); // stepKey: see1ActionGroup4
+		$I->comment("Exiting Action Group [actionGroup4] actionGroupWithEntityUsage");
+		$I->comment("Entering Action Group [actionGroup5] actionGroupWithEntityUsage");
+		$I->see($I->retrieveEntityField('simpleData', 'firstname', 'test'), "#element ." . $I->retrieveEntityField('simpleData', 'firstname', 'test')); // stepKey: see1ActionGroup5
+		$I->comment("Exiting Action Group [actionGroup5] actionGroupWithEntityUsage");
+		$I->comment("Entering Action Group [actionGroup6] actionGroupWithEntityUsage");
+		$I->see($I->retrieveEntityField('simpleData', 'firstname[0]', 'test'), "#element ." . $I->retrieveEntityField('simpleData', 'firstname[0]', 'test')); // stepKey: see1ActionGroup6
+		$I->comment("Exiting Action Group [actionGroup6] actionGroupWithEntityUsage");
+		$I->comment("Entering Action Group [actionGroup7] actionGroupWithEntityUsage");
+		$I->see($I->retrieveEntityField('simpleData', 'firstname[data_index]', 'test'), "#element ." . $I->retrieveEntityField('simpleData', 'firstname[data_index]', 'test')); // stepKey: see1ActionGroup7
+		$I->comment("Exiting Action Group [actionGroup7] actionGroupWithEntityUsage");
+	}
+
+	public function _passed(AcceptanceTester $I)
+	{
+		// Test passed successfully.
+		$this->isSuccess = true;
+	}
+}

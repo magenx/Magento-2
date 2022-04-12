@@ -1,0 +1,29 @@
+<?php
+/**
+ * Copyright © 2013-2017 Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+
+use PayPal\Braintree\Block\Payment;
+
+/** @var Payment $block */
+
+$code = $block->escapeHtml($block->getCode());
+?>
+<script>
+    //<![CDATA[
+    require(
+        [
+            'PayPal_Braintree/js/braintree',
+            'jquery',
+            'domReady!'
+        ], function(Braintree, $) {
+            let config = <?= /* @noEscape */ $block->getPaymentConfig() ?>,
+                payment,
+                form = $('#payment_form_<?= /* @noEscape */ $code ?>');
+
+            config.active = form.length > 0 && !form.is(':hidden');
+            payment = new Braintree(config);
+        });
+    //]]>
+</script>

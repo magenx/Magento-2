@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<payment xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Payment:etc/payment.xsd">
+    <groups>
+        <group id="braintree_group">
+            <label>Braintree</label>
+        </group>
+    </groups>
+    <methods>
+        <method name="braintree">
+            <allow_multiple_address>1</allow_multiple_address>
+        </method>
+        <method name="braintree_paypal">
+            <allow_multiple_address>1</allow_multiple_address>
+        </method>
+        <method name="braintree_applepay">
+            <allow_multiple_address>0</allow_multiple_address>
+        </method>
+        <method name="braintree_googlepay">
+            <allow_multiple_address>0</allow_multiple_address>
+        </method>
+        <method name="braintree_venmo">
+            <allow_multiple_address>0</allow_multiple_address>
+        </method>
+        <method name="braintree_ach_direct_debit">
+            <allow_multiple_address>0</allow_multiple_address>
+        </method>
+        <method name="braintree_local_payment">
+            <allow_multiple_address>0</allow_multiple_address>
+        </method>
+    </methods>
+</payment>

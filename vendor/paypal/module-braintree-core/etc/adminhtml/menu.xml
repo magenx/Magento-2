@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © 2013-2017 Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Backend:etc/menu.xsd">
+    <menu>
+        <add
+                id="PayPal_Braintree::settlement_report"
+                title="Braintree Settlement"
+                module="PayPal_Braintree"
+                sortOrder="80"
+                parent="Magento_Reports::report_salesroot"
+                action="braintree/report"
+                resource="PayPal_Braintree::settlement_report"/>
+
+        <add
+                id="PayPal_Braintree::virtual_terminal"
+                title="Braintree Virtual Terminal"
+                module="PayPal_Braintree"
+                sortOrder="100"
+                parent="Magento_Sales::sales_operation"
+                action="braintree/virtual"
+                resource="Magento_Sales::create"/>
+    </menu>
+</config>

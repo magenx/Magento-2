@@ -1,0 +1,80 @@
+<?php
+namespace Magento\AcceptanceTest\_default\Backend;
+
+use Magento\FunctionalTestingFramework\AcceptanceTester;
+use \Codeception\Util\Locator;
+use Yandex\Allure\Adapter\Annotation\Features;
+use Yandex\Allure\Adapter\Annotation\Stories;
+use Yandex\Allure\Adapter\Annotation\Title;
+use Yandex\Allure\Adapter\Annotation\Description;
+use Yandex\Allure\Adapter\Annotation\Parameter;
+use Yandex\Allure\Adapter\Annotation\Severity;
+use Yandex\Allure\Adapter\Model\SeverityLevel;
+use Yandex\Allure\Adapter\Annotation\TestCaseId;
+
+/**
+ * @Description("<h3>Test files</h3>verification/TestModule/Test/ActionGroupTest/ActionGroupWithStepKeyReferences.xml<br>")
+ */
+class ActionGroupWithStepKeyReferencesCest
+{
+	/**
+	 * @var bool
+	 */
+	private $isSuccess = false;
+
+	/**
+	  * @param AcceptanceTester $I
+	  * @throws \Exception
+	  */
+	public function _after(AcceptanceTester $I)
+	{
+		if ($this->isSuccess) {
+			unlink(__FILE__);
+		}
+	}
+
+	/**
+	 * @Features({"TestModule"})
+	 * @Parameter(name = "AcceptanceTester", value="$I")
+	 * @param AcceptanceTester $I
+	 * @return void
+	 * @throws \Exception
+	 */
+	public function ActionGroupWithStepKeyReferences(AcceptanceTester $I)
+	{
+		$I->comment("Entering Action Group [actionGroup] FunctionActionGroupWithStepKeyReferences");
+		$I->createEntity("createSimpleDataActionGroup", "test", "simpleData", [], []); // stepKey: createSimpleDataActionGroup
+		$grabTextDataActionGroup = $I->grabTextFrom(".class"); // stepKey: grabTextDataActionGroup
+		$I->fillField(".{$grabTextDataActionGroup}", $I->retrieveEntityField('createSimpleDataActionGroup', 'field', 'test')); // stepKey: fill1ActionGroup
+		$I->comment("Invocation stepKey will not be appended in non stepKey instances");
+		$I->click($action0); // stepKey: action0ActionGroup
+		$I->fillField($action1); // stepKey: action1ActionGroup
+		$I->comment("Invocation stepKey will be appended in non stepKey instances");
+		$action3ActionGroup = $I->executeJS($action3ActionGroup); // stepKey: action3ActionGroup
+		$action4ActionGroup = $I->magentoCLI($action4ActionGroup, 60, "\"stuffHere\""); // stepKey: action4ActionGroup
+		$I->comment($action4ActionGroup);
+		$date = new \DateTime();
+		$date->setTimestamp(strtotime("{$action5}"));
+		$date->setTimezone(new \DateTimeZone("America/Los_Angeles"));
+		$action5ActionGroup = $date->format("H:i:s");
+
+		$action6ActionGroup = $I->formatCurrency($action6ActionGroup, "en_CA", "USD"); // stepKey: action6ActionGroup
+		$I->deleteEntity("{$action7ActionGroupActionGroup}", "test"); // stepKey: action7ActionGroup
+		$I->getEntity("action8ActionGroup", "test", "{$action8}", [], null); // stepKey: action8ActionGroup
+		$I->updateEntity("1", "test", "{$action9}",[]); // stepKey: action9ActionGroup
+		$I->createEntity("action10ActionGroup", "test", "{$action10}", [], []); // stepKey: action10ActionGroup
+		$action11ActionGroup = $I->grabAttributeFrom($action11ActionGroup, "someInput"); // stepKey: action11ActionGroup
+		$action12ActionGroup = $I->grabCookie($action12ActionGroup, ['domain' => 'www.google.com']); // stepKey: action12ActionGroup
+		$action13ActionGroup = $I->grabFromCurrentUrl($action13ActionGroup); // stepKey: action13ActionGroup
+		$action14ActionGroup = $I->grabMultiple($action14ActionGroup); // stepKey: action14ActionGroup
+		$action15ActionGroup = $I->grabTextFrom($action15ActionGroup); // stepKey: action15ActionGroup
+		$action16ActionGroup = $I->grabValueFrom($action16ActionGroup); // stepKey: action16ActionGroup
+		$I->comment("Exiting Action Group [actionGroup] FunctionActionGroupWithStepKeyReferences");
+	}
+
+	public function _passed(AcceptanceTester $I)
+	{
+		// Test passed successfully.
+		$this->isSuccess = true;
+	}
+}

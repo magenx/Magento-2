@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © 2013-2017 Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+-->
+
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Event/etc/events.xsd">
+    <event name="payment_method_assign_data_braintree">
+        <observer name="braintree_gateway_data_assign" instance="PayPal\Braintree\Observer\DataAssignObserver" />
+    </event>
+    <event name="payment_method_assign_data_braintree_paypal">
+        <observer name="braintree_paypal_gateway_data_assign" instance="PayPal\Braintree\Observer\DataAssignObserver" />
+    </event>
+    <event name="payment_method_assign_data_braintree_paypal_credit">
+        <observer name="braintree_paypal_gateway_data_assign" instance="PayPal\Braintree\Observer\DataAssignObserver" />
+    </event>
+    <event name="payment_method_assign_data_braintree_applepay">
+        <observer name="braintree_applepay_gateway_data_assign" instance="PayPal\Braintree\Observer\DataAssignObserver" />
+    </event>
+    <event name="payment_method_assign_data_braintree_googlepay">
+        <observer name="braintree_googlepay_gateway_data_assign" instance="PayPal\Braintree\Observer\DataAssignObserver" />
+    </event>
+    <event name="payment_method_assign_data_braintree_venmo">
+        <observer name="braintree_venmo_gateway_data_assign" instance="PayPal\Braintree\Observer\DataAssignObserver" />
+    </event>
+    <event name="payment_method_assign_data_braintree_ach_direct_debit">
+        <observer name="braintree_ach_direct_debit_gateway_data_assign" instance="PayPal\Braintree\Observer\DataAssignObserver" />
+    </event>
+    <event name="payment_method_assign_data_braintree_local_payment">
+        <observer name="braintree_local_payment_gateway_data_assign" instance="PayPal\Braintree\Observer\DataAssignObserver" />
+    </event>
+    <event name="sales_order_save_after">
+        <observer name="braintree_sales_order_save_after" instance="PayPal\Braintree\Observer\SalesOrderSaveObserver" />
+    </event>
+</config>

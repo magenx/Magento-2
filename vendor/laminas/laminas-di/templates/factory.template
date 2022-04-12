@@ -1,0 +1,30 @@
+<?php
+
+/**
+ * Generated factory for %class%
+ */
+
+declare(strict_types=1);
+
+%namespace%
+use Laminas\Di\CodeGenerator\FactoryInterface;
+use Psr\Container\ContainerInterface;
+%use_array_key_exists%
+use function is_array;
+
+final class %factory_class% implements FactoryInterface
+{
+    public function create(ContainerInterface $container, array $options = [])
+    {%options_to_args_code%
+        return new %class%(%args%);
+    }
+
+    public function __invoke(ContainerInterface $container, $name = null, array $options = null)
+    {
+        if (is_array($name) && $options === null) {
+            $options = $name;
+        }
+
+        return $this->create($container, $options ?? []);
+    }
+}

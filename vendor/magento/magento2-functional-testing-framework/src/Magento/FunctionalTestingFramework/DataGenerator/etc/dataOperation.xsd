@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ /**
+  * Copyright © Magento, Inc. All rights reserved.
+  * See COPYING.txt for license details.
+  */
+-->
+
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <xs:element name="operations">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="operation" maxOccurs="unbounded" minOccurs="0">
+                    <xs:complexType>
+                        <xs:choice minOccurs="0" maxOccurs="unbounded">
+                            <xs:element name="object" type="object" maxOccurs="unbounded" minOccurs="0"/>
+                            <xs:element name="field" type="entry" maxOccurs="unbounded" minOccurs="0"/>
+                            <xs:element name="array" type="array" maxOccurs="unbounded" minOccurs="0"/>
+                            <xs:element name="header" type="header" maxOccurs="unbounded" minOccurs="0"/>
+                            <xs:element name="param" type="param" maxOccurs="unbounded" minOccurs="0"/>
+                            <xs:element name="contentType" type="xs:string" maxOccurs="1" minOccurs="1"/>
+                        </xs:choice>
+                        <xs:attribute type="xs:string" name="name"/>
+                        <xs:attribute type="xs:string" name="dataType" use="required"/>
+                        <xs:attribute type="xs:string" name="deprecated">
+                            <xs:annotation>
+                                <xs:documentation>
+                                    Message and flag which shows that entity is deprecated.
+                                </xs:documentation>
+                            </xs:annotation>
+                        </xs:attribute>
+                        <xs:attribute type="operationEnum" name="type" use="required"/>
+                        <xs:attribute type="xs:string" name="url"/>
+                        <xs:attribute type="authEnum" name="auth"/>
+                        <xs:attribute type="xs:boolean" name="removeBackend" use="optional" default="true"/>
+                        <xs:attribute type="operationMethodEnum" name="method"/>
+                        <xs:attribute type="xs:string" name="successRegex"/>
+                        <xs:attribute type="xs:string" name="returnRegex"/>
+                        <xs:attribute type="xs:string" name="returnIndex" use="optional"/>
+                        <xs:attribute type="xs:string" name="filename"/>
+                    </xs:complexType>
+                </xs:element>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:complexType name="object">
+        <xs:choice minOccurs="0" maxOccurs="unbounded">
+            <xs:element name="field" type="entry" maxOccurs="unbounded" minOccurs="0"/>
+            <xs:element name="array" type="array" maxOccurs="unbounded" minOccurs="0"/>
+            <xs:element name="object" type="object" maxOccurs="unbounded" minOccurs="0"/>
+        </xs:choice>
+        <xs:attribute type="xs:string" name="key"/>
+        <xs:attribute type="xs:string" name="dataType" use="required"/>
+        <xs:attribute type="xs:boolean" name="required" use="optional"/>
+    </xs:complexType>
+    <xs:complexType name="entry">
+        <xs:simpleContent>
+            <xs:extension base="xs:string">
+                <xs:attribute type="xs:string" name="key" use="required"/>
+                <xs:attribute type="xs:string" name="type" use="optional"/>
+                <xs:attribute type="xs:boolean" name="required" use="optional"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="array">
+        <xs:choice minOccurs="0" maxOccurs="unbounded">
+            <xs:element name="object" type="object" maxOccurs="unbounded" minOccurs="0"/>
+            <xs:element name="value" type="xs:string" maxOccurs="1" minOccurs="0"/>
+        </xs:choice>
+        <xs:attribute type="xs:string" name="key" use="required"/>
+        <xs:attribute type="xs:string" name="type" use="optional"/>
+        <xs:attribute type="xs:boolean" name="required" use="optional"/>
+    </xs:complexType>
+    <xs:complexType name="header">
+        <xs:simpleContent>
+            <xs:extension base="xs:string">
+                <xs:attribute type="xs:string" name="param" use="required"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="param">
+        <xs:simpleContent>
+            <xs:extension base="xs:string">
+                <xs:attribute type="xs:string" name="key" use="required"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:simpleType name="operationEnum" final="restriction" >
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="create" />
+            <xs:enumeration value="delete" />
+            <xs:enumeration value="update" />
+            <xs:enumeration value="get" />
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="authEnum" final="restriction" >
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="adminOauth" />
+            <xs:enumeration value="adminFormKey" />
+            <xs:enumeration value="customerFormKey" />
+            <xs:enumeration value="anonymous" />
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="operationMethodEnum" final="restriction">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="GET" />
+            <xs:enumeration value="PUT" />
+            <xs:enumeration value="POST" />
+            <xs:enumeration value="DELETE" />
+        </xs:restriction>
+    </xs:simpleType>
+</xs:schema>

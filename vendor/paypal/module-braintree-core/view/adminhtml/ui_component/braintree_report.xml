@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+/**
+ * Copyright © 2013-2017 Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+-->
+<listing xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Ui:etc/ui_configuration.xsd">
+    <argument name="data" xsi:type="array">
+        <item name="js_config" xsi:type="array">
+            <item name="provider" xsi:type="string">braintree_report.braintree_report_data_source</item>
+        </item>
+    </argument>
+    <settings>
+        <spinner>braintree_report_columns</spinner>
+        <deps>
+            <dep>braintree_report.braintree_report_data_source</dep>
+        </deps>
+    </settings>
+    <dataSource name="braintree_report_data_source" component="PayPal_Braintree/js/grid/provider">
+        <settings>
+            <updateUrl path="mui/index/render"/>
+        </settings>
+        <aclResource>PayPal_Braintree::settlement_report</aclResource>
+        <dataProvider class="BraintreeTransactionsDataProvider" name="braintree_report_data_source">
+            <settings>
+                <requestFieldName>id</requestFieldName>
+                <primaryFieldName>page_id</primaryFieldName>
+            </settings>
+        </dataProvider>
+    </dataSource>
+    <listingToolbar name="listing_top">
+        <bookmark name="bookmarks"/>
+        <columnsControls name="columns_controls"/>
+        <exportButton name="export_button"/>
+        <filters name="listing_filters">
+            <settings>
+                <childDefaults>
+                    <param name="imports" xsi:type="array">
+                        <item name="visible" xsi:type="string">braintree_report.braintree_report.braintree_report_columns.${ $.index }.visible</item>
+                    </param>
+                    <param name="provider" xsi:type="string">braintree_report.braintree_report.listing_top.listing_filters</param>
+                </childDefaults>
+                <statefull>
+                    <property name="applied" xsi:type="boolean">false</property>
+                </statefull>
+            </settings>
+        </filters>
+        <paging name="listing_paging"/>
+    </listingToolbar>
+    <columns name="braintree_report_columns">
+        <settings>
+            <childDefaults>
+                <param name="fieldAction" xsi:type="array">
+                    <item name="provider" xsi:type="string">braintree_report.braintree_report.braintree_report_columns.actions</item>
+                    <item name="target" xsi:type="string">applyAction</item>
+                    <item name="params" xsi:type="array">
+                        <item name="0" xsi:type="string">${ $.$data.rowIndex }</item>
+                        <item name="1" xsi:type="string">true</item>
+                    </item>
+                </param>
+            </childDefaults>
+        </settings>
+        <selectionsColumn name="ids">
+            <settings>
+                <indexField>id</indexField>
+            </settings>
+        </selectionsColumn>
+        <column name="id">
+            <settings>
+                <filter>text</filter>
+                <label translate="true">Transaction ID</label>
+            </settings>
+        </column>
+        <column name="orderId">
+            <settings>
+                <filter>text</filter>
+                <label translate="true">Order ID</label>
+            </settings>
+        </column>
+        <column name="paypalDetails_paymentId">
+            <settings>
+                <filter>text</filter>
+                <label translate="true">PayPal Payment ID</label>
+            </settings>
+        </column>
+        <column name="paymentInstrumentType" component="Magento_Ui/js/grid/columns/select">
+            <settings>
+                <options class="PayPal\Braintree\Ui\Component\Report\Listing\Column\PaymentType"/>
+                <filter>select</filter>
+                <dataType>select</dataType>
+                <label translate="true">Payment Type</label>
+            </settings>
+        </column>
+        <column name="type" component="Magento_Ui/js/grid/columns/select">
+            <settings>
+                <options class="PayPal\Braintree\Ui\Component\Report\Listing\Column\TransactionType"/>
+                <filter>select</filter>
+                <dataType>select</dataType>
+                <label translate="true">Transaction Type</label>
+            </settings>
+        </column>
+        <column name="createdAt" class="Magento\Ui\Component\Listing\Columns\Date" component="Magento_Ui/js/grid/columns/date">
+            <settings>
+                <filter>dateRange</filter>
+                <dataType>date</dataType>
+                <label translate="true">Created At</label>
+                <sorting>desc</sorting>
+            </settings>
+        </column>
+        <column name="amount" class="Magento\Sales\Ui\Component\Listing\Column\Price">
+            <settings>
+                <filter>textRange</filter>
+                <label translate="true">Amount</label>
+            </settings>
+        </column>
+        <column name="processorSettlementResponseCode">
+            <settings>
+                <filter>text</filter>
+                <label translate="true">Settlement Code</label>
+            </settings>
+        </column>
+        <column name="status" component="Magento_Ui/js/grid/columns/select">
+            <settings>
+                <options class="PayPal\Braintree\Ui\Component\Report\Listing\Column\Status"/>
+                <filter>select</filter>
+                <dataType>select</dataType>
+                <label translate="true">Status</label>
+            </settings>
+        </column>
+        <column name="processorSettlementResponseText">
+            <settings>
+                <dataType>text</dataType>
+                <label translate="true">Settlement Response Text</label>
+            </settings>
+        </column>
+        <column name="refundIds">
+            <settings>
+                <dataType>text</dataType>
+                <label translate="true">Refund Ids</label>
+            </settings>
+        </column>
+        <column name="merchantAccountId">
+            <settings>
+                <filter>text</filter>
+                <label translate="true">Merchant Account ID</label>
+            </settings>
+        </column>
+        <column name="settlementBatchId">
+            <settings>
+                <filter>text</filter>
+                <label translate="true">Settlement Batch ID</label>
+            </settings>
+        </column>
+        <column name="currencyIsoCode">
+            <settings>
+                <dataType>text</dataType>
+                <label translate="true">Currency</label>
+            </settings>
+        </column>
+    </columns>
+</listing>

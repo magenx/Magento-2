@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [ develop ]
+  pull_request:
+    branches: [ develop ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php-version:
+          - "7.4"
+          - "8.0"
+          - "8.1"
+        dependencies:
+          - "lowest"
+          - "highest"
+
+    name: Tests with PHP ${{ matrix.php-version }} and ${{ matrix.dependencies }} dependencies
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: ${{ matrix.php-version }}
+      env:
+        COMPOSER_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Validate composer
+      run: composer validate
+
+    - name: Composer install
+      uses: "ramsey/composer-install@v1"
+      with:
+        dependency-versions: "${{ matrix.dependencies }}"
+        composer-options: "${{ matrix.composer-options }}"
+
+    - name: Run unit tests suite
+      run: vendor/bin/phpunit

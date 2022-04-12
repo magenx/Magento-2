@@ -1,0 +1,60 @@
+<?php
+namespace Magento\AcceptanceTest\_default\Backend;
+
+use Magento\FunctionalTestingFramework\AcceptanceTester;
+use \Codeception\Util\Locator;
+use Yandex\Allure\Adapter\Annotation\Features;
+use Yandex\Allure\Adapter\Annotation\Stories;
+use Yandex\Allure\Adapter\Annotation\Title;
+use Yandex\Allure\Adapter\Annotation\Description;
+use Yandex\Allure\Adapter\Annotation\Parameter;
+use Yandex\Allure\Adapter\Annotation\Severity;
+use Yandex\Allure\Adapter\Model\SeverityLevel;
+use Yandex\Allure\Adapter\Annotation\TestCaseId;
+
+/**
+ * @Description("<h3>Test files</h3>verification/TestModule/Test/CharacterReplacementTest.xml<br>")
+ */
+class CharacterReplacementTestCest
+{
+	/**
+	 * @var bool
+	 */
+	private $isSuccess = false;
+
+	/**
+	  * @param AcceptanceTester $I
+	  * @throws \Exception
+	  */
+	public function _after(AcceptanceTester $I)
+	{
+		if ($this->isSuccess) {
+			unlink(__FILE__);
+		}
+	}
+
+	/**
+	 * @Features({"TestModule"})
+	 * @Parameter(name = "AcceptanceTester", value="$I")
+	 * @param AcceptanceTester $I
+	 * @return void
+	 * @throws \Exception
+	 */
+	public function CharacterReplacementTest(AcceptanceTester $I)
+	{
+		$I->click("#element"); // stepKey: charsInSectionElement
+		$I->fillField("#element", "7700 West Parmer Lane"); // stepKey: charsInDataRef
+		$I->click("#element .abcdefghijklmnopqrstuvwxyz1234567890"); // stepKey: allChars1
+		$I->click("#element .`~!@#$%^&*()-_=+{}[]|\;:\".,></?()3., "); // stepKey: allChars2
+		$I->click("#element .words, and, commas, and, spaces"); // stepKey: allChars3
+		$I->click("#abcdefghijklmnopqrstuvwxyz1234567890 .abcdefghijklmnopqrstuvwxyz1234567890"); // stepKey: allChars4
+		$I->click("#`~!@#$%^&*()-_=+{}[]|\;:\".,></?() .`~!@#$%^&*()-_=+{}[]|\;:\".,></?()"); // stepKey: allChars5
+		$I->click("#words, and, commas, and, spaces .words, and, commas, and, spaces"); // stepKey: allChars6
+	}
+
+	public function _passed(AcceptanceTester $I)
+	{
+		// Test passed successfully.
+		$this->isSuccess = true;
+	}
+}

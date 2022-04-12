@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ /**
+  * Copyright © Magento, Inc. All rights reserved.
+  * See COPYING.txt for license details.
+  */
+-->
+
+<xs:schema elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <xs:redefine schemaLocation="mergedActionGroupSchema.xsd">
+        <xs:complexType name="actionGroupType">
+            <xs:choice minOccurs="0" maxOccurs="1">
+                <xs:element type="actionsRefType" name="actionGroup" maxOccurs="1"/>
+            </xs:choice>
+        </xs:complexType>
+    </xs:redefine>
+</xs:schema>

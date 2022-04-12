@@ -1,0 +1,48 @@
+<!-- Local Payment Methods -->
+<!-- ko if: isActive() -->
+<div class="payment-method" data-bind="css: {'_active': (getCode() == isChecked())}" id="payment-method-braintree-lpm">
+    <div class="payment-method-title field choice">
+        <input type="radio"
+               name="payment[method]"
+               class="radio"
+               data-bind="attr: {'id': getCode()}, value: getCode(), checked: isChecked, click: selectPaymentMethod, visible: isRadioButtonVisible()" />
+        <label class="label" data-bind="attr: {'for': getCode()}">
+            <span text="getTitle()"></span>
+        </label>
+    </div>
+    <div class="payment-method-content">
+        <!-- ko foreach: getRegion('messages') -->
+        <!-- ko template: getTemplate() --><!-- /ko -->
+        <!--/ko-->
+
+        <div class="payment-method-billing-address">
+            <!-- ko foreach: $parent.getRegion(getBillingAddressFormName()) -->
+            <!-- ko template: getTemplate() --><!-- /ko -->
+            <!--/ko-->
+        </div>
+
+        <div class="checkout-agreements-block">
+            <!-- ko foreach: $parent.getRegion('before-place-order') -->
+            <!-- ko template: getTemplate() --><!-- /ko -->
+            <!--/ko-->
+        </div>
+
+        <!-- ko ifnot: paymentMethodsAvailable() -->
+        <p translate="'There are currently no available payment methods. Please update your Billing Address.'"></p>
+        <!-- /ko -->
+
+        <div class="actions-toolbar" each="getPaymentMethods()">
+            <if args="$parent.isValidCountryAndCurrency(method)">
+                <div class="primary">
+                    <button class="action checkout"
+                            click="function () { $parent.clickPaymentBtn(method) }"
+                            css="$data.method, { disabled: !$parent.isPlaceOrderActionAllowed() }"
+                            enabled="($parent.getCode() === $parent.isChecked())">
+                        <img attr="{ src: $parent.getPaymentMarkSrc()[method], alt: 'Pay with' + label }" />
+                    </button>
+                </div>
+            </if>
+        </div>
+    </div>
+</div>
+<!-- /ko -->

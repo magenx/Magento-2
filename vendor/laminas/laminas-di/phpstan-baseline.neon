@@ -1,0 +1,327 @@
+parameters:
+	ignoreErrors:
+		-
+			message: "#^Method Laminas\\\\Di\\\\CodeGenerator\\\\AbstractInjector\\:\\:create\\(\\) has parameter \\$options with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/CodeGenerator/AbstractInjector.php
+
+		-
+			message: "#^Method Laminas\\\\Di\\\\CodeGenerator\\\\AutoloadGenerator\\:\\:buildFromTemplate\\(\\) has parameter \\$replacements with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/CodeGenerator/AutoloadGenerator.php
+
+		-
+			message: "#^Method Laminas\\\\Di\\\\CodeGenerator\\\\AutoloadGenerator\\:\\:generateClassmapCode\\(\\) has parameter \\$classmap with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/CodeGenerator/AutoloadGenerator.php
+
+		-
+			message: "#^Method Laminas\\\\Di\\\\CodeGenerator\\\\AutoloadGenerator\\:\\:generateAutoloaderClass\\(\\) has parameter \\$classmap with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/CodeGenerator/AutoloadGenerator.php
+
+		-
+			message: "#^Method Laminas\\\\Di\\\\CodeGenerator\\\\AutoloadGenerator\\:\\:ensureDirectory\\(\\) has no return typehint specified\\.$#"
+			count: 1
+			path: src/CodeGenerator/AutoloadGenerator.php
+
+		-
+			message: "#^Method Laminas\\\\Di\\\\CodeGenerator\\\\AutoloadGenerator\\:\\:ensureOutputDirectory\\(\\) has no return typehint specified\\.$#"
+			count: 1
+			path: src/CodeGenerator/AutoloadGenerator.php
+
+		-
+			message: "#^Property Laminas\\\\Di\\\\CodeGenerator\\\\FactoryGenerator\\:\\:\\$classmap type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/CodeGenerator/FactoryGenerator.php
+
+		-
+			message: "#^Method Laminas\\\\Di\\\\CodeGenerator\\\\FactoryGenerator\\:\\:getClassmap\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/CodeGenerator/FactoryGenerator.php
+
+		-
+			message: "#^Method Laminas\\\\Di\\\\CodeGenerator\\\\FactoryGenerator\\:\\:ensureDirectory\\(\\) has no return typehint specified\\.$#"
+			count: 1
+			path: src/CodeGenerator/FactoryGenerator.php
+
+		-
+			message: "#^Method Laminas\\\\Di\\\\CodeGenerator\\\\FactoryGenerator\\:\\:ensureOutputDirectory\\(\\) has no return typehint specified\\.$#"
+			count: 1
+			path: src/CodeGenerator/FactoryGenerator.php
+
+		-
+			message: "#^Method Laminas\\\\Di\\\\CodeGenerator\\\\FactoryInterface\\:\\:create\\(\\) has parameter \\$options with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/CodeGenerator/FactoryInterface.php
+
+		-
+			message: "#^Method Laminas\\\\Di\\\\CodeGenerator\\\\InjectorGenerator\\:\\:ensureDirectory\\(\\) has no return typehint specified\\.$#"
+			count: 1
+			path: src/CodeGenerator/InjectorGenerator.php
+
+		-
+			message: "#^Method Laminas\\\\Di\\\\CodeGenerator\\\\InjectorGenerator\\:\\:ensureOutputDirectory\\(\\) has no return typehint specified\\.$#"
+			count: 1
+			path: src/CodeGenerator/InjectorGenerator.php
+
+		-
+			message: "#^Method Laminas\\\\Di\\\\CodeGenerator\\\\InjectorGenerator\\:\\:buildFromTemplate\\(\\) has parameter \\$replacements with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/CodeGenerator/InjectorGenerator.php
+
+		-
+			message: "#^Method Laminas\\\\Di\\\\CodeGenerator\\\\InjectorGenerator\\:\\:generateFactoryList\\(\\) has parameter \\$factories with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/CodeGenerator/InjectorGenerator.php
+
+		-
+			message: "#^Method Laminas\\\\Di\\\\CodeGenerator\\\\InjectorGenerator\\:\\:generateTypeFactory\\(\\) has parameter \\$factories with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/CodeGenerator/InjectorGenerator.php
+
+		-
+			message: "#^Property Laminas\\\\Di\\\\Config\\:\\:\\$preferences type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Config.php
+
+		-
+			message: "#^Property Laminas\\\\Di\\\\Config\\:\\:\\$types type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Config.php
+
+		-
+			message: "#^Method Laminas\\\\Di\\\\Config\\:\\:__construct\\(\\) has parameter \\$options with generic interface ArrayAccess but does not specify its types\\: TKey, TValue$#"
+			count: 1
+			path: src/Config.php
+
+		-
+			message: "#^Method Laminas\\\\Di\\\\Config\\:\\:__construct\\(\\) has parameter \\$options with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Config.php
+
+		-
+			message: "#^Method Laminas\\\\Di\\\\Config\\:\\:getDataFromArray\\(\\) has parameter \\$data with generic interface ArrayAccess but does not specify its types\\: TKey, TValue$#"
+			count: 1
+			path: src/Config.php
+
+		-
+			message: "#^Method Laminas\\\\Di\\\\Config\\:\\:getDataFromArray\\(\\) has parameter \\$data with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Config.php
+
+		-
+			message: "#^Method Laminas\\\\Di\\\\Config\\:\\:getDataFromArray\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Config.php
+
+		-
+			message: "#^Method Laminas\\\\Di\\\\Config\\:\\:getParameters\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Config.php
+
+		-
+			message: "#^Method Laminas\\\\Di\\\\Config\\:\\:setParameters\\(\\) has parameter \\$params with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Config.php
+
+		-
+			message: "#^Method Laminas\\\\Di\\\\Config\\:\\:ensureArrayOrArrayAccess\\(\\) has parameter \\$options with generic interface ArrayAccess but does not specify its types\\: TKey, TValue$#"
+			count: 1
+			path: src/Config.php
+
+		-
+			message: "#^Method Laminas\\\\Di\\\\Config\\:\\:ensureArrayOrArrayAccess\\(\\) has parameter \\$options with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Config.php
+
+		-
+			message: "#^Result of && is always false\\.$#"
+			count: 1
+			path: src/Config.php
+
+		-
+			message: "#^Method Laminas\\\\Di\\\\ConfigInterface\\:\\:getParameters\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/ConfigInterface.php
+
+		-
+			message: "#^Method Laminas\\\\Di\\\\ConfigInterface\\:\\:setParameters\\(\\) has no return typehint specified\\.$#"
+			count: 1
+			path: src/ConfigInterface.php
+
+		-
+			message: "#^Method Laminas\\\\Di\\\\ConfigInterface\\:\\:setParameters\\(\\) has parameter \\$params with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/ConfigInterface.php
+
+		-
+			message: "#^Method Laminas\\\\Di\\\\ConfigProvider\\:\\:__invoke\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/ConfigProvider.php
+
+		-
+			message: "#^Method Laminas\\\\Di\\\\ConfigProvider\\:\\:getDependencyConfig\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/ConfigProvider.php
+
+		-
+			message: "#^Method Laminas\\\\Di\\\\Container\\\\AutowireFactory\\:\\:create\\(\\) has parameter \\$options with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Container/AutowireFactory.php
+
+		-
+			message: "#^Method Laminas\\\\Di\\\\Container\\\\AutowireFactory\\:\\:__invoke\\(\\) has parameter \\$options with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Container/AutowireFactory.php
+
+		-
+			message: "#^Method Laminas\\\\Di\\\\Container\\\\ServiceManager\\\\AutowireFactory\\:\\:__invoke\\(\\) has parameter \\$options with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Container/ServiceManager/AutowireFactory.php
+
+		-
+			message: "#^Return type \\(bool\\) of method Laminas\\\\Di\\\\Container\\\\ServiceManager\\\\AutowireFactory\\:\\:__invoke\\(\\) should be compatible with return type \\(object\\) of method Laminas\\\\ServiceManager\\\\Factory\\\\FactoryInterface\\:\\:__invoke\\(\\)$#"
+			count: 2
+			path: src/Container/ServiceManager/AutowireFactory.php
+
+		-
+			message: "#^Method Laminas\\\\Di\\\\Container\\\\ServiceManager\\\\AutowireFactory\\:\\:__invoke\\(\\) should return bool but returns object\\.$#"
+			count: 1
+			path: src/Container/ServiceManager/AutowireFactory.php
+
+		-
+			message: "#^Property Laminas\\\\Di\\\\DefaultContainer\\:\\:\\$services type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/DefaultContainer.php
+
+		-
+			message: "#^Method Laminas\\\\Di\\\\Definition\\\\ClassDefinitionInterface\\:\\:getReflection\\(\\) return type with generic class ReflectionClass does not specify its types\\: T$#"
+			count: 1
+			path: src/Definition/ClassDefinitionInterface.php
+
+		-
+			message: "#^Property Laminas\\\\Di\\\\Definition\\\\Reflection\\\\ClassDefinition\\:\\:\\$reflection with generic class ReflectionClass does not specify its types\\: T$#"
+			count: 1
+			path: src/Definition/Reflection/ClassDefinition.php
+
+		-
+			message: "#^Method Laminas\\\\Di\\\\Definition\\\\Reflection\\\\ClassDefinition\\:\\:__construct\\(\\) has parameter \\$class with generic class ReflectionClass but does not specify its types\\: T$#"
+			count: 1
+			path: src/Definition/Reflection/ClassDefinition.php
+
+		-
+			message: "#^Parameter \\#1 \\$argument of class ReflectionClass constructor expects class\\-string\\<T of object\\>\\|T of object, string given\\.$#"
+			count: 1
+			path: src/Definition/Reflection/ClassDefinition.php
+
+		-
+			message: "#^Method Laminas\\\\Di\\\\Definition\\\\Reflection\\\\ClassDefinition\\:\\:reflectSupertypes\\(\\) has no return typehint specified\\.$#"
+			count: 1
+			path: src/Definition/Reflection/ClassDefinition.php
+
+		-
+			message: "#^Method Laminas\\\\Di\\\\Definition\\\\Reflection\\\\ClassDefinition\\:\\:getReflection\\(\\) return type with generic class ReflectionClass does not specify its types\\: T$#"
+			count: 1
+			path: src/Definition/Reflection/ClassDefinition.php
+
+		-
+			message: "#^Method Laminas\\\\Di\\\\Definition\\\\Reflection\\\\ClassDefinition\\:\\:reflectParameters\\(\\) has no return typehint specified\\.$#"
+			count: 1
+			path: src/Definition/Reflection/ClassDefinition.php
+
+		-
+			message: "#^Call to an undefined method ReflectionType\\:\\:getName\\(\\)\\.$#"
+			count: 1
+			path: src/Definition/Reflection/Parameter.php
+
+		-
+			message: "#^Method Laminas\\\\Di\\\\Definition\\\\RuntimeDefinition\\:\\:loadClass\\(\\) has no return typehint specified\\.$#"
+			count: 1
+			path: src/Definition/RuntimeDefinition.php
+
+		-
+			message: "#^Method Laminas\\\\Di\\\\Injector\\:\\:create\\(\\) has parameter \\$parameters with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Injector.php
+
+		-
+			message: "#^Method Laminas\\\\Di\\\\Injector\\:\\:createInstance\\(\\) has parameter \\$params with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Injector.php
+
+		-
+			message: "#^Method Laminas\\\\Di\\\\Injector\\:\\:resolveParameters\\(\\) has parameter \\$params with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Injector.php
+
+		-
+			message: "#^Method Laminas\\\\Di\\\\Injector\\:\\:resolveParameters\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Injector.php
+
+		-
+			message: "#^Method Laminas\\\\Di\\\\InjectorInterface\\:\\:create\\(\\) has parameter \\$options with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/InjectorInterface.php
+
+		-
+			message: "#^Method Laminas\\\\Di\\\\LegacyConfig\\:\\:__construct\\(\\) has parameter \\$config with generic interface ArrayAccess but does not specify its types\\: TKey, TValue$#"
+			count: 1
+			path: src/LegacyConfig.php
+
+		-
+			message: "#^Method Laminas\\\\Di\\\\LegacyConfig\\:\\:__construct\\(\\) has parameter \\$config with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/LegacyConfig.php
+
+		-
+			message: "#^Method Laminas\\\\Di\\\\LegacyConfig\\:\\:configureInstance\\(\\) has no return typehint specified\\.$#"
+			count: 1
+			path: src/LegacyConfig.php
+
+		-
+			message: "#^Method Laminas\\\\Di\\\\LegacyConfig\\:\\:configureInstance\\(\\) has parameter \\$config with no value type specified in iterable type iterable\\.$#"
+			count: 1
+			path: src/LegacyConfig.php
+
+		-
+			message: "#^Method Laminas\\\\Di\\\\LegacyConfig\\:\\:toArray\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/LegacyConfig.php
+
+		-
+			message: "#^Method Laminas\\\\Di\\\\Module\\:\\:getConfig\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Module.php
+
+		-
+			message: "#^Laminas\\\\Di\\\\Resolver\\\\AbstractInjection is deprecated, please migrate to Laminas\\\\Di\\\\Resolver\\\\InjectionInterface$#"
+			count: 1
+			path: src/Resolver/AbstractInjection.php
+
+		-
+			message: "#^Property Laminas\\\\Di\\\\Resolver\\\\DependencyResolver\\:\\:\\$gettypeMap has no typehint specified\\.$#"
+			count: 1
+			path: src/Resolver/DependencyResolver.php
+
+		-
+			message: "#^Method Laminas\\\\Di\\\\Resolver\\\\DependencyResolver\\:\\:getConfiguredParameters\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Resolver/DependencyResolver.php
+
+		-
+			message: "#^Method Laminas\\\\Di\\\\Resolver\\\\DependencyResolver\\:\\:resolveParameters\\(\\) has parameter \\$callTimeParameters with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Resolver/DependencyResolver.php
+
+		-
+			message: "#^Method Laminas\\\\Di\\\\Resolver\\\\DependencyResolverInterface\\:\\:resolveParameters\\(\\) has parameter \\$parameters with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Resolver/DependencyResolverInterface.php
+
+		-
+			message: "#^Method Laminas\\\\Di\\\\Resolver\\\\ValueInjection\\:\\:__set_state\\(\\) has parameter \\$state with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Resolver/ValueInjection.php
+

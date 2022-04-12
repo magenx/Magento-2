@@ -1,0 +1,68 @@
+{
+    "name": "laminas/laminas-router",
+    "description": "Flexible routing system for HTTP and console applications",
+    "license": "BSD-3-Clause",
+    "keywords": [
+        "laminas",
+        "routing"
+    ],
+    "homepage": "https://laminas.dev",
+    "support": {
+        "docs": "https://docs.laminas.dev/laminas-router/",
+        "issues": "https://github.com/laminas/laminas-router/issues",
+        "source": "https://github.com/laminas/laminas-router",
+        "rss": "https://github.com/laminas/laminas-router/releases.atom",
+        "chat": "https://laminas.dev/chat",
+        "forum": "https://discourse.laminas.dev"
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "extra": {
+        "laminas": {
+            "component": "Laminas\\Router",
+            "config-provider": "Laminas\\Router\\ConfigProvider"
+        }
+    },
+    "require": {
+        "php": "^7.3 || ~8.0.0 || ~8.1.0",
+        "container-interop/container-interop": "^1.2",
+        "laminas/laminas-http": "^2.15",
+        "laminas/laminas-servicemanager": "^3.7",
+        "laminas/laminas-stdlib": "^3.6"
+    },
+    "require-dev": {
+        "laminas/laminas-coding-standard": "~2.2.1",
+        "laminas/laminas-i18n": "^2.7.4",
+        "phpunit/phpunit": "^9.5.5",
+        "psalm/plugin-phpunit": "^0.15.1",
+        "vimeo/psalm": "^4.7"
+    },
+    "suggest": {
+        "laminas/laminas-i18n": "^2.7.4, if defining translatable HTTP path segments"
+    },
+    "autoload": {
+        "psr-4": {
+            "Laminas\\Router\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "LaminasTest\\Router\\": "test/"
+        }
+    },
+    "scripts": {
+        "check": [
+            "@cs-check",
+            "@test"
+        ],
+        "cs-check": "phpcs",
+        "cs-fix": "phpcbf",
+        "static-analysis": "psalm --shepherd --stats",
+        "test": "phpunit --colors=always",
+        "test-coverage": "phpunit --colors=always --coverage-clover clover.xml"
+    },
+    "conflict": {
+        "zendframework/zend-router": "*"
+    }
+}

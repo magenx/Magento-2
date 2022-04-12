@@ -1,0 +1,97 @@
+name: CI
+
+on:
+  push:
+    branches: [ master, develop ]
+  pull_request:
+    branches: [ master, develop ]
+
+jobs:
+  php:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php-version:
+          - "7.3"
+          - "7.4"
+          - "8.0"
+          - "8.1"
+        dependencies:
+          - "lowest"
+          - "highest"
+        exclude:
+          - php-version: "8.1"
+            dependencies: "lowest"
+    name: Tests with PHP ${{ matrix.php-version }} and ${{ matrix.dependencies }} dependencies
+
+    steps:
+    - name: Setup node
+      uses: actions/setup-node@v2
+      with:
+        node-version: '16'
+
+    - uses: actions/checkout@v2
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: ${{ matrix.php-version }}
+        ini-file: development
+      env:
+        COMPOSER_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Validate composer
+      run: composer validate
+
+    - name: Composer install
+      uses: "ramsey/composer-install@v1"
+      with:
+        dependency-versions: "${{ matrix.dependencies }}"
+        composer-options: "${{ matrix.composer-options }}"
+
+    - name: Run unit tests suite
+      run: vendor/bin/phpunit
+
+    - name: Run code style suite
+      run: vendor/bin/phpcs --standard=Magento2 Magento2/Helpers Magento2/Sniffs Magento2/Rector Magento2Framework/Sniffs
+
+    - name: Run framework suite
+      run: vendor/bin/phpcs --standard=Magento2Framework Magento2/Helpers Magento2/Sniffs Magento2/Rector Magento2Framework/Sniffs
+  js:
+    runs-on: ubuntu-latest
+    name: Javascript tests
+
+    steps:
+      - name: Setup node
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+
+      - uses: actions/checkout@v2
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run ESLint
+        run: npm run eslint -- eslint/rules
+  rector:
+    runs-on: ubuntu-latest
+    name: Rector tests
+
+    steps:
+      - name: Setup node
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+
+      - uses: actions/checkout@v2
+
+      - name: Install dependencies
+        run: composer install
+
+      - name: Run rector
+        run: vendor/bin/rector process Magento2 Magento2Framework PHP_CodeSniffer --dry-run --autoload-file vendor/squizlabs/php_codesniffer/autoload.php --autoload-file vendor/phpcompatibility/php-compatibility/PHPCSAliases.php

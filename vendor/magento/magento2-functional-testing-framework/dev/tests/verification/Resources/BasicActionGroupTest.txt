@@ -1,0 +1,74 @@
+<?php
+namespace Magento\AcceptanceTest\_default\Backend;
+
+use Magento\FunctionalTestingFramework\AcceptanceTester;
+use \Codeception\Util\Locator;
+use Yandex\Allure\Adapter\Annotation\Features;
+use Yandex\Allure\Adapter\Annotation\Stories;
+use Yandex\Allure\Adapter\Annotation\Title;
+use Yandex\Allure\Adapter\Annotation\Description;
+use Yandex\Allure\Adapter\Annotation\Parameter;
+use Yandex\Allure\Adapter\Annotation\Severity;
+use Yandex\Allure\Adapter\Model\SeverityLevel;
+use Yandex\Allure\Adapter\Annotation\TestCaseId;
+
+/**
+ * @group functional
+ * @Description("<h3>Test files</h3>verification/TestModule/Test/ActionGroupFunctionalTest/BasicActionGroupTest.xml<br>")
+ */
+class BasicActionGroupTestCest
+{
+	/**
+	 * @var bool
+	 */
+	private $isSuccess = false;
+
+	/**
+	  * @param AcceptanceTester $I
+	  * @throws \Exception
+	  */
+	public function _before(AcceptanceTester $I)
+	{
+		$I->createEntity("createPersonParam", "hook", "ReplacementPerson", [], []); // stepKey: createPersonParam
+		$I->comment("Entering Action Group [beforeGroup] FunctionalActionGroup");
+		$I->fillField("#foo", "myData1"); // stepKey: fillField1BeforeGroup
+		$I->fillField("#bar", "myData2"); // stepKey: fillField2BeforeGroup
+		$I->comment("Exiting Action Group [beforeGroup] FunctionalActionGroup");
+	}
+
+	/**
+	  * @param AcceptanceTester $I
+	  * @throws \Exception
+	  */
+	public function _after(AcceptanceTester $I)
+	{
+		if ($this->isSuccess) {
+			unlink(__FILE__);
+		}
+	}
+
+	/**
+	 * @Severity(level = SeverityLevel::CRITICAL)
+	 * @Features({"TestModule"})
+	 * @Stories({"MQE-433"})
+	 * @Parameter(name = "AcceptanceTester", value="$I")
+	 * @param AcceptanceTester $I
+	 * @return void
+	 * @throws \Exception
+	 */
+	public function BasicActionGroupTest(AcceptanceTester $I)
+	{
+		$I->amOnPage("/someUrl"); // stepKey: step1
+		$I->comment("Entering Action Group [actionGroup1] FunctionalActionGroup");
+		$I->fillField("#foo", "myData1"); // stepKey: fillField1ActionGroup1
+		$I->fillField("#bar", "myData2"); // stepKey: fillField2ActionGroup1
+		$I->comment("Exiting Action Group [actionGroup1] FunctionalActionGroup");
+		$I->click("loginButton"); // stepKey: step6
+	}
+
+	public function _passed(AcceptanceTester $I)
+	{
+		// Test passed successfully.
+		$this->isSuccess = true;
+	}
+}

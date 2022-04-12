@@ -1,0 +1,20 @@
+{
+    "name": "weew/helpers-array",
+    "description": "Useful collection of php array helpers.",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Maxim Kott",
+            "email": "maximkott@gmail.com"
+        }
+    ],
+    "autoload": {
+        "files": [
+            "src/array.php"
+        ]
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^4.7",
+        "satooshi/php-coveralls": "^0.6.1"
+    }
+}

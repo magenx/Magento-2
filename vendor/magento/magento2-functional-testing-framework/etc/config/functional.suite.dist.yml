@@ -1,0 +1,41 @@
+# Copyright © Magento, Inc. All rights reserved.
+# See COPYING.txt for license details.
+
+# Codeception Test Suite Configuration
+#
+# Suite for acceptance tests.
+# Perform tests in browser using the WebDriver or PhpBrowser.
+# If you need both WebDriver and PHPBrowser tests - create a separate suite.
+
+class_name: AcceptanceTester
+namespace: Magento\FunctionalTestingFramework
+modules:
+    enabled:
+        - \Magento\FunctionalTestingFramework\Module\MagentoWebDriver
+        - \Magento\FunctionalTestingFramework\Module\MagentoSequence
+        - \Magento\FunctionalTestingFramework\Module\MagentoAssert
+        - \Magento\FunctionalTestingFramework\Module\MagentoActionProxies
+        - Asserts
+        - \Magento\FunctionalTestingFramework\Helper\HelperContainer
+    config:
+        \Magento\FunctionalTestingFramework\Module\MagentoWebDriver:
+            url: "%MAGENTO_BASE_URL%"
+            backend_url: "%MAGENTO_BACKEND_BASE_URL%"
+            backend_name: "%MAGENTO_BACKEND_NAME%"
+            browser: 'chrome'
+            restart: true
+            window_size: 1280x1024
+            username: "%MAGENTO_ADMIN_USERNAME%"
+            password: "%MAGENTO_ADMIN_PASSWORD%"
+            pageload_timeout: "%WAIT_TIMEOUT%"
+            request_timeout: "%WAIT_TIMEOUT%"
+            connection_timeout: "%WAIT_TIMEOUT%"
+            host: "%SELENIUM_HOST%"
+            port: "%SELENIUM_PORT%"
+            protocol: "%SELENIUM_PROTOCOL%"
+            path: "%SELENIUM_PATH%"
+            close_all_sessions: "%SELENIUM_CLOSE_ALL_SESSIONS%"
+            capabilities:
+                unhandledPromptBehavior: "ignore"
+                chromeOptions:
+                    args: ["--no-sandbox", "--window-size=1280,1024", "--disable-extensions", "--enable-automation", "--disable-gpu", "--enable-Passthrough", "--disable-dev-shm-usage", "--ignore-certificate-errors"]

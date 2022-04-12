@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/7.0/phpunit.xsd"
+        bootstrap="phpunit.php"
+        colors="true"
+        defaultTestSuite="Allure PHP API Tests">
+    <testsuites>
+        <testsuite name="Allure PHP API Tests">
+            <directory>test/Yandex/Allure/Adapter/</directory>
+        </testsuite>
+    </testsuites>
+    <filter>
+        <whitelist>
+            <directory>src/</directory>
+        </whitelist>
+    </filter>
+</phpunit>

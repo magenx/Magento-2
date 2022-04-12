@@ -1,0 +1,88 @@
+<?php
+namespace Magento\AcceptanceTest\_default\Backend;
+
+use Magento\FunctionalTestingFramework\AcceptanceTester;
+use \Codeception\Util\Locator;
+use Yandex\Allure\Adapter\Annotation\Features;
+use Yandex\Allure\Adapter\Annotation\Stories;
+use Yandex\Allure\Adapter\Annotation\Title;
+use Yandex\Allure\Adapter\Annotation\Description;
+use Yandex\Allure\Adapter\Annotation\Parameter;
+use Yandex\Allure\Adapter\Annotation\Severity;
+use Yandex\Allure\Adapter\Model\SeverityLevel;
+use Yandex\Allure\Adapter\Annotation\TestCaseId;
+
+/**
+ * @Description("<h3>Test files</h3>verification/TestModule/Test/SectionReplacementTest.xml<br>")
+ */
+class SectionReplacementTestCest
+{
+	/**
+	 * @var bool
+	 */
+	private $isSuccess = false;
+
+	/**
+	  * @param AcceptanceTester $I
+	  * @throws \Exception
+	  */
+	public function _after(AcceptanceTester $I)
+	{
+		if ($this->isSuccess) {
+			unlink(__FILE__);
+		}
+	}
+
+	/**
+	 * @Features({"TestModule"})
+	 * @Parameter(name = "AcceptanceTester", value="$I")
+	 * @param AcceptanceTester $I
+	 * @return void
+	 * @throws \Exception
+	 */
+	public function SectionReplacementTest(AcceptanceTester $I)
+	{
+		$I->click("#element"); // stepKey: selectorReplace
+		$I->click("#foo"); // stepKey: selectorReplaceTimeout
+		$I->waitForPageLoad(30); // stepKey: selectorReplaceTimeoutWaitForPageLoad
+		$I->click("#element .stringLiteral"); // stepKey: selectorReplaceOneParam
+		$I->click("#stringLiteral1 .stringLiteral2"); // stepKey: selectorReplaceTwoParam
+		$I->click("#stringLiteral1-stringLiteral2 .stringLiteral3"); // stepKey: selectorReplaceThreeParam
+		$I->click("#stringLiteral1-stringLiteral2 .stringLiteral1 [stringLiteral3]"); // stepKey: selectorReplaceThreeParamOneDupe
+		$I->click("#element .John"); // stepKey: selectorReplaceOneParamDataRef
+		$I->click("#John .Doe"); // stepKey: selectorReplaceTwoParamDataRef
+		$I->click("#John-Doe .Tiberius"); // stepKey: selectorReplaceThreeParamDataRef
+		$I->click("#John-Doe .John [Tiberius]"); // stepKey: selectorReplaceThreeParamOneDupeDataRef
+		$I->click("#element ." . msq("uniqueData") . "John"); // stepKey: selectorReplaceOneParamDataRefMSQPrefix
+		$I->click("#" . msq("uniqueData") . "John .stringLiteral2"); // stepKey: selectorReplaceTwoParamDataRefMSQPrefix
+		$I->click("#" . msq("uniqueData") . "John-stringLiteral2 .stringLiteral3"); // stepKey: selectorReplaceThreeParamDataRefMSQPrefix
+		$I->click("#" . msq("uniqueData") . "John-stringLiteral2 ." . msq("uniqueData") . "John [stringLiteral3]"); // stepKey: selectorReplaceThreeParamOneDupeDataRefMSQPrefix
+		$I->click("#element .Doe" . msq("uniqueData")); // stepKey: selectorReplaceOneParamDataRefMSQSuffix
+		$I->click("#Doe" . msq("uniqueData") . " .stringLiteral2"); // stepKey: selectorReplaceTwoParamDataRefMSQSuffix
+		$I->click("#Doe" . msq("uniqueData") . "-stringLiteral2 .stringLiteral3"); // stepKey: selectorReplaceThreeParamDataRefMSQSuffix
+		$I->click("#Doe" . msq("uniqueData") . "-stringLiteral2 .Doe" . msq("uniqueData") . " [stringLiteral3]"); // stepKey: selectorReplaceThreeParamOneDupeDataRefMSQSuffix
+		$I->createEntity("createdData", "test", "simpleData", [], []); // stepKey: createdData
+		$I->click("#element ." . $I->retrieveEntityField('createdData', 'firstname', 'test')); // stepKey: selectorReplaceOneParamPersisted
+		$I->click("#" . $I->retrieveEntityField('createdData', 'firstname', 'test') . " .stringLiteral2"); // stepKey: selectorReplaceTwoParamPersisted
+		$I->click("#" . $I->retrieveEntityField('createdData', 'firstname', 'test') . "-stringLiteral2 .stringLiteral3"); // stepKey: selectorReplaceThreeParamPersisted
+		$I->click("#" . $I->retrieveEntityField('createdData', 'firstname', 'test') . "-stringLiteral2 ." . $I->retrieveEntityField('createdData', 'firstname', 'test') . " [stringLiteral3]"); // stepKey: selectorReplaceThreeParamOneDupePersisted
+		$I->click("#element .{$data}"); // stepKey: selectorReplaceOneParamVariable
+		$I->click("#{$data1} .{$data2}"); // stepKey: selectorReplaceTwoParamVariable
+		$I->click("#{$data1}-{$data2} .{$data3}"); // stepKey: selectorReplaceThreeParamVariable
+		$I->click("#John-Doe .John [Tiberius]"); // stepKey: selectorReplaceThreeParamVariableOneDupe
+		$I->click("#stringLiteral1-" . $I->retrieveEntityField('createdData', 'firstname', 'test') . " .John"); // stepKey: selectorReplaceThreeParamMixed1
+		$I->click("#stringLiteral1-" . $I->retrieveEntityField('createdData', 'firstname', 'test') . " .{$data}"); // stepKey: selectorReplaceThreeParamMixed2
+		$I->click("#stringLiteral1-" . $I->retrieveEntityField('createdData', 'firstname', 'test') . " ." . msq("uniqueData") . "John"); // stepKey: selectorReplaceThreeParamMixedMSQPrefix
+		$I->click("#stringLiteral1-" . $I->retrieveEntityField('createdData', 'firstname', 'test') . " .Doe" . msq("uniqueData")); // stepKey: selectorReplaceThreeParamMixedMSQSuffix
+		$I->click("#element .1#element .2"); // stepKey: selectorReplaceTwoParamElements
+		$I->click("#element .1#element .{$data}"); // stepKey: selectorReplaceTwoParamMixedTypes
+		$I->click("(//div[@data-role='slide'])[1]/a[@data-element='link'][contains(@href,'')]"); // stepKey: selectorParamWithEmptyString
+		$I->click("(//div[@data-role='slide'])[1]/a[@data-element='link'][contains(@href,' ')]"); // stepKey: selectorParamWithASpace
+	}
+
+	public function _passed(AcceptanceTester $I)
+	{
+		// Test passed successfully.
+		$this->isSuccess = true;
+	}
+}

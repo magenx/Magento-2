@@ -1,0 +1,64 @@
+<?php
+namespace Magento\AcceptanceTest\_default\Backend;
+
+use Magento\FunctionalTestingFramework\AcceptanceTester;
+use \Codeception\Util\Locator;
+use Yandex\Allure\Adapter\Annotation\Features;
+use Yandex\Allure\Adapter\Annotation\Stories;
+use Yandex\Allure\Adapter\Annotation\Title;
+use Yandex\Allure\Adapter\Annotation\Description;
+use Yandex\Allure\Adapter\Annotation\Parameter;
+use Yandex\Allure\Adapter\Annotation\Severity;
+use Yandex\Allure\Adapter\Model\SeverityLevel;
+use Yandex\Allure\Adapter\Annotation\TestCaseId;
+
+/**
+ * @Description("<h3>Test files</h3>verification/TestModule/Test/PageReplacementTest.xml<br>")
+ */
+class PageReplacementTestCest
+{
+	/**
+	 * @var bool
+	 */
+	private $isSuccess = false;
+
+	/**
+	  * @param AcceptanceTester $I
+	  * @throws \Exception
+	  */
+	public function _after(AcceptanceTester $I)
+	{
+		if ($this->isSuccess) {
+			unlink(__FILE__);
+		}
+	}
+
+	/**
+	 * @Features({"TestModule"})
+	 * @Parameter(name = "AcceptanceTester", value="$I")
+	 * @param AcceptanceTester $I
+	 * @return void
+	 * @throws \Exception
+	 */
+	public function PageReplacementTest(AcceptanceTester $I)
+	{
+		$I->createEntity("datakey", "test", "simpleData", [], []); // stepKey: datakey
+		$I->amOnPage("/page.html"); // stepKey: noParamPage
+		$I->amOnPage("/StringLiteral/page.html"); // stepKey: oneParamPageString
+		$I->amOnPage("/John/page.html"); // stepKey: oneParamPageData
+		$I->amOnPage("/" . $I->retrieveEntityField('datakey', 'firstname', 'test') . "/page.html"); // stepKey: oneParamPagePersist
+		$I->amOnPage("/StringLiteral1/StringLiteral2.html"); // stepKey: twoParamPageString
+		$I->amOnPage("/John/StringLiteral2.html"); // stepKey: twoParamPageStringData
+		$I->amOnPage("/John/" . $I->retrieveEntityField('datakey', 'firstname', 'test') . ".html"); // stepKey: twoParamPageDataPersist
+		$I->amOnPage("/" . $I->retrieveEntityField('datakey', 'firstname', 'test') . "/StringLiteral2.html"); // stepKey: twoParamPagePersistString
+		$I->amOnPage((getenv("MAGENTO_BACKEND_BASE_URL") ? rtrim(getenv("MAGENTO_BACKEND_BASE_URL"), "/") : "") . "/" . getenv("MAGENTO_BACKEND_NAME") . "/backend"); // stepKey: onAdminPage
+		$I->amOnPage((getenv("MAGENTO_BACKEND_BASE_URL") ? rtrim(getenv("MAGENTO_BACKEND_BASE_URL"), "/") : "") . "/" . getenv("MAGENTO_BACKEND_NAME") . "/StringLiteral/page.html"); // stepKey: oneParamAdminPageString
+		$I->amOnUrl("http://myFullUrl.com/"); // stepKey: onExternalPage
+	}
+
+	public function _passed(AcceptanceTester $I)
+	{
+		// Test passed successfully.
+		$this->isSuccess = true;
+	}
+}

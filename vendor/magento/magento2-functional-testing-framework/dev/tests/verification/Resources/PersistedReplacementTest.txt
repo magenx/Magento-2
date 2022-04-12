@@ -1,0 +1,84 @@
+<?php
+namespace Magento\AcceptanceTest\_default\Backend;
+
+use Magento\FunctionalTestingFramework\AcceptanceTester;
+use \Codeception\Util\Locator;
+use Yandex\Allure\Adapter\Annotation\Features;
+use Yandex\Allure\Adapter\Annotation\Stories;
+use Yandex\Allure\Adapter\Annotation\Title;
+use Yandex\Allure\Adapter\Annotation\Description;
+use Yandex\Allure\Adapter\Annotation\Parameter;
+use Yandex\Allure\Adapter\Annotation\Severity;
+use Yandex\Allure\Adapter\Model\SeverityLevel;
+use Yandex\Allure\Adapter\Annotation\TestCaseId;
+
+/**
+ * @Description("<h3>Test files</h3>verification/TestModule/Test/PersistedReplacementTest.xml<br>")
+ */
+class PersistedReplacementTestCest
+{
+	/**
+	 * @var bool
+	 */
+	private $isSuccess = false;
+
+	/**
+	  * @param AcceptanceTester $I
+	  * @throws \Exception
+	  */
+	public function _before(AcceptanceTester $I)
+	{
+		$I->createEntity("createData1", "hook", "ReplacementPerson", [], []); // stepKey: createData1
+	}
+
+	/**
+	  * @param AcceptanceTester $I
+	  * @throws \Exception
+	  */
+	public function _after(AcceptanceTester $I)
+	{
+		if ($this->isSuccess) {
+			unlink(__FILE__);
+		}
+	}
+
+	/**
+	 * @Features({"TestModule"})
+	 * @Parameter(name = "AcceptanceTester", value="$I")
+	 * @param AcceptanceTester $I
+	 * @return void
+	 * @throws \Exception
+	 */
+	public function PersistedReplacementTest(AcceptanceTester $I)
+	{
+		$I->createEntity("createdData", "test", "simpleData", [], []); // stepKey: createdData
+		$I->fillField("#selector", "StringBefore " . $I->retrieveEntityField('createdData', 'firstname', 'test') . " StringAfter"); // stepKey: inputReplace
+		$I->fillField("#" . $I->retrieveEntityField('createdData', 'firstname', 'test'), "input"); // stepKey: selectorReplace
+		$I->fillField("#" . getenv("MAGENTO_BASE_URL") . "#" . $I->retrieveEntityField('createdData', 'firstname', 'test'), "input"); // stepKey: selectorReplace2
+		$I->fillSecretField("#" . $I->getSecret("SECRET_PARAM") . "#" . $I->retrieveEntityField('createdData', 'firstname', 'test'), "input"); // stepKey: selectorReplace3
+		$I->dragAndDrop("#" . $I->retrieveEntityField('createdData', 'firstname', 'test'), $I->retrieveEntityField('createdData', 'lastname', 'test')); // stepKey: selector12Replace
+		$I->conditionalClick($I->retrieveEntityField('createdData', 'lastname', 'test'), "#" . $I->retrieveEntityField('createdData', 'firstname', 'test'), true); // stepKey: dependentSelectorReplace
+		$I->amOnUrl($I->retrieveEntityField('createdData', 'firstname', 'test') . ".html"); // stepKey: urlReplace
+		$I->searchAndMultiSelectOption("#selector", [$I->retrieveEntityField('createdData', 'firstname', 'test'), $I->retrieveEntityField('createdData', 'lastname', 'test')]); // stepKey: parameterArrayReplacement
+		$I->fillField("#selector", "John " . $I->retrieveEntityField('createdData', 'firstname', 'test') . " stringLiteral"); // stepKey: allTypesMixed
+		$I->searchAndMultiSelectOption("#selector", [$I->retrieveEntityField('createdData', 'firstname', 'test'), "John", "stringLiteral"]); // stepKey: parameterArrayMixed
+		$I->seeInPageSource("StringBefore " . $I->retrieveEntityField('createdData', 'firstname', 'test') . " StringAfter"); // stepKey: htmlReplace1
+		$I->seeInPageSource("StringBefore " . $I->retrieveEntityField('createData1', 'firstname', 'test') . " StringAfter"); // stepKey: htmlReplace2
+		$I->seeInPageSource("#" . getenv("MAGENTO_BASE_URL") . "#" . $I->retrieveEntityField('createdData', 'firstname', 'test')); // stepKey: htmlReplace3
+		$I->dontSeeInPageSource("StringBefore " . $I->retrieveEntityField('createdData', 'firstname', 'test') . " StringAfter"); // stepKey: htmlReplace4
+		$I->dontSeeInPageSource("StringBefore " . $I->retrieveEntityField('createData1', 'firstname', 'test') . " StringAfter"); // stepKey: htmlReplace5
+		$I->dontSeeInPageSource("#" . getenv("MAGENTO_BASE_URL") . "#" . $I->retrieveEntityField('createdData', 'firstname', 'test')); // stepKey: htmlReplace6
+		$I->seeInSource("StringBefore " . $I->retrieveEntityField('createdData', 'firstname', 'test') . " StringAfter"); // stepKey: htmlReplace7
+		$I->seeInSource("StringBefore " . $I->retrieveEntityField('createData1', 'firstname', 'test') . " StringAfter"); // stepKey: htmlReplace8
+		$I->seeInSource("#" . getenv("MAGENTO_BASE_URL") . "#" . $I->retrieveEntityField('createdData', 'firstname', 'test')); // stepKey: htmlReplace9
+		$I->dontSeeInSource("StringBefore " . $I->retrieveEntityField('createdData', 'firstname', 'test') . " StringAfter"); // stepKey: htmlReplace10
+		$I->dontSeeInSource("StringBefore " . $I->retrieveEntityField('createData1', 'firstname', 'test') . " StringAfter"); // stepKey: htmlReplace11
+		$I->dontSeeInSource("#" . getenv("MAGENTO_BASE_URL") . "#" . $I->retrieveEntityField('createdData', 'firstname', 'test')); // stepKey: htmlReplace12
+	}
+
+	public function _passed(AcceptanceTester $I)
+	{
+		// Test passed successfully.
+		$this->isSuccess = true;
+	}
+}

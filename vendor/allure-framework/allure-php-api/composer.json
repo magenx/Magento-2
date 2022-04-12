@@ -1,0 +1,36 @@
+{
+    "name": "allure-framework/allure-php-api",
+    "keywords":["php", "report", "allure", "api"],
+    "description": "Allure PHP commons",
+    "homepage": "http://allure.qatools.ru/",
+    "license": "Apache-2.0",
+    "authors": [
+        {
+            "name": "Ivan Krutov",
+            "email": "vania-pooh@yandex-team.ru",
+            "role": "Developer"
+        }
+    ],
+    "support": {
+        "email": "allure@qameta.io",
+        "source": "https://github.com/allure-framework/allure-php-api"
+    },
+    "require": {
+        "php": ">=7.1.3",
+        "jms/serializer": "^1 | ^2 | ^3",
+        "ramsey/uuid": "^3 | ^4",
+        "symfony/mime": "^4.3 | ^5"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^7 | ^8 | ^9"
+    },
+    "autoload": {
+        "psr-0": {
+            "Yandex": ["src/", "test/"]
+        }
+    },
+    "scripts": {
+        "test": "vendor/bin/phpunit",
+        "test-legacy": "vendor/bin/phpunit --configuration=phpunit.legacy.xml"
+    }
+}

@@ -1,0 +1,45 @@
+{
+    "name": "spomky-labs/aes-key-wrap",
+    "description": "AES Key Wrap for PHP.",
+    "type": "library",
+    "license": "MIT",
+    "keywords": ["A128KW", "A192KW", "A256KW", "AES", "Key", "Wrap", "Padding", "RFC3394", "RFC5649"],
+    "homepage": "https://github.com/Spomky-Labs/aes-key-wrap",
+    "authors": [
+        {
+            "name": "Florent Morselli",
+            "homepage": "https://github.com/Spomky-Labs/aes-key-wrap/contributors"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "AESKW\\":  "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "AESKW\\Tests\\":  "tests/"
+        }
+    },
+    "require": {
+        "php": ">=7.2",
+        "ext-mbstring": "*",
+        "lib-openssl": "*",
+        "thecodingmachine/safe": "^1.1"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^7.0|^8.0|^9.0",
+        "php-coveralls/php-coveralls": "^2.0",
+        "phpstan/phpstan": "^0.12",
+        "phpstan/phpstan-beberlei-assert": "^0.12",
+        "phpstan/phpstan-deprecation-rules": "^0.12",
+        "phpstan/phpstan-phpunit": "^0.12",
+        "phpstan/phpstan-strict-rules": "^0.12",
+        "thecodingmachine/phpstan-safe-rule": "^1.0"
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "5.0.x-dev"
+        }
+    }
+}

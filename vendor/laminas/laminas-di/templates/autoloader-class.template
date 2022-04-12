@@ -1,0 +1,47 @@
+<?php
+
+/**
+ * Generated autoloader for Laminas\Di
+ */
+
+declare(strict_types=1);
+
+%namespace%
+use function spl_autoload_register;
+use function spl_autoload_unregister;
+
+class Autoloader
+{
+    private $registered = false;
+    private $classmap = [
+        %classmap%
+    ];
+
+    public function register() : void
+    {
+        if (! $this->registered) {
+            spl_autoload_register($this);
+            $this->registered = true;
+        }
+    }
+
+    public function unregister() : void
+    {
+        if ($this->registered) {
+            spl_autoload_unregister($this);
+            $this->registered = false;
+        }
+    }
+
+    public function load(string $class) : void
+    {
+        if (isset($this->classmap[$class])) {
+            include __DIR__ . '/' . $this->classmap[$class];
+        }
+    }
+
+    public function __invoke(string $class) : void
+    {
+        $this->load($class);
+    }
+}

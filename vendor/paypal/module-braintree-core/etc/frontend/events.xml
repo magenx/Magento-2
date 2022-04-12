@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © 2013-2017 Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Event/etc/events.xsd">
+    <event name="shortcut_buttons_container">
+        <observer name="braintree_paypal_shortcuts" instance="PayPal\Braintree\Observer\AddPaypalShortcuts"/>
+        <observer name="braintree_applepay_shortcuts" instance="PayPal\Braintree\Observer\AddApplePayShortcuts" />
+        <observer name="braintree_googlepay_shortcuts" instance="PayPal\Braintree\Observer\AddGooglePayShortcuts" />
+    </event>
+</config>

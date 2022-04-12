@@ -1,0 +1,72 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © 2013-2017 Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <type name="PayPal\Braintree\Block\Payment">
+        <arguments>
+            <argument name="config" xsi:type="object">PayPal\Braintree\Model\Ui\ConfigProvider</argument>
+        </arguments>
+    </type>
+    <type name="PayPal\Braintree\Block\Info">
+        <arguments>
+            <argument name="data" xsi:type="array">
+                <item xsi:type="string" name="is_secure_mode">0</item>
+            </argument>
+        </arguments>
+    </type>
+    <virtualType name="BraintreeAuthorizeRequest" type="Magento\Payment\Gateway\Request\BuilderComposite">
+        <arguments>
+            <argument name="builders" xsi:type="array">
+                <item name="customer" xsi:type="string">PayPal\Braintree\Gateway\Request\CustomerDataBuilder</item>
+                <item name="payment" xsi:type="string">PayPal\Braintree\Gateway\Request\PaymentDataBuilder</item>
+                <item name="channel" xsi:type="string">PayPal\Braintree\Gateway\Request\ChannelDataBuilder</item>
+                <item name="fraud" xsi:type="string">PayPal\Braintree\Gateway\Request\FraudDataBuilder</item>
+                <item name="source" xsi:type="string">PayPal\Braintree\Gateway\Request\TransactionSourceDataBuilder</item>
+                <item name="customFields" xsi:type="string">PayPal\Braintree\Gateway\Request\CustomFieldsDataBuilder</item>
+                <item name="address" xsi:type="string">PayPal\Braintree\Gateway\Request\AddressDataBuilder</item>
+                <item name="vault" xsi:type="string">PayPal\Braintree\Gateway\Request\VaultDataBuilder</item>
+                <item name="dynamic_descriptor" xsi:type="string">PayPal\Braintree\Gateway\Request\DescriptorDataBuilder</item>
+                <item name="level_2_3_processing" xsi:type="string">PayPal\Braintree\Gateway\Request\Level23ProcessingDataBuilder</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="BraintreeVaultAuthorizeRequest" type="Magento\Payment\Gateway\Request\BuilderComposite">
+        <arguments>
+            <argument name="builders" xsi:type="array">
+                <item name="customer" xsi:type="string">PayPal\Braintree\Gateway\Request\CustomerDataBuilder</item>
+                <item name="payment" xsi:type="string">PayPal\Braintree\Gateway\Request\PaymentDataBuilder</item>
+                <item name="channel" xsi:type="string">PayPal\Braintree\Gateway\Request\ChannelDataBuilder</item>
+                <item name="fraud" xsi:type="string">PayPal\Braintree\Gateway\Request\FraudDataBuilder</item>
+                <item name="source" xsi:type="string">PayPal\Braintree\Gateway\Request\TransactionSourceDataBuilder</item>
+                <item name="customFields" xsi:type="string">PayPal\Braintree\Gateway\Request\CustomFieldsDataBuilder</item>
+                <item name="address" xsi:type="string">PayPal\Braintree\Gateway\Request\AddressDataBuilder</item>
+                <item name="dynamic_descriptor" xsi:type="string">PayPal\Braintree\Gateway\Request\DescriptorDataBuilder</item>
+                <item name="level_2_3_processing" xsi:type="string">PayPal\Braintree\Gateway\Request\Level23ProcessingDataBuilder</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <type name="Magento\Vault\Model\Ui\Adminhtml\TokensConfigProvider">
+        <arguments>
+            <argument name="tokenUiComponentProviders" xsi:type="array">
+                <item name="braintree" xsi:type="object">PayPal\Braintree\Model\Ui\Adminhtml\TokenUiComponentProvider</item>
+                <item name="braintree_paypal" xsi:type="object">PayPal\Braintree\Model\Ui\Adminhtml\PayPal\TokenUiComponentProvider</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <type name="PayPal\Braintree\Controller\Adminhtml\Payment\GetNonce">
+        <arguments>
+            <argument name="session" xsi:type="object">Magento\Backend\Model\Session\Quote</argument>
+        </arguments>
+    </type>
+
+    <!-- Sale order grid -->
+    <type name="Magento\Sales\Model\ResourceModel\Order\Grid\Collection">
+        <plugin name="braintreeSalesOrderGrid" type="\PayPal\Braintree\Plugin\SalesOrderGridPlugin" />
+    </type>
+</config>

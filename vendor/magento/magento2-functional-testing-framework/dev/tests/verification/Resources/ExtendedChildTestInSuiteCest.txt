@@ -1,0 +1,76 @@
+<?php
+namespace Magento\AcceptanceTest\_suiteExtends\Backend;
+
+use Magento\FunctionalTestingFramework\AcceptanceTester;
+use \Codeception\Util\Locator;
+use Yandex\Allure\Adapter\Annotation\Features;
+use Yandex\Allure\Adapter\Annotation\Stories;
+use Yandex\Allure\Adapter\Annotation\Title;
+use Yandex\Allure\Adapter\Annotation\Description;
+use Yandex\Allure\Adapter\Annotation\Parameter;
+use Yandex\Allure\Adapter\Annotation\Severity;
+use Yandex\Allure\Adapter\Model\SeverityLevel;
+use Yandex\Allure\Adapter\Annotation\TestCaseId;
+
+/**
+ * @Title("[NO TESTCASEID]: ExtendedChildTestInSuite")
+ * @group ExtendedTestInSuite
+ * @Description("<h3>Test files</h3>verification/TestModule/Test/ExtendedFunctionalTest/ExtendedChildTestInSuite.xml<br>")
+ */
+class ExtendedChildTestInSuiteCest
+{
+	/**
+	 * @var bool
+	 */
+	private $isSuccess = false;
+
+	/**
+	  * @param AcceptanceTester $I
+	  * @throws \Exception
+	  */
+	public function _before(AcceptanceTester $I)
+	{
+		$I->amOnPage("/beforeUrl"); // stepKey: beforeAmOnPageKey
+	}
+
+	/**
+	  * @param AcceptanceTester $I
+	  * @throws \Exception
+	  */
+	public function _after(AcceptanceTester $I)
+	{
+		$I->amOnPage("/afterUrl"); // stepKey: afterAmOnPageKey
+		if ($this->isSuccess) {
+			unlink(__FILE__);
+		}
+	}
+
+	/**
+	  * @param AcceptanceTester $I
+	  * @throws \Exception
+	  */
+	public function _failed(AcceptanceTester $I)
+	{
+		$I->saveScreenshot(); // stepKey: saveScreenshot
+	}
+
+	/**
+	 * @Severity(level = SeverityLevel::TRIVIAL)
+	 * @Features({"TestModule"})
+	 * @Stories({"ExtendedChildTestInSuite"})
+	 * @Parameter(name = "AcceptanceTester", value="$I")
+	 * @param AcceptanceTester $I
+	 * @return void
+	 * @throws \Exception
+	 */
+	public function ExtendedChildTestInSuite(AcceptanceTester $I)
+	{
+		$I->comment("Different Input");
+	}
+
+	public function _passed(AcceptanceTester $I)
+	{
+		// Test passed successfully.
+		$this->isSuccess = true;
+	}
+}

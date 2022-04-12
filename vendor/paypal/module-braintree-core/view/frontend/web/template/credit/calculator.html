@@ -1,0 +1,56 @@
+<!-- ko if: visible -->
+<!-- ko if: displaySummary -->
+<div class="ppcredit-summary">
+    <!-- ko i18n: 'From only' --><!-- /ko -->
+    &pound;<span data-bind="text: instalmentsFrom"></span>
+    <!-- ko i18n: 'per month' --><!-- /ko -->
+</div>
+<!-- /ko -->
+<!-- ko if: displayInterestDetails -->
+<div class="ppcreditcalc-container">
+    <div class="ppcreditcalc-header">
+        <img src="https://www.paypalobjects.com/webstatic/en_US/i/buttons/PP_credit_logo_h_100x26.png" />
+    </div>
+
+    <ol class="ppcreditcalc-instalments" data-bind="foreach: instalments"><li>
+            <a href="#"
+               class="ppcreditcalc-instalments-term"
+               data-bind="click: function() { $parent.setCurrentInstalment($data) }, css: {active: $parent.isCurrentInstalment(term)}">
+                <span data-bind="text: term"></span> <!-- ko i18n: 'Months' --><!-- /ko -->
+            </a>
+        </li></ol>
+
+    <div class="ppcreditcalc-instalment-summary" data-bind="with: currentInstalment">
+        <dl>
+            <dt><!-- ko i18n: 'Monthly Payment:' --><!-- /ko --></dt>
+            <dd>&pound;<span data-bind="text: monthlyPayment"></span></dd>
+
+            <dt><!-- ko i18n: 'Instalment Rate:' --><!-- /ko --></dt>
+            <dd><span data-bind="text: apr"></span>%</dd>
+
+            <dt><!-- ko i18n: 'Cost of purchase:' --><!-- /ko --></dt>
+            <dd>&pound;<span data-bind="text: cost"></span></dd>
+
+            <dt><!-- ko i18n: 'Total inc. interest:' --><!-- /ko --></dt>
+            <dd>&pound;<span data-bind="text: costIncInterest"></span></dd>
+        </dl>
+    </div>
+
+    <div class="ppcreditcalc-legal">
+        <p><!-- ko i18n: 'If you are approved for a credit limit with PayPal Credit and use it for future purchases, the APR for those purchases won’t be more than 21.9% and may be even lower.' --><!-- /ko --></p>
+
+        <p>
+            <strong><!-- ko i18n: 'Representative Example:' --><!-- /ko --></strong>
+            <br /><!-- ko i18n: 'Purchase Rate: 21.9% p.a. (variable)' --><!-- /ko -->
+            <br /><!-- ko i18n: 'Representative: 21.9% APR (variable)' --><!-- /ko -->
+            <br /><!-- ko i18n: 'Assumed Credit Limit: £1,200' --><!-- /ko -->
+            <br /><!-- ko i18n: 'Subject to status. Terms and Conditions apply.' --><!-- /ko -->
+        </p>
+
+        <p>
+            <span data-bind="html: merchantName"></span> acts as a broker and offers credit solely from PayPal (Europe) S.&agrave;.r.l. et Cie, S.C.A. 22-24 Boulevard Royal L-2449, Luxembourg.
+        </p>
+    </div>
+</div>
+<!-- /ko -->
+<!-- /ko -->

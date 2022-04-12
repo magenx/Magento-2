@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceContainer name="content">
+            <block name="braintree_virtual_form" class="PayPal\Braintree\Block\Adminhtml\Virtual\Form" />
+            <block name="braintree_virtual_script" template="PayPal_Braintree::virtual/script.phtml" class="PayPal\Braintree\Block\Adminhtml\Virtual\Script" />
+        </referenceContainer>
+    </body>
+</page>

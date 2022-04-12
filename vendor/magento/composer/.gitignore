@@ -1,0 +1,9 @@
+/vendor
+/.cache
+/.metadata
+/.project
+/.settings
+atlassian*
+/.idea
+/.gitattributes
+/composer.lock

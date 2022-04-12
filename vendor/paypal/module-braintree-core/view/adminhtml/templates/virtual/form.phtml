@@ -1,0 +1,22 @@
+<?php
+// @codingStandardsIgnoreFile
+/** @var PayPal\Braintree\Block\Adminhtml\Virtual\Form $block */
+$code = $block->escapeHtml($block->getMethodCode());
+?>
+<div class="form-inline">
+    <form id="payment_form_<?php /* @noEscape */ echo $code; ?>" method="post" action="#">
+        <div class="admin__fieldset-wrapper-content">
+            <fieldset class="admin__fieldset">
+                <div class="admin__field _required">
+                    <label class="label admin__field-label" for="amount-field">
+                        <span><?php echo $block->escapeHtml(__('Transaction Amount')); ?></span>
+                    </label>
+                    <div class="admin__field-control control">
+                        <input class="admin__control-text" type="text" name="amount" aria-describedby="amount-field" id="amount-field" />
+                    </div>
+                </div>
+            </fieldset>
+        </div>
+        <?php echo $block->getChildHtml('cc'); ?>
+    </form>
+</div>

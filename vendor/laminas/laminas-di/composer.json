@@ -1,0 +1,79 @@
+{
+    "name": "laminas/laminas-di",
+    "description": "Automated dependency injection for PSR-11 containers",
+    "license": "BSD-3-Clause",
+    "keywords": [
+        "laminas",
+        "di",
+        "psr-11"
+    ],
+    "homepage": "https://laminas.dev",
+    "support": {
+        "docs": "https://docs.laminas.dev/laminas-di/",
+        "issues": "https://github.com/laminas/laminas-di/issues",
+        "source": "https://github.com/laminas/laminas-di",
+        "rss": "https://github.com/laminas/laminas-di/releases.atom",
+        "chat": "https://laminas.dev/chat",
+        "forum": "https://discourse.laminas.dev"
+    },
+    "config": {
+        "sort-packages": true,
+        "platform": {
+            "php": "7.4.99"
+        },
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        }
+    },
+    "extra": {
+        "laminas": {
+            "component": "Laminas\\Di",
+            "config-provider": "Laminas\\Di\\ConfigProvider"
+        }
+    },
+    "require": {
+        "php": ">=7.4, <8.2",
+        "laminas/laminas-stdlib": "^3.6",
+        "psr/container": "^1.1.1",
+        "psr/log": "^1.1.4"
+    },
+    "require-dev": {
+        "container-interop/container-interop": "^1.2.0",
+        "laminas/laminas-coding-standard": "~2.3.0",
+        "laminas/laminas-servicemanager": "^3.7",
+        "mikey179/vfsstream": "^1.6.10@alpha",
+        "phpstan/phpstan": "^0.12.64",
+        "phpspec/prophecy-phpunit": "^2.0",
+        "phpunit/phpunit": "^9.5.5"
+    },
+    "conflict": {
+        "zendframework/zend-di": "*",
+        "laminas/laminas-servicemanager-di": "*",
+        "phpspec/prophecy": "<1.9.0"
+    },
+    "suggest": {
+        "laminas/laminas-servicemanager": "An IoC container without auto wiring capabilities"
+    },
+    "autoload": {
+        "psr-4": {
+            "Laminas\\Di\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "LaminasTest\\Di\\": "test/"
+        }
+    },
+    "scripts": {
+        "check": [
+            "@cs-check",
+            "@analyse",
+            "@test"
+        ],
+        "cs-check": "phpcs",
+        "cs-fix": "phpcbf",
+        "analyse": "phpstan analyse --no-progress -c phpstan.neon",
+        "test": "phpunit --colors=always",
+        "test-coverage": "phpunit --colors=always --coverage-clover clover.xml"
+    }
+}

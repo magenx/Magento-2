@@ -1,0 +1,543 @@
+{
+    "name": "magento/magento2-base",
+    "description": "Magento 2 Base (Community Edition)",
+    "type": "magento2-component",
+    "license": [
+        "OSL-3.0",
+        "AFL-3.0"
+    ],
+    "version": "2.4.4",
+    "require": {
+        "magento/magento-composer-installer": "*",
+        "php": "~7.4.0||~8.1.0",
+        "ext-intl": "*",
+        "ext-mbstring": "*",
+        "composer/composer": "^1.9 || ^2.0",
+        "laminas/laminas-code": "~4.5.0",
+        "laminas/laminas-di": "^3.3.0",
+        "laminas/laminas-eventmanager": "^3.4.0",
+        "laminas/laminas-http": "^2.15.0",
+        "laminas/laminas-json": "^3.3.0",
+        "laminas/laminas-modulemanager": "^2.11.0",
+        "laminas/laminas-mvc": "^3.3.0",
+        "laminas/laminas-server": "^2.11.0",
+        "laminas/laminas-servicemanager": "^3.10.0",
+        "laminas/laminas-soap": "^2.10.0",
+        "laminas/laminas-stdlib": "^3.6.0",
+        "laminas/laminas-text": "^2.9.0",
+        "laminas/laminas-uri": "^2.9.1",
+        "laminas/laminas-validator": "^2.15.0",
+        "laminas/laminas-view": "~2.14.1",
+        "magento/composer": "~1.8.0",
+        "magento/zendframework1": "~1.15.0",
+        "monolog/monolog": "^2.3",
+        "pelago/emogrifier": "^6.0.0",
+        "phpseclib/phpseclib": "~3.0.9",
+        "symfony/console": "~4.4.0",
+        "symfony/event-dispatcher": "~4.4.0",
+        "tedivm/jshrink": "~1.4.0",
+        "tubalmartin/cssmin": "4.1.1"
+    },
+    "conflict": {
+        "gene/bluefoot": "*"
+    },
+    "replace": {
+        "trentrichardson/jquery-timepicker-addon": "1.4.3",
+        "components/jquery": "1.11.0",
+        "blueimp/jquery-file-upload": "5.6.14",
+        "components/jqueryui": "1.10.4",
+        "twbs/bootstrap": "3.1.0",
+        "tinymce/tinymce": "3.4.7"
+    },
+    "extra": {
+        "chmod": [
+            {
+                "mask": "0755",
+                "path": "bin/magento"
+            }
+        ],
+        "component_paths": {
+            "blueimp/jquery-file-upload": "lib/web/jquery/fileUploader",
+            "components/jquery": [
+                "lib/web/jquery.js",
+                "lib/web/jquery/jquery.min.js",
+                "lib/web/jquery/jquery-migrate.js"
+            ],
+            "components/jqueryui": "lib/web/jquery/jquery-ui.js",
+            "tinymce/tinymce": "lib/web/tiny_mce_5",
+            "trentrichardson/jquery-timepicker-addon": "lib/web/jquery/jquery-ui-timepicker-addon.js",
+            "twbs/bootstrap": "lib/web/jquery/jquery.tabs.js"
+        },
+        "map": [
+            [
+                ".editorconfig",
+                ".editorconfig"
+            ],
+            [
+                ".gitignore",
+                ".gitignore"
+            ],
+            [
+                ".htaccess",
+                ".htaccess"
+            ],
+            [
+                ".htaccess.sample",
+                ".htaccess.sample"
+            ],
+            [
+                ".php-cs-fixer.dist.php",
+                ".php-cs-fixer.dist.php"
+            ],
+            [
+                ".user.ini",
+                ".user.ini"
+            ],
+            [
+                "CHANGELOG.md",
+                "CHANGELOG.md"
+            ],
+            [
+                "COPYING.txt",
+                "COPYING.txt"
+            ],
+            [
+                "Gruntfile.js.sample",
+                "Gruntfile.js.sample"
+            ],
+            [
+                "LICENSE.txt",
+                "LICENSE.txt"
+            ],
+            [
+                "LICENSE_AFL.txt",
+                "LICENSE_AFL.txt"
+            ],
+            [
+                "SECURITY.md",
+                "SECURITY.md"
+            ],
+            [
+                "app/.htaccess",
+                "app/.htaccess"
+            ],
+            [
+                "app/autoload.php",
+                "app/autoload.php"
+            ],
+            [
+                "app/bootstrap.php",
+                "app/bootstrap.php"
+            ],
+            [
+                "app/design/adminhtml/Magento",
+                "app/design/adminhtml/Magento"
+            ],
+            [
+                "app/design/frontend/Magento",
+                "app/design/frontend/Magento"
+            ],
+            [
+                "app/etc/NonComposerComponentRegistration.php",
+                "app/etc/NonComposerComponentRegistration.php"
+            ],
+            [
+                "app/etc/db_schema.xml",
+                "app/etc/db_schema.xml"
+            ],
+            [
+                "app/etc/di.xml",
+                "app/etc/di.xml"
+            ],
+            [
+                "app/etc/registration_globlist.php",
+                "app/etc/registration_globlist.php"
+            ],
+            [
+                "auth.json.sample",
+                "auth.json.sample"
+            ],
+            [
+                "bin/.htaccess",
+                "bin/.htaccess"
+            ],
+            [
+                "bin/magento",
+                "bin/magento"
+            ],
+            [
+                "dev/.htaccess",
+                "dev/.htaccess"
+            ],
+            [
+                "dev/tests/.gitignore",
+                "dev/tests/.gitignore"
+            ],
+            [
+                "dev/tests/acceptance",
+                "dev/tests/acceptance"
+            ],
+            [
+                "dev/tests/api-functional/.gitignore",
+                "dev/tests/api-functional/.gitignore"
+            ],
+            [
+                "dev/tests/api-functional/_files",
+                "dev/tests/api-functional/_files"
+            ],
+            [
+                "dev/tests/api-functional/config",
+                "dev/tests/api-functional/config"
+            ],
+            [
+                "dev/tests/api-functional/framework",
+                "dev/tests/api-functional/framework"
+            ],
+            [
+                "dev/tests/api-functional/isolate_gql.txt",
+                "dev/tests/api-functional/isolate_gql.txt"
+            ],
+            [
+                "dev/tests/api-functional/isolate_rest.txt",
+                "dev/tests/api-functional/isolate_rest.txt"
+            ],
+            [
+                "dev/tests/api-functional/phpunit_graphql.xml.dist",
+                "dev/tests/api-functional/phpunit_graphql.xml.dist"
+            ],
+            [
+                "dev/tests/api-functional/phpunit_rest.xml.dist",
+                "dev/tests/api-functional/phpunit_rest.xml.dist"
+            ],
+            [
+                "dev/tests/api-functional/phpunit_soap.xml.dist",
+                "dev/tests/api-functional/phpunit_soap.xml.dist"
+            ],
+            [
+                "dev/tests/api-functional/testsuite/Magento",
+                "dev/tests/api-functional/testsuite/Magento"
+            ],
+            [
+                "dev/tests/error_handler.php",
+                "dev/tests/error_handler.php"
+            ],
+            [
+                "dev/tests/integration/.gitignore",
+                "dev/tests/integration/.gitignore"
+            ],
+            [
+                "dev/tests/integration/_files",
+                "dev/tests/integration/_files"
+            ],
+            [
+                "dev/tests/integration/bin",
+                "dev/tests/integration/bin"
+            ],
+            [
+                "dev/tests/integration/etc",
+                "dev/tests/integration/etc"
+            ],
+            [
+                "dev/tests/integration/framework",
+                "dev/tests/integration/framework"
+            ],
+            [
+                "dev/tests/integration/isolate.txt",
+                "dev/tests/integration/isolate.txt"
+            ],
+            [
+                "dev/tests/integration/phpunit.xml.dist",
+                "dev/tests/integration/phpunit.xml.dist"
+            ],
+            [
+                "dev/tests/integration/testsuite/Magento",
+                "dev/tests/integration/testsuite/Magento"
+            ],
+            [
+                "dev/tests/integration/tmp",
+                "dev/tests/integration/tmp"
+            ],
+            [
+                "dev/tests/js",
+                "dev/tests/js"
+            ],
+            [
+                "dev/tests/setup-integration",
+                "dev/tests/setup-integration"
+            ],
+            [
+                "dev/tests/static/.gitignore",
+                "dev/tests/static/.gitignore"
+            ],
+            [
+                "dev/tests/static/framework",
+                "dev/tests/static/framework"
+            ],
+            [
+                "dev/tests/static/get_github_changes.php",
+                "dev/tests/static/get_github_changes.php"
+            ],
+            [
+                "dev/tests/static/phpunit-all.xml.dist",
+                "dev/tests/static/phpunit-all.xml.dist"
+            ],
+            [
+                "dev/tests/static/phpunit.xml.dist",
+                "dev/tests/static/phpunit.xml.dist"
+            ],
+            [
+                "dev/tests/static/testsuite/Magento",
+                "dev/tests/static/testsuite/Magento"
+            ],
+            [
+                "dev/tests/static/tmp",
+                "dev/tests/static/tmp"
+            ],
+            [
+                "dev/tests/unit/.gitignore",
+                "dev/tests/unit/.gitignore"
+            ],
+            [
+                "dev/tests/unit/framework",
+                "dev/tests/unit/framework"
+            ],
+            [
+                "dev/tests/unit/phpunit.xml.dist",
+                "dev/tests/unit/phpunit.xml.dist"
+            ],
+            [
+                "dev/tests/unit/tmp",
+                "dev/tests/unit/tmp"
+            ],
+            [
+                "dev/tests/utils",
+                "dev/tests/utils"
+            ],
+            [
+                "dev/tools",
+                "dev/tools"
+            ],
+            [
+                "generated",
+                "generated"
+            ],
+            [
+                "grunt-config.json.sample",
+                "grunt-config.json.sample"
+            ],
+            [
+                "lib/.htaccess",
+                "lib/.htaccess"
+            ],
+            [
+                "lib/internal/GnuFreeFont",
+                "lib/internal/GnuFreeFont"
+            ],
+            [
+                "lib/internal/LinLibertineFont",
+                "lib/internal/LinLibertineFont"
+            ],
+            [
+                "lib/web/blank.html",
+                "lib/web/blank.html"
+            ],
+            [
+                "lib/web/chartjs",
+                "lib/web/chartjs"
+            ],
+            [
+                "lib/web/css",
+                "lib/web/css"
+            ],
+            [
+                "lib/web/extjs",
+                "lib/web/extjs"
+            ],
+            [
+                "lib/web/fonts",
+                "lib/web/fonts"
+            ],
+            [
+                "lib/web/fotorama",
+                "lib/web/fotorama"
+            ],
+            [
+                "lib/web/i18n",
+                "lib/web/i18n"
+            ],
+            [
+                "lib/web/images",
+                "lib/web/images"
+            ],
+            [
+                "lib/web/jquery",
+                "lib/web/jquery"
+            ],
+            [
+                "lib/web/jquery.js",
+                "lib/web/jquery.js"
+            ],
+            [
+                "lib/web/knockoutjs",
+                "lib/web/knockoutjs"
+            ],
+            [
+                "lib/web/legacy-build.min.js",
+                "lib/web/legacy-build.min.js"
+            ],
+            [
+                "lib/web/less",
+                "lib/web/less"
+            ],
+            [
+                "lib/web/lib",
+                "lib/web/lib"
+            ],
+            [
+                "lib/web/mage",
+                "lib/web/mage"
+            ],
+            [
+                "lib/web/magnifier",
+                "lib/web/magnifier"
+            ],
+            [
+                "lib/web/matchMedia.js",
+                "lib/web/matchMedia.js"
+            ],
+            [
+                "lib/web/moment-timezone-with-data.js",
+                "lib/web/moment-timezone-with-data.js"
+            ],
+            [
+                "lib/web/moment.js",
+                "lib/web/moment.js"
+            ],
+            [
+                "lib/web/prototype",
+                "lib/web/prototype"
+            ],
+            [
+                "lib/web/requirejs",
+                "lib/web/requirejs"
+            ],
+            [
+                "lib/web/scriptaculous",
+                "lib/web/scriptaculous"
+            ],
+            [
+                "lib/web/spacer.gif",
+                "lib/web/spacer.gif"
+            ],
+            [
+                "lib/web/tiny_mce_5",
+                "lib/web/tiny_mce_5"
+            ],
+            [
+                "lib/web/underscore.js",
+                "lib/web/underscore.js"
+            ],
+            [
+                "lib/web/varien",
+                "lib/web/varien"
+            ],
+            [
+                "nginx.conf.sample",
+                "nginx.conf.sample"
+            ],
+            [
+                "package.json.sample",
+                "package.json.sample"
+            ],
+            [
+                "phpserver",
+                "phpserver"
+            ],
+            [
+                "pub/.htaccess",
+                "pub/.htaccess"
+            ],
+            [
+                "pub/.user.ini",
+                "pub/.user.ini"
+            ],
+            [
+                "pub/cron.php",
+                "pub/cron.php"
+            ],
+            [
+                "pub/errors",
+                "pub/errors"
+            ],
+            [
+                "pub/get.php",
+                "pub/get.php"
+            ],
+            [
+                "pub/health_check.php",
+                "pub/health_check.php"
+            ],
+            [
+                "pub/index.php",
+                "pub/index.php"
+            ],
+            [
+                "pub/media/.htaccess",
+                "pub/media/.htaccess"
+            ],
+            [
+                "pub/media/custom_options",
+                "pub/media/custom_options"
+            ],
+            [
+                "pub/media/customer/.htaccess",
+                "pub/media/customer/.htaccess"
+            ],
+            [
+                "pub/media/customer_address",
+                "pub/media/customer_address"
+            ],
+            [
+                "pub/media/downloadable/.htaccess",
+                "pub/media/downloadable/.htaccess"
+            ],
+            [
+                "pub/media/import",
+                "pub/media/import"
+            ],
+            [
+                "pub/media/sitemap",
+                "pub/media/sitemap"
+            ],
+            [
+                "pub/media/theme_customization/.htaccess",
+                "pub/media/theme_customization/.htaccess"
+            ],
+            [
+                "pub/opt",
+                "pub/opt"
+            ],
+            [
+                "pub/static/.htaccess",
+                "pub/static/.htaccess"
+            ],
+            [
+                "pub/static.php",
+                "pub/static.php"
+            ],
+            [
+                "setup",
+                "setup"
+            ],
+            [
+                "var/.htaccess",
+                "var/.htaccess"
+            ],
+            [
+                "vendor/.htaccess",
+                "vendor/.htaccess"
+            ]
+        ]
+    }
+}
+

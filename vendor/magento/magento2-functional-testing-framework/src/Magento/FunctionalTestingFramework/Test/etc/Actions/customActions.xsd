@@ -1,0 +1,387 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ /**
+  * Copyright © Magento, Inc. All rights reserved.
+  * See COPYING.txt for license details.
+  */
+-->
+<xs:schema elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+    <xs:include schemaLocation="commonAttributes.xsd"/>
+
+    <xs:group name="customTags">
+        <xs:choice>
+            <xs:element name="helper" type="helperType" minOccurs="0" maxOccurs="unbounded" />
+            <xs:element type="magentoCLIType" name="magentoCLI" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element type="magentoCronType" name="magentoCron" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element type="closeAdminNotificationType" name="closeAdminNotification" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element type="searchAndMultiSelectOptionType" name="searchAndMultiSelectOption" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element type="selectMultipleOptionsType" name="selectMultipleOptions" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element type="formatCurrencyType" name="formatCurrency" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element type="parseFloatType" name="parseFloat" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element type="mSetLocaleType" name="mSetLocale" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element type="mResetLocaleType" name="mResetLocale" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element type="scrollToTopOfPageType" name="scrollToTopOfPage" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element type="clearFieldType" name="clearField" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element type="assertArrayIsSortedType" name="assertArrayIsSorted" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element type="generateDateType" name="generateDate" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element type="getOTPType" name="getOTP" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:choice>
+    </xs:group>
+
+    <xs:group name="returnTags">
+        <xs:choice>
+            <xs:element type="returnType" name="return" minOccurs="0" maxOccurs="1"/>
+        </xs:choice>
+    </xs:group>
+
+    <!-- Complex Types -->
+
+    <xs:complexType name="helperType">
+        <xs:sequence>
+            <xs:element name="argument" type="argumentType" minOccurs="0" maxOccurs="unbounded" />
+        </xs:sequence>
+        <xs:attribute type="xs:string" name="class" use="required" />
+        <xs:attribute type="xs:string" name="method" use="required" />
+        <xs:attributeGroup ref="commonActionAttributes"/>
+    </xs:complexType>
+
+    <xs:complexType name="argumentType" mixed="true">
+        <xs:attribute name="name" use="required">
+            <xs:simpleType>
+                <xs:restriction base="xs:string">
+                    <xs:pattern value="[^cm].*|c(.{0,3}|[^l].*|l[^a].*|la[^s].*|las[^s].*|lass.+)|m(.{0,4}|[^e].*|e[^t].*|et[^h].*|eth[^o].*|etho[^d].*|ethod.+)" />
+                </xs:restriction>
+            </xs:simpleType>
+        </xs:attribute>
+    </xs:complexType>
+
+    <xs:complexType name="magentoCLIType">
+        <xs:annotation>
+            <xs:documentation>
+                Executes given command against Magento CLI in test Magento instance.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:simpleContent>
+            <xs:extension base="xs:string">
+                <xs:attribute type="xs:string" name="command">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Magento CLI command to be executed. Can be given options just like normal CLI interaction.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute type="xs:string" name="arguments">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Arguments for Magento CLI command, will not be escaped.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute type="xs:string" name="timeout">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Idle timeout in seconds, defaulted to 60s when not specified.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attributeGroup ref="commonActionAttributes"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+
+    <xs:complexType name="magentoCronType">
+        <xs:annotation>
+            <xs:documentation>
+                Executes Magento Cron Jobs (selected groups)
+            </xs:documentation>
+        </xs:annotation>
+        <xs:simpleContent>
+            <xs:extension base="xs:string">
+                <xs:attribute type="xs:string" name="groups">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Cron groups to be executed (separated by space)
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute type="xs:string" name="arguments">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Arguments for Magento CLI command, will not be escaped.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute type="xs:string" name="timeout">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Idle timeout in seconds, defaulted to 60s when not specified.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attributeGroup ref="commonActionAttributes"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+
+    <xs:complexType name="closeAdminNotificationType">
+        <xs:annotation>
+            <xs:documentation>
+                Closes Admin Notification prompt.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:simpleContent>
+            <xs:extension base="xs:string">
+                <xs:attributeGroup ref="commonActionAttributes"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+
+    <xs:complexType name="searchAndMultiSelectOptionType">
+        <xs:annotation>
+            <xs:documentation>
+                Searches and Selects all given options in given Magento dropdown element.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:simpleContent>
+            <xs:extension base="xs:string">
+                <xs:attribute ref="selector" use="required"/>
+                <xs:attribute ref="parameterArray" use="required"/>
+                <xs:attribute type="xs:boolean" name="requiredAction">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Determines if Multi Select needs to click "Done" after selections.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attributeGroup ref="commonActionAttributes"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+
+    <xs:complexType name="selectMultipleOptionsType">
+        <xs:annotation>
+            <xs:documentation>
+                Selects all given options in given Magento dropdown element.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:choice maxOccurs="unbounded">
+            <xs:element name="array" type="xs:string" minOccurs="0"/>
+        </xs:choice>
+        <xs:attribute type="xs:string" name="filterSelector" use="required">
+            <xs:annotation>
+                <xs:documentation>
+                    The selector for the text filter field.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute type="xs:string" name="optionSelector" use="required">
+            <xs:annotation>
+                <xs:documentation>
+                    The selector used to select the corresponding options based on the filter field.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attributeGroup ref="commonActionAttributes"/>
+    </xs:complexType>
+
+    <xs:complexType name="formatCurrencyType">
+        <xs:annotation>
+            <xs:documentation>
+                Format input to specified currency according to the locale specified. Returns formatted string for test use.
+                Use NumberFormatter::formatCurrency(), see https://www.php.net/manual/en/numberformatter.formatcurrency.php
+            </xs:documentation>
+        </xs:annotation>
+        <xs:attribute type="xs:string" name="userInput" use="required"/>
+        <xs:attribute type="xs:string" name="locale" use="required">
+            <xs:annotation>
+                <xs:documentation>
+                    Locale in which the input would be formatted (e.g. en_US).
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute type="xs:string" name="currency" use="required">
+            <xs:annotation>
+                <xs:documentation>
+                    The 3-letter ISO 4217 currency code indicating the currency to use.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attributeGroup ref="commonActionAttributes"/>
+    </xs:complexType>
+
+    <xs:complexType name="parseFloatType">
+        <xs:annotation>
+            <xs:documentation>
+                Parses given float number with thousands_sep. Returns float for test use.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:simpleContent>
+            <xs:extension base="xs:string">
+                <xs:attribute ref="userInput"/>
+                <xs:attributeGroup ref="commonActionAttributes"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+
+    <xs:complexType name="mSetLocaleType">
+        <xs:annotation>
+            <xs:documentation>
+                Sets locale according to given locale and input.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:simpleContent>
+            <xs:extension base="xs:string">
+                <xs:attribute ref="userInput"/>
+                <xs:attribute type="xs:string" name="locale" use="required">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Locale to set. Ex. 'en_US.UTF-8'
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attributeGroup ref="commonActionAttributes"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+
+    <xs:complexType name="mResetLocaleType">
+        <xs:simpleContent>
+            <xs:extension base="xs:string">
+                <xs:attributeGroup ref="commonActionAttributes"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+
+    <xs:complexType name="scrollToTopOfPageType">
+        <xs:annotation>
+            <xs:documentation>
+                Scrolls browser to the very top of the page.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:simpleContent>
+            <xs:extension base="xs:string">
+                <xs:attributeGroup ref="commonActionAttributes"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+
+    <xs:complexType name="clearFieldType">
+        <xs:annotation>
+            <xs:documentation>
+                Clears all input on given element.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:simpleContent>
+            <xs:extension base="xs:string">
+                <xs:attribute ref="selector" use="required"/>
+                <xs:attributeGroup ref="commonActionAttributes"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+
+    <xs:complexType name="assertArrayIsSortedType">
+        <xs:annotation>
+            <xs:documentation>
+                Asserts that array is sorted according to sort direction.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="array" type="arrayType"/>
+        </xs:sequence>
+        <xs:attribute name="sortOrder" type="sortEnum" use="required"/>
+        <xs:attributeGroup ref="commonActionAttributes"/>
+    </xs:complexType>
+
+    <xs:complexType name="generateDateType">
+        <xs:annotation>
+            <xs:documentation>
+                Generates a date according to input and format.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:simpleContent>
+            <xs:extension base="xs:string">
+                <xs:attribute name="date" use="required" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Date input to parse, uses same functionality as php strtotime() function.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="format" use="required" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Format to save given date in, uses same functionality as php date() function.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="timezone" use="optional" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Timezone to generate date in, defaults to "America/Los_Angeles".
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attributeGroup ref="commonActionAttributes"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+
+    <xs:complexType name="getOTPType">
+        <xs:annotation>
+            <xs:documentation>
+                Generates TOTP by a shared secret. Use https://github.com/Spomky-Labs/otphp
+            </xs:documentation>
+        </xs:annotation>
+        <xs:simpleContent>
+            <xs:extension base="xs:string">
+                <xs:attribute ref="userInput"/>
+                <xs:attributeGroup ref="commonActionAttributes"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+
+    <xs:complexType name="arrayType">
+        <xs:simpleContent>
+            <xs:extension base="xs:string">
+                <xs:annotation>
+                    <xs:documentation>
+                        Array to be asserted for proper sorting. Must be in parameterArray format (ex. [1,2,3,4,5] or [alpha, brontosaurus, zebra]).
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+
+    <xs:complexType name="returnType">
+        <xs:annotation>
+            <xs:documentation>
+                Used in an action group to return a value. Must be used only once in action group. Do not use in tests or suites.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:simpleContent>
+            <xs:extension base="xs:string">
+                <xs:attribute name="value" use="required" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Value or variable to be returned.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attributeGroup ref="commonActionAttributes"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+
+    <xs:simpleType name="sortEnum" final="restriction">
+        <xs:annotation>
+            <xs:documentation>
+                Sort direction.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="asc"/>
+            <xs:enumeration value="desc"/>
+        </xs:restriction>
+    </xs:simpleType>
+</xs:schema>

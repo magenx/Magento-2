@@ -1,0 +1,27 @@
+{{#actions}}
+{{#webDriverInit}}
+if ($this->webDriver->webDriver != null) {
+    $this->webDriver->_restart();
+} else {
+    $this->webDriver->_initializeSession();
+}
+{{/webDriverInit}}
+{{#action}}
+{{{action}}}
+{{/action}}
+{{#createData}}
+PersistedObjectHandler::getInstance()->createEntity(
+    "{{stepKey}}",
+    "suite",
+    "{{entityName}}",
+    [{{#requiredEntities}}"{{entityName}}"{{^last}}, {{/last}}{{/requiredEntities}}]{{#customFields}},
+    ${{customFields}}{{/customFields}}
+);
+{{/createData}}
+{{#deleteData}}
+PersistedObjectHandler::getInstance()->deleteEntity(
+	"{{entityName}}",
+    "suite"
+);
+{{/deleteData}}
+{{/actions}}

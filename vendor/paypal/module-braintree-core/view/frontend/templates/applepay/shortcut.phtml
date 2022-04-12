@@ -1,0 +1,35 @@
+<?php
+/**
+ * Copyright © 2016 Magento. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+
+/** @var \PayPal\Braintree\Block\ApplePay\Shortcut\Button $block */
+try {
+    $id = sprintf('%s%s', $block->getContainerId(), random_int(PHP_INT_MIN, PHP_INT_MAX));
+} catch (Exception $e) {
+    /**
+     * Exception only thrown if an appropriate source of randomness cannot be found.
+     * https://www.php.net/manual/en/function.random-int.php
+     */
+    $id = 0;
+}
+
+$config = [
+    'PayPal_Braintree/js/applepay/implementations/shortcut' => [
+        'id' => $id,
+        'clientToken' => $block->getClientToken(),
+        'quoteId' => $block->getQuoteId(),
+        'displayName' => $block->getMerchantName(),
+        'actionSuccess' => $block->getActionSuccess(),
+        'grandTotalAmount' => $block->getAmount(),
+        'isLoggedIn' => $block->isCustomerLoggedIn(),
+        'storeCode' => $block->getStorecode()
+    ]
+];
+
+?>
+<div id="<?= $block->escapeHtmlAttr($id) ?>"
+     data-mage-init="<?= $block->escapeHtmlAttr(json_encode($config)) ?>"
+     class="braintree-applepay-minicart <?= $block->escapeHtmlAttr($block->getExtraClassname()) ?>">
+</div>

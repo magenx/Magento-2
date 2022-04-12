@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ /**
+  * Copyright © Magento, Inc. All rights reserved.
+  * See COPYING.txt for license details.
+  */
+-->
+
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <xs:redefine schemaLocation="mergedPageObject.xsd">
+        <xs:complexType name="PageType">
+            <xs:sequence>
+                <xs:element ref="page" maxOccurs="1" minOccurs="1">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Contains sequence of ui sections in a page.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:element>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:redefine>
+</xs:schema>

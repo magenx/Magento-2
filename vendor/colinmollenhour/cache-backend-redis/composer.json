@@ -1,0 +1,20 @@
+{
+    "name":"colinmollenhour/cache-backend-redis",
+    "type":"magento-module",
+    "license":"BSD-3-Clause",
+    "homepage":"https://github.com/colinmollenhour/Cm_Cache_Backend_Redis",
+    "description":"Zend_Cache backend using Redis with full support for tags.",
+    "authors":[
+        {
+            "name":"Colin Mollenhour"
+        }
+    ],
+    "require":{
+        "colinmollenhour/credis": "*"
+    },
+    "autoload": {
+        "classmap": [
+            "Cm/Cache/Backend/Redis.php"
+        ]
+    }
+}

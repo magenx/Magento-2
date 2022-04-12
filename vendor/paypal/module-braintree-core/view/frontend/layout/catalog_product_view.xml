@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceContainer name="product.info.main">
+            <block class="PayPal\Braintree\Block\Credit\Calculator\Product\View" name="braintree.credit" template="PayPal_Braintree::credit/product/view.phtml" before="product.info" />
+        </referenceContainer>
+
+        <referenceBlock name="product.info.addtocart">
+            <!-- Simple Product -->
+            <block name="product.info.addtocart.paypalButton"
+                   class="PayPal\Braintree\Block\Paypal\ProductPage"
+                   template="PayPal_Braintree::paypal/product_page.phtml" before="-" />
+        </referenceBlock>
+
+        <!-- Configurable Products -->
+        <referenceBlock name="product.info.addtocart.additional">
+            <block name="product.info.addtocart.additional.paypalButton" class="PayPal\Braintree\Block\Paypal\ProductPage" template="PayPal_Braintree::paypal/product_page.phtml" before="-" />
+        </referenceBlock>
+    </body>
+</page>

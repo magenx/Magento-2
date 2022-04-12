@@ -1,0 +1,53 @@
+<?php
+namespace Magento\AcceptanceTest\_default\Backend;
+
+use Magento\FunctionalTestingFramework\AcceptanceTester;
+use \Codeception\Util\Locator;
+use Yandex\Allure\Adapter\Annotation\Features;
+use Yandex\Allure\Adapter\Annotation\Stories;
+use Yandex\Allure\Adapter\Annotation\Title;
+use Yandex\Allure\Adapter\Annotation\Description;
+use Yandex\Allure\Adapter\Annotation\Parameter;
+use Yandex\Allure\Adapter\Annotation\Severity;
+use Yandex\Allure\Adapter\Model\SeverityLevel;
+use Yandex\Allure\Adapter\Annotation\TestCaseId;
+
+/**
+ * @Title("[NO TESTCASEID]: ChildExtendedTestNoParent")
+ * @group Child
+ * @Description("<h3>Test files</h3>verification/TestModule/Test/ExtendedFunctionalTest/ChildExtendedTestNoParent.xml<br>")
+ * @group skip
+ */
+class ChildExtendedTestNoParentCest
+{
+	/**
+	 * @var bool
+	 */
+	private $isSuccess = false;
+
+	/**
+	  * @param AcceptanceTester $I
+	  * @throws \Exception
+	  */
+	public function _after(AcceptanceTester $I)
+	{
+		if ($this->isSuccess) {
+			unlink(__FILE__);
+		}
+	}
+
+	/**
+	 * @Severity(level = SeverityLevel::CRITICAL)
+	 * @Features({"TestModule"})
+	 * @Stories({"Child"})
+	 * @Parameter(name = "AcceptanceTester", value="$I")
+	 * @param AcceptanceTester $I
+	 * @return void
+	 * @throws \Exception
+	 */
+	public function ChildExtendedTestNoParent(AcceptanceTester $I, \Codeception\Scenario $scenario)
+	{
+		unlink(__FILE__);
+		$scenario->skip("This test is skipped due to the following issues:No issues have been specified.");
+	}
+}

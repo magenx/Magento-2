@@ -1,0 +1,35 @@
+<?php
+/** @var $block \PayPal\Braintree\Block\Credit\Calculator\Listing\Product */
+
+$scopeId = sprintf('ppcreditsummary-product-%d%d', $block->getProduct()->getId(), random_int(PHP_INT_MIN, PHP_INT_MAX));
+$priceData = $block->getPriceData();
+if (!$priceData) {
+    return;
+}
+?>
+<div data-bind="scope: '<?= $block->escapeHtmlAttr($scopeId) ?>'"><!-- ko template: getTemplate() --><!-- /ko --></div>
+<script type="text/x-magento-init">
+    {
+        "*": {
+            "Magento_Ui/js/core/app":{
+                "components": {
+                    "<?= $block->escapeHtml($scopeId) ?>": {
+                        "component": "PayPal_Braintree/js/paypal/credit/calculator",
+                        "template": "PayPal_Braintree/credit/calculator",
+                        "displaySummary": true,
+                        "merchantName": "<?= $block->escapeJs($block->getMerchantName()) ?>",
+                        "instalments": [
+                            {
+                                "term": <?= $block->escapeJs($priceData->getTerm()) ?>,
+                                "monthlyPayment": <?= $block->escapeJs($priceData->getMonthlyPayment()) ?>,
+                                "apr": <?= $block->escapeJs($priceData->getInstalmentRate()) ?>,
+                                "cost": <?= $block->escapeJs($priceData->getCostOfPurchase()) ?>,
+                                "costIncInterest": <?= $block->escapeJs($priceData->getTotalIncInterest()) ?>
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    }
+</script>

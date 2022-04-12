@@ -1,0 +1,106 @@
+<?php
+// @codingStandardsIgnoreFile
+use PayPal\Braintree\Block\Paypal\ProductPage;
+
+/** @var ProductPage $block */
+try {
+    $paypalId = sprintf('paypal-%s-%d', $block->getContainerId(), random_int(PHP_INT_MIN, PHP_INT_MAX));
+    $paypalCreditId = sprintf('paypalcredit-%s-%d', $block->getContainerId(), random_int(PHP_INT_MIN, PHP_INT_MAX));
+    $paypalPaylaterId = sprintf('paypalpaylater-%s-%d', $block->getContainerId(), random_int(PHP_INT_MIN, PHP_INT_MAX));
+
+} catch (Exception $e) {
+    /**
+     * Exception only thrown if an appropriate source of randomness cannot be found.
+     * https://www.php.net/manual/en/function.random-int.php
+     */
+    $paypalId = sprintf('paypal-%s', $block->getContainerId());
+    $paypalCreditId = sprintf('paypalcredit-%s', $block->getContainerId());
+    $paypalPaylaterId = sprintf('paypalpaylater-%s', $block->getContainerId());
+}
+
+?>
+<?php if ($block->getAmount() > 0): ?>
+    <script>
+        require([
+            'PayPal_Braintree/js/paypal/button',
+            'jquery'
+        ], function (button, $) {
+            $(function () {
+                button.init(
+                    '<?= $block->getClientToken() ?>',
+                    '<?= $block->escapeHtmlAttr($block->getCurrency()) ?>',
+                    '<?= $block->escapeHtmlAttr($block->getEnvironment()) ?>',
+                    '<?= $block->escapeHtmlAttr($block->getMerchantCountry()) ?>'
+                );
+            })
+        })
+    </script>
+
+    <div class="paypal checkout paypal-logo braintree-paypal-logo <?= $block->escapeHtmlAttr($block->getContainerId()) ?>-container">
+        <div data-currency="<?= $block->escapeHtmlAttr($block->getCurrency()) ?>"
+             data-locale="<?= $block->escapeHtmlAttr($block->getLocale()) ?>"
+             data-amount="<?= $block->escapeHtmlAttr($block->getAmount()) ?>"
+             id="<?= $block->escapeHtmlAttr($paypalId) ?>"
+             data-environment="<?= $block->getEnvironment() ?>"
+             data-displayname="<?= $block->getMerchantName() ?>"
+             data-actionsuccess="<?= $block->getActionSuccess() ?>"
+             data-funding="paypal"
+             data-fundingicons="true"
+             data-shape="<?= $block->getButtonShape() ?>"
+             data-size="<?= $block->getButtonSize() ?>"
+             data-color="<?= $block->getButtonColor() ?>"
+             data-location="<?= $block->getLocation() ?>"
+             data-requiredbillingaddress="<?= $block->isRequiredBillingAddress() ?>"
+             class="action-braintree-paypal-logo"></div>
+    </div>
+
+    <?php if ($block->isCreditActive()): ?>
+        <div class="paypal checkout paypal-logo braintree-paypal-logo <?= $block->escapeHtmlAttr($block->getContainerId()) ?>-container">
+            <div data-currency="<?= $block->escapeHtmlAttr($block->getCurrency()) ?>"
+                 data-locale="<?= $block->escapeHtmlAttr($block->getLocale()) ?>"
+                 data-amount="<?= $block->escapeHtmlAttr($block->getAmount()) ?>"
+                 id="<?= $block->escapeHtmlAttr($paypalCreditId) ?>"
+                 data-environment="<?= $block->getEnvironment() ?>"
+                 data-displayname="<?= $block->getMerchantName() ?>"
+                 data-actionsuccess="<?= $block->getActionSuccess() ?>"
+                 data-funding="credit"
+                 data-fundingicons="true"
+                 data-shape="<?= $block->getButtonShape() ?>"
+                 data-size="<?= $block->getButtonSize() ?>"
+                 data-color="darkblue"
+                 data-location="<?= $block->getLocation() ?>"
+                 data-requiredbillingaddress="<?= $block->isRequiredBillingAddress() ?>"
+                 class="action-braintree-paypal-logo"></div>
+        </div>
+    <?php endif; ?>
+    <?php if ($block->isPayLaterActive()): ?>
+        <?php if ($block->isPayLaterButtonActive('productpage')):?>
+            <div class="paypal checkout paypal-logo braintree-paypal-logo <?= $block->escapeHtmlAttr($block->getContainerId()) ?>-container">
+                <div data-currency="<?= $block->escapeHtmlAttr($block->getCurrency()) ?>"
+                     data-locale="<?= $block->escapeHtmlAttr($block->getLocale()) ?>"
+                     data-amount="<?= $block->escapeHtmlAttr($block->getAmount()) ?>"
+                     id="<?= $block->escapeHtmlAttr($paypalPaylaterId) ?>"
+                     data-environment="<?= $block->getEnvironment() ?>"
+                     data-displayname="<?= $block->getMerchantName() ?>"
+                     data-actionsuccess="<?= $block->getActionSuccess() ?>"
+                     data-funding="paylater"
+                     data-fundingicons="true"
+                     data-shape="<?= $block->getButtonShape() ?>"
+                     data-size="<?= $block->getButtonSize() ?>"
+                     data-color="white"
+                     data-location="<?= $block->getLocation() ?>"
+                     data-requiredbillingaddress="<?= $block->isRequiredBillingAddress() ?>"
+                     class="action-braintree-paypal-logo"></div>
+            </div>
+        <?php endif; ?>
+    <?php endif; ?>
+    <?php if ($block->isPayLaterMessageActive('productpage') && !$block->isPayPalVaultActive()): ?>
+        <div class="action-braintree-paypal-message"
+             id="<?= $block->escapeHtmlAttr($paypalPaylaterId) ?>-message"
+             data-pp-amount="<?= $block->escapeHtmlAttr($block->getAmount()) ?>"
+             data-pp-type="product"
+             data-currency-symbol="<?= $block->getCurrencySymbol(); ?>"
+        ></div>
+    <?php endif; ?>
+<?php endif; ?>
+

@@ -1,0 +1,226 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © 2013-2017 Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
+    <default>
+        <payment>
+            <braintree>
+                <model>BraintreeFacade</model>
+                <title>Credit Card</title>
+                <payment_action>authorize</payment_action>
+                <active>0</active>
+                <is_gateway>1</is_gateway>
+                <can_use_checkout>1</can_use_checkout>
+                <can_authorize>1</can_authorize>
+                <can_capture>1</can_capture>
+                <can_capture_partial>1</can_capture_partial>
+                <can_authorize_vault>1</can_authorize_vault>
+                <can_capture_vault>1</can_capture_vault>
+                <can_use_internal>1</can_use_internal>
+                <can_refund_partial_per_invoice>1</can_refund_partial_per_invoice>
+                <can_refund>1</can_refund>
+                <can_void>1</can_void>
+                <can_cancel>1</can_cancel>
+                <can_edit>1</can_edit>
+                <can_review_payment>1</can_review_payment>
+                <can_deny_payment>1</can_deny_payment>
+                <cctypes>AE,VI,MC,DI,JCB,DN,MI</cctypes>
+                <useccv>1</useccv>
+                <cctypes_braintree_mapper><![CDATA[{"american-express":"AE","discover":"DI","jcb":"JCB","mastercard":"MC","master-card":"MC","visa":"VI","maestro":"MI","uk-maestro":"MI","diners-club":"DN"}]]></cctypes_braintree_mapper>
+                <order_status>processing</order_status>
+                <environment>sandbox</environment>
+                <allowspecific>0</allowspecific>
+                <public_key backend_model="Magento\Config\Model\Config\Backend\Encrypted" />
+                <private_key backend_model="Magento\Config\Model\Config\Backend\Encrypted" />
+                <sandbox_public_key backend_model="Magento\Config\Model\Config\Backend\Encrypted" />
+                <sandbox_private_key backend_model="Magento\Config\Model\Config\Backend\Encrypted" />
+                <masked_fields>cvv,number</masked_fields>
+                <privateInfoKeys>avsPostalCodeResponseCode,avsStreetAddressResponseCode,cvvResponseCode,processorAuthorizationCode,processorResponseCode,processorResponseText,liabilityShifted,liabilityShiftPossible,eciFlag,riskDataId,riskDataDecision,transactionSource</privateInfoKeys>
+                <paymentInfoKeys>cc_type,cc_number,avsPostalCodeResponseCode,avsStreetAddressResponseCode,cvvResponseCode,processorAuthorizationCode,processorResponseCode,processorResponseText,liabilityShifted,liabilityShiftPossible,eciFlag,riskDataId,riskDataDecision,transactionSource</paymentInfoKeys>
+                <kount_allowed_ips>208.75.112.0/22,209.81.12.0/24</kount_allowed_ips>
+                <group>braintree_group</group>
+            </braintree>
+            <braintree_paypal>
+                <model>BraintreePayPalFacade</model>
+                <title>PayPal</title>
+                <active>0</active>
+                <payment_action>authorize</payment_action>
+                <allowspecific>0</allowspecific>
+                <require_billing_address>0</require_billing_address>
+                <allow_shipping_address_override>1</allow_shipping_address_override>
+                <display_on_shopping_cart>1</display_on_shopping_cart>
+                <order_status>processing</order_status>
+                <is_gateway>1</is_gateway>
+                <can_use_checkout>1</can_use_checkout>
+                <can_authorize>1</can_authorize>
+                <can_capture>1</can_capture>
+                <can_capture_partial>1</can_capture_partial>
+                <can_refund>1</can_refund>
+                <can_refund_partial_per_invoice>1</can_refund_partial_per_invoice>
+                <can_void>1</can_void>
+                <can_cancel>1</can_cancel><can_authorize_vault>1</can_authorize_vault>
+                <can_capture_vault>1</can_capture_vault>
+                <privateInfoKeys>processorResponseCode,processorResponseText,paymentId</privateInfoKeys>
+                <paymentInfoKeys>processorResponseCode,processorResponseText,paymentId,payerEmail</paymentInfoKeys>
+                <sort_order>2</sort_order>
+                <disabled_funding_checkout></disabled_funding_checkout>
+                <disabled_funding_cart></disabled_funding_cart>
+                <button_productpage_enable>1</button_productpage_enable>
+                <button_paylater_productpage_enable>1</button_paylater_productpage_enable>
+                <button_paylater_checkout_enable>1</button_paylater_checkout_enable>
+                <message_productpage_enable>1</message_productpage_enable>
+                <message_checkout_enable>1</message_checkout_enable>
+                <button_cart_enabled>1</button_cart_enabled>
+                <message_cart_enabled>1</message_cart_enabled>
+
+                <!-- These are also defined in Gateway/Config/PayPal/Config.php::getButtonStyle() -->
+                <button_customise_cart>0</button_customise_cart>
+                <button_color_cart>2</button_color_cart>
+                <button_size_cart>2</button_size_cart>
+                <button_shape_cart>1</button_shape_cart>
+                <button_customise_checkout>0</button_customise_checkout>
+                <button_color_checkout>2</button_color_checkout>
+                <button_size_checkout>2</button_size_checkout>
+                <button_shape_checkout>1</button_shape_checkout>
+                <button_customise_productpage>0</button_customise_productpage>
+                <button_color_productpage>2</button_color_productpage>
+                <button_size_productpage>2</button_size_productpage>
+                <button_shape_productpage>1</button_shape_productpage>
+                <group>braintree_group</group>
+            </braintree_paypal>
+            <braintree_cc_vault>
+                <model>BraintreeCreditCardVaultFacade</model>
+                <title>Stored Cards</title>
+                <instant_purchase>
+                    <available>PayPal\Braintree\Model\InstantPurchase\CreditCard\AvailabilityChecker</available>
+                    <tokenFormat>PayPal\Braintree\Model\InstantPurchase\CreditCard\TokenFormatter</tokenFormat>
+                    <additionalInformation>PayPal\Braintree\Model\InstantPurchase\PaymentAdditionalInformationProvider</additionalInformation>
+                </instant_purchase>
+                <group>braintree_group</group>
+            </braintree_cc_vault>
+            <braintree_paypal_vault>
+                <model>BraintreePayPalVaultFacade</model>
+                <title>Stored Accounts (PayPal)</title>
+                <can_use_internal>1</can_use_internal>
+                <instant_purchase>
+                    <tokenFormat>PayPal\Braintree\Model\InstantPurchase\PayPal\TokenFormatter</tokenFormat>
+                    <additionalInformation>PayPal\Braintree\Model\InstantPurchase\PaymentAdditionalInformationProvider</additionalInformation>
+                </instant_purchase>
+                <group>braintree_group</group>
+            </braintree_paypal_vault>
+            <braintree_applepay>
+                <model>BraintreeApplePay</model>
+                <title>Apple Pay</title>
+                <active>0</active>
+                <payment_action>authorize</payment_action>
+                <allowspecific>0</allowspecific>
+                <require_billing_address>0</require_billing_address>
+                <allow_shipping_address_override>0</allow_shipping_address_override>
+                <display_on_shopping_cart>0</display_on_shopping_cart>
+                <order_status>processing</order_status>
+                <is_gateway>1</is_gateway>
+                <can_use_checkout>1</can_use_checkout>
+                <can_authorize>1</can_authorize>
+                <can_capture>1</can_capture>
+                <can_capture_partial>1</can_capture_partial>
+                <can_refund>1</can_refund>
+                <can_refund_partial_per_invoice>1</can_refund_partial_per_invoice>
+                <can_void>1</can_void>
+                <can_cancel>1</can_cancel>
+                <privateInfoKeys>processorAuthorizationCode,processorResponseCode,processorResponseText</privateInfoKeys>
+                <paymentInfoKeys>processorAuthorizationCode,processorResponseCode,processorResponseText</paymentInfoKeys>
+                <merchant_name>Store</merchant_name>
+                <group>braintree_group</group>
+            </braintree_applepay>
+            <braintree_googlepay>
+                <model>BraintreeGooglePay</model>
+                <title>Google Pay</title>
+                <active>0</active>
+                <payment_action>authorize</payment_action>
+                <allowspecific>0</allowspecific>
+                <require_billing_address>0</require_billing_address>
+                <allow_shipping_address_override>0</allow_shipping_address_override>
+                <display_on_shopping_cart>0</display_on_shopping_cart>
+                <order_status>processing</order_status>
+                <is_gateway>1</is_gateway>
+                <can_use_checkout>1</can_use_checkout>
+                <can_authorize>1</can_authorize>
+                <can_capture>1</can_capture>
+                <can_capture_partial>1</can_capture_partial>
+                <can_refund>1</can_refund>
+                <can_refund_partial_per_invoice>1</can_refund_partial_per_invoice>
+                <can_void>1</can_void>
+                <can_cancel>1</can_cancel>
+                <privateInfoKeys>processorAuthorizationCode,processorResponseCode,processorResponseText</privateInfoKeys>
+                <paymentInfoKeys>processorAuthorizationCode,processorResponseCode,processorResponseText</paymentInfoKeys>
+                <cctypes>VISA,MASTERCARD,AMEX</cctypes>
+                <merchant_id>testmode</merchant_id>
+                <btn_color>0</btn_color>
+                <group>braintree_group</group>
+            </braintree_googlepay>
+            <braintree_venmo>
+                <active>0</active>
+                <can_authorize>1</can_authorize>
+                <can_cancel>1</can_cancel>
+                <can_capture>1</can_capture>
+                <can_capture_partial>0</can_capture_partial>
+                <can_refund>1</can_refund>
+                <can_refund_partial_per_invoice>0</can_refund_partial_per_invoice>
+                <can_use_checkout>1</can_use_checkout>
+                <can_void>1</can_void>
+                <is_gateway>1</is_gateway>
+                <model>BraintreeVenmo</model>
+                <order_status>processing</order_status>
+                <payment_action>authorize</payment_action>
+                <title>Venmo</title>
+                <privateInfoKeys>processorAuthorizationCode,processorResponseCode,processorResponseText</privateInfoKeys>
+                <paymentInfoKeys>processorAuthorizationCode,processorResponseCode,processorResponseText</paymentInfoKeys>
+                <group>braintree_group</group>
+            </braintree_venmo>
+            <braintree_ach_direct_debit>
+                <active>0</active>
+                <can_authorize>1</can_authorize>
+                <can_cancel>1</can_cancel>
+                <can_capture>1</can_capture>
+                <can_capture_partial>0</can_capture_partial>
+                <can_refund>1</can_refund>
+                <can_refund_partial_per_invoice>0</can_refund_partial_per_invoice>
+                <can_use_checkout>1</can_use_checkout>
+                <can_void>1</can_void>
+                <is_gateway>1</is_gateway>
+                <model>BraintreeAch</model>
+                <order_status>processing</order_status>
+                <payment_action>authorize_capture</payment_action>
+                <title>ACH Direct Debit</title>
+                <privateInfoKeys>processorAuthorizationCode,processorResponseCode,processorResponseText</privateInfoKeys>
+                <paymentInfoKeys>processorAuthorizationCode,processorResponseCode,processorResponseText</paymentInfoKeys>
+                <group>braintree_group</group>
+            </braintree_ach_direct_debit>
+            <braintree_local_payment>
+                <active>0</active>
+                <can_authorize>1</can_authorize>
+                <can_cancel>1</can_cancel>
+                <can_capture>1</can_capture>
+                <can_capture_partial>0</can_capture_partial>
+                <can_refund>1</can_refund>
+                <can_refund_partial_per_invoice>0</can_refund_partial_per_invoice>
+                <can_use_checkout>1</can_use_checkout>
+                <can_void>1</can_void>
+                <is_gateway>1</is_gateway>
+                <model>BraintreeLpm</model>
+                <order_status>processing</order_status>
+                <payment_action>authorize_capture</payment_action>
+                <paymentInfoKeys>processorAuthorizationCode,processorResponseCode,processorResponseText</paymentInfoKeys>
+                <privateInfoKeys>processorAuthorizationCode,processorResponseCode,processorResponseText</privateInfoKeys>
+                <title>Local Payments</title>
+                <allowed_methods>bancontact,eps,giropay,ideal,sofort,mybank,p24,sepa</allowed_methods>
+                <group>braintree_group</group>
+            </braintree_local_payment>
+        </payment>
+    </default>
+</config>
+

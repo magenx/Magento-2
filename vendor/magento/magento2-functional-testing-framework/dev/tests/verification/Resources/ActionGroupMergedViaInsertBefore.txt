@@ -1,0 +1,60 @@
+<?php
+namespace Magento\AcceptanceTest\_default\Backend;
+
+use Magento\FunctionalTestingFramework\AcceptanceTester;
+use \Codeception\Util\Locator;
+use Yandex\Allure\Adapter\Annotation\Features;
+use Yandex\Allure\Adapter\Annotation\Stories;
+use Yandex\Allure\Adapter\Annotation\Title;
+use Yandex\Allure\Adapter\Annotation\Description;
+use Yandex\Allure\Adapter\Annotation\Parameter;
+use Yandex\Allure\Adapter\Annotation\Severity;
+use Yandex\Allure\Adapter\Model\SeverityLevel;
+use Yandex\Allure\Adapter\Annotation\TestCaseId;
+
+/**
+ * @Description("<h3>Test files</h3>verification/TestModule/Test/ActionGroupFunctionalTest/ActionGroupMergedViaInsertBefore.xml<br>")
+ */
+class ActionGroupMergedViaInsertBeforeCest
+{
+	/**
+	 * @var bool
+	 */
+	private $isSuccess = false;
+
+	/**
+	  * @param AcceptanceTester $I
+	  * @throws \Exception
+	  */
+	public function _after(AcceptanceTester $I)
+	{
+		if ($this->isSuccess) {
+			unlink(__FILE__);
+		}
+	}
+
+	/**
+	 * @Features({"TestModule"})
+	 * @Parameter(name = "AcceptanceTester", value="$I")
+	 * @param AcceptanceTester $I
+	 * @return void
+	 * @throws \Exception
+	 */
+	public function ActionGroupMergedViaInsertBefore(AcceptanceTester $I)
+	{
+		$I->comment("Entering Action Group [keyone] FunctionalActionGroupForMassMergeBefore");
+		$I->fillField("#foo", "foo"); // stepKey: fillField1Keyone
+		$I->click("#foo2"); // stepKey: mergeBeforeBarKeyone
+		$I->click("#bar2"); // stepKey: mergeAfterFoo2Keyone
+		$I->click("#baz2"); // stepKey: mergeAfterBar2Keyone
+		$I->fillField("#bar", "bar"); // stepKey: fillField2Keyone
+		$I->fillField("#baz", "baz"); // stepKey: fillField3Keyone
+		$I->comment("Exiting Action Group [keyone] FunctionalActionGroupForMassMergeBefore");
+	}
+
+	public function _passed(AcceptanceTester $I)
+	{
+		// Test passed successfully.
+		$this->isSuccess = true;
+	}
+}

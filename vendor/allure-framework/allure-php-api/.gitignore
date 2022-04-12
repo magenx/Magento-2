@@ -1,0 +1,7 @@
+*.iml
+.idea
+nbproject
+vendor/*
+composer.phar
+/composer.lock
+.phpunit.result.cache

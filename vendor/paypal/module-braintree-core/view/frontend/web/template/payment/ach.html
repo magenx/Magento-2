@@ -1,0 +1,177 @@
+<!-- ACH Direct Debit -->
+<div class="payment-method" data-bind="css: {'_active': (getCode() == isChecked())}" id="payment-method-braintree-ach">
+    <div class="payment-method-title field choice">
+        <input type="radio"
+               name="payment[method]"
+               class="radio"
+               data-bind="attr: {'id': getCode()}, value: getCode(), checked: isChecked, click: selectPaymentMethod, visible: isRadioButtonVisible()" />
+        <label class="label" data-bind="attr: {'for': getCode()}">
+            <span text="getTitle()"></span>
+        </label>
+    </div>
+    <div class="payment-method-content">
+        <!-- ko foreach: getRegion('messages') -->
+        <!-- ko template: getTemplate() --><!-- /ko -->
+        <!--/ko-->
+
+        <div class="payment-method-billing-address">
+            <!-- ko foreach: $parent.getRegion(getBillingAddressFormName()) -->
+            <!-- ko template: getTemplate() --><!-- /ko -->
+            <!--/ko-->
+        </div>
+
+        <form class="form" data-bind="attr: {'id': getCode() + '-form'}">
+            <fieldset data-bind="attr: {class: 'fieldset payment items ach ' + getCode(), id: 'payment_form_' + getCode()}">
+                <div class="field">
+                        <div class="fields group group-2">
+                            <div class="field required number">
+                                <label data-bind="attr: {for: getCode() + '_routing_number'}" class="label">
+                                    <span><!-- ko i18n: 'Routing Number'--><!-- /ko --></span>
+                                </label>
+                                <div class="control">
+                                    <input
+                                            class="input-text"
+                                            data-bind="value: routingNumber"
+                                            data-validate="{'required-number':true, minlength:8, maxlength:9}"
+                                            name="payment[routing_number]"
+                                            placeholder="011000015"
+                                            type="number"
+                                    />
+                                </div>
+                            </div>
+                            <div class="field required number">
+                                <label data-bind="attr: {for: getCode() + '_account_number'}" class="label">
+                                    <span><!-- ko i18n: 'Account Number'--><!-- /ko --></span>
+                                </label>
+                                <div class="control">
+                                    <input
+                                            class="input-text"
+                                            data-bind="value: accountNumber"
+                                            data-validate="{'required-number':true, minlength:10}"
+                                            name="payment[account_number]"
+                                            placeholder="1000000000"
+                                            type="number"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                </div>
+
+                <div class="field">
+                        <div class="fields group group-2">
+                            <div class="field">
+                                <label data-bind="attr: {for: getCode() + '_account_type'}" class="label">
+                                    <span data-bind="i18n: 'Account Type'"></span>
+                                </label>
+                                <div class="control">
+                                    <select class="select"
+                                            data-bind="value: accountType"
+                                            name="payment[account_type]">
+                                        <option value="checking">Checking</option>
+                                        <option value="savings">Savings</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="field">
+                                <label data-bind="attr: {for: getCode() + '_ownership_type'}" class="label">
+                                    <span data-bind="i18n: 'Ownership Type'"></span>
+                                </label>
+                                <div class="control">
+                                    <select class="select"
+                                            data-bind="event: { change: changeOwnershipType }, value: ownershipType"
+                                            name="payment[ownership_type]">
+                                        <option value="personal">Personal</option>
+                                        <option value="business">Business</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                </div>
+
+                <!-- Personal Account -->
+                <!-- ko if: (isPersonal()) -->
+                <div class="field">
+                        <div class="fields group group-2">
+                            <div class="field required">
+                                <label data-bind="attr: {for: getCode() + '_first_name'}" class="label">
+                                    <span data-bind="i18n: 'First Name'"></span>
+                                </label>
+                                <div class="control">
+                                    <input class="input-text"
+                                           data-bind="attr: { id: getCode() + '_first_name' }, value: firstName"
+                                           data-validate="{'required':true,'letters-only':true}"
+                                           name="payment[first_name]"
+                                           placeholder="Joe"
+                                           type="text"
+                                    />
+                                </div>
+                            </div>
+                            <div class="field required">
+                                <label data-bind="attr: {for: getCode() + '_last_name'}" class="label">
+                                    <span data-bind="i18n: 'Last Name'"></span>
+                                </label>
+                                <div class="control">
+                                    <input class="input-text"
+                                           data-bind="attr: { id: getCode() + '_last_name' }, value: lastName"
+                                           data-validate="{'required':true,'letters-only':true}"
+                                           name="payment[last_name]"
+                                           placeholder="Bloggs"
+                                           type="text"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                </div>
+                <!-- /ko -->
+
+                <!-- Business Account -->
+                <!-- ko if: isBusiness() -->
+                <div class="field required">
+                    <label data-bind="attr: {for: getCode() + '_business_name'}" class="label">
+                        <span data-bind="i18n: 'Business Name'"></span>
+                    </label>
+                    <div class="control">
+                        <input class="input-text"
+                               data-bind="attr: { id: getCode() + '_business_name' }, value: businessName"
+                               data-validate="{'required':true}"
+                               type="text"
+                               name="payment[business_name]"
+                        />
+                    </div>
+                </div>
+                <!-- /ko -->
+
+                <div class="field required">
+                    <label class="label">
+                        <span data-bind="i18n: 'Proof of Authorization'"></span>
+                    </label>
+                    <input
+                            class="checkbox"
+                            data-bind="checked: hasAuthorization"
+                            name="payment[authorization_proof]"
+                            type="checkbox"
+                    />
+                    <p id="braintree-ach-mandate">By clicking "Pay with ACH", I authorize Braintree, a service of PayPal,
+                        on behalf of <span data-bind="text: getStoreName() "></span> (i) to verify my bank account information
+                        using bank information and consumer reports and (ii) to debit my bank account.</p>
+                </div>
+            </fieldset>
+        </form>
+
+        <div class="checkout-agreements-block">
+            <!-- ko foreach: $parent.getRegion('before-place-order') -->
+            <!-- ko template: getTemplate() --><!-- /ko -->
+            <!--/ko-->
+        </div>
+
+        <div class="actions-toolbar">
+            <div class="primary">
+                <button class="action primary checkout"
+                        data-bind="click: clickAchBtn, enable: hasAuthorization"
+                        type="submit">
+                    <span data-bind="i18n: 'Pay with ACH'"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
