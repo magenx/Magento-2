@@ -4,6 +4,7 @@ declare (strict_types=1);
 namespace PHPStan\PhpDocParser\Ast\Type;
 
 use PHPStan\PhpDocParser\Ast\NodeAttributes;
+use function implode;
 class CallableTypeNode implements \PHPStan\PhpDocParser\Ast\Type\TypeNode
 {
     use NodeAttributes;
@@ -21,7 +22,7 @@ class CallableTypeNode implements \PHPStan\PhpDocParser\Ast\Type\TypeNode
     }
     public function __toString() : string
     {
-        $parameters = \implode(', ', $this->parameters);
+        $parameters = implode(', ', $this->parameters);
         return "{$this->identifier}({$parameters}): {$this->returnType}";
     }
 }

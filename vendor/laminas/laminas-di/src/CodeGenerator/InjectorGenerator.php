@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Laminas\Di\CodeGenerator;
 
+use Laminas\Di\CodeGenerator\AutoloadGenerator;
+use Laminas\Di\CodeGenerator\FactoryGenerator;
 use Laminas\Di\ConfigInterface;
 use Laminas\Di\Definition\DefinitionInterface;
 use Laminas\Di\Resolver\DependencyResolverInterface;
@@ -26,8 +28,8 @@ use function var_export;
 /**
  * Generator for the dependency injector
  *
- * Generates a Injector class that will use a generated factory for a requested
- * type, if available. This factory will contained pre-resolved dependencies
+ * Generates an Injector class that will use a generated factory for a requested
+ * type, if available. This factory will contain pre-resolved dependencies
  * from the provided configuration, definition and resolver instances.
  */
 class InjectorGenerator
@@ -38,8 +40,7 @@ class InjectorGenerator
     private const INJECTOR_TEMPLATE     = __DIR__ . '/../../templates/injector.template';
     private const INDENTATION_SPACES    = 4;
 
-    /** @var ConfigInterface */
-    private $config;
+    private ConfigInterface $config;
 
     /**
      * @deprecated
@@ -48,17 +49,13 @@ class InjectorGenerator
      */
     protected $definition;
 
-    /** @var string */
-    private $namespace;
+    private string $namespace;
 
-    /** @var FactoryGenerator */
-    private $factoryGenerator;
+    private FactoryGenerator $factoryGenerator;
 
-    /** @var AutoloadGenerator */
-    private $autoloadGenerator;
+    private AutoloadGenerator $autoloadGenerator;
 
-    /** @var LoggerInterface */
-    private $logger;
+    private LoggerInterface $logger;
 
     /**
      * Constructs the compiler instance
@@ -111,9 +108,8 @@ class InjectorGenerator
     {
         $indentation = sprintf("\n%s", str_repeat(' ', self::INDENTATION_SPACES));
         $codeLines   = array_map(
-            function (string $key, string $value): string {
-                return sprintf('%s => %s,', var_export($key, true), var_export($value, true));
-            },
+            fn(string $key, string $value): string =>
+                sprintf('%s => %s,', var_export($key, true), var_export($value, true)),
             array_keys($factories),
             $factories
         );
@@ -148,9 +144,7 @@ class InjectorGenerator
 
     private function generateAutoload(): void
     {
-        $addFactoryPrefix = function ($value) {
-            return 'Factory/' . $value;
-        };
+        $addFactoryPrefix = fn($value) => 'Factory/' . $value;
 
         $classmap = array_map($addFactoryPrefix, $this->factoryGenerator->getClassmap());
 
@@ -172,7 +166,7 @@ class InjectorGenerator
      *
      * This will generate the injector and its factories into the output directory
      *
-     * @param string[] $classes
+     * @param class-string[] $classes
      */
     public function generate($classes = []): void
     {

@@ -1,10 +1,9 @@
 <?php
 
 declare (strict_types=1);
-namespace RectorPrefix20211221;
+namespace RectorPrefix202208;
 
-use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
-return static function (\Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator $containerConfigurator) : void {
-    $services = $containerConfigurator->services();
-    $services->set(\Rector\__Package__\Rector\__Category__\__Name__::class)->configure(\__MainConfiguration__);
+use Rector\Config\RectorConfig;
+return static function (RectorConfig $rectorConfig) : void {
+    $rectorConfig->ruleWithConfiguration(\Rector\__Package__\Rector\__Category__\__Name__::class, \RectorPrefix202208\__MainConfiguration__);
 };

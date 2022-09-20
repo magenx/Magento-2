@@ -12,22 +12,24 @@ use Rector\Core\ValueObject\MethodName;
 use Rector\Nette\Contract\FormControlTypeResolverInterface;
 use Rector\Nette\NodeResolver\MethodNamesByInputNamesResolver;
 use Rector\NodeNameResolver\NodeNameResolver;
-use RectorPrefix20211221\Symfony\Contracts\Service\Attribute\Required;
-final class ThisVariableInAnotherMethodFormControlTypeResolver implements \Rector\Nette\Contract\FormControlTypeResolverInterface
+use RectorPrefix202208\Symfony\Contracts\Service\Attribute\Required;
+final class ThisVariableInAnotherMethodFormControlTypeResolver implements FormControlTypeResolverInterface
 {
     /**
      * @var \Rector\Nette\NodeResolver\MethodNamesByInputNamesResolver
      */
     private $methodNamesByInputNamesResolver;
     /**
+     * @readonly
      * @var \Rector\NodeNameResolver\NodeNameResolver
      */
     private $nodeNameResolver;
     /**
+     * @readonly
      * @var \Rector\Core\PhpParser\Node\BetterNodeFinder
      */
     private $betterNodeFinder;
-    public function __construct(\Rector\NodeNameResolver\NodeNameResolver $nodeNameResolver, \Rector\Core\PhpParser\Node\BetterNodeFinder $betterNodeFinder)
+    public function __construct(NodeNameResolver $nodeNameResolver, BetterNodeFinder $betterNodeFinder)
     {
         $this->nodeNameResolver = $nodeNameResolver;
         $this->betterNodeFinder = $betterNodeFinder;
@@ -35,32 +37,32 @@ final class ThisVariableInAnotherMethodFormControlTypeResolver implements \Recto
     /**
      * @required
      */
-    public function autowire(\Rector\Nette\NodeResolver\MethodNamesByInputNamesResolver $methodNamesByInputNamesResolver) : void
+    public function autowire(MethodNamesByInputNamesResolver $methodNamesByInputNamesResolver) : void
     {
         $this->methodNamesByInputNamesResolver = $methodNamesByInputNamesResolver;
     }
     /**
      * @return array<string, string>
      */
-    public function resolve(\PhpParser\Node $node) : array
+    public function resolve(Node $node) : array
     {
-        if (!$node instanceof \PhpParser\Node\Expr\Variable) {
+        if (!$node instanceof Variable) {
             return [];
         }
-        $classMethod = $this->betterNodeFinder->findParentType($node, \PhpParser\Node\Stmt\ClassMethod::class);
-        if (!$classMethod instanceof \PhpParser\Node\Stmt\ClassMethod) {
+        $classMethod = $this->betterNodeFinder->findParentType($node, ClassMethod::class);
+        if (!$classMethod instanceof ClassMethod) {
             return [];
         }
         // handled elsewhere
-        if ($this->nodeNameResolver->isName($classMethod, \Rector\Core\ValueObject\MethodName::CONSTRUCT)) {
+        if ($this->nodeNameResolver->isName($classMethod, MethodName::CONSTRUCT)) {
             return [];
         }
-        $class = $this->betterNodeFinder->findParentType($node, \PhpParser\Node\Stmt\Class_::class);
-        if (!$class instanceof \PhpParser\Node\Stmt\Class_) {
+        $class = $this->betterNodeFinder->findParentType($node, Class_::class);
+        if (!$class instanceof Class_) {
             return [];
         }
-        $constructorClassMethod = $class->getMethod(\Rector\Core\ValueObject\MethodName::CONSTRUCT);
-        if (!$constructorClassMethod instanceof \PhpParser\Node\Stmt\ClassMethod) {
+        $constructorClassMethod = $class->getMethod(MethodName::CONSTRUCT);
+        if (!$constructorClassMethod instanceof ClassMethod) {
             return [];
         }
         return $this->methodNamesByInputNamesResolver->resolveExpr($constructorClassMethod);

@@ -4,8 +4,9 @@ declare (strict_types=1);
 namespace Rector\ChangesReporting\ValueObject;
 
 use Rector\Core\Contract\Rector\RectorInterface;
-use RectorPrefix20211221\Symplify\EasyParallel\Contract\SerializableInterface;
-final class RectorWithLineChange implements \RectorPrefix20211221\Symplify\EasyParallel\Contract\SerializableInterface
+use RectorPrefix202208\Symplify\EasyParallel\Contract\SerializableInterface;
+use RectorPrefix202208\Webmozart\Assert\Assert;
+final class RectorWithLineChange implements SerializableInterface
 {
     /**
      * @var string
@@ -26,12 +27,12 @@ final class RectorWithLineChange implements \RectorPrefix20211221\Symplify\EasyP
      */
     private $line;
     /**
-     * @param \Rector\Core\Contract\Rector\RectorInterface|string $rectorClass
+     * @param string|\Rector\Core\Contract\Rector\RectorInterface $rectorClass
      */
     public function __construct($rectorClass, int $line)
     {
         $this->line = $line;
-        if ($rectorClass instanceof \Rector\Core\Contract\Rector\RectorInterface) {
+        if ($rectorClass instanceof RectorInterface) {
             $rectorClass = \get_class($rectorClass);
         }
         $this->rectorClass = $rectorClass;
@@ -49,13 +50,18 @@ final class RectorWithLineChange implements \RectorPrefix20211221\Symplify\EasyP
     }
     /**
      * @param array<string, mixed> $json
+     * @return $this
      */
-    public static function decode(array $json) : \RectorPrefix20211221\Symplify\EasyParallel\Contract\SerializableInterface
+    public static function decode(array $json) : \RectorPrefix202208\Symplify\EasyParallel\Contract\SerializableInterface
     {
-        return new self($json[self::KEY_RECTOR_CLASS], $json[self::KEY_LINE]);
+        $rectorClass = $json[self::KEY_RECTOR_CLASS];
+        Assert::string($rectorClass);
+        $line = $json[self::KEY_LINE];
+        Assert::integer($line);
+        return new self($rectorClass, $line);
     }
     /**
-     * @return array<string, mixed>
+     * @return array{rector_class: class-string<RectorInterface>, line: int}
      */
     public function jsonSerialize() : array
     {

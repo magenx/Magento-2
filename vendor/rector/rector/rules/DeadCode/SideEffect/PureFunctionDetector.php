@@ -139,6 +139,7 @@ final class PureFunctionDetector
         'curl_exec',
         'mt_srand',
         'openssl_pkcs7_sign',
+        'openssl_sign',
         'mt_rand',
         'rand',
         'random_int',
@@ -218,6 +219,7 @@ final class PureFunctionDetector
         'array_pop',
         'array_push',
         'array_shift',
+        'array_splice',
         'next',
         'prev',
         // stream
@@ -233,25 +235,25 @@ final class PureFunctionDetector
      * @var \PHPStan\Reflection\ReflectionProvider
      */
     private $reflectionProvider;
-    public function __construct(\Rector\NodeNameResolver\NodeNameResolver $nodeNameResolver, \PHPStan\Reflection\ReflectionProvider $reflectionProvider)
+    public function __construct(NodeNameResolver $nodeNameResolver, ReflectionProvider $reflectionProvider)
     {
         $this->nodeNameResolver = $nodeNameResolver;
         $this->reflectionProvider = $reflectionProvider;
     }
-    public function detect(\PhpParser\Node\Expr\FuncCall $funcCall) : bool
+    public function detect(FuncCall $funcCall) : bool
     {
         $funcCallName = $this->nodeNameResolver->getName($funcCall);
         if ($funcCallName === null) {
             return \false;
         }
-        $scope = $funcCall->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::SCOPE);
-        $name = new \PhpParser\Node\Name($funcCallName);
+        $scope = $funcCall->getAttribute(AttributeKey::SCOPE);
+        $name = new Name($funcCallName);
         $hasFunction = $this->reflectionProvider->hasFunction($name, $scope);
         if (!$hasFunction) {
             return \false;
         }
-        $function = $this->reflectionProvider->getFunction($name, $scope);
-        if (!$function instanceof \PHPStan\Reflection\Native\NativeFunctionReflection) {
+        $functionReflection = $this->reflectionProvider->getFunction($name, $scope);
+        if (!$functionReflection instanceof NativeFunctionReflection) {
             return \false;
         }
         return !$this->nodeNameResolver->isNames($funcCall, self::IMPURE_FUNCTIONS);

@@ -4,16 +4,17 @@ declare (strict_types=1);
 namespace Rector\ReadWrite\Guard;
 
 use PhpParser\Node\Arg;
+use PhpParser\Node\Expr\CallLike;
 use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Name;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\FunctionReflection;
 use PHPStan\Reflection\ParameterReflection;
-use PHPStan\Reflection\ParametersAcceptorSelector;
 use PHPStan\Reflection\ReflectionProvider;
 use Rector\Core\Exception\ShouldNotHappenException;
 use Rector\NodeNameResolver\NodeNameResolver;
 use Rector\NodeTypeResolver\Node\AttributeKey;
+use Rector\NodeTypeResolver\PHPStan\ParametersAcceptorSelectorVariantsWrapper;
 final class VariableToConstantGuard
 {
     /**
@@ -30,32 +31,36 @@ final class VariableToConstantGuard
      * @var \PHPStan\Reflection\ReflectionProvider
      */
     private $reflectionProvider;
-    public function __construct(\Rector\NodeNameResolver\NodeNameResolver $nodeNameResolver, \PHPStan\Reflection\ReflectionProvider $reflectionProvider)
+    public function __construct(NodeNameResolver $nodeNameResolver, ReflectionProvider $reflectionProvider)
     {
         $this->nodeNameResolver = $nodeNameResolver;
         $this->reflectionProvider = $reflectionProvider;
     }
-    public function isReadArg(\PhpParser\Node\Arg $arg) : bool
+    public function isReadArg(Arg $arg) : bool
     {
-        $parentParent = $arg->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::PARENT_NODE);
-        if (!$parentParent instanceof \PhpParser\Node\Expr\FuncCall) {
+        $parentParent = $arg->getAttribute(AttributeKey::PARENT_NODE);
+        if (!$parentParent instanceof FuncCall) {
             return \true;
         }
         $functionNameString = $this->nodeNameResolver->getName($parentParent);
         if ($functionNameString === null) {
             return \true;
         }
-        $functionName = new \PhpParser\Node\Name($functionNameString);
-        $argScope = $arg->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::SCOPE);
+        $functionName = new Name($functionNameString);
+        $argScope = $arg->getAttribute(AttributeKey::SCOPE);
         if (!$this->reflectionProvider->hasFunction($functionName, $argScope)) {
             // we don't know
             return \true;
         }
         $functionReflection = $this->reflectionProvider->getFunction($functionName, $argScope);
-        if (!$argScope instanceof \PHPStan\Analyser\Scope) {
+        if (!$argScope instanceof Scope) {
             return \true;
         }
-        $referenceParametersPositions = $this->resolveFunctionReferencePositions($functionReflection, [$arg], $argScope);
+        $parentArg = $arg->getAttribute(AttributeKey::PARENT_NODE);
+        if (!$parentArg instanceof CallLike) {
+            return \true;
+        }
+        $referenceParametersPositions = $this->resolveFunctionReferencePositions($functionReflection, $parentArg, $argScope);
         if ($referenceParametersPositions === []) {
             // no reference always only write
             return \true;
@@ -64,16 +69,15 @@ final class VariableToConstantGuard
         return !\in_array($argumentPosition, $referenceParametersPositions, \true);
     }
     /**
-     * @param Arg[] $args
      * @return int[]
      */
-    private function resolveFunctionReferencePositions(\PHPStan\Reflection\FunctionReflection $functionReflection, array $args, \PHPStan\Analyser\Scope $scope) : array
+    private function resolveFunctionReferencePositions(FunctionReflection $functionReflection, CallLike $callLike, Scope $scope) : array
     {
         if (isset($this->referencePositionsByFunctionName[$functionReflection->getName()])) {
             return $this->referencePositionsByFunctionName[$functionReflection->getName()];
         }
         $referencePositions = [];
-        $parametersAcceptor = \PHPStan\Reflection\ParametersAcceptorSelector::selectFromArgs($scope, $args, $functionReflection->getVariants());
+        $parametersAcceptor = ParametersAcceptorSelectorVariantsWrapper::select($functionReflection, $callLike, $scope);
         foreach ($parametersAcceptor->getParameters() as $position => $parameterReflection) {
             /** @var ParameterReflection $parameterReflection */
             if (!$parameterReflection->passedByReference()->yes()) {
@@ -84,7 +88,7 @@ final class VariableToConstantGuard
         $this->referencePositionsByFunctionName[$functionReflection->getName()] = $referencePositions;
         return $referencePositions;
     }
-    private function getArgumentPosition(\PhpParser\Node\Expr\FuncCall $funcCall, \PhpParser\Node\Arg $desiredArg) : int
+    private function getArgumentPosition(FuncCall $funcCall, Arg $desiredArg) : int
     {
         foreach ($funcCall->args as $position => $arg) {
             if ($arg !== $desiredArg) {
@@ -92,6 +96,6 @@ final class VariableToConstantGuard
             }
             return $position;
         }
-        throw new \Rector\Core\Exception\ShouldNotHappenException();
+        throw new ShouldNotHappenException();
     }
 }

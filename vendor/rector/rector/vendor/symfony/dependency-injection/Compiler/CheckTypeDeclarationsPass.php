@@ -8,23 +8,23 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix20211221\Symfony\Component\DependencyInjection\Compiler;
+namespace RectorPrefix202208\Symfony\Component\DependencyInjection\Compiler;
 
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\Argument\IteratorArgument;
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\Argument\RewindableGenerator;
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\Argument\ServiceClosureArgument;
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\Argument\ServiceLocatorArgument;
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\Container;
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\Definition;
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\InvalidArgumentException;
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\InvalidParameterTypeException;
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\RuntimeException;
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\ExpressionLanguage;
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\Parameter;
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\ParameterBag\EnvPlaceholderParameterBag;
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\Reference;
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\ServiceLocator;
-use RectorPrefix20211221\Symfony\Component\ExpressionLanguage\Expression;
+use RectorPrefix202208\Symfony\Component\DependencyInjection\Argument\IteratorArgument;
+use RectorPrefix202208\Symfony\Component\DependencyInjection\Argument\RewindableGenerator;
+use RectorPrefix202208\Symfony\Component\DependencyInjection\Argument\ServiceClosureArgument;
+use RectorPrefix202208\Symfony\Component\DependencyInjection\Argument\ServiceLocatorArgument;
+use RectorPrefix202208\Symfony\Component\DependencyInjection\Container;
+use RectorPrefix202208\Symfony\Component\DependencyInjection\Definition;
+use RectorPrefix202208\Symfony\Component\DependencyInjection\Exception\InvalidArgumentException;
+use RectorPrefix202208\Symfony\Component\DependencyInjection\Exception\InvalidParameterTypeException;
+use RectorPrefix202208\Symfony\Component\DependencyInjection\Exception\RuntimeException;
+use RectorPrefix202208\Symfony\Component\DependencyInjection\ExpressionLanguage;
+use RectorPrefix202208\Symfony\Component\DependencyInjection\Parameter;
+use RectorPrefix202208\Symfony\Component\DependencyInjection\ParameterBag\EnvPlaceholderParameterBag;
+use RectorPrefix202208\Symfony\Component\DependencyInjection\Reference;
+use RectorPrefix202208\Symfony\Component\DependencyInjection\ServiceLocator;
+use RectorPrefix202208\Symfony\Component\ExpressionLanguage\Expression;
 /**
  * Checks whether injected parameters are compatible with type declarations.
  *
@@ -37,12 +37,21 @@ use RectorPrefix20211221\Symfony\Component\ExpressionLanguage\Expression;
  * @author Nicolas Grekas <p@tchwork.com>
  * @author Julien Maulny <jmaulny@darkmira.fr>
  */
-final class CheckTypeDeclarationsPass extends \RectorPrefix20211221\Symfony\Component\DependencyInjection\Compiler\AbstractRecursivePass
+final class CheckTypeDeclarationsPass extends AbstractRecursivePass
 {
     private const SCALAR_TYPES = ['int' => \true, 'float' => \true, 'bool' => \true, 'string' => \true];
     private const BUILTIN_TYPES = ['array' => \true, 'bool' => \true, 'callable' => \true, 'float' => \true, 'int' => \true, 'iterable' => \true, 'object' => \true, 'string' => \true];
+    /**
+     * @var bool
+     */
     private $autoload;
+    /**
+     * @var mixed[]
+     */
     private $skippedIds;
+    /**
+     * @var \Symfony\Component\DependencyInjection\ExpressionLanguage
+     */
     private $expressionLanguage;
     /**
      * @param bool  $autoload   Whether services who's class in not loaded should be checked or not.
@@ -56,13 +65,15 @@ final class CheckTypeDeclarationsPass extends \RectorPrefix20211221\Symfony\Comp
     }
     /**
      * {@inheritdoc}
+     * @param mixed $value
+     * @return mixed
      */
     protected function processValue($value, bool $isRoot = \false)
     {
         if (isset($this->skippedIds[$this->currentId])) {
             return $value;
         }
-        if (!$value instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Definition || $value->hasErrors() || $value->isDeprecated()) {
+        if (!$value instanceof Definition || $value->hasErrors() || $value->isDeprecated()) {
             return parent::processValue($value, $isRoot);
         }
         if (!$this->autoload) {
@@ -73,7 +84,7 @@ final class CheckTypeDeclarationsPass extends \RectorPrefix20211221\Symfony\Comp
                 return parent::processValue($value, $isRoot);
             }
         }
-        if (\RectorPrefix20211221\Symfony\Component\DependencyInjection\ServiceLocator::class === $value->getClass()) {
+        if (ServiceLocator::class === $value->getClass()) {
             return parent::processValue($value, $isRoot);
         }
         if ($constructor = $this->getConstructor($value, \false)) {
@@ -82,7 +93,7 @@ final class CheckTypeDeclarationsPass extends \RectorPrefix20211221\Symfony\Comp
         foreach ($value->getMethodCalls() as $methodCall) {
             try {
                 $reflectionMethod = $this->getReflectionMethod($value, $methodCall[0]);
-            } catch (\RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\RuntimeException $e) {
+            } catch (RuntimeException $e) {
                 if ($value->getFactory()) {
                     continue;
                 }
@@ -95,15 +106,15 @@ final class CheckTypeDeclarationsPass extends \RectorPrefix20211221\Symfony\Comp
     /**
      * @throws InvalidArgumentException When not enough parameters are defined for the method
      */
-    private function checkTypeDeclarations(\RectorPrefix20211221\Symfony\Component\DependencyInjection\Definition $checkedDefinition, \ReflectionFunctionAbstract $reflectionFunction, array $values) : void
+    private function checkTypeDeclarations(Definition $checkedDefinition, \ReflectionFunctionAbstract $reflectionFunction, array $values) : void
     {
         $numberOfRequiredParameters = $reflectionFunction->getNumberOfRequiredParameters();
         if (\count($values) < $numberOfRequiredParameters) {
-            throw new \RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\InvalidArgumentException(\sprintf('Invalid definition for service "%s": "%s::%s()" requires %d arguments, %d passed.', $this->currentId, $reflectionFunction->class, $reflectionFunction->name, $numberOfRequiredParameters, \count($values)));
+            throw new InvalidArgumentException(\sprintf('Invalid definition for service "%s": "%s::%s()" requires %d arguments, %d passed.', $this->currentId, $reflectionFunction->class, $reflectionFunction->name, $numberOfRequiredParameters, \count($values)));
         }
         $reflectionParameters = $reflectionFunction->getParameters();
         $checksCount = \min($reflectionFunction->getNumberOfParameters(), \count($values));
-        $envPlaceholderUniquePrefix = $this->container->getParameterBag() instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\ParameterBag\EnvPlaceholderParameterBag ? $this->container->getParameterBag()->getEnvPlaceholderUniquePrefix() : null;
+        $envPlaceholderUniquePrefix = $this->container->getParameterBag() instanceof EnvPlaceholderParameterBag ? $this->container->getParameterBag()->getEnvPlaceholderUniquePrefix() : null;
         for ($i = 0; $i < $checksCount; ++$i) {
             if (!$reflectionParameters[$i]->hasType() || $reflectionParameters[$i]->isVariadic()) {
                 continue;
@@ -119,8 +130,9 @@ final class CheckTypeDeclarationsPass extends \RectorPrefix20211221\Symfony\Comp
     }
     /**
      * @throws InvalidParameterTypeException When a parameter is not compatible with the declared type
+     * @param mixed $value
      */
-    private function checkType(\RectorPrefix20211221\Symfony\Component\DependencyInjection\Definition $checkedDefinition, $value, \ReflectionParameter $parameter, ?string $envPlaceholderUniquePrefix, \ReflectionType $reflectionType = null) : void
+    private function checkType(Definition $checkedDefinition, $value, \ReflectionParameter $parameter, ?string $envPlaceholderUniquePrefix, \ReflectionType $reflectionType = null) : void
     {
         $reflectionType = $reflectionType ?? $parameter->getType();
         if ($reflectionType instanceof \ReflectionUnionType) {
@@ -128,12 +140,12 @@ final class CheckTypeDeclarationsPass extends \RectorPrefix20211221\Symfony\Comp
                 try {
                     $this->checkType($checkedDefinition, $value, $parameter, $envPlaceholderUniquePrefix, $t);
                     return;
-                } catch (\RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\InvalidParameterTypeException $e) {
+                } catch (InvalidParameterTypeException $e) {
                 }
             }
-            throw new \RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\InvalidParameterTypeException($this->currentId, $e->getCode(), $parameter);
+            throw new InvalidParameterTypeException($this->currentId, $e->getCode(), $parameter);
         }
-        if ($reflectionType instanceof \RectorPrefix20211221\ReflectionIntersectionType) {
+        if ($reflectionType instanceof \ReflectionIntersectionType) {
             foreach ($reflectionType->getTypes() as $t) {
                 $this->checkType($checkedDefinition, $value, $parameter, $envPlaceholderUniquePrefix, $t);
             }
@@ -143,11 +155,11 @@ final class CheckTypeDeclarationsPass extends \RectorPrefix20211221\Symfony\Comp
             return;
         }
         $type = $reflectionType->getName();
-        if ($value instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Reference) {
+        if ($value instanceof Reference) {
             if (!$this->container->has($value = (string) $value)) {
                 return;
             }
-            if ('service_container' === $value && \is_a($type, \RectorPrefix20211221\Symfony\Component\DependencyInjection\Container::class, \true)) {
+            if ('service_container' === $value && \is_a($type, Container::class, \true)) {
                 return;
             }
             $value = $this->container->findDefinition($value);
@@ -159,19 +171,22 @@ final class CheckTypeDeclarationsPass extends \RectorPrefix20211221\Symfony\Comp
             $type = $checkedDefinition->getClass();
         }
         $class = null;
-        if ($value instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Definition) {
+        if ($value instanceof Definition) {
+            if ($value->getFactory()) {
+                return;
+            }
             $class = $value->getClass();
             if ($class && isset(self::BUILTIN_TYPES[\strtolower($class)])) {
                 $class = \strtolower($class);
             } elseif (!$class || !$this->autoload && !\class_exists($class, \false) && !\interface_exists($class, \false)) {
                 return;
             }
-        } elseif ($value instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Parameter) {
+        } elseif ($value instanceof Parameter) {
             $value = $this->container->getParameter($value);
-        } elseif ($value instanceof \RectorPrefix20211221\Symfony\Component\ExpressionLanguage\Expression) {
+        } elseif ($value instanceof Expression) {
             try {
                 $value = $this->getExpressionLanguage()->evaluate($value, ['container' => $this->container]);
-            } catch (\Exception $e) {
+            } catch (\Exception $exception) {
                 // If a service from the expression cannot be fetched from the container, we skip the validation.
                 return;
             }
@@ -185,7 +200,7 @@ final class CheckTypeDeclarationsPass extends \RectorPrefix20211221\Symfony\Comp
                 if ('' === \preg_replace('/' . $envPlaceholderUniquePrefix . '_\\w+_[a-f0-9]{32}/U', '', $value, -1, $c) && 1 === $c) {
                     try {
                         $value = $this->container->resolveEnvPlaceholders($value, \true);
-                    } catch (\Exception $e) {
+                    } catch (\Exception $exception) {
                         // If an env placeholder cannot be resolved, we skip the validation.
                         return;
                     }
@@ -196,12 +211,12 @@ final class CheckTypeDeclarationsPass extends \RectorPrefix20211221\Symfony\Comp
             return;
         }
         if (null === $class) {
-            if ($value instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Argument\IteratorArgument) {
-                $class = \RectorPrefix20211221\Symfony\Component\DependencyInjection\Argument\RewindableGenerator::class;
-            } elseif ($value instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Argument\ServiceClosureArgument) {
+            if ($value instanceof IteratorArgument) {
+                $class = RewindableGenerator::class;
+            } elseif ($value instanceof ServiceClosureArgument) {
                 $class = \Closure::class;
-            } elseif ($value instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Argument\ServiceLocatorArgument) {
-                $class = \RectorPrefix20211221\Symfony\Component\DependencyInjection\ServiceLocator::class;
+            } elseif ($value instanceof ServiceLocatorArgument) {
+                $class = ServiceLocator::class;
             } elseif (\is_object($value)) {
                 $class = \get_class($value);
             } else {
@@ -218,7 +233,7 @@ final class CheckTypeDeclarationsPass extends \RectorPrefix20211221\Symfony\Comp
         if ('callable' === $type && (\Closure::class === $class || \method_exists($class, '__invoke'))) {
             return;
         }
-        if ('callable' === $type && \is_array($value) && isset($value[0]) && ($value[0] instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Reference || $value[0] instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Definition || \is_string($value[0]))) {
+        if ('callable' === $type && \is_array($value) && isset($value[0]) && ($value[0] instanceof Reference || $value[0] instanceof Definition || \is_string($value[0]))) {
             return;
         }
         if ('iterable' === $type && (\is_array($value) || 'array' === $class || \is_subclass_of($class, \Traversable::class))) {
@@ -246,13 +261,10 @@ final class CheckTypeDeclarationsPass extends \RectorPrefix20211221\Symfony\Comp
                 return;
             }
         }
-        throw new \RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\InvalidParameterTypeException($this->currentId, \is_object($value) ? $class : \get_debug_type($value), $parameter);
+        throw new InvalidParameterTypeException($this->currentId, \is_object($value) ? $class : \get_debug_type($value), $parameter);
     }
-    private function getExpressionLanguage() : \RectorPrefix20211221\Symfony\Component\DependencyInjection\ExpressionLanguage
+    private function getExpressionLanguage() : ExpressionLanguage
     {
-        if (null === $this->expressionLanguage) {
-            $this->expressionLanguage = new \RectorPrefix20211221\Symfony\Component\DependencyInjection\ExpressionLanguage(null, $this->container->getExpressionLanguageProviders());
-        }
-        return $this->expressionLanguage;
+        return $this->expressionLanguage = $this->expressionLanguage ?? new ExpressionLanguage(null, $this->container->getExpressionLanguageProviders());
     }
 }

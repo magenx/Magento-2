@@ -11,32 +11,32 @@ use Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfo;
 final class DoctrineItemDefaultValueManipulator
 {
     /**
-     * @param bool|int|string $defaultValue
+     * @param string|bool|int $defaultValue
      */
-    public function remove(\Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfo $phpDocInfo, \Rector\BetterPhpDocParser\PhpDoc\DoctrineAnnotationTagValueNode $doctrineTagValueNode, string $item, $defaultValue) : void
+    public function remove(PhpDocInfo $phpDocInfo, DoctrineAnnotationTagValueNode $doctrineAnnotationTagValueNode, string $item, $defaultValue) : void
     {
-        if (!$this->hasItemWithDefaultValue($doctrineTagValueNode, $item, $defaultValue)) {
+        if (!$this->hasItemWithDefaultValue($doctrineAnnotationTagValueNode, $item, $defaultValue)) {
             return;
         }
-        $doctrineTagValueNode->removeValue($item);
+        $doctrineAnnotationTagValueNode->removeValue($item);
         $phpDocInfo->markAsChanged();
     }
     /**
-     * @param bool|int|string $defaultValue
+     * @param string|bool|int $defaultValue
      */
-    private function hasItemWithDefaultValue(\Rector\BetterPhpDocParser\PhpDoc\DoctrineAnnotationTagValueNode $doctrineAnnotationTagValueNode, string $itemKey, $defaultValue) : bool
+    private function hasItemWithDefaultValue(DoctrineAnnotationTagValueNode $doctrineAnnotationTagValueNode, string $itemKey, $defaultValue) : bool
     {
         $currentValue = $doctrineAnnotationTagValueNode->getValueWithoutQuotes($itemKey);
         if ($currentValue === null) {
             return \false;
         }
         if ($defaultValue === \false) {
-            return $currentValue instanceof \PHPStan\PhpDocParser\Ast\ConstExpr\ConstExprFalseNode;
+            return $currentValue instanceof ConstExprFalseNode;
         }
         if ($defaultValue === \true) {
-            return $currentValue instanceof \PHPStan\PhpDocParser\Ast\ConstExpr\ConstExprTrueNode;
+            return $currentValue instanceof ConstExprTrueNode;
         }
-        if (\is_int($defaultValue) && $currentValue instanceof \PHPStan\PhpDocParser\Ast\ConstExpr\ConstExprIntegerNode) {
+        if (\is_int($defaultValue) && $currentValue instanceof ConstExprIntegerNode) {
             $currentValue = (int) $currentValue->value;
         }
         return $currentValue === $defaultValue;

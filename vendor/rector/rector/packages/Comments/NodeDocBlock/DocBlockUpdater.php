@@ -11,24 +11,19 @@ use Rector\NodeTypeResolver\Node\AttributeKey;
 final class DocBlockUpdater
 {
     /**
-     * @var string
-     * @see https://regex101.com/r/VdaVGL/1
-     */
-    public const SPACE_OR_ASTERISK_REGEX = '#(\\s|\\*)+#';
-    /**
      * @readonly
      * @var \Rector\BetterPhpDocParser\Printer\PhpDocInfoPrinter
      */
     private $phpDocInfoPrinter;
-    public function __construct(\Rector\BetterPhpDocParser\Printer\PhpDocInfoPrinter $phpDocInfoPrinter)
+    public function __construct(PhpDocInfoPrinter $phpDocInfoPrinter)
     {
         $this->phpDocInfoPrinter = $phpDocInfoPrinter;
     }
-    public function updateNodeWithPhpDocInfo(\PhpParser\Node $node) : void
+    public function updateNodeWithPhpDocInfo(Node $node) : void
     {
         // nothing to change? don't save it
-        $phpDocInfo = $node->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::PHP_DOC_INFO);
-        if (!$phpDocInfo instanceof \Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfo) {
+        $phpDocInfo = $node->getAttribute(AttributeKey::PHP_DOC_INFO);
+        if (!$phpDocInfo instanceof PhpDocInfo) {
             return;
         }
         if (!$phpDocInfo->hasChanged()) {
@@ -44,14 +39,14 @@ final class DocBlockUpdater
             }
             if ($phpDocInfo->getOriginalPhpDocNode()->children !== []) {
                 // all comments were removed → null
-                $node->setAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::COMMENTS, null);
+                $node->setAttribute(AttributeKey::COMMENTS, null);
             }
             return;
         }
         // this is needed to remove duplicated // commentsAsText
-        $node->setDocComment(new \PhpParser\Comment\Doc($phpDoc));
+        $node->setDocComment(new Doc($phpDoc));
     }
-    private function printPhpDocInfoToString(\Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfo $phpDocInfo) : string
+    private function printPhpDocInfoToString(PhpDocInfo $phpDocInfo) : string
     {
         if ($phpDocInfo->isNewNode()) {
             return $this->phpDocInfoPrinter->printNew($phpDocInfo);

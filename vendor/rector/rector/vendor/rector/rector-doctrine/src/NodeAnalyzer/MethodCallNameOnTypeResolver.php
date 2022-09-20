@@ -8,22 +8,25 @@ use PhpParser\Node\Expr\MethodCall;
 use PHPStan\Type\ObjectType;
 use Rector\NodeNameResolver\NodeNameResolver;
 use Rector\NodeTypeResolver\NodeTypeResolver;
-use RectorPrefix20211221\Symplify\Astral\NodeTraverser\SimpleCallableNodeTraverser;
+use RectorPrefix202208\Symplify\Astral\NodeTraverser\SimpleCallableNodeTraverser;
 final class MethodCallNameOnTypeResolver
 {
     /**
+     * @readonly
      * @var \Rector\NodeNameResolver\NodeNameResolver
      */
     private $nodeNameResolver;
     /**
+     * @readonly
      * @var \Symplify\Astral\NodeTraverser\SimpleCallableNodeTraverser
      */
     private $simpleCallableNodeTraverser;
     /**
+     * @readonly
      * @var \Rector\NodeTypeResolver\NodeTypeResolver
      */
     private $nodeTypeResolver;
-    public function __construct(\Rector\NodeNameResolver\NodeNameResolver $nodeNameResolver, \RectorPrefix20211221\Symplify\Astral\NodeTraverser\SimpleCallableNodeTraverser $simpleCallableNodeTraverser, \Rector\NodeTypeResolver\NodeTypeResolver $nodeTypeResolver)
+    public function __construct(NodeNameResolver $nodeNameResolver, SimpleCallableNodeTraverser $simpleCallableNodeTraverser, NodeTypeResolver $nodeTypeResolver)
     {
         $this->nodeNameResolver = $nodeNameResolver;
         $this->simpleCallableNodeTraverser = $simpleCallableNodeTraverser;
@@ -32,11 +35,11 @@ final class MethodCallNameOnTypeResolver
     /**
      * @return string[]
      */
-    public function resolve(\PhpParser\Node $node, \PHPStan\Type\ObjectType $objectType) : array
+    public function resolve(Node $node, ObjectType $objectType) : array
     {
         $methodNames = [];
-        $this->simpleCallableNodeTraverser->traverseNodesWithCallable($node, function (\PhpParser\Node $node) use(&$methodNames, $objectType) {
-            if (!$node instanceof \PhpParser\Node\Expr\MethodCall) {
+        $this->simpleCallableNodeTraverser->traverseNodesWithCallable($node, function (Node $node) use(&$methodNames, $objectType) {
+            if (!$node instanceof MethodCall) {
                 return null;
             }
             if (!$this->nodeTypeResolver->isObjectType($node->var, $objectType)) {

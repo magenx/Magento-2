@@ -1,6 +1,6 @@
 <?php
 
-namespace RectorPrefix20211221;
+namespace RectorPrefix202208;
 
 if ('cli-server' !== \PHP_SAPI) {
     // safe guard against unwanted execution
@@ -14,7 +14,7 @@ if (!$_POST) {
 foreach ($_SERVER as $k => $v) {
     switch ($k) {
         default:
-            if (0 !== \strpos($k, 'HTTP_')) {
+            if (!\str_starts_with($k, 'HTTP_')) {
                 continue 2;
             }
         // no break

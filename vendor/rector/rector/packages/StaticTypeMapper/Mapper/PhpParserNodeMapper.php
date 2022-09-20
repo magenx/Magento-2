@@ -15,7 +15,7 @@ use Rector\StaticTypeMapper\Contract\PhpParser\PhpParserNodeMapperInterface;
 final class PhpParserNodeMapper
 {
     /**
-     * @var \Rector\StaticTypeMapper\Contract\PhpParser\PhpParserNodeMapperInterface[]
+     * @var PhpParserNodeMapperInterface[]
      * @readonly
      */
     private $phpParserNodeMappers;
@@ -26,24 +26,32 @@ final class PhpParserNodeMapper
     {
         $this->phpParserNodeMappers = $phpParserNodeMappers;
     }
-    public function mapToPHPStanType(\PhpParser\Node $node) : \PHPStan\Type\Type
+    public function mapToPHPStanType(Node $node) : Type
     {
-        if (\get_class($node) === \PhpParser\Node\Name::class && $node->hasAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::NAMESPACED_NAME)) {
-            $node = new \PhpParser\Node\Name\FullyQualified($node->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::NAMESPACED_NAME));
-        }
+        $nameOrExpr = $this->expandedNamespacedName($node);
         foreach ($this->phpParserNodeMappers as $phpParserNodeMapper) {
-            if (!\is_a($node, $phpParserNodeMapper->getNodeType())) {
+            if (!\is_a($nameOrExpr, $phpParserNodeMapper->getNodeType())) {
                 continue;
             }
             // do not let Expr collect all the types
             // note: can be solve later with priorities on mapper interface, making this last
-            if ($phpParserNodeMapper->getNodeType() !== \PhpParser\Node\Expr::class) {
-                return $phpParserNodeMapper->mapToPHPStan($node);
+            if ($phpParserNodeMapper->getNodeType() !== Expr::class) {
+                return $phpParserNodeMapper->mapToPHPStan($nameOrExpr);
             }
-            if (!$node instanceof \PhpParser\Node\Scalar\String_) {
-                return $phpParserNodeMapper->mapToPHPStan($node);
+            if (!$nameOrExpr instanceof String_) {
+                return $phpParserNodeMapper->mapToPHPStan($nameOrExpr);
             }
         }
-        throw new \Rector\Core\Exception\NotImplementedYetException(\get_class($node));
+        throw new NotImplementedYetException(\get_class($nameOrExpr));
+    }
+    /**
+     * @return \PhpParser\Node|\PhpParser\Node\Name\FullyQualified
+     */
+    private function expandedNamespacedName(Node $node)
+    {
+        if (\get_class($node) === Name::class && $node->hasAttribute(AttributeKey::NAMESPACED_NAME)) {
+            return new FullyQualified($node->getAttribute(AttributeKey::NAMESPACED_NAME));
+        }
+        return $node;
     }
 }

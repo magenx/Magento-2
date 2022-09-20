@@ -4,6 +4,10 @@ namespace PayPal\Braintree\Block\Adminhtml\Virtual;
 
 use Magento\Backend\Block\Widget\Form\Container;
 
+/**
+ * @api
+ * @since 100.0.2
+ */
 class Form extends Container
 {
     /**

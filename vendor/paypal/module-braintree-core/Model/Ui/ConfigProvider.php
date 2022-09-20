@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © 2013-2017 Magento, Inc. All rights reserved.
+ * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
 namespace PayPal\Braintree\Model\Ui;
@@ -19,8 +19,8 @@ use Magento\Framework\View\Asset\Source;
 
 class ConfigProvider implements ConfigProviderInterface
 {
-    const CODE = 'braintree';
-    const CC_VAULT_CODE = 'braintree_cc_vault';
+    public const CODE = 'braintree';
+    public const CC_VAULT_CODE = 'braintree_cc_vault';
 
     /**
      * @var PayPalConfig
@@ -98,8 +98,6 @@ class ConfigProvider implements ConfigProviderInterface
                     'availableCardTypes' => $this->config->getAvailableCardTypes(),
                     'useCvv' => $this->config->isCvvEnabled(),
                     'environment' => $this->config->getEnvironment(),
-                    'kountMerchantId' => $this->config->getKountMerchantId(),
-                    'hasFraudProtection' => $this->config->hasFraudProtection(),
                     'merchantId' => $this->config->getMerchantId(),
                     'ccVaultCode' => self::CC_VAULT_CODE,
                     'style' => [
@@ -108,13 +106,14 @@ class ConfigProvider implements ConfigProviderInterface
                         'color' => $this->paypalConfig->getButtonColor(PayPalConfig::BUTTON_AREA_CHECKOUT)
                     ],
                     'disabledFunding' => [
-                        'card' => $this->paypalConfig->getDisabledFundingOptionCard(),
-                        'elv' => $this->paypalConfig->getDisabledFundingOptionElv()
+                        'card' => $this->paypalConfig->isFundingOptionCardDisabled(),
+                        'elv' => $this->paypalConfig->isFundingOptionElvDisabled()
                     ],
                     'icons' => $this->getIcons()
                 ],
                 Config::CODE_3DSECURE => [
                     'enabled' => $this->config->isVerify3DSecure(),
+                    'challengeRequested' => $this->config->is3DSAlwaysRequested(),
                     'thresholdAmount' => $this->config->getThresholdAmount(),
                     'specificCountries' => $this->config->get3DSecureSpecificCountries()
                 ]
@@ -167,9 +166,11 @@ class ConfigProvider implements ConfigProviderInterface
                 if ($asset) {
                     $placeholder = $this->assetSource->findSource($asset);
                     if ($placeholder) {
-                        list($width, $height) = getimagesize($asset->getSourceFile());
+                        list($width, $height) = getimagesizefromstring($asset->getSourceFile());
                         $this->icons[$code] = [
-                            'url' => $asset->getUrl()
+                            'url' => $asset->getUrl(),
+                            'width' => $width,
+                            'height' => $height
                         ];
                     }
                 }

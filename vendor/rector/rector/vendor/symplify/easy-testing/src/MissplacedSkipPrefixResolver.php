@@ -1,12 +1,13 @@
 <?php
 
 declare (strict_types=1);
-namespace RectorPrefix20211221\Symplify\EasyTesting;
+namespace RectorPrefix202208\Symplify\EasyTesting;
 
-use RectorPrefix20211221\Nette\Utils\Strings;
-use RectorPrefix20211221\Symplify\EasyTesting\ValueObject\Prefix;
-use RectorPrefix20211221\Symplify\EasyTesting\ValueObject\SplitLine;
-use Symplify\SmartFileSystem\SmartFileInfo;
+use RectorPrefix202208\Nette\Utils\Strings;
+use RectorPrefix202208\Symplify\EasyTesting\ValueObject\IncorrectAndMissingSkips;
+use RectorPrefix202208\Symplify\EasyTesting\ValueObject\Prefix;
+use RectorPrefix202208\Symplify\EasyTesting\ValueObject\SplitLine;
+use RectorPrefix202208\Symplify\SmartFileSystem\SmartFileInfo;
 /**
  * @see \Symplify\EasyTesting\Tests\MissingSkipPrefixResolver\MissingSkipPrefixResolverTest
  */
@@ -14,28 +15,27 @@ final class MissplacedSkipPrefixResolver
 {
     /**
      * @param SmartFileInfo[] $fixtureFileInfos
-     * @return array<string, SmartFileInfo[]>
      */
-    public function resolve(array $fixtureFileInfos) : array
+    public function resolve(array $fixtureFileInfos) : IncorrectAndMissingSkips
     {
-        $invalidFileInfos = ['incorrect_skips' => [], 'missing_skips' => []];
+        $incorrectSkips = [];
+        $missingSkips = [];
         foreach ($fixtureFileInfos as $fixtureFileInfo) {
             $hasNameSkipStart = $this->hasNameSkipStart($fixtureFileInfo);
             $fileContents = $fixtureFileInfo->getContents();
-            $hasSplitLine = (bool) \RectorPrefix20211221\Nette\Utils\Strings::match($fileContents, \RectorPrefix20211221\Symplify\EasyTesting\ValueObject\SplitLine::SPLIT_LINE_REGEX);
+            $hasSplitLine = (bool) Strings::match($fileContents, SplitLine::SPLIT_LINE_REGEX);
             if ($hasNameSkipStart && $hasSplitLine) {
-                $invalidFileInfos['incorrect_skips'][] = $fixtureFileInfo;
+                $incorrectSkips[] = $fixtureFileInfo;
                 continue;
             }
             if (!$hasNameSkipStart && !$hasSplitLine) {
-                $invalidFileInfos['missing_skips'][] = $fixtureFileInfo;
-                continue;
+                $missingSkips[] = $fixtureFileInfo;
             }
         }
-        return $invalidFileInfos;
+        return new IncorrectAndMissingSkips($incorrectSkips, $missingSkips);
     }
-    private function hasNameSkipStart(\Symplify\SmartFileSystem\SmartFileInfo $fixtureFileInfo) : bool
+    private function hasNameSkipStart(SmartFileInfo $fixtureFileInfo) : bool
     {
-        return (bool) \RectorPrefix20211221\Nette\Utils\Strings::match($fixtureFileInfo->getBasenameWithoutSuffix(), \RectorPrefix20211221\Symplify\EasyTesting\ValueObject\Prefix::SKIP_PREFIX_REGEX);
+        return (bool) Strings::match($fixtureFileInfo->getBasenameWithoutSuffix(), Prefix::SKIP_PREFIX_REGEX);
     }
 }

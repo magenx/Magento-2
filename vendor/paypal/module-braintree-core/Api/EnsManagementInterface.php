@@ -8,6 +8,7 @@ use SimpleXMLElement;
 
 /**
  * Interface EnsManagementInterface
+ * @deprecated as KOUNT integration has been discontinued by Braintree
  */
 interface EnsManagementInterface
 {

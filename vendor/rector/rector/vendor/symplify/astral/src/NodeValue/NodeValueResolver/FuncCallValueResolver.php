@@ -1,21 +1,21 @@
 <?php
 
 declare (strict_types=1);
-namespace RectorPrefix20211221\Symplify\Astral\NodeValue\NodeValueResolver;
+namespace RectorPrefix202208\Symplify\Astral\NodeValue\NodeValueResolver;
 
 use PhpParser\ConstExprEvaluator;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Name;
-use RectorPrefix20211221\Symplify\Astral\Contract\NodeValueResolver\NodeValueResolverInterface;
-use RectorPrefix20211221\Symplify\Astral\Exception\ShouldNotHappenException;
-use RectorPrefix20211221\Symplify\Astral\Naming\SimpleNameResolver;
+use RectorPrefix202208\Symplify\Astral\Contract\NodeValueResolver\NodeValueResolverInterface;
+use RectorPrefix202208\Symplify\Astral\Exception\ShouldNotHappenException;
+use RectorPrefix202208\Symplify\Astral\Naming\SimpleNameResolver;
 /**
  * @see \Symplify\Astral\Tests\NodeValue\NodeValueResolverTest
  *
  * @implements NodeValueResolverInterface<FuncCall>
  */
-final class FuncCallValueResolver implements \RectorPrefix20211221\Symplify\Astral\Contract\NodeValueResolver\NodeValueResolverInterface
+final class FuncCallValueResolver implements NodeValueResolverInterface
 {
     /**
      * @var string[]
@@ -29,20 +29,20 @@ final class FuncCallValueResolver implements \RectorPrefix20211221\Symplify\Astr
      * @var \PhpParser\ConstExprEvaluator
      */
     private $constExprEvaluator;
-    public function __construct(\RectorPrefix20211221\Symplify\Astral\Naming\SimpleNameResolver $simpleNameResolver, \PhpParser\ConstExprEvaluator $constExprEvaluator)
+    public function __construct(SimpleNameResolver $simpleNameResolver, ConstExprEvaluator $constExprEvaluator)
     {
         $this->simpleNameResolver = $simpleNameResolver;
         $this->constExprEvaluator = $constExprEvaluator;
     }
     public function getType() : string
     {
-        return \PhpParser\Node\Expr\FuncCall::class;
+        return FuncCall::class;
     }
     /**
      * @param FuncCall $expr
      * @return mixed
      */
-    public function resolve(\PhpParser\Node\Expr $expr, string $currentFilePath)
+    public function resolve(Expr $expr, string $currentFilePath)
     {
         if ($this->simpleNameResolver->isName($expr, 'getcwd')) {
             return \dirname($currentFilePath);
@@ -52,15 +52,15 @@ final class FuncCallValueResolver implements \RectorPrefix20211221\Symplify\Astr
         foreach ($args as $arg) {
             $arguments[] = $this->constExprEvaluator->evaluateDirectly($arg->value);
         }
-        if ($expr->name instanceof \PhpParser\Node\Name) {
+        if ($expr->name instanceof Name) {
             $functionName = (string) $expr->name;
             if (!$this->isAllowedFunctionName($functionName)) {
                 return null;
             }
-            if (\function_exists($functionName) && \is_callable($functionName)) {
-                return \call_user_func_array($functionName, $arguments);
+            if (\function_exists($functionName)) {
+                return $functionName(...$arguments);
             }
-            throw new \RectorPrefix20211221\Symplify\Astral\Exception\ShouldNotHappenException();
+            throw new ShouldNotHappenException();
         }
         return null;
     }

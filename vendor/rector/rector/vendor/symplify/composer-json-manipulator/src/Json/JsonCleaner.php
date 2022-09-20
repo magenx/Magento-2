@@ -1,13 +1,13 @@
 <?php
 
 declare (strict_types=1);
-namespace RectorPrefix20211221\Symplify\ComposerJsonManipulator\Json;
+namespace RectorPrefix202208\Symplify\ComposerJsonManipulator\Json;
 
 final class JsonCleaner
 {
     /**
-     * @param mixed[] $data
-     * @return mixed[]
+     * @param array<int|string, mixed> $data
+     * @return array<int|string, mixed>
      */
     public function removeEmptyKeysFromJsonArray(array $data) : array
     {

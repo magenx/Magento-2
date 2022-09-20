@@ -14,7 +14,7 @@ use Magento\Store\Model\ScopeInterface;
 
 class ConfigTest extends \PHPUnit\Framework\TestCase
 {
-    const METHOD_CODE = 'braintree';
+    private const METHOD_CODE = 'braintree';
 
     /**
      * @var Config
@@ -51,6 +51,8 @@ class ConfigTest extends \PHPUnit\Framework\TestCase
      * @param string $encodedValue
      * @param string|array $value
      * @param array $expected
+     * @throws \Magento\Framework\Exception\InputException
+     * @throws \Magento\Framework\Exception\NoSuchEntityException
      * @dataProvider getCountrySpecificCardTypeConfigDataProvider
      */
     public function testGetCountrySpecificCardTypeConfig($encodedValue, $value, array $expected)
@@ -93,6 +95,8 @@ class ConfigTest extends \PHPUnit\Framework\TestCase
     /**
      * @param string $value
      * @param array $expected
+     * @throws \Magento\Framework\Exception\InputException
+     * @throws \Magento\Framework\Exception\NoSuchEntityException
      * @dataProvider getAvailableCardTypesDataProvider
      */
     public function testGetAvailableCardTypes($value, $expected)
@@ -128,6 +132,8 @@ class ConfigTest extends \PHPUnit\Framework\TestCase
     /**
      * @param string $value
      * @param array $expected
+     * @throws \Magento\Framework\Exception\InputException
+     * @throws \Magento\Framework\Exception\NoSuchEntityException
      * @dataProvider getCcTypesMapperDataProvider
      */
     public function testGetCcTypesMapper($value, $expected)
@@ -165,11 +171,13 @@ class ConfigTest extends \PHPUnit\Framework\TestCase
     }
 
     /**
-     * @covers       \PayPal\Braintree\Gateway\Config\Config::getCountryAvailableCardTypes
-     * @dataProvider getCountrySpecificCardTypeConfigDataProvider
      * @param string $encodedData
      * @param string|array $data
      * @param array $countryData
+     * @throws \Magento\Framework\Exception\InputException
+     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @covers \PayPal\Braintree\Gateway\Config\Config::getCountryAvailableCardTypes
+     * @dataProvider getCountrySpecificCardTypeConfigDataProvider
      */
     public function testCountryAvailableCardTypes($encodedData, $data, array $countryData)
     {
@@ -209,8 +217,10 @@ class ConfigTest extends \PHPUnit\Framework\TestCase
     /**
      * @param mixed $data
      * @param boolean $expected
-     * @dataProvider verify3DSecureDataProvider
+     * @throws \Magento\Framework\Exception\InputException
+     * @throws \Magento\Framework\Exception\NoSuchEntityException
      * @covers \PayPal\Braintree\Gateway\Config\Config::isVerify3DSecure
+     * @dataProvider verify3DSecureDataProvider
      */
     public function testIsVerify3DSecure($data, $expected)
     {
@@ -223,6 +233,7 @@ class ConfigTest extends \PHPUnit\Framework\TestCase
 
     /**
      * Get items to verify 3d secure testing
+     *
      * @return array
      */
     public function verify3DSecureDataProvider()
@@ -238,8 +249,12 @@ class ConfigTest extends \PHPUnit\Framework\TestCase
     }
 
     /**
-     * @param mixed $data
-     * @param double $expected
+     * Test to get threshold amount
+     *
+     * @param $data
+     * @param $expected
+     * @throws \Magento\Framework\Exception\InputException
+     * @throws \Magento\Framework\Exception\NoSuchEntityException
      * @covers \PayPal\Braintree\Gateway\Config\Config::getThresholdAmount
      * @dataProvider thresholdAmountDataProvider
      */
@@ -254,6 +269,7 @@ class ConfigTest extends \PHPUnit\Framework\TestCase
 
     /**
      * Get items for testing threshold amount
+     *
      * @return array
      */
     public function thresholdAmountDataProvider()
@@ -271,24 +287,21 @@ class ConfigTest extends \PHPUnit\Framework\TestCase
     }
 
     /**
-     * @param int $value
+     * @param $value
      * @param array $expected
+     * @throws \Magento\Framework\Exception\InputException
+     * @throws \Magento\Framework\Exception\NoSuchEntityException
      * @covers \PayPal\Braintree\Gateway\Config\Config::get3DSecureSpecificCountries
      * @dataProvider threeDSecureSpecificCountriesDataProvider
      */
     public function testGet3DSecureSpecificCountries($value, array $expected)
     {
-        $this->scopeConfigMock->expects(static::at(0))
-            ->method('getValue')
-            ->with($this->getPath(Config::KEY_VERIFY_ALLOW_SPECIFIC), ScopeInterface::SCOPE_STORE, null)
-            ->willReturn($value);
-
-        if ($value !== Config::VALUE_3DSECURE_ALL) {
-            $this->scopeConfigMock->expects(static::at(1))
-                ->method('getValue')
-                ->with($this->getPath(Config::KEY_VERIFY_SPECIFIC), ScopeInterface::SCOPE_STORE, null)
-                ->willReturn('GB,US');
-        }
+        $this->scopeConfigMock->method('getValue')
+            ->withConsecutive(
+                [$this->getPath(Config::KEY_VERIFY_ALLOW_SPECIFIC), ScopeInterface::SCOPE_STORE, null],
+                [$this->getPath(Config::KEY_VERIFY_SPECIFIC), ScopeInterface::SCOPE_STORE, null]
+            )
+            ->willReturnOnConsecutiveCalls($value, 'GB,US');
         static::assertEquals($expected, $this->model->get3DSecureSpecificCountries());
     }
 
@@ -314,18 +327,13 @@ class ConfigTest extends \PHPUnit\Framework\TestCase
      */
     public function testGetDynamicDescriptors($name, $phone, $url, array $expected)
     {
-        $this->scopeConfigMock->expects(static::at(0))
-            ->method('getValue')
-            ->with($this->getPath('descriptor_name'), ScopeInterface::SCOPE_STORE, null)
-            ->willReturn($name);
-        $this->scopeConfigMock->expects(static::at(1))
-            ->method('getValue')
-            ->with($this->getPath('descriptor_phone'), ScopeInterface::SCOPE_STORE, null)
-            ->willReturn($phone);
-        $this->scopeConfigMock->expects(static::at(2))
-            ->method('getValue')
-            ->with($this->getPath('descriptor_url'), ScopeInterface::SCOPE_STORE, null)
-            ->willReturn($url);
+        $this->scopeConfigMock->method('getValue')
+            ->withConsecutive(
+                [$this->getPath('descriptor_name'), ScopeInterface::SCOPE_STORE, null],
+                [$this->getPath('descriptor_phone'), ScopeInterface::SCOPE_STORE, null],
+                [$this->getPath('descriptor_url'), ScopeInterface::SCOPE_STORE, null]
+            )
+            ->willReturnOnConsecutiveCalls($name, $phone, $url);
 
         $actual = $this->model->getDynamicDescriptors();
         static::assertEquals($expected, $actual);

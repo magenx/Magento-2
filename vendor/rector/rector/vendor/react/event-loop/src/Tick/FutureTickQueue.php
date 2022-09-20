@@ -1,6 +1,6 @@
 <?php
 
-namespace RectorPrefix20211221\React\EventLoop\Tick;
+namespace RectorPrefix202208\React\EventLoop\Tick;
 
 use SplQueue;
 /**
@@ -16,7 +16,7 @@ final class FutureTickQueue
     private $queue;
     public function __construct()
     {
-        $this->queue = new \SplQueue();
+        $this->queue = new SplQueue();
     }
     /**
      * Add a callback to be invoked on a future tick of the event loop.

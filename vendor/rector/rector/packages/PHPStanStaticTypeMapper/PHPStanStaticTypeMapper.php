@@ -7,6 +7,7 @@ use PhpParser\Node\ComplexType;
 use PhpParser\Node\Name;
 use PHPStan\PhpDocParser\Ast\Type\IdentifierTypeNode;
 use PHPStan\PhpDocParser\Ast\Type\TypeNode;
+use PHPStan\Type\Accessory\AccessoryLiteralStringType;
 use PHPStan\Type\Accessory\AccessoryNumericStringType;
 use PHPStan\Type\Accessory\HasMethodType;
 use PHPStan\Type\Type;
@@ -16,7 +17,7 @@ use Rector\PHPStanStaticTypeMapper\Enum\TypeKind;
 final class PHPStanStaticTypeMapper
 {
     /**
-     * @var \Rector\PHPStanStaticTypeMapper\Contract\TypeMapperInterface[]
+     * @var TypeMapperInterface[]
      * @readonly
      */
     private $typeMappers;
@@ -27,7 +28,10 @@ final class PHPStanStaticTypeMapper
     {
         $this->typeMappers = $typeMappers;
     }
-    public function mapToPHPStanPhpDocTypeNode(\PHPStan\Type\Type $type, \Rector\PHPStanStaticTypeMapper\Enum\TypeKind $typeKind) : \PHPStan\PhpDocParser\Ast\Type\TypeNode
+    /**
+     * @param TypeKind::* $typeKind
+     */
+    public function mapToPHPStanPhpDocTypeNode(Type $type, string $typeKind) : TypeNode
     {
         foreach ($this->typeMappers as $typeMapper) {
             if (!\is_a($type, $typeMapper->getNodeClass(), \true)) {
@@ -35,18 +39,22 @@ final class PHPStanStaticTypeMapper
             }
             return $typeMapper->mapToPHPStanPhpDocTypeNode($type, $typeKind);
         }
-        if ($type instanceof \PHPStan\Type\Accessory\AccessoryNumericStringType) {
-            return new \PHPStan\PhpDocParser\Ast\Type\IdentifierTypeNode('string');
+        if ($type instanceof AccessoryNumericStringType) {
+            return new IdentifierTypeNode('string');
         }
-        if ($type instanceof \PHPStan\Type\Accessory\HasMethodType) {
-            return new \PHPStan\PhpDocParser\Ast\Type\IdentifierTypeNode('object');
+        if ($type instanceof HasMethodType) {
+            return new IdentifierTypeNode('object');
         }
-        throw new \Rector\Core\Exception\NotImplementedYetException(__METHOD__ . ' for ' . \get_class($type));
+        if ($type instanceof AccessoryLiteralStringType) {
+            return new IdentifierTypeNode('string');
+        }
+        throw new NotImplementedYetException(__METHOD__ . ' for ' . \get_class($type));
     }
     /**
-     * @return \PhpParser\Node\ComplexType|\PhpParser\Node\Name|null
+     * @param TypeKind::* $typeKind
+     * @return \PhpParser\Node\Name|\PhpParser\Node\ComplexType|null
      */
-    public function mapToPhpParserNode(\PHPStan\Type\Type $type, \Rector\PHPStanStaticTypeMapper\Enum\TypeKind $typeKind)
+    public function mapToPhpParserNode(Type $type, string $typeKind)
     {
         foreach ($this->typeMappers as $typeMapper) {
             if (!\is_a($type, $typeMapper->getNodeClass(), \true)) {
@@ -54,6 +62,6 @@ final class PHPStanStaticTypeMapper
             }
             return $typeMapper->mapToPhpParserNode($type, $typeKind);
         }
-        throw new \Rector\Core\Exception\NotImplementedYetException(__METHOD__ . ' for ' . \get_class($type));
+        throw new NotImplementedYetException(__METHOD__ . ' for ' . \get_class($type));
     }
 }

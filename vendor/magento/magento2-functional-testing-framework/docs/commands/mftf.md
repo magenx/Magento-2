@@ -42,10 +42,41 @@ vendor/bin/mftf generate:tests
 vendor/bin/mftf generate:tests AdminLoginSuccessfulTest StorefrontPersistedCustomerLoginTest
 ```
 
+### Generate tests by testNames.txt file
+
+```bash
+vendor/bin/mftf generate:tests -p path/to/your/testNames.txt
+```
+
+This command generate all tests specified in a testNames.txt file.
+
+#### Example
+
+```bash
+testName1
+testName2
+testNameN
+suiteName:testInSuite
+```
+
 ### Generate test by test and suite name
 
 ```bash
 vendor/bin/mftf generate:tests WYSIWYGDisabledSuite:AdminCMSPageCreatePageTest
+```
+
+### Generate test dependencies
+
+```bash
+vendor/bin/mftf generate:tests -l testEntityJson
+```
+
+This command generate json file consist of all test dependent module.
+
+### Generate test dependencies by test name
+
+```bash
+vendor/bin/mftf generate:tests testName1  testName2 .. testNameN -l testEntityJson
 ```
 
 ### Generate and run the tests for a specified group
@@ -166,24 +197,25 @@ vendor/bin/mftf generate:tests [option] [<test name>] [<test name>] [--remove]
 
 #### Options
 
-| Option | Description|
-| ---| --- |
-| `--config=[<default> or <singleRun> or <parallel>]` | Creates a single manifest file with a list of all tests. The default location is `tests/functional/Magento/FunctionalTest/_generated/testManifest.txt`.<br/> You can split the list into multiple groups using `--config=parallel`; the groups will be generated in `_generated/groups/` like `_generated/groups/group1.txt, group2.txt, ...`.<br/> Available values: `default` (default), `singleRun`(same as `default`), and `parallel`.<br/> Example: `generate:tests --config=parallel`. |
-| `--filter` | Option to filter tests to be generated.<br/>Template: '&lt;filterName&gt;:&lt;filterValue&gt;'.<br/>Existing filter types: severity, includeGroup, excludeGroup.<br/>Existing severity values: BLOCKER, CRITICAL, MAJOR, AVERAGE, MINOR.<br/>Example: `vendor/bin/mftf generate:tests --filter=severity:CRITICAL --filter=severity:BLOCKER --filter=includeGroup:customer`|
-| `--force` | Forces test generation, regardless of the module merge order defined in the Magento instance. Example: `generate:tests --force`. |
-| `-i,--time` | Set time in minutes to determine the group size when `--config=parallel` is used. <br/>Example: `generate:tests --config=parallel --time=15` <br/>Option `--time` will be the default and the __default value__ is `10` when neither `--time` nor `--groups` is specified. <br/>Example: `generate:tests --config=parallel`|
-| `-g,--groups` | Set number of groups to be split into when `--config=parallel` is used. <br>Example: `generate:tests --config=parallel --groups=300` <br/>Options `--time` and `--groups` are mutually exclusive and only one should be used.|
-| `--tests` | Defines the test configuration as a JSON string.|
-| `--allow-skipped` | Allows MFTF to generate and run tests marked with `<skip>.`|
-| `--debug` | Performs schema validations on XML files. <br/> DEFAULT: `generate:tests` implicitly performs schema validation on merged files. It does not indicate the file name where the error is encountered. <br/> DEVELOPER: `--debug` performs per-file validation and returns additional debug information (such as the filename where an error occurred) when test generation fails because of an invalid XML schema. This option takes extra processing time. Use it after test generation has failed once.<br/>|
-| `-r,--remove`| Removes the existing generated suites and tests cleaning up the `_generated` directory before the actual run. For example, `generate:tests SampleTest --remove` cleans up the entire `_generated` directory and generates `SampleTest` only.|
+| Option                                              | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+|-----------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `--config=[<default> or <singleRun> or <parallel>]` | Creates a single manifest file with a list of all tests. The default location is `tests/functional/Magento/FunctionalTest/_generated/testManifest.txt`.<br/> You can split the list into multiple groups using `--config=parallel`; the groups will be generated in `_generated/groups/` like `_generated/groups/group1.txt, group2.txt, ...`.<br/> Available values: `default` (default), `singleRun`(same as `default`), and `parallel`.<br/> Example: `generate:tests --config=parallel`.                 |
+| `--filter`                                          | Option to filter tests to be generated.<br/>Template: '&lt;filterName&gt;:&lt;filterValue&gt;'.<br/>Existing filter types: severity, includeGroup, excludeGroup.<br/>Existing severity values: BLOCKER, CRITICAL, MAJOR, AVERAGE, MINOR.<br/>Example: `vendor/bin/mftf generate:tests --filter=severity:CRITICAL --filter=severity:BLOCKER --filter=includeGroup:customer`                                                                                                                                   |
+| `--force`                                           | Forces test generation, regardless of the module merge order defined in the Magento instance. Example: `generate:tests --force`.                                                                                                                                                                                                                                                                                                                                                                             |
+| `-i,--time`                                         | Set time in minutes to determine the group size when `--config=parallel` is used. <br/>Example: `generate:tests --config=parallel --time=15` <br/>Option `--time` will be the default and the __default value__ is `10` when neither `--time` nor `--groups` is specified. <br/>Example: `generate:tests --config=parallel`                                                                                                                                                                                  |
+| `-g,--groups`                                       | Set number of groups to be split into when `--config=parallel` is used. <br>Example: `generate:tests --config=parallel --groups=300` <br/>Options `--time` and `--groups` are mutually exclusive and only one should be used.                                                                                                                                                                                                                                                                                |
+| `--tests`                                           | Defines the test configuration as a JSON string or JSON file path.                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `--allow-skipped`                                   | Allows MFTF to generate and run tests marked with `<skip>.`                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `--debug`                                           | Performs schema validations on XML files. <br/> DEFAULT: `generate:tests` implicitly performs schema validation on merged files. It does not indicate the file name where the error is encountered. <br/> DEVELOPER: `--debug` performs per-file validation and returns additional debug information (such as the filename where an error occurred) when test generation fails because of an invalid XML schema. This option takes extra processing time. Use it after test generation has failed once.<br/> |
+| `-r,--remove`                                       | Removes the existing generated suites and tests cleaning up the `_generated` directory before the actual run. For example, `generate:tests SampleTest --remove` cleans up the entire `_generated` directory and generates `SampleTest` only.                                                                                                                                                                                                                                                                 |
+| `-l,--log`                                          | Generate metadata files during test generation. Accepted parameters are: testEntityJson.                                                                                                                                                                                                                                                                                                                                                                                                                     |
 
 #### Examples of the JSON configuration
 
 The configuration to generate a single test with no suites:
 
 ```json
-{  
+{
    "tests":[
       "general_test1"  //Generate the "general_test1" test.
       ],
@@ -194,9 +226,9 @@ The configuration to generate a single test with no suites:
 The configuration to generate a single test in the suite:
 
 ```json
-{  
+{
    "tests": null,       // No tests outside the suite configuration will be generated.
-   "suites":{  
+   "suites":{
       "sample":[        // The suite that contains the test.
          "suite_test1"  // The test to be generated.
       ]
@@ -207,8 +239,8 @@ The configuration to generate a single test in the suite:
 Complex configuration to generate a few non-suite tests, a single test in a suite, and an entire suite:
 
 ```json
-{  
-   "tests":[  
+{
+   "tests":[
       "general_test1",
       "general_test2",
       "general_test3"
@@ -224,11 +256,19 @@ Complex configuration to generate a few non-suite tests, a single test in a suit
 
 The command that encodes this complex configuration:
 
+Command to generate test by json string:
+
 ```bash
 vendor/bin/mftf generate:tests --tests '{"tests":["general_test1","general_test2","general_test3"],"suites":{"sample":["suite_test1"],"sample2":null}}'
 ```
 
 Note that the strings must be escaped and surrounded in quotes.
+
+Command to generate test by json file:
+
+```bash
+vendor/bin/mftf generate:tests --tests ./foldername/filename.json
+```
 
 ### `generate:suite`
 
@@ -313,7 +353,7 @@ Generates and executes the listed groups of tests using Codeception.
 #### Usage
 
 ```bash
-vendor/bin/mftf run:group [--skip-generate|--remove] [--] <group1> [<group2>]
+vendor/bin/mftf run:group [--skip-generate|--remove|--xml] [--] <group1> [<group2>]
 ```
 
 #### Options
@@ -323,6 +363,7 @@ vendor/bin/mftf run:group [--skip-generate|--remove] [--] <group1> [<group2>]
 | `-k, --skip-generate` | Skips generating from the source XML. Instead, the command executes previously-generated groups of tests. |
 | `-r, --remove`        | Removes previously generated suites and tests before the actual generation and run.                       |
 | `--debug`             | Performs schema validations on XML files. `run:group` implicitly performs schema validation on merged files. It does not indicate the file name where the error is encountered. `--debug` performs per-file validation and returns additional debug information (such as the filename where an error occurred).|
+| `--xml`               |  Generate JUnit XML Log (default: "report.xml")                                                             |
 
 #### Examples
 
@@ -345,7 +386,7 @@ Generates and executes tests by name using Codeception.
 #### Usage
 
 ```bash
-vendor/bin/mftf run:test [--skip-generate|--remove] [--] <name1> [<name2>]
+vendor/bin/mftf run:test [--skip-generate|--remove|--xml] [--] <name1> [<name2>]
 ```
 
 #### Options
@@ -355,6 +396,7 @@ vendor/bin/mftf run:test [--skip-generate|--remove] [--] <name1> [<name2>]
 | `-k, --skip-generate` | Skips generating from the source XML. Instead, the command executes previously-generated groups of tests. |
 | `-r, --remove`        | Remove previously generated suites and tests.                                                             |
 | `--debug`             | Performs schema validations on XML files. `run:test` implicitly performs schema validation on merged files. It does not indicate the file name where the error is encountered. `--debug` performs per-file validation and returns additional debug information (such as the filename where an error occurred).|
+| `--xml`               |  Generate JUnit XML Log (default: "report.xml")                                                             |
 
 #### Examples
 
@@ -368,7 +410,7 @@ vendor/bin/mftf run:test LoginCustomerTest StorefrontCreateCustomerTest
 
 Runs a testManifest.txt file.
 
-This command runs all tests specified in a testManifest.xml file. It does not generate tests for you. You must do that as first. 
+This command runs all tests specified in a testManifest.xml file. It does not generate tests for you. You must do that as first.
 
 #### Usage
 
@@ -449,7 +491,7 @@ The example parameters are taken from the `etc/config/.env.example` file.
 
 ### `static-checks`
 
-Runs all or specific MFTF static-checks on the test codebase that MFTF is currently attached to. 
+Runs all or specific MFTF static-checks on the test codebase that MFTF is currently attached to.
 Behavior for determining what tests to run is as follows:
 
 *  If test names are specified, only those tests are run.
@@ -469,7 +511,7 @@ vendor/bin/mftf static-checks [<names>]...
 | Option                | Description                                                                                               |
 |-----------------------|-----------------------------------------------------------------------------------------------------------|
 | `-p, --path` | Path to a MFTF test module to run "deprecatedEntityUsage" and "pauseActionUsage" static check scripts. Option is ignored by other static check scripts.
-                
+
 #### Examples
 
 To check what existing static check scripts are available
@@ -478,7 +520,7 @@ To check what existing static check scripts are available
 vendor/bin/mftf static-checks --help
 ```
 
-To run all existing static check scripts 
+To run all existing static check scripts
 
 ```bash
 vendor/bin/mftf static-checks
@@ -527,7 +569,7 @@ vendor/bin/mftf static-checks testDependencies actionGroupArguments
 |`deprecatedEntityUsage`| Checks that deprecated test entities are not being referenced.|
 |`annotations`| Checks various details of test annotations, such as missing annotations or duplicate annotations.|
 |`pauseUsage`| Checks that pause action is not used in action groups, tests or suites.|
-         
+
 #### Defining ruleset
 
 The `static-checks` command will look for a `staticRuleset.json` file under either:
@@ -623,7 +665,7 @@ vendor/bin/mftf codecept:run functional --verbose --steps -g default
 
 <div class="bs-callout-warning">
 <p>
-Note: You may want to limit the usage of this Codeception command with arguments and options for "acceptance" only, since it is what's supported by MFTF. 
+Note: You may want to limit the usage of this Codeception command with arguments and options for "acceptance" only, since it is what's supported by MFTF.
 When using this command, you should change "acceptance" to "functional" when referring to Codeception documentation.
 </p>
 </div>

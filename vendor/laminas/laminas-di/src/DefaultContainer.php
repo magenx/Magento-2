@@ -25,7 +25,7 @@ class DefaultContainer implements ContainerInterface
     /**
      * Registered services and cached values
      *
-     * @var array
+     * @var array<string, object>
      */
     protected $services = [];
 
@@ -57,7 +57,7 @@ class DefaultContainer implements ContainerInterface
      * @see ContainerInterface::has()
      *
      * @param string $name
-     * @return mixed
+     * @return bool
      */
     public function has($name)
     {
@@ -80,7 +80,7 @@ class DefaultContainer implements ContainerInterface
      * @see ContainerInterface::get()
      *
      * @param string $name
-     * @return mixed
+     * @return object
      */
     public function get($name)
     {

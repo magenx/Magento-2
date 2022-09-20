@@ -3,7 +3,7 @@
 declare (strict_types=1);
 namespace Rector\CodingStyle\Rector\Stmt;
 
-use PhpParser\Comment\Doc;
+use PhpParser\Comment;
 use PhpParser\Node;
 use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Catch_;
@@ -33,25 +33,21 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
  * @see \Rector\Tests\CodingStyle\Rector\Stmt\NewlineAfterStatementRector\NewlineAfterStatementRectorTest
  */
-final class NewlineAfterStatementRector extends \Rector\Core\Rector\AbstractRector
+final class NewlineAfterStatementRector extends AbstractRector
 {
     /**
      * @var array<class-string<Node>>
      */
-    private const STMTS_TO_HAVE_NEXT_NEWLINE = [\PhpParser\Node\Stmt\ClassMethod::class, \PhpParser\Node\Stmt\Function_::class, \PhpParser\Node\Stmt\Property::class, \PhpParser\Node\Stmt\If_::class, \PhpParser\Node\Stmt\Foreach_::class, \PhpParser\Node\Stmt\Do_::class, \PhpParser\Node\Stmt\While_::class, \PhpParser\Node\Stmt\For_::class, \PhpParser\Node\Stmt\ClassConst::class, \PhpParser\Node\Stmt\Namespace_::class, \PhpParser\Node\Stmt\TryCatch::class, \PhpParser\Node\Stmt\Class_::class, \PhpParser\Node\Stmt\Trait_::class, \PhpParser\Node\Stmt\Interface_::class, \PhpParser\Node\Stmt\Switch_::class];
-    /**
-     * @var array<string, true>
-     */
-    private $stmtsHashed = [];
-    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
+    private const STMTS_TO_HAVE_NEXT_NEWLINE = [ClassMethod::class, Function_::class, Property::class, If_::class, Foreach_::class, Do_::class, While_::class, For_::class, ClassConst::class, Namespace_::class, TryCatch::class, Class_::class, Trait_::class, Interface_::class, Switch_::class];
+    public function getRuleDefinition() : RuleDefinition
     {
-        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Add new line after statements to tidify code', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample(<<<'CODE_SAMPLE'
+        return new RuleDefinition('Add new line after statements to tidify code', [new CodeSample(<<<'CODE_SAMPLE'
 class SomeClass
 {
-    public function test()
+    public function first()
     {
     }
-    public function test2()
+    public function second()
     {
     }
 }
@@ -59,11 +55,11 @@ CODE_SAMPLE
 , <<<'CODE_SAMPLE'
 class SomeClass
 {
-    public function test()
+    public function first()
     {
     }
 
-    public function test2()
+    public function second()
     {
     }
 }
@@ -75,25 +71,21 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [\PhpParser\Node\Stmt::class];
+        return [Stmt::class];
     }
     /**
      * @param Stmt $node
+     * @return Stmt[]|null
      */
-    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
+    public function refactor(Node $node) : ?array
     {
-        if ($this->nodesToRemoveCollector->isActive()) {
-            return null;
-        }
-        $node = $this->resolveCurrentStatement($node);
         if (!\in_array(\get_class($node), self::STMTS_TO_HAVE_NEXT_NEWLINE, \true)) {
             return null;
         }
-        $hash = \spl_object_hash($node);
-        if (isset($this->stmtsHashed[$hash])) {
+        $nextNode = $node->getAttribute(AttributeKey::NEXT_NODE);
+        if (!$nextNode instanceof Node) {
             return null;
         }
-        $nextNode = $node->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::NEXT_NODE);
         if ($this->shouldSkip($nextNode)) {
             return null;
         }
@@ -101,7 +93,8 @@ CODE_SAMPLE
         $line = $nextNode->getLine();
         $rangeLine = $line - $endLine;
         if ($rangeLine > 1) {
-            $comments = $nextNode->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::COMMENTS);
+            /** @var Comment[]|null $comments */
+            $comments = $nextNode->getAttribute(AttributeKey::COMMENTS);
             if ($this->hasNoComment($comments)) {
                 return null;
             }
@@ -109,23 +102,17 @@ CODE_SAMPLE
             if ($phpDocInfo->hasChanged()) {
                 return null;
             }
+            /** @var Comment[] $comments */
             $line = $comments[0]->getLine();
             $rangeLine = $line - $endLine;
             if ($rangeLine > 1) {
                 return null;
             }
         }
-        $this->stmtsHashed[$hash] = \true;
-        $this->nodesToAddCollector->addNodeAfterNode(new \PhpParser\Node\Stmt\Nop(), $node);
-        return $node;
-    }
-    private function resolveCurrentStatement(\PhpParser\Node\Stmt $stmt) : \PhpParser\Node\Stmt
-    {
-        $currentStatement = $stmt->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::CURRENT_STATEMENT);
-        return $currentStatement instanceof \PhpParser\Node\Stmt ? $currentStatement : $stmt;
+        return [$node, new Nop()];
     }
     /**
-     * @param null|Doc[] $comments
+     * @param Comment[]|null $comments
      */
     private function hasNoComment(?array $comments) : bool
     {
@@ -134,11 +121,11 @@ CODE_SAMPLE
         }
         return !isset($comments[0]);
     }
-    private function shouldSkip(?\PhpParser\Node $nextNode) : bool
+    private function shouldSkip(?Node $nextNode) : bool
     {
-        if (!$nextNode instanceof \PhpParser\Node\Stmt) {
+        if (!$nextNode instanceof Stmt) {
             return \true;
         }
-        return \in_array(\get_class($nextNode), [\PhpParser\Node\Stmt\Else_::class, \PhpParser\Node\Stmt\ElseIf_::class, \PhpParser\Node\Stmt\Catch_::class, \PhpParser\Node\Stmt\Finally_::class], \true);
+        return \in_array(\get_class($nextNode), [Else_::class, ElseIf_::class, Catch_::class, Finally_::class], \true);
     }
 }

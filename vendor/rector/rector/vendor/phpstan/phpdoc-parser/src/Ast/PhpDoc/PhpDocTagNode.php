@@ -4,6 +4,7 @@ declare (strict_types=1);
 namespace PHPStan\PhpDocParser\Ast\PhpDoc;
 
 use PHPStan\PhpDocParser\Ast\NodeAttributes;
+use function trim;
 class PhpDocTagNode implements \PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocChildNode
 {
     use NodeAttributes;
@@ -18,6 +19,6 @@ class PhpDocTagNode implements \PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocChildNode
     }
     public function __toString() : string
     {
-        return \trim("{$this->name} {$this->value}");
+        return trim("{$this->name} {$this->value}");
     }
 }

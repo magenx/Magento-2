@@ -3,7 +3,7 @@
 declare (strict_types=1);
 namespace Rector\Nette\NeonParser;
 
-use RectorPrefix20211221\Nette\Neon\Node;
+use RectorPrefix202208\Nette\Neon\Node;
 use Rector\Nette\Contract\Rector\NeonRectorInterface;
 use Rector\Nette\NeonParser\Contract\NeonNodeVisitorInterface;
 use Rector\Nette\NeonParser\Node\Service_;
@@ -26,16 +26,16 @@ final class NeonNodeTraverser
      * @var \Rector\Nette\NeonParser\NodeFactory\ServiceFactory
      */
     private $serviceFactory;
-    public function __construct(\Rector\Nette\NeonParser\Services\ServiceTypeResolver $serviceTypeResolver, \Rector\Nette\NeonParser\NodeFactory\ServiceFactory $serviceFactory)
+    public function __construct(ServiceTypeResolver $serviceTypeResolver, ServiceFactory $serviceFactory)
     {
         $this->serviceTypeResolver = $serviceTypeResolver;
         $this->serviceFactory = $serviceFactory;
     }
-    public function addNeonNodeVisitor(\Rector\Nette\Contract\Rector\NeonRectorInterface $neonRector) : void
+    public function addNeonNodeVisitor(NeonRectorInterface $neonRector) : void
     {
         $this->neonRectors[] = $neonRector;
     }
-    public function traverse(\RectorPrefix20211221\Nette\Neon\Node $node) : \RectorPrefix20211221\Nette\Neon\Node
+    public function traverse(Node $node) : Node
     {
         foreach ($this->neonRectors as $neonRector) {
             // is service node?
@@ -44,7 +44,7 @@ final class NeonNodeTraverser
             // create virtual node
             if (\is_string($serviceType)) {
                 $service = $this->serviceFactory->create($node);
-                if ($service instanceof \Rector\Nette\NeonParser\Node\Service_) {
+                if ($service instanceof Service_) {
                     // enter meta node
                     $node = $service;
                 }
@@ -54,7 +54,7 @@ final class NeonNodeTraverser
                 $neonRector->enterNode($node);
             }
             // traverse all children
-            foreach ($node->getSubNodes() as $subnode) {
+            foreach ($node->getIterator() as $subnode) {
                 $this->traverse($subnode);
             }
         }

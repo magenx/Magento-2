@@ -4,6 +4,7 @@ declare (strict_types=1);
 namespace PHPStan\PhpDocParser\Ast\Type;
 
 use PHPStan\PhpDocParser\Ast\NodeAttributes;
+use function implode;
 class UnionTypeNode implements \PHPStan\PhpDocParser\Ast\Type\TypeNode
 {
     use NodeAttributes;
@@ -15,6 +16,6 @@ class UnionTypeNode implements \PHPStan\PhpDocParser\Ast\Type\TypeNode
     }
     public function __toString() : string
     {
-        return '(' . \implode(' | ', $this->types) . ')';
+        return '(' . implode(' | ', $this->types) . ')';
     }
 }

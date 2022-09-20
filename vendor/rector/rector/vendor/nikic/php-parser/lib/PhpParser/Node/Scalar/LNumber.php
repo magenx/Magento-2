@@ -5,7 +5,7 @@ namespace PhpParser\Node\Scalar;
 
 use PhpParser\Error;
 use PhpParser\Node\Scalar;
-class LNumber extends \PhpParser\Node\Scalar
+class LNumber extends Scalar
 {
     /* For use in "kind" attribute */
     const KIND_BIN = 2;
@@ -40,6 +40,7 @@ class LNumber extends \PhpParser\Node\Scalar
      */
     public static function fromString(string $str, array $attributes = [], bool $allowInvalidOctal = \false) : \PhpParser\Node\Scalar\LNumber
     {
+        $attributes['rawValue'] = $str;
         $str = \str_replace('_', '', $str);
         if ('0' !== $str[0] || '0' === $str) {
             $attributes['kind'] = \PhpParser\Node\Scalar\LNumber::KIND_DEC;
@@ -54,7 +55,7 @@ class LNumber extends \PhpParser\Node\Scalar
             return new \PhpParser\Node\Scalar\LNumber(\bindec($str), $attributes);
         }
         if (!$allowInvalidOctal && \strpbrk($str, '89')) {
-            throw new \PhpParser\Error('Invalid numeric literal', $attributes);
+            throw new Error('Invalid numeric literal', $attributes);
         }
         // Strip optional explicit octal prefix.
         if ('o' === $str[1] || 'O' === $str[1]) {

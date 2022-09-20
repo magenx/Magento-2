@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Laminas\Feed\Writer\Renderer\Entry;
 
 use DateTime;
@@ -19,9 +21,6 @@ use function preg_replace;
 use function str_replace;
 use function strlen;
 use function strtotime;
-use function version_compare;
-
-use const PHP_VERSION;
 
 class Atom extends Renderer\AbstractRenderer implements Renderer\RendererInterface
 {
@@ -177,18 +176,18 @@ class Atom extends Renderer\AbstractRenderer implements Renderer\RendererInterfa
             $name   = $this->dom->createElement('name');
             $author->appendChild($name);
             $root->appendChild($author);
-            $text = $dom->createTextNode($data['name']);
+            $text = $dom->createTextNode((string) $data['name']);
             $name->appendChild($text);
             if (array_key_exists('email', $data)) {
                 $email = $this->dom->createElement('email');
                 $author->appendChild($email);
-                $text = $dom->createTextNode($data['email']);
+                $text = $dom->createTextNode((string) $data['email']);
                 $email->appendChild($text);
             }
             if (array_key_exists('uri', $data)) {
                 $uri = $this->dom->createElement('uri');
                 $author->appendChild($uri);
-                $text = $dom->createTextNode($data['uri']);
+                $text = $dom->createTextNode((string) $data['uri']);
                 $uri->appendChild($text);
             }
         }
@@ -274,7 +273,7 @@ class Atom extends Renderer\AbstractRenderer implements Renderer\RendererInterfa
         }
         $id = $dom->createElement('id');
         $root->appendChild($id);
-        $text = $dom->createTextNode($this->getDataContainer()->getId());
+        $text = $dom->createTextNode((string) $this->getDataContainer()->getId());
         $id->appendChild($text);
     }
 
@@ -342,8 +341,7 @@ class Atom extends Renderer\AbstractRenderer implements Renderer\RendererInterfa
         $element = $dom->createElement('content');
         $element->setAttribute('type', 'xhtml');
         $xhtmlElement = $this->_loadXhtml($content);
-        $deep         = version_compare(PHP_VERSION, '7', 'ge') ? 1 : true;
-        $xhtml        = $dom->importNode($xhtmlElement, $deep);
+        $xhtml        = $dom->importNode($xhtmlElement, true);
         $element->appendChild($xhtml);
         $root->appendChild($element);
     }

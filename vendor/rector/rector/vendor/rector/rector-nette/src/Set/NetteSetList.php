@@ -4,7 +4,7 @@ declare (strict_types=1);
 namespace Rector\Nette\Set;
 
 use Rector\Set\Contract\SetListInterface;
-final class NetteSetList implements \Rector\Set\Contract\SetListInterface
+final class NetteSetList implements SetListInterface
 {
     /**
      * @var string
@@ -26,6 +26,10 @@ final class NetteSetList implements \Rector\Set\Contract\SetListInterface
      * @var string
      */
     public const NETTE_CODE_QUALITY = __DIR__ . '/../../config/sets/nette-code-quality.php';
+    /**
+     * @var string
+     */
+    public const NETTE_STRICT = __DIR__ . '/../../config/sets/nette-strict.php';
     /**
      * @var string
      */

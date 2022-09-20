@@ -17,18 +17,12 @@ use Rector\Transform\NodeAnalyzer\FuncCallStaticCallToMethodCallAnalyzer;
 use Rector\Transform\ValueObject\StaticCallToMethodCall;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
-use RectorPrefix20211221\Webmozart\Assert\Assert;
+use RectorPrefix202208\Webmozart\Assert\Assert;
 /**
  * @see \Rector\Tests\Transform\Rector\StaticCall\StaticCallToMethodCallRector\StaticCallToMethodCallRectorTest
  */
-final class StaticCallToMethodCallRector extends \Rector\Core\Rector\AbstractRector implements \Rector\Core\Contract\Rector\ConfigurableRectorInterface
+final class StaticCallToMethodCallRector extends AbstractRector implements ConfigurableRectorInterface
 {
-    /**
-     * @api
-     * @deprecated
-     * @var string
-     */
-    public const STATIC_CALLS_TO_METHOD_CALLS = 'static_calls_to_method_calls';
     /**
      * @var StaticCallToMethodCall[]
      */
@@ -38,13 +32,13 @@ final class StaticCallToMethodCallRector extends \Rector\Core\Rector\AbstractRec
      * @var \Rector\Transform\NodeAnalyzer\FuncCallStaticCallToMethodCallAnalyzer
      */
     private $funcCallStaticCallToMethodCallAnalyzer;
-    public function __construct(\Rector\Transform\NodeAnalyzer\FuncCallStaticCallToMethodCallAnalyzer $funcCallStaticCallToMethodCallAnalyzer)
+    public function __construct(FuncCallStaticCallToMethodCallAnalyzer $funcCallStaticCallToMethodCallAnalyzer)
     {
         $this->funcCallStaticCallToMethodCallAnalyzer = $funcCallStaticCallToMethodCallAnalyzer;
     }
-    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
+    public function getRuleDefinition() : RuleDefinition
     {
-        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Change static call to service method via constructor injection', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample(<<<'CODE_SAMPLE'
+        return new RuleDefinition('Change static call to service method via constructor injection', [new ConfiguredCodeSample(<<<'CODE_SAMPLE'
 use Nette\Utils\FileSystem;
 
 class SomeClass
@@ -76,26 +70,26 @@ class SomeClass
     }
 }
 CODE_SAMPLE
-, [new \Rector\Transform\ValueObject\StaticCallToMethodCall('Nette\\Utils\\FileSystem', 'write', 'Symplify\\SmartFileSystem\\SmartFileSystem', 'dumpFile')])]);
+, [new StaticCallToMethodCall('Nette\\Utils\\FileSystem', 'write', 'Symplify\\SmartFileSystem\\SmartFileSystem', 'dumpFile')])]);
     }
     /**
      * @return array<class-string<Node>>
      */
     public function getNodeTypes() : array
     {
-        return [\PhpParser\Node\Expr\StaticCall::class];
+        return [StaticCall::class];
     }
     /**
      * @param StaticCall $node
      */
-    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
+    public function refactor(Node $node) : ?Node
     {
-        $classLike = $this->betterNodeFinder->findParentType($node, \PhpParser\Node\Stmt\Class_::class);
-        if (!$classLike instanceof \PhpParser\Node\Stmt\Class_) {
+        $classLike = $this->betterNodeFinder->findParentType($node, Class_::class);
+        if (!$classLike instanceof Class_) {
             return null;
         }
-        $classMethod = $this->betterNodeFinder->findParentType($node, \PhpParser\Node\Stmt\ClassMethod::class);
-        if (!$classMethod instanceof \PhpParser\Node\Stmt\ClassMethod) {
+        $classMethod = $this->betterNodeFinder->findParentType($node, ClassMethod::class);
+        if (!$classMethod instanceof ClassMethod) {
             return null;
         }
         foreach ($this->staticCallsToMethodCalls as $staticCallToMethodCall) {
@@ -112,9 +106,9 @@ CODE_SAMPLE
                 $methodName = $staticCallToMethodCall->getMethodName();
             }
             if (!\is_string($methodName)) {
-                throw new \Rector\Core\Exception\ShouldNotHappenException();
+                throw new ShouldNotHappenException();
             }
-            return new \PhpParser\Node\Expr\MethodCall($expr, $methodName, $node->args);
+            return new MethodCall($expr, $methodName, $node->args);
         }
         return $node;
     }
@@ -123,14 +117,12 @@ CODE_SAMPLE
      */
     public function configure(array $configuration) : void
     {
-        $staticCallsToMethodCalls = $configuration[self::STATIC_CALLS_TO_METHOD_CALLS] ?? $configuration;
-        \RectorPrefix20211221\Webmozart\Assert\Assert::isArray($staticCallsToMethodCalls);
-        \RectorPrefix20211221\Webmozart\Assert\Assert::allIsAOf($staticCallsToMethodCalls, \Rector\Transform\ValueObject\StaticCallToMethodCall::class);
-        $this->staticCallsToMethodCalls = $staticCallsToMethodCalls;
+        Assert::allIsAOf($configuration, StaticCallToMethodCall::class);
+        $this->staticCallsToMethodCalls = $configuration;
     }
-    private function refactorToInstanceCall(\PhpParser\Node\Expr\StaticCall $staticCall, \Rector\Transform\ValueObject\StaticCallToMethodCall $staticCallToMethodCall) : \PhpParser\Node\Expr\MethodCall
+    private function refactorToInstanceCall(StaticCall $staticCall, StaticCallToMethodCall $staticCallToMethodCall) : MethodCall
     {
-        $new = new \PhpParser\Node\Expr\New_(new \PhpParser\Node\Name\FullyQualified($staticCallToMethodCall->getClassType()));
-        return new \PhpParser\Node\Expr\MethodCall($new, $staticCallToMethodCall->getMethodName(), $staticCall->args);
+        $new = new New_(new FullyQualified($staticCallToMethodCall->getClassType()));
+        return new MethodCall($new, $staticCallToMethodCall->getMethodName(), $staticCall->args);
     }
 }

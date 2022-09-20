@@ -8,25 +8,28 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix20211221\Symfony\Component\Config\Loader;
+namespace RectorPrefix202208\Symfony\Component\Config\Loader;
 
-use RectorPrefix20211221\Symfony\Component\Config\Exception\FileLoaderImportCircularReferenceException;
-use RectorPrefix20211221\Symfony\Component\Config\Exception\FileLocatorFileNotFoundException;
-use RectorPrefix20211221\Symfony\Component\Config\Exception\LoaderLoadException;
-use RectorPrefix20211221\Symfony\Component\Config\FileLocatorInterface;
-use RectorPrefix20211221\Symfony\Component\Config\Resource\FileExistenceResource;
-use RectorPrefix20211221\Symfony\Component\Config\Resource\GlobResource;
+use RectorPrefix202208\Symfony\Component\Config\Exception\FileLoaderImportCircularReferenceException;
+use RectorPrefix202208\Symfony\Component\Config\Exception\FileLocatorFileNotFoundException;
+use RectorPrefix202208\Symfony\Component\Config\Exception\LoaderLoadException;
+use RectorPrefix202208\Symfony\Component\Config\FileLocatorInterface;
+use RectorPrefix202208\Symfony\Component\Config\Resource\FileExistenceResource;
+use RectorPrefix202208\Symfony\Component\Config\Resource\GlobResource;
 /**
  * FileLoader is the abstract class used by all built-in loaders that are file based.
  *
  * @author Fabien Potencier <fabien@symfony.com>
  */
-abstract class FileLoader extends \RectorPrefix20211221\Symfony\Component\Config\Loader\Loader
+abstract class FileLoader extends Loader
 {
     protected static $loading = [];
     protected $locator;
+    /**
+     * @var string|null
+     */
     private $currentDir;
-    public function __construct(\RectorPrefix20211221\Symfony\Component\Config\FileLocatorInterface $locator, string $env = null)
+    public function __construct(FileLocatorInterface $locator, string $env = null)
     {
         $this->locator = $locator;
         parent::__construct($env);
@@ -40,10 +43,8 @@ abstract class FileLoader extends \RectorPrefix20211221\Symfony\Component\Config
     }
     /**
      * Returns the file locator used by this loader.
-     *
-     * @return FileLocatorInterface
      */
-    public function getLocator()
+    public function getLocator() : FileLocatorInterface
     {
         return $this->locator;
     }
@@ -54,7 +55,7 @@ abstract class FileLoader extends \RectorPrefix20211221\Symfony\Component\Config
      * @param string|null          $type           The resource type or null if unknown
      * @param bool                 $ignoreErrors   Whether to ignore import errors or not
      * @param string|null          $sourceResource The original resource importing the new resource
-     * @param string|string[]|null $exclude        Glob patterns to exclude from the import
+     * @param string|mixed[] $exclude Glob patterns to exclude from the import
      *
      * @return mixed
      *
@@ -62,7 +63,7 @@ abstract class FileLoader extends \RectorPrefix20211221\Symfony\Component\Config
      * @throws FileLoaderImportCircularReferenceException
      * @throws FileLocatorFileNotFoundException
      */
-    public function import($resource, $type = null, $ignoreErrors = \false, $sourceResource = null, $exclude = null)
+    public function import($resource, string $type = null, bool $ignoreErrors = \false, string $sourceResource = null, $exclude = null)
     {
         if (\is_string($resource) && \strlen($resource) !== ($i = \strcspn($resource, '*?{[')) && \strpos($resource, "\n") === \false) {
             $excluded = [];
@@ -88,6 +89,7 @@ abstract class FileLoader extends \RectorPrefix20211221\Symfony\Component\Config
     }
     /**
      * @internal
+     * @param mixed[]|\Symfony\Component\Config\Resource\GlobResource $resource
      */
     protected function glob(string $pattern, bool $recursive, &$resource = null, bool $ignoreErrors = \false, bool $forExclusion = \false, array $excluded = [])
     {
@@ -103,19 +105,22 @@ abstract class FileLoader extends \RectorPrefix20211221\Symfony\Component\Config
         }
         try {
             $prefix = $this->locator->locate($prefix, $this->currentDir, \true);
-        } catch (\RectorPrefix20211221\Symfony\Component\Config\Exception\FileLocatorFileNotFoundException $e) {
+        } catch (FileLocatorFileNotFoundException $e) {
             if (!$ignoreErrors) {
                 throw $e;
             }
             $resource = [];
             foreach ($e->getPaths() as $path) {
-                $resource[] = new \RectorPrefix20211221\Symfony\Component\Config\Resource\FileExistenceResource($path);
+                $resource[] = new FileExistenceResource($path);
             }
             return;
         }
-        $resource = new \RectorPrefix20211221\Symfony\Component\Config\Resource\GlobResource($prefix, $pattern, $recursive, $forExclusion, $excluded);
+        $resource = new GlobResource($prefix, $pattern, $recursive, $forExclusion, $excluded);
         yield from $resource;
     }
+    /**
+     * @param mixed $resource
+     */
     private function doImport($resource, string $type = null, bool $ignoreErrors = \false, string $sourceResource = null)
     {
         try {
@@ -127,7 +132,7 @@ abstract class FileLoader extends \RectorPrefix20211221\Symfony\Component\Config
             for ($i = 0; $i < ($resourcesCount = \count($resources)); ++$i) {
                 if (isset(self::$loading[$resources[$i]])) {
                     if ($i == $resourcesCount - 1) {
-                        throw new \RectorPrefix20211221\Symfony\Component\Config\Exception\FileLoaderImportCircularReferenceException(\array_keys(self::$loading));
+                        throw new FileLoaderImportCircularReferenceException(\array_keys(self::$loading));
                     }
                 } else {
                     $resource = $resources[$i];
@@ -141,15 +146,15 @@ abstract class FileLoader extends \RectorPrefix20211221\Symfony\Component\Config
                 unset(self::$loading[$resource]);
             }
             return $ret;
-        } catch (\RectorPrefix20211221\Symfony\Component\Config\Exception\FileLoaderImportCircularReferenceException $e) {
+        } catch (FileLoaderImportCircularReferenceException $e) {
             throw $e;
         } catch (\Exception $e) {
             if (!$ignoreErrors) {
                 // prevent embedded imports from nesting multiple exceptions
-                if ($e instanceof \RectorPrefix20211221\Symfony\Component\Config\Exception\LoaderLoadException) {
+                if ($e instanceof LoaderLoadException) {
                     throw $e;
                 }
-                throw new \RectorPrefix20211221\Symfony\Component\Config\Exception\LoaderLoadException($resource, $sourceResource, 0, $e, $type);
+                throw new LoaderLoadException($resource, $sourceResource, 0, $e, $type);
             }
         }
         return null;

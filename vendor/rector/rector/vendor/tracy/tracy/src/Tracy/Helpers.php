@@ -5,9 +5,9 @@
  * Copyright (c) 2004 David Grudl (https://davidgrudl.com)
  */
 declare (strict_types=1);
-namespace RectorPrefix20211221\Tracy;
+namespace RectorPrefix202208\Tracy;
 
-use RectorPrefix20211221\Nette;
+use RectorPrefix202208\Nette;
 /**
  * Rendering helpers for Debugger.
  */
@@ -18,7 +18,7 @@ class Helpers
      */
     public static function editorLink(string $file, ?int $line = null) : string
     {
-        $file = \strtr($origFile = $file, \RectorPrefix20211221\Tracy\Debugger::$editorMapping);
+        $file = \strtr($origFile = $file, Debugger::$editorMapping);
         if ($editor = self::editorUri($origFile, $line)) {
             $parts = \explode('/', \strtr($file, '\\', '/'));
             $file = \array_pop($parts);
@@ -37,12 +37,12 @@ class Helpers
      */
     public static function editorUri(string $file, ?int $line = null, string $action = 'open', string $search = '', string $replace = '') : ?string
     {
-        if (\RectorPrefix20211221\Tracy\Debugger::$editor && $file && ($action === 'create' || \is_file($file))) {
+        if (Debugger::$editor && $file && ($action === 'create' || \is_file($file))) {
             $file = \strtr($file, '/', \DIRECTORY_SEPARATOR);
-            $file = \strtr($file, \RectorPrefix20211221\Tracy\Debugger::$editorMapping);
+            $file = \strtr($file, Debugger::$editorMapping);
             $search = \str_replace("\n", \PHP_EOL, $search);
             $replace = \str_replace("\n", \PHP_EOL, $replace);
-            return \strtr(\RectorPrefix20211221\Tracy\Debugger::$editor, ['%action' => $action, '%file' => \rawurlencode($file), '%line' => $line ?: 1, '%search' => \rawurlencode($search), '%replace' => \rawurlencode($replace)]);
+            return \strtr(Debugger::$editor, ['%action' => $action, '%file' => \rawurlencode($file), '%line' => $line ?: 1, '%search' => \rawurlencode($search), '%replace' => \rawurlencode($replace)]);
         }
         return null;
     }
@@ -70,7 +70,7 @@ class Helpers
     }
     public static function getClass($obj) : string
     {
-        return \explode("\0", \get_class($obj))[0];
+        return \explode("\x00", \get_class($obj))[0];
     }
     /** @internal */
     public static function fixStack(\Throwable $exception) : \Throwable
@@ -115,7 +115,7 @@ class Helpers
     public static function improveException(\Throwable $e) : void
     {
         $message = $e->getMessage();
-        if (!$e instanceof \Error && !$e instanceof \ErrorException || $e instanceof \RectorPrefix20211221\Nette\MemberAccessException || \strpos($e->getMessage(), 'did you mean')) {
+        if (!$e instanceof \Error && !$e instanceof \ErrorException || $e instanceof Nette\MemberAccessException || \strpos($e->getMessage(), 'did you mean')) {
             // do nothing
         } elseif (\preg_match('#^Call to undefined function (\\S+\\\\)?(\\w+)\\(#', $message, $m)) {
             $funcs = \array_merge(\get_defined_functions()['internal'], \get_defined_functions()['user']);
@@ -148,7 +148,7 @@ class Helpers
             $replace = ["::\${$m[2]}", "::\${$hint}"];
         }
         if (isset($hint)) {
-            $loc = \RectorPrefix20211221\Tracy\Debugger::mapSource($e->getFile(), $e->getLine()) ?? ['file' => $e->getFile(), 'line' => $e->getLine()];
+            $loc = Debugger::mapSource($e->getFile(), $e->getLine()) ?? ['file' => $e->getFile(), 'line' => $e->getLine()];
             $ref = new \ReflectionProperty($e, 'message');
             $ref->setAccessible(\true);
             $ref->setValue($e, $message);
@@ -214,7 +214,7 @@ class Helpers
     /** @internal */
     public static function isHtmlMode() : bool
     {
-        return empty($_SERVER['HTTP_X_REQUESTED_WITH']) && empty($_SERVER['HTTP_X_TRACY_AJAX']) && !self::isCli() && !\preg_match('#^Content-Type: (?!text/html)#im', \implode("\n", \headers_list()));
+        return empty($_SERVER['HTTP_X_REQUESTED_WITH']) && empty($_SERVER['HTTP_X_TRACY_AJAX']) && isset($_SERVER['HTTP_HOST']) && !self::isCli() && !\preg_match('#^Content-Type: *+(?!text/html)#im', \implode("\n", \headers_list()));
     }
     /** @internal */
     public static function isAjax() : bool
@@ -275,7 +275,7 @@ class Helpers
     }
     private static function doEncodeString(string $s, bool $utf8, bool $showWhitespaces) : string
     {
-        static $specials = [\true => ["\r" => '<i>\\r</i>', "\n" => "<i>\\n</i>\n", "\t" => '<i>\\t</i>    ', "\33" => '<i>\\e</i>', '<' => '&lt;', '&' => '&amp;'], \false => ["\r" => "\r", "\n" => "\n", "\t" => "\t", "\33" => '<i>\\e</i>', '<' => '&lt;', '&' => '&amp;']];
+        $specials = [\true => ["\r" => '<i>\\r</i>', "\n" => "<i>\\n</i>\n", "\t" => '<i>\\t</i>    ', "\x1b" => '<i>\\e</i>', '<' => '&lt;', '&' => '&amp;'], \false => ["\r" => "\r", "\n" => "\n", "\t" => "\t", "\x1b" => '<i>\\e</i>', '<' => '&lt;', '&' => '&amp;']];
         $special = $specials[$showWhitespaces];
         $s = \preg_replace_callback($utf8 ? '#[\\p{C}<&]#u' : '#[\\x00-\\x1F\\x7F-\\xFF<&]#', function ($m) use($special) {
             return $special[$m[0]] ?? (\strlen($m[0]) === 1 ? '<i>\\x' . \str_pad(\strtoupper(\dechex(\ord($m[0]))), 2, '0', \STR_PAD_LEFT) . '</i>' : '<i>\\u{' . \strtoupper(\ltrim(\dechex(self::utf8Ord($m[0])), '0')) . '}</i>');
@@ -391,22 +391,7 @@ XX
     }
     public static function detectColors() : bool
     {
-        $streamIsatty = function ($stream) {
-            if (\function_exists('stream_isatty')) {
-                return \stream_isatty($stream);
-            }
-            if (!\is_resource($stream)) {
-                \trigger_error('stream_isatty() expects parameter 1 to be resource, ' . \gettype($stream) . ' given', \E_USER_WARNING);
-                return \false;
-            }
-            if ('\\' === \DIRECTORY_SEPARATOR) {
-                $stat = @\fstat($stream);
-                // Check if formatted mode is S_IFCHR
-                return $stat ? 020000 === ($stat['mode'] & 0170000) : \false;
-            }
-            return \function_exists('posix_isatty') && @\posix_isatty($stream);
-        };
-        return self::isCli() && \getenv('NO_COLOR') === \false && (\getenv('FORCE_COLOR') || @$streamIsatty(\STDOUT) || (\defined('PHP_WINDOWS_VERSION_BUILD') && (\function_exists('sapi_windows_vt100_support') && \sapi_windows_vt100_support(\STDOUT)) || \getenv('ConEmuANSI') === 'ON' || \getenv('ANSICON') !== \false || \getenv('term') === 'xterm' || \getenv('term') === 'xterm-256color'));
+        return self::isCli() && \getenv('NO_COLOR') === \false && (\getenv('FORCE_COLOR') || (\function_exists('sapi_windows_vt100_support') ? \sapi_windows_vt100_support(\STDOUT) : @\stream_isatty(\STDOUT)));
     }
     public static function getExceptionChain(\Throwable $ex) : array
     {
@@ -415,5 +400,27 @@ XX
             $res[] = $ex;
         }
         return $res;
+    }
+    public static function traverseValue($val, callable $callback, array &$skip = [], ?string $refId = null) : void
+    {
+        if (\is_object($val)) {
+            $id = \spl_object_id($val);
+            if (!isset($skip[$id])) {
+                $skip[$id] = \true;
+                $callback($val);
+                self::traverseValue((array) $val, $callback, $skip);
+            }
+        } elseif (\is_array($val)) {
+            if ($refId) {
+                if (isset($skip[$refId])) {
+                    return;
+                }
+                $skip[$refId] = \true;
+            }
+            foreach ($val as $k => $v) {
+                $refId = ($r = \ReflectionReference::fromArrayElement($val, $k)) ? $r->getId() : null;
+                self::traverseValue($v, $callback, $skip, $refId);
+            }
+        }
     }
 }

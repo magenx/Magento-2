@@ -1,7 +1,7 @@
 <?php
 
 declare (strict_types=1);
-namespace RectorPrefix20211221\Symplify\PackageBuilder\Reflection;
+namespace RectorPrefix202208\Symplify\PackageBuilder\Reflection;
 
 use ReflectionClass;
 use ReflectionMethod;
@@ -11,40 +11,39 @@ use ReflectionMethod;
 final class PrivatesCaller
 {
     /**
+     * @api
      * @param mixed[] $arguments
-     * @return mixed
      * @param object|string $object
+     * @return mixed
      */
     public function callPrivateMethod($object, string $methodName, array $arguments)
     {
         if (\is_string($object)) {
-            $reflectionClass = new \ReflectionClass($object);
+            $reflectionClass = new ReflectionClass($object);
             $object = $reflectionClass->newInstanceWithoutConstructor();
         }
         $methodReflection = $this->createAccessibleMethodReflection($object, $methodName);
         return $methodReflection->invokeArgs($object, $arguments);
     }
     /**
-     * @return mixed
+     * @api
      * @param object|string $object
      * @param mixed $argument
+     * @return mixed
      */
     public function callPrivateMethodWithReference($object, string $methodName, $argument)
     {
         if (\is_string($object)) {
-            $reflectionClass = new \ReflectionClass($object);
+            $reflectionClass = new ReflectionClass($object);
             $object = $reflectionClass->newInstanceWithoutConstructor();
         }
         $methodReflection = $this->createAccessibleMethodReflection($object, $methodName);
         $methodReflection->invokeArgs($object, [&$argument]);
         return $argument;
     }
-    /**
-     * @param object $object
-     */
-    private function createAccessibleMethodReflection($object, string $methodName) : \ReflectionMethod
+    private function createAccessibleMethodReflection(object $object, string $methodName) : ReflectionMethod
     {
-        $reflectionMethod = new \ReflectionMethod(\get_class($object), $methodName);
+        $reflectionMethod = new ReflectionMethod(\get_class($object), $methodName);
         $reflectionMethod->setAccessible(\true);
         return $reflectionMethod;
     }

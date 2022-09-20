@@ -7,14 +7,17 @@ use PHPStan\Type\ObjectType;
 final class TypeToTimeMethodAndPosition
 {
     /**
+     * @readonly
      * @var string
      */
     private $type;
     /**
+     * @readonly
      * @var string
      */
     private $methodName;
     /**
+     * @readonly
      * @var int
      */
     private $position;
@@ -24,9 +27,9 @@ final class TypeToTimeMethodAndPosition
         $this->methodName = $methodName;
         $this->position = $position;
     }
-    public function getObjectType() : \PHPStan\Type\ObjectType
+    public function getObjectType() : ObjectType
     {
-        return new \PHPStan\Type\ObjectType($this->type);
+        return new ObjectType($this->type);
     }
     public function getMethodName() : string
     {

@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © 2013-2017 Magento, Inc. All rights reserved.
+ * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
 namespace PayPal\Braintree\Block\Adminhtml\Form\Field;
@@ -23,6 +23,7 @@ class CountryCreditCard extends AbstractFieldArray
 
     /**
      * Returns renderer for country element
+     *
      * @return Countries
      * @throws LocalizedException
      */
@@ -40,6 +41,7 @@ class CountryCreditCard extends AbstractFieldArray
 
     /**
      * Returns renderer for country element
+     *
      * @return CcTypes
      * @throws LocalizedException
      */
@@ -57,6 +59,7 @@ class CountryCreditCard extends AbstractFieldArray
 
     /**
      * Prepare to render
+     *
      * @return void
      * @throws LocalizedException
      */
@@ -82,6 +85,7 @@ class CountryCreditCard extends AbstractFieldArray
 
     /**
      * Prepare existing row data object
+     *
      * @param DataObject $row
      * @return void
      * @throws LocalizedException

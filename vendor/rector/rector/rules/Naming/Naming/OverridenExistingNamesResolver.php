@@ -32,27 +32,30 @@ final class OverridenExistingNamesResolver
      * @var \Rector\NodeNameResolver\NodeNameResolver
      */
     private $nodeNameResolver;
-    public function __construct(\Rector\Naming\PhpArray\ArrayFilter $arrayFilter, \Rector\Core\PhpParser\Node\BetterNodeFinder $betterNodeFinder, \Rector\NodeNameResolver\NodeNameResolver $nodeNameResolver)
+    public function __construct(ArrayFilter $arrayFilter, BetterNodeFinder $betterNodeFinder, NodeNameResolver $nodeNameResolver)
     {
         $this->arrayFilter = $arrayFilter;
         $this->betterNodeFinder = $betterNodeFinder;
         $this->nodeNameResolver = $nodeNameResolver;
     }
     /**
-     * @param \PhpParser\Node\Expr\Closure|\PhpParser\Node\Stmt\ClassMethod|\PhpParser\Node\Stmt\Function_ $functionLike
+     * @param \PhpParser\Node\Stmt\ClassMethod|\PhpParser\Node\Stmt\Function_|\PhpParser\Node\Expr\Closure $functionLike
      */
     public function hasNameInClassMethodForNew(string $variableName, $functionLike) : bool
     {
         $overridenVariableNames = $this->resolveOveriddenNamesForNew($functionLike);
         return \in_array($variableName, $overridenVariableNames, \true);
     }
-    public function hasNameInClassMethodForParam(string $expectedName, \PhpParser\Node\Stmt\ClassMethod $classMethod) : bool
+    /**
+     * @param \PhpParser\Node\Stmt\ClassMethod|\PhpParser\Node\Stmt\Function_|\PhpParser\Node\Expr\Closure $classMethod
+     */
+    public function hasNameInFunctionLikeForParam(string $expectedName, $classMethod) : bool
     {
         /** @var Assign[] $assigns */
-        $assigns = $this->betterNodeFinder->findInstanceOf((array) $classMethod->stmts, \PhpParser\Node\Expr\Assign::class);
+        $assigns = $this->betterNodeFinder->findInstanceOf((array) $classMethod->stmts, Assign::class);
         $usedVariableNames = [];
         foreach ($assigns as $assign) {
-            if (!$assign->var instanceof \PhpParser\Node\Expr\Variable) {
+            if (!$assign->var instanceof Variable) {
                 continue;
             }
             $variableName = $this->nodeNameResolver->getName($assign->var);
@@ -65,7 +68,7 @@ final class OverridenExistingNamesResolver
     }
     /**
      * @return string[]
-     * @param \PhpParser\Node\Expr\Closure|\PhpParser\Node\Stmt\ClassMethod|\PhpParser\Node\Stmt\Function_ $functionLike
+     * @param \PhpParser\Node\Stmt\ClassMethod|\PhpParser\Node\Stmt\Function_|\PhpParser\Node\Expr\Closure $functionLike
      */
     private function resolveOveriddenNamesForNew($functionLike) : array
     {
@@ -75,7 +78,7 @@ final class OverridenExistingNamesResolver
         }
         $currentlyUsedNames = [];
         /** @var Assign[] $assigns */
-        $assigns = $this->betterNodeFinder->findInstanceOf((array) $functionLike->stmts, \PhpParser\Node\Expr\Assign::class);
+        $assigns = $this->betterNodeFinder->findInstanceOf((array) $functionLike->stmts, Assign::class);
         foreach ($assigns as $assign) {
             /** @var Variable $assignVariable */
             $assignVariable = $assign->var;

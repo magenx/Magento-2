@@ -8,8 +8,8 @@ use Rector\Core\Configuration\Option;
 use Rector\Core\PhpParser\Parser\RectorParser;
 use Rector\Core\ValueObject\Application\File;
 use Rector\NodeTypeResolver\NodeScopeAndMetadataDecorator;
-use RectorPrefix20211221\Symplify\PackageBuilder\Parameter\ParameterProvider;
-use Symplify\SmartFileSystem\SmartFileInfo;
+use RectorPrefix202208\Symplify\PackageBuilder\Parameter\ParameterProvider;
+use RectorPrefix202208\Symplify\SmartFileSystem\SmartFileInfo;
 /**
  * @api
  */
@@ -30,16 +30,16 @@ final class TestingParser
      * @var \Rector\NodeTypeResolver\NodeScopeAndMetadataDecorator
      */
     private $nodeScopeAndMetadataDecorator;
-    public function __construct(\RectorPrefix20211221\Symplify\PackageBuilder\Parameter\ParameterProvider $parameterProvider, \Rector\Core\PhpParser\Parser\RectorParser $rectorParser, \Rector\NodeTypeResolver\NodeScopeAndMetadataDecorator $nodeScopeAndMetadataDecorator)
+    public function __construct(ParameterProvider $parameterProvider, RectorParser $rectorParser, NodeScopeAndMetadataDecorator $nodeScopeAndMetadataDecorator)
     {
         $this->parameterProvider = $parameterProvider;
         $this->rectorParser = $rectorParser;
         $this->nodeScopeAndMetadataDecorator = $nodeScopeAndMetadataDecorator;
     }
-    public function parseFilePathToFile(string $filePath) : \Rector\Core\ValueObject\Application\File
+    public function parseFilePathToFile(string $filePath) : File
     {
-        $smartFileInfo = new \Symplify\SmartFileSystem\SmartFileInfo($filePath);
-        $file = new \Rector\Core\ValueObject\Application\File($smartFileInfo, $smartFileInfo->getContents());
+        $smartFileInfo = new SmartFileInfo($filePath);
+        $file = new File($smartFileInfo, $smartFileInfo->getContents());
         $stmts = $this->rectorParser->parseFile($smartFileInfo);
         $file->hydrateStmtsAndTokens($stmts, $stmts, []);
         return $file;
@@ -47,14 +47,14 @@ final class TestingParser
     /**
      * @return Node[]
      */
-    public function parseFileToDecoratedNodes(string $file) : array
+    public function parseFileToDecoratedNodes(string $filePath) : array
     {
         // autoload file
-        require_once $file;
-        $smartFileInfo = new \Symplify\SmartFileSystem\SmartFileInfo($file);
-        $this->parameterProvider->changeParameter(\Rector\Core\Configuration\Option::SOURCE, [$file]);
+        require_once $filePath;
+        $smartFileInfo = new SmartFileInfo($filePath);
+        $this->parameterProvider->changeParameter(Option::SOURCE, [$filePath]);
         $nodes = $this->rectorParser->parseFile($smartFileInfo);
-        $file = new \Rector\Core\ValueObject\Application\File($smartFileInfo, $smartFileInfo->getContents());
+        $file = new File($smartFileInfo, $smartFileInfo->getContents());
         return $this->nodeScopeAndMetadataDecorator->decorateNodesFromFile($file, $nodes);
     }
 }

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<files psalm-version="4.10.0@916b098b008f6de4543892b1e0651c1c3b92cbfa">
+<files psalm-version="4.24.0@06dd975cb55d36af80f242561738f16c5f58264f">
   <file src="src/Http/Chain.php">
     <InvalidReturnStatement occurrences="1"/>
     <InvalidReturnType occurrences="1">
@@ -290,11 +290,9 @@
     <InvalidArgument occurrences="1">
       <code>$pathOffset</code>
     </InvalidArgument>
-    <MixedArgument occurrences="15">
+    <MixedArgument occurrences="13">
       <code>$key</code>
       <code>$locale</code>
-      <code>$matches[$index]</code>
-      <code>$matches[0]</code>
       <code>$options['constraints']</code>
       <code>$options['defaults']</code>
       <code>$options['has_child'] ?? false</code>
@@ -411,8 +409,7 @@
       <code>Wildcard::class</code>
       <code>Wildcard::class</code>
     </DeprecatedClass>
-    <DocblockTypeContradiction occurrences="8">
-      <code>! is_array($routes) &amp;&amp; ! $routes instanceof Traversable</code>
+    <DocblockTypeContradiction occurrences="7">
       <code>$this-&gt;baseUrl === null</code>
       <code>$this-&gt;requestUri === null</code>
       <code>$this-&gt;requestUri === null</code>
@@ -573,9 +570,6 @@
     <ImplementedReturnTypeMismatch occurrences="1">
       <code>void</code>
     </ImplementedReturnTypeMismatch>
-    <InvalidScalarArgument occurrences="1">
-      <code>$e-&gt;getCode()</code>
-    </InvalidScalarArgument>
     <MissingReturnType occurrences="1">
       <code>validatePlugin</code>
     </MissingReturnType>
@@ -585,20 +579,20 @@
       <code>$config['invokables']</code>
       <code>$config['invokables']</code>
     </MixedArgument>
-    <MixedArrayOffset occurrences="1">
-      <code>$factories[$class]</code>
-    </MixedArrayOffset>
-    <MixedAssignment occurrences="3">
-      <code>$aliases[$name]</code>
-      <code>$class</code>
-      <code>$class</code>
-    </MixedAssignment>
+    <MoreSpecificImplementedParamType occurrences="1">
+      <code>$instance</code>
+    </MoreSpecificImplementedParamType>
     <NonInvariantDocblockPropertyType occurrences="1">
       <code>$instanceOf</code>
     </NonInvariantDocblockPropertyType>
     <RedundantConditionGivenDocblockType occurrences="1">
       <code>is_object($instance)</code>
     </RedundantConditionGivenDocblockType>
+  </file>
+  <file src="src/RoutePluginManagerFactory.php">
+    <MixedArgumentTypeCoercion occurrences="1">
+      <code>$options</code>
+    </MixedArgumentTypeCoercion>
   </file>
   <file src="src/RouterConfigTrait.php">
     <MixedArgument occurrences="1">
@@ -624,8 +618,7 @@
     </ParamNameMismatch>
   </file>
   <file src="src/SimpleRouteStack.php">
-    <DocblockTypeContradiction occurrences="3">
-      <code>! is_array($routes) &amp;&amp; ! $routes instanceof Traversable</code>
+    <DocblockTypeContradiction occurrences="2">
       <code>is_array($options)</code>
       <code>is_array($specs)</code>
     </DocblockTypeContradiction>
@@ -734,15 +727,11 @@
       <code>$services</code>
     </MissingClosureParamType>
     <MissingClosureReturnType occurrences="1">
-      <code>function ($services) {</code>
+      <code>static fn($services) =&gt; new RoutePluginManager($services)</code>
     </MissingClosureReturnType>
     <MixedArgument occurrences="1">
       <code>$services</code>
     </MixedArgument>
-    <UndefinedThisPropertyAssignment occurrences="2">
-      <code>$this-&gt;defaultServiceConfig</code>
-      <code>$this-&gt;factory</code>
-    </UndefinedThisPropertyAssignment>
   </file>
   <file src="test/Http/LiteralTest.php">
     <MissingReturnType occurrences="6">
@@ -864,22 +853,17 @@
     <ArgumentTypeCoercion occurrences="1">
       <code>$exceptionName</code>
     </ArgumentTypeCoercion>
-    <DocblockTypeContradiction occurrences="1">
-      <code>$offset === null</code>
-    </DocblockTypeContradiction>
     <InvalidScalarArgument occurrences="2">
       <code>$offset</code>
       <code>$offset</code>
     </InvalidScalarArgument>
-    <MissingReturnType occurrences="14">
-      <code>testAssembling</code>
+    <MissingReturnType occurrences="12">
       <code>testAssemblingWithExistingChild</code>
       <code>testAssemblingWithL10n</code>
       <code>testAssemblingWithMissingParameterInRoot</code>
       <code>testEncodeCache</code>
       <code>testEncodedDecode</code>
       <code>testFactory</code>
-      <code>testMatching</code>
       <code>testMatchingWithL10n</code>
       <code>testNoMatchWithoutUriMethod</code>
       <code>testParseExceptions</code>
@@ -887,57 +871,26 @@
       <code>testTranslatedAssemblingThrowsExceptionWithoutTranslator</code>
       <code>testTranslatedMatchingThrowsExceptionWithoutTranslator</code>
     </MissingReturnType>
-    <MixedArgument occurrences="3">
-      <code>$deLoader</code>
-      <code>$domainLoader</code>
-      <code>$enLoader</code>
-    </MixedArgument>
     <MixedArgumentTypeCoercion occurrences="2">
       <code>$key</code>
       <code>$key</code>
     </MixedArgumentTypeCoercion>
-    <MixedAssignment occurrences="8">
-      <code>$deLoader</code>
-      <code>$domainLoader</code>
-      <code>$enLoader</code>
+    <MixedAssignment occurrences="5">
       <code>$path</code>
       <code>$result</code>
       <code>$result</code>
       <code>$value</code>
       <code>$value</code>
     </MixedAssignment>
-    <MixedMethodCall occurrences="9">
-      <code>expects</code>
-      <code>expects</code>
-      <code>expects</code>
-      <code>method</code>
-      <code>method</code>
-      <code>method</code>
-      <code>willReturn</code>
-      <code>willReturn</code>
-      <code>willReturn</code>
-    </MixedMethodCall>
     <NullArgument occurrences="3">
       <code>null</code>
       <code>null</code>
       <code>null</code>
     </NullArgument>
-    <PossiblyInvalidArgument occurrences="2">
-      <code>testAssembling</code>
-      <code>testMatching</code>
-    </PossiblyInvalidArgument>
     <PossiblyNullReference occurrences="2">
       <code>getParam</code>
       <code>getParam</code>
     </PossiblyNullReference>
-    <RedundantConditionGivenDocblockType occurrences="1">
-      <code>$offset !== null</code>
-    </RedundantConditionGivenDocblockType>
-    <UndefinedMethod occurrences="3">
-      <code>getMock</code>
-      <code>getMock</code>
-      <code>getMock</code>
-    </UndefinedMethod>
   </file>
   <file src="test/Http/TestAsset/DummyRoute.php">
     <ImplementedParamTypeMismatch occurrences="1">
@@ -949,31 +902,6 @@
     <UndefinedDocblockClass occurrences="1">
       <code>array|Traversable</code>
     </UndefinedDocblockClass>
-  </file>
-  <file src="test/Http/TranslatorAwareTreeRouteStackTest.php">
-    <MissingReturnType occurrences="5">
-      <code>testAssembleRouteWithParameterLocale</code>
-      <code>testMatchRouteWithParameterLocale</code>
-      <code>testTranslatorAwareInterfaceImplementation</code>
-      <code>testTranslatorIsPassedThroughAssembleMethod</code>
-      <code>testTranslatorIsPassedThroughMatchMethod</code>
-    </MissingReturnType>
-    <MixedAssignment occurrences="2">
-      <code>$route</code>
-      <code>$route</code>
-    </MixedAssignment>
-    <MixedMethodCall occurrences="6">
-      <code>expects</code>
-      <code>expects</code>
-      <code>method</code>
-      <code>method</code>
-      <code>with</code>
-      <code>with</code>
-    </MixedMethodCall>
-    <UndefinedMethod occurrences="2">
-      <code>getMock</code>
-      <code>getMock</code>
-    </UndefinedMethod>
   </file>
   <file src="test/Http/TreeRouteStackTest.php">
     <MissingReturnType occurrences="33">
@@ -1104,11 +1032,14 @@
     </MissingReturnType>
   </file>
   <file src="test/RoutePluginManagerFactoryTest.php">
+    <DeprecatedMethod occurrences="1">
+      <code>createService</code>
+    </DeprecatedMethod>
     <MissingClosureParamType occurrences="1">
       <code>$container</code>
     </MissingClosureParamType>
     <MissingClosureReturnType occurrences="1">
-      <code>function ($container) {</code>
+      <code>fn($container) =&gt; $this-&gt;createMock(RouteInterface::class)</code>
     </MissingClosureReturnType>
     <MissingReturnType occurrences="3">
       <code>testCreateServiceReturnsAPluginManager</code>
@@ -1130,40 +1061,24 @@
     </MissingReturnType>
   </file>
   <file src="test/RouterFactoryTest.php">
+    <ArgumentTypeCoercion occurrences="2"/>
     <MissingClosureParamType occurrences="1">
       <code>$services</code>
     </MissingClosureParamType>
     <MissingClosureReturnType occurrences="1">
-      <code>function ($services) {</code>
+      <code>static fn($services) =&gt; new RoutePluginManager($services)</code>
     </MissingClosureReturnType>
-    <MissingReturnType occurrences="2">
-      <code>testFactoryCanCreateRouterBasedOnConfiguredName</code>
-      <code>testFactoryCanCreateRouterWhenOnlyHttpRouterConfigPresent</code>
-    </MissingReturnType>
-    <MixedArgument occurrences="3">
+    <MixedArgument occurrences="1">
       <code>$services</code>
-      <code>$this-&gt;defaultServiceConfig</code>
-      <code>$this-&gt;defaultServiceConfig</code>
     </MixedArgument>
-    <MixedMethodCall occurrences="2">
-      <code>__invoke</code>
-      <code>__invoke</code>
-    </MixedMethodCall>
-    <UndefinedThisPropertyAssignment occurrences="2">
-      <code>$this-&gt;defaultServiceConfig</code>
-      <code>$this-&gt;factory</code>
-    </UndefinedThisPropertyAssignment>
-    <UndefinedThisPropertyFetch occurrences="4">
-      <code>$this-&gt;defaultServiceConfig</code>
-      <code>$this-&gt;defaultServiceConfig</code>
-      <code>$this-&gt;factory</code>
-      <code>$this-&gt;factory</code>
-    </UndefinedThisPropertyFetch>
   </file>
   <file src="test/SimpleRouteStackTest.php">
     <ArgumentTypeCoercion occurrences="1">
       <code>'Traversable'</code>
     </ArgumentTypeCoercion>
+    <DeprecatedProperty occurrences="1">
+      <code>$route-&gt;priority</code>
+    </DeprecatedProperty>
     <InvalidArgument occurrences="2">
       <code>'foo'</code>
       <code>'foo'</code>
@@ -1202,9 +1117,6 @@
       <code>getParam</code>
       <code>getParam</code>
     </PossiblyNullReference>
-    <UndefinedPropertyAssignment occurrences="1">
-      <code>$route-&gt;priority</code>
-    </UndefinedPropertyAssignment>
   </file>
   <file src="test/TestAsset/DummyRoute.php">
     <UnsafeInstantiation occurrences="1">

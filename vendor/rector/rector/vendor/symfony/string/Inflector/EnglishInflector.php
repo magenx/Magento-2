@@ -8,9 +8,9 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix20211221\Symfony\Component\String\Inflector;
+namespace RectorPrefix202208\Symfony\Component\String\Inflector;
 
-final class EnglishInflector implements \RectorPrefix20211221\Symfony\Component\String\Inflector\InflectorInterface
+final class EnglishInflector implements InflectorInterface
 {
     /**
      * Map English plural to singular suffixes.
@@ -277,7 +277,7 @@ final class EnglishInflector implements \RectorPrefix20211221\Symfony\Component\
                 if ($j === $suffixLength) {
                     // Is there any character preceding the suffix in the plural string?
                     if ($j < $pluralLength) {
-                        $nextIsVocal = \false !== \strpos('aeiou', $lowerPluralRev[$j]);
+                        $nextIsVocal = \strpos('aeiou', $lowerPluralRev[$j]) !== \false;
                         if (!$map[2] && $nextIsVocal) {
                             // suffix may not succeed a vocal but next char is one
                             break;
@@ -341,7 +341,7 @@ final class EnglishInflector implements \RectorPrefix20211221\Symfony\Component\
                 if ($j === $suffixLength) {
                     // Is there any character preceding the suffix in the plural string?
                     if ($j < $singularLength) {
-                        $nextIsVocal = \false !== \strpos('aeiou', $lowerSingularRev[$j]);
+                        $nextIsVocal = \strpos('aeiou', $lowerSingularRev[$j]) !== \false;
                         if (!$map[2] && $nextIsVocal) {
                             // suffix may not succeed a vocal but next char is one
                             break;

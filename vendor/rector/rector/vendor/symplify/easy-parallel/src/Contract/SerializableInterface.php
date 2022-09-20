@@ -1,10 +1,10 @@
 <?php
 
 declare (strict_types=1);
-namespace RectorPrefix20211221\Symplify\EasyParallel\Contract;
+namespace RectorPrefix202208\Symplify\EasyParallel\Contract;
 
 use JsonSerializable;
-interface SerializableInterface extends \JsonSerializable
+interface SerializableInterface extends JsonSerializable
 {
     /**
      * @param array<string, mixed> $json

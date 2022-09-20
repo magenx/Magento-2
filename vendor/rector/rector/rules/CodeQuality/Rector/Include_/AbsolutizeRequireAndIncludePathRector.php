@@ -3,7 +3,7 @@
 declare (strict_types=1);
 namespace Rector\CodeQuality\Rector\Include_;
 
-use RectorPrefix20211221\Nette\Utils\Strings;
+use RectorPrefix202208\Nette\Utils\Strings;
 use PhpParser\Node;
 use PhpParser\Node\Expr\BinaryOp\Concat;
 use PhpParser\Node\Expr\Include_;
@@ -17,11 +17,11 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
  *
  * @see \Rector\Tests\CodeQuality\Rector\Include_\AbsolutizeRequireAndIncludePathRector\AbsolutizeRequireAndIncludePathRectorTest
  */
-final class AbsolutizeRequireAndIncludePathRector extends \Rector\Core\Rector\AbstractRector
+final class AbsolutizeRequireAndIncludePathRector extends AbstractRector
 {
-    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
+    public function getRuleDefinition() : RuleDefinition
     {
-        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('include/require to absolute path. This Rector might introduce backwards incompatible code, when the include/require beeing changed depends on the current working directory.', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample(<<<'CODE_SAMPLE'
+        return new RuleDefinition('include/require to absolute path. This Rector might introduce backwards incompatible code, when the include/require being changed depends on the current working directory.', [new CodeSample(<<<'CODE_SAMPLE'
 class SomeClass
 {
     public function run()
@@ -50,14 +50,21 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [\PhpParser\Node\Expr\Include_::class];
+        return [Include_::class];
     }
     /**
      * @param Include_ $node
      */
-    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
+    public function refactor(Node $node) : ?Node
     {
-        if (!$node->expr instanceof \PhpParser\Node\Scalar\String_) {
+        if ($node->expr instanceof Concat && $node->expr->left instanceof String_ && $this->isRefactorableStringPath($node->expr->left)) {
+            $node->expr->left = $this->prefixWithDirConstant($node->expr->left);
+            return $node;
+        }
+        if (!$node->expr instanceof String_) {
+            return null;
+        }
+        if (!$this->isRefactorableStringPath($node->expr)) {
             return null;
         }
         /** @var string $includeValue */
@@ -70,13 +77,43 @@ CODE_SAMPLE
         if (\strncmp($includeValue, '/', \strlen('/')) === 0) {
             return null;
         }
+        if (\strpos($includeValue, 'config/') !== \false) {
+            return null;
+        }
         // add preslash to string
         if (\strncmp($includeValue, './', \strlen('./')) === 0) {
-            $node->expr->value = \RectorPrefix20211221\Nette\Utils\Strings::substring($includeValue, 1);
+            $node->expr->value = Strings::substring($includeValue, 1);
         } else {
             $node->expr->value = '/' . $includeValue;
         }
-        $node->expr = new \PhpParser\Node\Expr\BinaryOp\Concat(new \PhpParser\Node\Scalar\MagicConst\Dir(), $node->expr);
+        $node->expr = $this->prefixWithDirConstant($node->expr);
         return $node;
+    }
+    private function isRefactorableStringPath(String_ $string) : bool
+    {
+        return \strncmp($string->value, 'phar://', \strlen('phar://')) !== 0;
+    }
+    private function prefixWithDirConstant(String_ $string) : Concat
+    {
+        $this->removeExtraDotSlash($string);
+        $this->prependSlashIfMissing($string);
+        return new Concat(new Dir(), $string);
+    }
+    /**
+     * Remove "./" which would break the path
+     */
+    private function removeExtraDotSlash(String_ $string) : void
+    {
+        if (\strncmp($string->value, './', \strlen('./')) !== 0) {
+            return;
+        }
+        $string->value = Strings::replace($string->value, '#^\\.\\/#', '/');
+    }
+    private function prependSlashIfMissing(String_ $string) : void
+    {
+        if (\strncmp($string->value, '/', \strlen('/')) === 0) {
+            return;
+        }
+        $string->value = '/' . $string->value;
     }
 }

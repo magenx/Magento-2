@@ -82,7 +82,7 @@ class SessionConfig extends StandardConfig
     protected $phpErrorMessage = false;
 
     /** @var int Default number of seconds to make session sticky, when rememberMe() is called */
-    protected $rememberMeSeconds = 1209600; // 2 weeks
+    protected $rememberMeSeconds = 1_209_600; // 2 weeks
 
     /**
      * Name of the save handler currently in use. This will either be a PHP
@@ -384,7 +384,7 @@ class SessionConfig extends StandardConfig
 
         $sidBitsPerCharacter = (int) $sidBitsPerCharacter;
         $this->setOption('sid_bits_per_character', $sidBitsPerCharacter);
-        ini_set('session.sid_bits_per_character', $sidBitsPerCharacter);
+        ini_set('session.sid_bits_per_character', (string) $sidBitsPerCharacter);
         return $this;
     }
 

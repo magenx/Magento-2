@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © 2013-2017 Magento, Inc. All rights reserved.
+ * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
 namespace PayPal\Braintree\Gateway\Response;
@@ -10,75 +10,16 @@ use DateInterval;
 use DateTime;
 use DateTimeZone;
 use Exception;
-use PayPal\Braintree\Gateway\Config\Config;
-use PayPal\Braintree\Gateway\Helper\SubjectReader;
-use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Exception\InputException;
 use Magento\Framework\Exception\NoSuchEntityException;
-use Magento\Framework\Serialize\Serializer\Json;
 use Magento\Payment\Gateway\Response\HandlerInterface;
-use Magento\Payment\Model\InfoInterface;
-use Magento\Sales\Api\Data\OrderPaymentExtensionInterface;
-use Magento\Sales\Api\Data\OrderPaymentExtensionInterfaceFactory;
 use Magento\Vault\Api\Data\PaymentTokenInterface;
-use Magento\Vault\Api\Data\PaymentTokenInterfaceFactory;
-use RuntimeException;
 
 /**
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
-class VaultDetailsHandler implements HandlerInterface
+class VaultDetailsHandler extends Handler implements HandlerInterface
 {
-    /**
-     * @var PaymentTokenInterfaceFactory
-     */
-    protected $paymentTokenFactory;
-
-    /**
-     * @var OrderPaymentExtensionInterfaceFactory
-     */
-    protected $paymentExtensionFactory;
-
-    /**
-     * @var SubjectReader
-     */
-    protected $subjectReader;
-
-    /**
-     * @var Config
-     */
-    protected $config;
-
-    /**
-     * @var Json
-     */
-    private $serializer;
-
-    /**
-     * VaultDetailsHandler constructor.
-     *
-     * @param PaymentTokenInterfaceFactory $paymentTokenFactory
-     * @param OrderPaymentExtensionInterfaceFactory $paymentExtensionFactory
-     * @param Config $config
-     * @param SubjectReader $subjectReader
-     * @param Json|null $serializer
-     * @throws RuntimeException
-     */
-    public function __construct(
-        PaymentTokenInterfaceFactory $paymentTokenFactory,
-        OrderPaymentExtensionInterfaceFactory $paymentExtensionFactory,
-        Config $config,
-        SubjectReader $subjectReader,
-        Json $serializer = null
-    ) {
-        $this->paymentTokenFactory = $paymentTokenFactory;
-        $this->paymentExtensionFactory = $paymentExtensionFactory;
-        $this->config = $config;
-        $this->subjectReader = $subjectReader;
-        $this->serializer = $serializer ?: ObjectManager::getInstance()
-            ->get(Json::class);
-    }
-
     /**
      * @inheritdoc
      */
@@ -127,6 +68,8 @@ class VaultDetailsHandler implements HandlerInterface
     }
 
     /**
+     * Get expiration date
+     *
      * @param Transaction $transaction
      * @return string
      * @throws Exception
@@ -149,17 +92,6 @@ class VaultDetailsHandler implements HandlerInterface
     }
 
     /**
-     * Convert payment token details to JSON
-     * @param array $details
-     * @return string
-     */
-    private function convertDetailsToJSON($details): string
-    {
-        $json = $this->serializer->serialize($details);
-        return $json ?: '{}';
-    }
-
-    /**
      * Get type of credit card mapped from Braintree
      *
      * @param string $type
@@ -173,21 +105,5 @@ class VaultDetailsHandler implements HandlerInterface
         $mapper = $this->config->getCcTypesMapper();
 
         return $mapper[$replaced];
-    }
-
-    /**
-     * Get payment extension attributes
-     *
-     * @param InfoInterface $payment
-     * @return OrderPaymentExtensionInterface
-     */
-    private function getExtensionAttributes(InfoInterface $payment): OrderPaymentExtensionInterface
-    {
-        $extensionAttributes = $payment->getExtensionAttributes();
-        if (null === $extensionAttributes) {
-            $extensionAttributes = $this->paymentExtensionFactory->create();
-            $payment->setExtensionAttributes($extensionAttributes);
-        }
-        return $extensionAttributes;
     }
 }

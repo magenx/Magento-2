@@ -16,7 +16,13 @@
         "forum": "https://discourse.laminas.dev"
     },
     "config": {
-        "sort-packages": true
+        "sort-packages": true,
+        "platform": {
+            "php": "7.4.99"
+        },
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        }
     },
     "extra": {
         "laminas": {
@@ -25,21 +31,20 @@
         }
     },
     "require": {
-        "php": "^7.3 || ~8.0.0 || ~8.1.0",
-        "container-interop/container-interop": "^1.2",
+        "php": "^7.4 || ~8.0.0 || ~8.1.0",
         "laminas/laminas-http": "^2.15",
-        "laminas/laminas-servicemanager": "^3.7",
-        "laminas/laminas-stdlib": "^3.6"
+        "laminas/laminas-servicemanager": "^3.14.0",
+        "laminas/laminas-stdlib": "^3.10.1"
     },
     "require-dev": {
-        "laminas/laminas-coding-standard": "~2.2.1",
-        "laminas/laminas-i18n": "^2.7.4",
+        "laminas/laminas-coding-standard": "~2.4.0",
+        "laminas/laminas-i18n": "^2.15.0",
         "phpunit/phpunit": "^9.5.5",
-        "psalm/plugin-phpunit": "^0.15.1",
-        "vimeo/psalm": "^4.7"
+        "psalm/plugin-phpunit": "^0.17.0",
+        "vimeo/psalm": "^4.24.0"
     },
     "suggest": {
-        "laminas/laminas-i18n": "^2.7.4, if defining translatable HTTP path segments"
+        "laminas/laminas-i18n": "^2.15.0 if defining translatable HTTP path segments"
     },
     "autoload": {
         "psr-4": {

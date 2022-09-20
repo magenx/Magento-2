@@ -129,6 +129,9 @@ abstract class AbstractConnection extends AbstractChannel
     /** @var int Connection timeout value*/
     protected $connection_timeout ;
 
+    /** @var AMQPConnectionConfig|null */
+    protected $config;
+
     /**
      * Circular buffer to speed up prepare_content().
      * Max size limited by $prepare_content_cache_max_size.
@@ -184,10 +187,15 @@ abstract class AbstractConnection extends AbstractChannel
         AbstractIO $io = null,
         $heartbeat = 0,
         $connection_timeout = 0,
-        $channel_rpc_timeout = 0.0
+        $channel_rpc_timeout = 0.0,
+        ?AMQPConnectionConfig $config = null
     ) {
         if (is_null($io)) {
             throw new \InvalidArgumentException('Argument $io cannot be null');
+        }
+
+        if ($config) {
+            $this->config = clone $config;
         }
 
         // save the params for the use of __clone
@@ -312,6 +320,9 @@ abstract class AbstractConnection extends AbstractChannel
      */
     public function __clone()
     {
+        if ($this->config) {
+            $this->config = clone $this->config;
+        }
         call_user_func_array(array($this, '__construct'), $this->construct_params);
     }
 
@@ -693,6 +704,10 @@ abstract class AbstractConnection extends AbstractChannel
      *
      * @param int|null $channel_id
      * @return AMQPChannel
+     * @throws \PhpAmqpLib\Exception\AMQPOutOfBoundsException
+     * @throws \PhpAmqpLib\Exception\AMQPRuntimeException
+     * @throws \PhpAmqpLib\Exception\AMQPTimeoutException
+     * @throws \PhpAmqpLib\Exception\AMQPConnectionClosedException
      */
     public function channel($channel_id = null)
     {
@@ -968,6 +983,15 @@ abstract class AbstractConnection extends AbstractChannel
     public function getLastActivity()
     {
         return $this->io->getLastActivity();
+    }
+
+    /**
+     * @return float
+     * @since 3.2.0
+     */
+    public function getReadTimeout(): float
+    {
+        return $this->io->getReadTimeout();
     }
 
     /**

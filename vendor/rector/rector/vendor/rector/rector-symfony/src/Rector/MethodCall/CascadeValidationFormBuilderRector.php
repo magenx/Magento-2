@@ -5,6 +5,7 @@ namespace Rector\Symfony\Rector\MethodCall;
 
 use PhpParser\Node;
 use PhpParser\Node\Arg;
+use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\Array_;
 use PhpParser\Node\Expr\ArrayItem;
 use PhpParser\Node\Expr\MethodCall;
@@ -17,22 +18,25 @@ use Rector\NodeTypeResolver\Node\AttributeKey;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
- * @see https://gist.github.com/mickaelandrieu/5d27a2ffafcbdd64912f549aaf2a6df9#stuck-with-forms
  * @see \Rector\Symfony\Tests\Rector\MethodCall\CascadeValidationFormBuilderRector\CascadeValidationFormBuilderRectorTest
+ *
+ * @changelog https://gist.github.com/mickaelandrieu/5d27a2ffafcbdd64912f549aaf2a6df9#stuck-with-forms
+ * @changelog https://stackoverflow.com/questions/39758392/symfony-3-validation-groups-inside-child-entity-ignored
  */
-final class CascadeValidationFormBuilderRector extends \Rector\Core\Rector\AbstractRector
+final class CascadeValidationFormBuilderRector extends AbstractRector
 {
     /**
+     * @readonly
      * @var \Rector\Core\NodeManipulator\ArrayManipulator
      */
     private $arrayManipulator;
-    public function __construct(\Rector\Core\NodeManipulator\ArrayManipulator $arrayManipulator)
+    public function __construct(ArrayManipulator $arrayManipulator)
     {
         $this->arrayManipulator = $arrayManipulator;
     }
-    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
+    public function getRuleDefinition() : RuleDefinition
     {
-        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Change "cascade_validation" option to specific node attribute', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample(<<<'CODE_SAMPLE'
+        return new RuleDefinition('Change "cascade_validation" option to specific node attribute', [new CodeSample(<<<'CODE_SAMPLE'
 class SomeController
 {
     public function someMethod()
@@ -73,38 +77,42 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [\PhpParser\Node\Expr\MethodCall::class];
+        return [MethodCall::class, ArrayItem::class];
     }
     /**
-     * @param MethodCall $node
+     * @param MethodCall|ArrayItem $node
      */
-    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
+    public function refactor(Node $node) : ?Node
     {
-        if ($this->shouldSkip($node)) {
+        if ($node instanceof ArrayItem) {
+            return $this->refactorArrayItem($node);
+        }
+        if ($this->shouldSkipMethodCall($node)) {
             return null;
         }
         /** @var Array_ $formBuilderOptionsArrayNode */
-        $formBuilderOptionsArrayNode = $node->args[1]->value;
+        $formBuilderOptionsArrayNode = $node->getArgs()[1]->value;
         if (!$this->isSuccessfulRemovalCascadeValidationOption($node, $formBuilderOptionsArrayNode)) {
             return null;
         }
         $this->addConstraintsOptionToFollowingAddMethodCalls($node);
         return $node;
     }
-    private function shouldSkip(\PhpParser\Node\Expr\MethodCall $methodCall) : bool
+    private function shouldSkipMethodCall(MethodCall $methodCall) : bool
     {
         if (!$this->isName($methodCall->name, 'createFormBuilder')) {
             return \true;
         }
-        if (!isset($methodCall->args[1])) {
+        if (!isset($methodCall->getArgs()[1])) {
             return \true;
         }
-        return !$methodCall->args[1]->value instanceof \PhpParser\Node\Expr\Array_;
+        $secondArg = $methodCall->getArgs()[1];
+        return !$secondArg->value instanceof Array_;
     }
-    private function isSuccessfulRemovalCascadeValidationOption(\PhpParser\Node\Expr\MethodCall $methodCall, \PhpParser\Node\Expr\Array_ $optionsArrayNode) : bool
+    private function isSuccessfulRemovalCascadeValidationOption(MethodCall $methodCall, Array_ $optionsArrayNode) : bool
     {
         foreach ($optionsArrayNode->items as $key => $arrayItem) {
-            if ($arrayItem === null) {
+            if (!$arrayItem instanceof ArrayItem) {
                 continue;
             }
             if (!$this->arrayManipulator->hasKeyName($arrayItem, 'cascade_validation')) {
@@ -122,19 +130,42 @@ CODE_SAMPLE
         }
         return \false;
     }
-    private function addConstraintsOptionToFollowingAddMethodCalls(\PhpParser\Node\Expr\MethodCall $methodCall) : void
+    private function addConstraintsOptionToFollowingAddMethodCalls(MethodCall $methodCall) : void
     {
-        $new = new \PhpParser\Node\Expr\New_(new \PhpParser\Node\Name\FullyQualified('Symfony\\Component\\Validator\\Constraints\\Valid'));
-        $constraintsArrayItem = new \PhpParser\Node\Expr\ArrayItem($new, new \PhpParser\Node\Scalar\String_('constraints'));
-        $parentNode = $methodCall->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::PARENT_NODE);
-        while ($parentNode instanceof \PhpParser\Node\Expr\MethodCall) {
+        $array = $this->createValidConstraintsArray();
+        $constraintsArrayItem = new ArrayItem($array, new String_('constraints'));
+        $parentNode = $methodCall->getAttribute(AttributeKey::PARENT_NODE);
+        while ($parentNode instanceof MethodCall) {
             if ($this->isName($parentNode->name, 'add')) {
                 /** @var Array_ $addOptionsArrayNode */
-                $addOptionsArrayNode = isset($parentNode->args[2]) ? $parentNode->args[2]->value : new \PhpParser\Node\Expr\Array_();
+                $addOptionsArrayNode = isset($parentNode->getArgs()[2]) ? $parentNode->getArgs()[2]->value : new Array_();
                 $addOptionsArrayNode->items[] = $constraintsArrayItem;
-                $parentNode->args[2] = new \PhpParser\Node\Arg($addOptionsArrayNode);
+                $parentNode->args[2] = new Arg($addOptionsArrayNode);
             }
-            $parentNode = $parentNode->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::PARENT_NODE);
+            $parentNode = $parentNode->getAttribute(AttributeKey::PARENT_NODE);
         }
+    }
+    private function createValidConstraintsArray() : Array_
+    {
+        $new = new New_(new FullyQualified('Symfony\\Component\\Validator\\Constraints\\Valid'));
+        return new Array_([new ArrayItem($new)]);
+    }
+    /**
+     * @return null|\PhpParser\Node\Expr\ArrayItem
+     */
+    private function refactorArrayItem(ArrayItem $arrayItem)
+    {
+        if (!$arrayItem->key instanceof Expr) {
+            return null;
+        }
+        if (!$this->valueResolver->isValue($arrayItem->key, 'cascade_validation')) {
+            return null;
+        }
+        if (!$this->valueResolver->isValue($arrayItem->value, \true)) {
+            return null;
+        }
+        $arrayItem->key = new String_('constraints');
+        $arrayItem->value = $this->createValidConstraintsArray();
+        return $arrayItem;
     }
 }

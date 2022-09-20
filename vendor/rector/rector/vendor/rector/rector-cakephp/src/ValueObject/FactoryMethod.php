@@ -7,18 +7,22 @@ use PHPStan\Type\ObjectType;
 final class FactoryMethod
 {
     /**
+     * @readonly
      * @var string
      */
     private $type;
     /**
+     * @readonly
      * @var string
      */
     private $method;
     /**
+     * @readonly
      * @var string
      */
     private $newClass;
     /**
+     * @readonly
      * @var int
      */
     private $position;
@@ -29,9 +33,9 @@ final class FactoryMethod
         $this->newClass = $newClass;
         $this->position = $position;
     }
-    public function getObjectType() : \PHPStan\Type\ObjectType
+    public function getObjectType() : ObjectType
     {
-        return new \PHPStan\Type\ObjectType($this->type);
+        return new ObjectType($this->type);
     }
     public function getMethod() : string
     {

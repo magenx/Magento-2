@@ -8,7 +8,7 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix20211221\Symfony\Component\Config\Resource;
+namespace RectorPrefix202208\Symfony\Component\Config\Resource;
 
 /**
  * DirectoryResource represents a resources stored in a subdirectory tree.
@@ -17,9 +17,15 @@ namespace RectorPrefix20211221\Symfony\Component\Config\Resource;
  *
  * @final
  */
-class DirectoryResource implements \RectorPrefix20211221\Symfony\Component\Config\Resource\SelfCheckingResourceInterface
+class DirectoryResource implements SelfCheckingResourceInterface
 {
+    /**
+     * @var string
+     */
     private $resource;
+    /**
+     * @var string|null
+     */
     private $pattern;
     /**
      * @param string      $resource The file path to the resource
@@ -29,11 +35,12 @@ class DirectoryResource implements \RectorPrefix20211221\Symfony\Component\Confi
      */
     public function __construct(string $resource, string $pattern = null)
     {
-        $this->resource = \realpath($resource) ?: (\file_exists($resource) ? $resource : \false);
+        $resolvedResource = \realpath($resource) ?: (\file_exists($resource) ? $resource : \false);
         $this->pattern = $pattern;
-        if (\false === $this->resource || !\is_dir($this->resource)) {
+        if (\false === $resolvedResource || !\is_dir($resolvedResource)) {
             throw new \InvalidArgumentException(\sprintf('The directory "%s" does not exist.', $resource));
         }
+        $this->resource = $resolvedResource;
     }
     public function __toString() : string
     {
@@ -71,7 +78,7 @@ class DirectoryResource implements \RectorPrefix20211221\Symfony\Component\Confi
             // for broken links
             try {
                 $fileMTime = $file->getMTime();
-            } catch (\RuntimeException $e) {
+            } catch (\RuntimeException $exception) {
                 continue;
             }
             // early return if a file's mtime exceeds the passed timestamp

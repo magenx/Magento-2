@@ -8,10 +8,14 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix20211221\Symfony\Component\Console\Input;
+namespace RectorPrefix202208\Symfony\Component\Console\Input;
 
-use RectorPrefix20211221\Symfony\Component\Console\Exception\InvalidArgumentException;
-use RectorPrefix20211221\Symfony\Component\Console\Exception\LogicException;
+use RectorPrefix202208\Symfony\Component\Console\Command\Command;
+use RectorPrefix202208\Symfony\Component\Console\Completion\CompletionInput;
+use RectorPrefix202208\Symfony\Component\Console\Completion\CompletionSuggestions;
+use RectorPrefix202208\Symfony\Component\Console\Completion\Suggestion;
+use RectorPrefix202208\Symfony\Component\Console\Exception\InvalidArgumentException;
+use RectorPrefix202208\Symfony\Component\Console\Exception\LogicException;
 /**
  * Represents a command line argument.
  *
@@ -31,9 +35,13 @@ class InputArgument
      */
     private $mode;
     /**
-     * @var mixed[]|bool|float|int|string|null
+     * @var string|int|bool|mixed[]|null|float
      */
     private $default;
+    /**
+     * @var mixed[]|\Closure
+     */
+    private $suggestedValues;
     /**
      * @var string
      */
@@ -42,20 +50,22 @@ class InputArgument
      * @param string                           $name        The argument name
      * @param int|null                         $mode        The argument mode: self::REQUIRED or self::OPTIONAL
      * @param string                           $description A description text
-     * @param mixed[]|bool|float|int|string $default The default value (for self::OPTIONAL mode only)
+     * @param string|bool|int|float|mixed[] $default The default value (for self::OPTIONAL mode only)
+     * @param array|\Closure(CompletionInput,CompletionSuggestions):list<string|Suggestion> $suggestedValues The values used for input completion
      *
      * @throws InvalidArgumentException When argument mode is not valid
      */
-    public function __construct(string $name, int $mode = null, string $description = '', $default = null)
+    public function __construct(string $name, int $mode = null, string $description = '', $default = null, $suggestedValues = [])
     {
         if (null === $mode) {
             $mode = self::OPTIONAL;
         } elseif ($mode > 7 || $mode < 1) {
-            throw new \RectorPrefix20211221\Symfony\Component\Console\Exception\InvalidArgumentException(\sprintf('Argument mode "%s" is not valid.', $mode));
+            throw new InvalidArgumentException(\sprintf('Argument mode "%s" is not valid.', $mode));
         }
         $this->name = $name;
         $this->mode = $mode;
         $this->description = $description;
+        $this->suggestedValues = $suggestedValues;
         $this->setDefault($default);
     }
     /**
@@ -87,30 +97,48 @@ class InputArgument
      * Sets the default value.
      *
      * @throws LogicException When incorrect default value is given
-     * @param mixed[]|bool|float|int|string $default
+     * @param string|bool|int|float|mixed[] $default
      */
     public function setDefault($default = null)
     {
-        if (self::REQUIRED === $this->mode && null !== $default) {
-            throw new \RectorPrefix20211221\Symfony\Component\Console\Exception\LogicException('Cannot set a default value except for InputArgument::OPTIONAL mode.');
+        if ($this->isRequired() && null !== $default) {
+            throw new LogicException('Cannot set a default value except for InputArgument::OPTIONAL mode.');
         }
         if ($this->isArray()) {
             if (null === $default) {
                 $default = [];
             } elseif (!\is_array($default)) {
-                throw new \RectorPrefix20211221\Symfony\Component\Console\Exception\LogicException('A default value for an array argument must be an array.');
+                throw new LogicException('A default value for an array argument must be an array.');
             }
         }
         $this->default = $default;
     }
     /**
      * Returns the default value.
-     *
-     * @return string|bool|int|float|array|null
+     * @return string|bool|int|float|mixed[]|null
      */
     public function getDefault()
     {
         return $this->default;
+    }
+    public function hasCompletion() : bool
+    {
+        return [] !== $this->suggestedValues;
+    }
+    /**
+     * Adds suggestions to $suggestions for the current completion input.
+     *
+     * @see Command::complete()
+     */
+    public function complete(CompletionInput $input, CompletionSuggestions $suggestions) : void
+    {
+        $values = $this->suggestedValues;
+        if ($values instanceof \Closure && !\is_array($values = $values($input))) {
+            throw new LogicException(\sprintf('Closure for argument "%s" must return an array. Got "%s".', $this->name, \get_debug_type($values)));
+        }
+        if ($values) {
+            $suggestions->suggestValues($values);
+        }
     }
     /**
      * Returns the description text.

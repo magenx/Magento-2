@@ -11,24 +11,19 @@ use Rector\Core\Rector\AbstractRector;
 use Rector\Transform\ValueObject\MethodCallToAnotherMethodCallWithArguments;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
-use RectorPrefix20211221\Webmozart\Assert\Assert;
+use RectorPrefix202208\Webmozart\Assert\Assert;
 /**
  * @see \Rector\Tests\Transform\Rector\MethodCall\MethodCallToAnotherMethodCallWithArgumentsRector\MethodCallToAnotherMethodCallWithArgumentsRectorTest
  */
-final class MethodCallToAnotherMethodCallWithArgumentsRector extends \Rector\Core\Rector\AbstractRector implements \Rector\Core\Contract\Rector\ConfigurableRectorInterface
+final class MethodCallToAnotherMethodCallWithArgumentsRector extends AbstractRector implements ConfigurableRectorInterface
 {
-    /**
-     * @deprecated
-     * @var string
-     */
-    public const METHOD_CALL_RENAMES_WITH_ADDED_ARGUMENTS = 'method_call_renames_with_added_arguments';
     /**
      * @var MethodCallToAnotherMethodCallWithArguments[]
      */
     private $methodCallRenamesWithAddedArguments = [];
-    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
+    public function getRuleDefinition() : RuleDefinition
     {
-        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Turns old method call with specific types to new one with arguments', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample(<<<'CODE_SAMPLE'
+        return new RuleDefinition('Turns old method call with specific types to new one with arguments', [new ConfiguredCodeSample(<<<'CODE_SAMPLE'
 $serviceDefinition = new Nette\DI\ServiceDefinition;
 $serviceDefinition->setInject();
 CODE_SAMPLE
@@ -36,19 +31,19 @@ CODE_SAMPLE
 $serviceDefinition = new Nette\DI\ServiceDefinition;
 $serviceDefinition->addTag('inject');
 CODE_SAMPLE
-, [new \Rector\Transform\ValueObject\MethodCallToAnotherMethodCallWithArguments('Nette\\DI\\ServiceDefinition', 'setInject', 'addTag', ['inject'])])]);
+, [new MethodCallToAnotherMethodCallWithArguments('Nette\\DI\\ServiceDefinition', 'setInject', 'addTag', ['inject'])])]);
     }
     /**
      * @return array<class-string<Node>>
      */
     public function getNodeTypes() : array
     {
-        return [\PhpParser\Node\Expr\MethodCall::class];
+        return [MethodCall::class];
     }
     /**
      * @param MethodCall $node
      */
-    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
+    public function refactor(Node $node) : ?Node
     {
         foreach ($this->methodCallRenamesWithAddedArguments as $methodCallRenameWithAddedArgument) {
             if (!$this->isObjectType($node->var, $methodCallRenameWithAddedArgument->getObjectType())) {
@@ -57,7 +52,7 @@ CODE_SAMPLE
             if (!$this->isName($node->name, $methodCallRenameWithAddedArgument->getOldMethod())) {
                 continue;
             }
-            $node->name = new \PhpParser\Node\Identifier($methodCallRenameWithAddedArgument->getNewMethod());
+            $node->name = new Identifier($methodCallRenameWithAddedArgument->getNewMethod());
             $node->args = $this->nodeFactory->createArgs($methodCallRenameWithAddedArgument->getNewArguments());
             return $node;
         }
@@ -68,9 +63,7 @@ CODE_SAMPLE
      */
     public function configure(array $configuration) : void
     {
-        $methodCallRenamesWithAddedArguments = $configuration[self::METHOD_CALL_RENAMES_WITH_ADDED_ARGUMENTS] ?? $configuration;
-        \RectorPrefix20211221\Webmozart\Assert\Assert::isArray($methodCallRenamesWithAddedArguments);
-        \RectorPrefix20211221\Webmozart\Assert\Assert::allIsAOf($methodCallRenamesWithAddedArguments, \Rector\Transform\ValueObject\MethodCallToAnotherMethodCallWithArguments::class);
-        $this->methodCallRenamesWithAddedArguments = $methodCallRenamesWithAddedArguments;
+        Assert::allIsAOf($configuration, MethodCallToAnotherMethodCallWithArguments::class);
+        $this->methodCallRenamesWithAddedArguments = $configuration;
     }
 }

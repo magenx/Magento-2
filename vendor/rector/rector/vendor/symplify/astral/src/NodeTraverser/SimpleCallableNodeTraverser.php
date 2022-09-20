@@ -1,18 +1,19 @@
 <?php
 
 declare (strict_types=1);
-namespace RectorPrefix20211221\Symplify\Astral\NodeTraverser;
+namespace RectorPrefix202208\Symplify\Astral\NodeTraverser;
 
 use PhpParser\Node;
 use PhpParser\NodeTraverser;
-use RectorPrefix20211221\Symplify\Astral\NodeVisitor\CallableNodeVisitor;
+use RectorPrefix202208\Symplify\Astral\NodeVisitor\CallableNodeVisitor;
 /**
  * @api
  */
 final class SimpleCallableNodeTraverser
 {
     /**
-     * @param mixed[]|\PhpParser\Node|null $nodes
+     * @param callable(Node $node): (int|Node|null) $callable
+     * @param \PhpParser\Node|mixed[]|null $nodes
      */
     public function traverseNodesWithCallable($nodes, callable $callable) : void
     {
@@ -25,8 +26,8 @@ final class SimpleCallableNodeTraverser
         if (!\is_array($nodes)) {
             $nodes = [$nodes];
         }
-        $nodeTraverser = new \PhpParser\NodeTraverser();
-        $callableNodeVisitor = new \RectorPrefix20211221\Symplify\Astral\NodeVisitor\CallableNodeVisitor($callable);
+        $nodeTraverser = new NodeTraverser();
+        $callableNodeVisitor = new CallableNodeVisitor($callable);
         $nodeTraverser->addVisitor($callableNodeVisitor);
         $nodeTraverser->traverse($nodes);
     }

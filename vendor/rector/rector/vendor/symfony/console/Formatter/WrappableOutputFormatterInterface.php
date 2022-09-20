@@ -8,17 +8,19 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix20211221\Symfony\Component\Console\Formatter;
+namespace RectorPrefix202208\Symfony\Component\Console\Formatter;
 
 /**
  * Formatter interface for console output that supports word wrapping.
  *
  * @author Roland Franssen <franssen.roland@gmail.com>
  */
-interface WrappableOutputFormatterInterface extends \RectorPrefix20211221\Symfony\Component\Console\Formatter\OutputFormatterInterface
+interface WrappableOutputFormatterInterface extends OutputFormatterInterface
 {
     /**
      * Formats a message according to the given styles, wrapping at `$width` (0 means no wrapping).
+     *
+     * @return string
      */
     public function formatAndWrap(?string $message, int $width);
 }

@@ -8,23 +8,25 @@ use PhpParser\Node\Expr\FuncCall;
 final class FuncCallAndExpr
 {
     /**
+     * @readonly
      * @var \PhpParser\Node\Expr\FuncCall
      */
     private $funcCall;
     /**
+     * @readonly
      * @var \PhpParser\Node\Expr
      */
     private $expr;
-    public function __construct(\PhpParser\Node\Expr\FuncCall $funcCall, \PhpParser\Node\Expr $expr)
+    public function __construct(FuncCall $funcCall, Expr $expr)
     {
         $this->funcCall = $funcCall;
         $this->expr = $expr;
     }
-    public function getFuncCall() : \PhpParser\Node\Expr\FuncCall
+    public function getFuncCall() : FuncCall
     {
         return $this->funcCall;
     }
-    public function getExpr() : \PhpParser\Node\Expr
+    public function getExpr() : Expr
     {
         return $this->expr;
     }

@@ -58,11 +58,6 @@ class PlaceOrderTest extends \PHPUnit\Framework\TestCase
      */
     private $placeOrder;
 
-    /**
-     * @var \PHPUnit\Framework\MockObject\MockObject
-     */
-    private $loggerMock;
-
     protected function setUp(): void
     {
         /** @var Context|\PHPUnit\Framework\MockObject\MockObject $contextMock */
@@ -97,15 +92,11 @@ class PlaceOrderTest extends \PHPUnit\Framework\TestCase
             ->method('getMessageManager')
             ->willReturn($this->messageManagerMock);
 
-        $this->loggerMock = $this->getMockBuilder(\Psr\Log\LoggerInterface::class)
-            ->disableOriginalConstructor()
-            ->getMock();
         $this->placeOrder = new PlaceOrder(
             $contextMock,
             $this->configMock,
             $this->checkoutSessionMock,
-            $this->orderPlaceMock,
-            $this->loggerMock
+            $this->orderPlaceMock
         );
     }
 
@@ -183,8 +174,8 @@ class PlaceOrderTest extends \PHPUnit\Framework\TestCase
         $this->messageManagerMock->expects(self::once())
             ->method('addExceptionMessage')
             ->with(
-                self::isInstanceOf('\InvalidArgumentException'),
-                'We can\'t initialize checkout.'
+                self::isInstanceOf('Exception'),
+                'The order # cannot be processed.'
             );
 
         self::assertEquals($this->placeOrder->execute(), $resultMock);

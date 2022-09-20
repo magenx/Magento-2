@@ -3,10 +3,10 @@
 declare (strict_types=1);
 namespace Rector\RectorGenerator\FileSystem;
 
-use RectorPrefix20211221\Nette\Utils\Strings;
+use RectorPrefix202208\Nette\Utils\Strings;
 use Rector\RectorGenerator\Exception\ShouldNotHappenException;
 use Rector\RectorGenerator\TemplateFactory;
-use RectorPrefix20211221\Symplify\SmartFileSystem\SmartFileSystem;
+use RectorPrefix202208\Symplify\SmartFileSystem\SmartFileSystem;
 final class ConfigFilesystem
 {
     /**
@@ -15,6 +15,7 @@ final class ConfigFilesystem
     private const REQUIRED_KEYS = ['__Package__', '__Category__', '__Name__'];
     /**
      * @see https://regex101.com/r/gJ0bHJ/1
+     * @var string
      */
     private const LAST_ITEM_REGEX = '#;\\n};#';
     /**
@@ -27,7 +28,7 @@ final class ConfigFilesystem
      * @var \Rector\RectorGenerator\TemplateFactory
      */
     private $templateFactory;
-    public function __construct(\RectorPrefix20211221\Symplify\SmartFileSystem\SmartFileSystem $smartFileSystem, \Rector\RectorGenerator\TemplateFactory $templateFactory)
+    public function __construct(SmartFileSystem $smartFileSystem, TemplateFactory $templateFactory)
     {
         $this->smartFileSystem = $smartFileSystem;
         $this->templateFactory = $templateFactory;
@@ -44,8 +45,8 @@ final class ConfigFilesystem
         if (\strpos($setFileContents, $servicesFullyQualifiedName) !== \false) {
             return;
         }
-        $registerServiceLine = \sprintf(';' . \PHP_EOL . '    $services->set(\\%s::class);' . \PHP_EOL . '};', $servicesFullyQualifiedName);
-        $setFileContents = \RectorPrefix20211221\Nette\Utils\Strings::replace($setFileContents, self::LAST_ITEM_REGEX, $registerServiceLine);
+        $registerServiceLine = \sprintf(';' . \PHP_EOL . '    $rectorConfig->rule(\\%s::class);' . \PHP_EOL . '};', $servicesFullyQualifiedName);
+        $setFileContents = Strings::replace($setFileContents, self::LAST_ITEM_REGEX, $registerServiceLine);
         // 3. print the content back to file
         $this->smartFileSystem->dumpFile($setFilePath, $setFileContents);
     }
@@ -59,6 +60,6 @@ final class ConfigFilesystem
             return;
         }
         $message = \sprintf('Template variables for "%s" keys are missing', \implode('", "', $missingKeys));
-        throw new \Rector\RectorGenerator\Exception\ShouldNotHappenException($message);
+        throw new ShouldNotHappenException($message);
     }
 }

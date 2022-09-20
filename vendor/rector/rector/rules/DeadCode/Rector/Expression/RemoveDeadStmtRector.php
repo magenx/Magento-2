@@ -19,7 +19,7 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
  * @see \Rector\Tests\DeadCode\Rector\Expression\RemoveDeadStmtRector\RemoveDeadStmtRectorTest
  */
-final class RemoveDeadStmtRector extends \Rector\Core\Rector\AbstractRector
+final class RemoveDeadStmtRector extends AbstractRector
 {
     /**
      * @readonly
@@ -36,15 +36,15 @@ final class RemoveDeadStmtRector extends \Rector\Core\Rector\AbstractRector
      * @var \Rector\Core\Reflection\ReflectionResolver
      */
     private $reflectionResolver;
-    public function __construct(\Rector\DeadCode\NodeManipulator\LivingCodeManipulator $livingCodeManipulator, \Rector\Core\NodeAnalyzer\PropertyFetchAnalyzer $propertyFetchAnalyzer, \Rector\Core\Reflection\ReflectionResolver $reflectionResolver)
+    public function __construct(LivingCodeManipulator $livingCodeManipulator, PropertyFetchAnalyzer $propertyFetchAnalyzer, ReflectionResolver $reflectionResolver)
     {
         $this->livingCodeManipulator = $livingCodeManipulator;
         $this->propertyFetchAnalyzer = $propertyFetchAnalyzer;
         $this->reflectionResolver = $reflectionResolver;
     }
-    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
+    public function getRuleDefinition() : RuleDefinition
     {
-        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Removes dead code statements', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample(<<<'CODE_SAMPLE'
+        return new RuleDefinition('Removes dead code statements', [new CodeSample(<<<'CODE_SAMPLE'
 $value = 5;
 $value;
 CODE_SAMPLE
@@ -58,13 +58,13 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [\PhpParser\Node\Stmt\Expression::class];
+        return [Expression::class];
     }
     /**
      * @param Expression $node
      * @return Node[]|Node|null
      */
-    public function refactor(\PhpParser\Node $node)
+    public function refactor(Node $node)
     {
         if ($this->hasGetMagic($node)) {
             return null;
@@ -76,16 +76,15 @@ CODE_SAMPLE
         if ($livingCode === [$node->expr]) {
             return null;
         }
-        $firstExpr = \array_shift($livingCode);
-        $node->expr = $firstExpr;
+        $node->expr = \array_shift($livingCode);
         $newNodes = [];
         foreach ($livingCode as $singleLivingCode) {
-            $newNodes[] = new \PhpParser\Node\Stmt\Expression($singleLivingCode);
+            $newNodes[] = new Expression($singleLivingCode);
         }
         $newNodes[] = $node;
         return $newNodes;
     }
-    private function hasGetMagic(\PhpParser\Node\Stmt\Expression $expression) : bool
+    private function hasGetMagic(Expression $expression) : bool
     {
         if (!$this->propertyFetchAnalyzer->isPropertyFetch($expression->expr)) {
             return \false;
@@ -97,15 +96,14 @@ CODE_SAMPLE
          *  property not found assume has class has __get method
          *  that can call non-defined property, that can have some special handling, eg: throw on special case
          */
-        return !$phpPropertyReflection instanceof \PHPStan\Reflection\Php\PhpPropertyReflection;
+        return !$phpPropertyReflection instanceof PhpPropertyReflection;
     }
-    private function removeNodeAndKeepComments(\PhpParser\Node\Stmt\Expression $expression) : ?\PhpParser\Node
+    private function removeNodeAndKeepComments(Expression $expression) : ?Node
     {
         $phpDocInfo = $this->phpDocInfoFactory->createFromNodeOrEmpty($expression);
         if ($expression->getComments() !== []) {
-            $nop = new \PhpParser\Node\Stmt\Nop();
-            $nop->setAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::PHP_DOC_INFO, $phpDocInfo);
-            $this->phpDocInfoFactory->createFromNode($nop);
+            $nop = new Nop();
+            $nop->setAttribute(AttributeKey::PHP_DOC_INFO, $phpDocInfo);
             return $nop;
         }
         $this->removeNode($expression);

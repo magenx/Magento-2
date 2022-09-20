@@ -1,15 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Laminas\View\Helper;
 
 /**
- * Helper for escaping values
+ * @final
  */
 class EscapeJs extends Escaper\AbstractHelper
 {
     /**
-     * Escape a value for current escaping strategy
-     *
      * @param  string $value
      * @return string
      */

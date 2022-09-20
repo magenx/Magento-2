@@ -8,9 +8,9 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix20211221\Symfony\Contracts\Translation;
+namespace RectorPrefix202208\Symfony\Contracts\Translation;
 
-use RectorPrefix20211221\Symfony\Component\Translation\Exception\InvalidArgumentException;
+use RectorPrefix202208\Symfony\Component\Translation\Exception\InvalidArgumentException;
 /**
  * A trait to help implement TranslatorInterface and LocaleAwareInterface.
  *
@@ -18,6 +18,9 @@ use RectorPrefix20211221\Symfony\Component\Translation\Exception\InvalidArgument
  */
 trait TranslatorTrait
 {
+    /**
+     * @var string|null
+     */
     private $locale;
     /**
      * {@inheritdoc}
@@ -28,10 +31,8 @@ trait TranslatorTrait
     }
     /**
      * {@inheritdoc}
-     *
-     * @return string
      */
-    public function getLocale()
+    public function getLocale() : string
     {
         return $this->locale ?: (\class_exists(\Locale::class) ? \Locale::getDefault() : 'en');
     }
@@ -103,8 +104,8 @@ EOF;
                 return \strtr($standardRules[0], $parameters);
             }
             $message = \sprintf('Unable to choose a translation for "%s" with locale "%s" for value "%d". Double check that this translation has the correct plural options (e.g. "There is one apple|There are %%count%% apples").', $id, $locale, $number);
-            if (\class_exists(\RectorPrefix20211221\Symfony\Component\Translation\Exception\InvalidArgumentException::class)) {
-                throw new \RectorPrefix20211221\Symfony\Component\Translation\Exception\InvalidArgumentException($message);
+            if (\class_exists(InvalidArgumentException::class)) {
+                throw new InvalidArgumentException($message);
             }
             throw new \InvalidArgumentException($message);
         }

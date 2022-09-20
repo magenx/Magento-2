@@ -4,32 +4,41 @@ declare (strict_types=1);
 namespace Rector\Nette\NodeAnalyzer;
 
 use PhpParser\Node\Stmt\Property;
-use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\ClassReflection;
+use PHPStan\Reflection\ParametersAcceptorSelector;
 use Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfo;
 use Rector\Core\Exception\ShouldNotHappenException;
+use Rector\Core\Reflection\ReflectionResolver;
 use Rector\Core\ValueObject\MethodName;
 use Rector\FamilyTree\NodeAnalyzer\ClassChildAnalyzer;
-use Rector\NodeTypeResolver\Node\AttributeKey;
 final class NetteInjectPropertyAnalyzer
 {
     /**
+     * @readonly
      * @var \Rector\FamilyTree\NodeAnalyzer\ClassChildAnalyzer
      */
     private $classChildAnalyzer;
-    public function __construct(\Rector\FamilyTree\NodeAnalyzer\ClassChildAnalyzer $classChildAnalyzer)
+    /**
+     * @readonly
+     * @var \Rector\Core\Reflection\ReflectionResolver
+     */
+    private $reflectionResolver;
+    public function __construct(ClassChildAnalyzer $classChildAnalyzer, ReflectionResolver $reflectionResolver)
     {
         $this->classChildAnalyzer = $classChildAnalyzer;
+        $this->reflectionResolver = $reflectionResolver;
     }
-    public function canBeRefactored(\PhpParser\Node\Stmt\Property $property, \Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfo $phpDocInfo) : bool
+    public function canBeRefactored(Property $property, PhpDocInfo $phpDocInfo) : bool
     {
         if (!$phpDocInfo->hasByName('inject')) {
-            throw new \Rector\Core\Exception\ShouldNotHappenException();
+            throw new ShouldNotHappenException();
         }
-        /** @var Scope $scope */
-        $scope = $property->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::SCOPE);
-        $classReflection = $scope->getClassReflection();
-        if (!$classReflection instanceof \PHPStan\Reflection\ClassReflection) {
+        // it needs @var tag as well, to get the type - faster, put first :)
+        if (!$this->isKnownPropertyType($phpDocInfo, $property)) {
+            return \false;
+        }
+        $classReflection = $this->reflectionResolver->resolveClassReflection($property);
+        if (!$classReflection instanceof ClassReflection) {
             return \false;
         }
         if ($classReflection->isAbstract()) {
@@ -38,13 +47,28 @@ final class NetteInjectPropertyAnalyzer
         if ($classReflection->isAnonymous()) {
             return \false;
         }
-        if ($this->classChildAnalyzer->hasChildClassMethod($classReflection, \Rector\Core\ValueObject\MethodName::CONSTRUCT)) {
+        if ($this->classChildAnalyzer->hasChildClassMethod($classReflection, MethodName::CONSTRUCT)) {
             return \false;
         }
-        if ($this->classChildAnalyzer->hasParentClassMethod($classReflection, \Rector\Core\ValueObject\MethodName::CONSTRUCT)) {
-            return \false;
+        return $this->hasNoOrEmptyParamParentConstructor($classReflection);
+    }
+    public function hasNoOrEmptyParamParentConstructor(ClassReflection $classReflection) : bool
+    {
+        $parentClassMethods = $this->classChildAnalyzer->resolveParentClassMethods($classReflection, MethodName::CONSTRUCT);
+        if ($parentClassMethods === []) {
+            return \true;
         }
-        // it needs @var tag as well, to get the type
+        // are there parent ctors? - has empty constructor params? it can be refactored
+        foreach ($parentClassMethods as $parentClassMethod) {
+            $parametersAcceptor = ParametersAcceptorSelector::selectSingle($parentClassMethod->getVariants());
+            if ($parametersAcceptor->getParameters() !== []) {
+                return \false;
+            }
+        }
+        return \true;
+    }
+    private function isKnownPropertyType(PhpDocInfo $phpDocInfo, Property $property) : bool
+    {
         if ($phpDocInfo->getVarTagValueNode() !== null) {
             return \true;
         }

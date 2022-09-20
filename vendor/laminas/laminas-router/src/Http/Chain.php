@@ -14,10 +14,9 @@ use Traversable;
 
 use function array_diff_key;
 use function array_flip;
+use function array_key_last;
 use function array_reverse;
-use function end;
 use function is_array;
-use function key;
 use function method_exists;
 use function sprintf;
 use function strlen;
@@ -164,10 +163,8 @@ class Chain extends TreeRouteStack implements RouteInterface
 
         $this->assembledParams = [];
 
-        $routes = ArrayUtils::iteratorToArray($this->routes);
-
-        end($routes);
-        $lastRouteKey = key($routes);
+        $routes       = ArrayUtils::iteratorToArray($this->routes);
+        $lastRouteKey = array_key_last($routes);
         $path         = '';
 
         foreach ($routes as $key => $route) {

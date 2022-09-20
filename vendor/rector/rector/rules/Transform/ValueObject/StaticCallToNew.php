@@ -7,8 +7,8 @@ use Rector\Core\Validation\RectorAssert;
 final class StaticCallToNew
 {
     /**
+     * @var class-string
      * @readonly
-     * @var string
      */
     private $class;
     /**
@@ -16,11 +16,15 @@ final class StaticCallToNew
      * @var string
      */
     private $method;
+    /**
+     * @param class-string $class
+     */
     public function __construct(string $class, string $method)
     {
         $this->class = $class;
         $this->method = $method;
-        \Rector\Core\Validation\RectorAssert::className($class);
+        RectorAssert::className($class);
+        RectorAssert::methodName($method);
     }
     public function getClass() : string
     {

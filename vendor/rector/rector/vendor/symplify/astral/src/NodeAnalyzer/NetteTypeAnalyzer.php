@@ -1,23 +1,24 @@
 <?php
 
 declare (strict_types=1);
-namespace RectorPrefix20211221\Symplify\Astral\NodeAnalyzer;
+namespace RectorPrefix202208\Symplify\Astral\NodeAnalyzer;
 
-use RectorPrefix20211221\Nette\Application\UI\Template;
+use RectorPrefix202208\Latte\Engine;
+use RectorPrefix202208\Nette\Application\UI\Template;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\PropertyFetch;
 use PHPStan\Analyser\Scope;
-use RectorPrefix20211221\Symplify\Astral\Naming\SimpleNameResolver;
-use RectorPrefix20211221\Symplify\Astral\TypeAnalyzer\ContainsTypeAnalyser;
+use RectorPrefix202208\Symplify\Astral\Naming\SimpleNameResolver;
+use RectorPrefix202208\Symplify\Astral\TypeAnalyzer\ContainsTypeAnalyser;
 /**
  * @api
  */
 final class NetteTypeAnalyzer
 {
     /**
-     * @var array<class-string<Template>>
+     * @var array<class-string<Engine|Template>>
      */
-    private const TEMPLATE_TYPES = ['RectorPrefix20211221\\Nette\\Application\\UI\\Template', 'RectorPrefix20211221\\Nette\\Application\\UI\\ITemplate', 'RectorPrefix20211221\\Nette\\Bridges\\ApplicationLatte\\Template', 'RectorPrefix20211221\\Nette\\Bridges\\ApplicationLatte\\DefaultTemplate'];
+    private const TEMPLATE_TYPES = ['RectorPrefix202208\\Latte\\Engine', 'RectorPrefix202208\\Nette\\Application\\UI\\Template', 'RectorPrefix202208\\Nette\\Application\\UI\\ITemplate', 'RectorPrefix202208\\Nette\\Bridges\\ApplicationLatte\\Template', 'RectorPrefix202208\\Nette\\Bridges\\ApplicationLatte\\DefaultTemplate'];
     /**
      * @var \Symplify\Astral\Naming\SimpleNameResolver
      */
@@ -26,7 +27,7 @@ final class NetteTypeAnalyzer
      * @var \Symplify\Astral\TypeAnalyzer\ContainsTypeAnalyser
      */
     private $containsTypeAnalyser;
-    public function __construct(\RectorPrefix20211221\Symplify\Astral\Naming\SimpleNameResolver $simpleNameResolver, \RectorPrefix20211221\Symplify\Astral\TypeAnalyzer\ContainsTypeAnalyser $containsTypeAnalyser)
+    public function __construct(SimpleNameResolver $simpleNameResolver, ContainsTypeAnalyser $containsTypeAnalyser)
     {
         $this->simpleNameResolver = $simpleNameResolver;
         $this->containsTypeAnalyser = $containsTypeAnalyser;
@@ -34,12 +35,12 @@ final class NetteTypeAnalyzer
     /**
      * E.g. $this->template->key
      */
-    public function isTemplateMagicPropertyType(\PhpParser\Node\Expr $expr, \PHPStan\Analyser\Scope $scope) : bool
+    public function isTemplateMagicPropertyType(Expr $expr, Scope $scope) : bool
     {
-        if (!$expr instanceof \PhpParser\Node\Expr\PropertyFetch) {
+        if (!$expr instanceof PropertyFetch) {
             return \false;
         }
-        if (!$expr->var instanceof \PhpParser\Node\Expr\PropertyFetch) {
+        if (!$expr->var instanceof PropertyFetch) {
             return \false;
         }
         return $this->isTemplateType($expr->var, $scope);
@@ -47,28 +48,28 @@ final class NetteTypeAnalyzer
     /**
      * E.g. $this->template
      */
-    public function isTemplateType(\PhpParser\Node\Expr $expr, \PHPStan\Analyser\Scope $scope) : bool
+    public function isTemplateType(Expr $expr, Scope $scope) : bool
     {
         return $this->containsTypeAnalyser->containsExprTypes($expr, $scope, self::TEMPLATE_TYPES);
     }
     /**
      * This type has getComponent() method
      */
-    public function isInsideComponentContainer(\PHPStan\Analyser\Scope $scope) : bool
+    public function isInsideComponentContainer(Scope $scope) : bool
     {
         $className = $this->simpleNameResolver->getClassNameFromScope($scope);
         if ($className === null) {
             return \false;
         }
         // this type has getComponent() method
-        return \is_a($className, 'RectorPrefix20211221\\Nette\\ComponentModel\\Container', \true);
+        return \is_a($className, 'RectorPrefix202208\\Nette\\ComponentModel\\Container', \true);
     }
-    public function isInsideControl(\PHPStan\Analyser\Scope $scope) : bool
+    public function isInsideControl(Scope $scope) : bool
     {
         $className = $this->simpleNameResolver->getClassNameFromScope($scope);
         if ($className === null) {
             return \false;
         }
-        return \is_a($className, 'RectorPrefix20211221\\Nette\\Application\\UI\\Control', \true);
+        return \is_a($className, 'RectorPrefix202208\\Nette\\Application\\UI\\Control', \true);
     }
 }

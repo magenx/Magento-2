@@ -14,7 +14,7 @@ use PhpParser\Node\Expr\Variable;
 final class VariableAssignPair
 {
     /**
-     * @var ArrayDimFetch|PropertyFetch|StaticPropertyFetch|Variable
+     * @var Variable|ArrayDimFetch|PropertyFetch|StaticPropertyFetch
      * @readonly
      */
     private $variable;
@@ -27,7 +27,7 @@ final class VariableAssignPair
      * @param Variable|ArrayDimFetch|PropertyFetch|StaticPropertyFetch $variable
      * @param Assign|AssignOp|AssignRef $assign
      */
-    public function __construct(\PhpParser\Node $variable, \PhpParser\Node $assign)
+    public function __construct(Node $variable, Node $assign)
     {
         $this->variable = $variable;
         $this->assign = $assign;

@@ -3,8 +3,7 @@ namespace Codeception\Command;
 
 use Codeception\Codecept;
 use Codeception\Configuration;
-use Codeception\Lib\GroupManager;
-use Codeception\Util\PathResolver;
+use Codeception\Exception\ParseException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -251,18 +250,10 @@ class Run extends Command
         if ($this->options['bootstrap']) {
             Configuration::loadBootstrap($this->options['bootstrap'], getcwd());
         }
-
-        // load config
+        
         $config = $this->getGlobalConfig();
-
-        // update config from options
-        if (count($this->options['override'])) {
-            $config = $this->overrideConfig($this->options['override']);
-        }
-        if ($this->options['ext']) {
-            $config = $this->enableExtensions($this->options['ext']);
-        }
-
+        $config = $this->addRuntimeOptionsToCurrentConfig($config);
+        
         if (!$this->options['colors']) {
             $this->options['colors'] = $config['settings']['colors'];
         }
@@ -350,7 +341,8 @@ class Run extends Command
                     if (strpos($suite, $include) === 0) {
                         // Use include config
                         $config = Configuration::config($projectDir.$include);
-
+                        $config = $this->addRuntimeOptionsToCurrentConfig($config);
+                        
                         if (!isset($config['paths']['tests'])) {
                             throw new \RuntimeException(
                                 sprintf("Included '%s' has no tests path configured", $include)
@@ -376,7 +368,9 @@ class Run extends Command
 
                 // Restore main config
                 if (!$isIncludeTest) {
-                    $config = Configuration::config($projectDir);
+                    $config = $this->addRuntimeOptionsToCurrentConfig(
+                        Configuration::config($projectDir)
+                    );
                 }
             } elseif (!empty($suite)) {
                 $result = $this->matchSingleTest($suite, $config);
@@ -388,7 +382,11 @@ class Run extends Command
 
         if ($test) {
             $userOptions['filter'] = $this->matchFilteredTestName($test);
-        } elseif ($suite) {
+        } elseif (
+            $suite
+            && ! $this->isWildcardSuiteName($suite)
+            && ! $this->isSuiteInMultiApplication($suite)
+        ) {
             $userOptions['filter'] = $this->matchFilteredTestName($suite);
         }
         if (!$this->options['silent'] && $config['settings']['shuffle']) {
@@ -405,18 +403,66 @@ class Run extends Command
 
         // Run all tests of given suite or all suites
         if (!$test) {
-            $suites = $suite ? explode(',', $suite) : Configuration::suites();
-            $this->executed = $this->runSuites($suites, $this->options['skip']);
-
-            if (!empty($config['include']) and !$suite) {
-                $current_dir = Configuration::projectDir();
-                $suites += $config['include'];
-                $this->runIncludedSuites($config['include'], $current_dir);
+            
+            $didPassCliSuite = !empty($suite);
+            
+            $rawSuites = $didPassCliSuite ? explode(',', $suite) : Configuration::suites();
+            
+            /** @var string[] $mainAppSuites */
+            $mainAppSuites = [];
+            
+            /** @var array<string,string> $appSpecificSuites */
+            $appSpecificSuites = [];
+            
+            /** @var string[] $wildcardSuites */
+            $wildcardSuites = [];
+            
+            foreach ($rawSuites as $rawSuite) {
+                if($this->isWildcardSuiteName($rawSuite)){
+                    $wildcardSuites[] = explode('*::', $rawSuite)[1];
+                    continue;
+                }
+                if($this->isSuiteInMultiApplication($rawSuite)){
+                    $appAndSuite = explode('::', $rawSuite);
+                    $appSpecificSuites[$appAndSuite[0]][] = $appAndSuite[1];
+                    continue;
+                }
+                $mainAppSuites[] = $rawSuite;
             }
-
+            
+            if([] !== $mainAppSuites) {
+                $this->executed = $this->runSuites($mainAppSuites, $this->options['skip']);
+            }
+            
+            if(!empty($wildcardSuites) && ! empty($appSpecificSuites)) {
+                $this->output->writeLn('<error>Wildcard options can not be combined with specific suites of included apps.</error>');
+                return 2;
+            }
+            
+            if(
+                !empty($config['include'])
+                && (!$didPassCliSuite || !empty($wildcardSuites) || !empty($appSpecificSuites))
+            ) {
+                
+                $currentDir = Configuration::projectDir();
+                $includedApps = $config['include'];
+                
+                if(!empty($appSpecificSuites)){
+                    $includedApps = array_intersect($includedApps, array_keys($appSpecificSuites));
+                }
+                
+                $this->runIncludedSuites(
+                    $includedApps,
+                    $currentDir,
+                    $appSpecificSuites,
+                    $wildcardSuites
+                );
+                
+            }
+    
             if ($this->executed === 0) {
                 throw new \RuntimeException(
-                    sprintf("Suite '%s' could not be found", implode(', ', $suites))
+                    sprintf("Suite '%s' could not be found", implode(', ', $rawSuites))
                 );
             }
         }
@@ -488,8 +534,10 @@ class Run extends Command
      *
      * @param array $suites
      * @param string $parent_dir
+     * @param array<string,string[]> $filterAppSuites An array keyed by included app name where values are suite names to run.
+     * @param string[] $filterSuitesByWildcard A list of suite names (applies to all included apps)
      */
-    protected function runIncludedSuites($suites, $parent_dir)
+    protected function runIncludedSuites($suites, $parent_dir, $filterAppSuites = [], $filterSuitesByWildcard = [])
     {
         $defaultConfig = Configuration::config();
         $absolutePath = \Codeception\Configuration::projectDir();
@@ -498,7 +546,7 @@ class Run extends Command
             $current_dir = rtrim($parent_dir, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $relativePath;
             $config = Configuration::config($current_dir);
 
-            if (!empty($defaultConfig['groups'])) {
+            if ( !empty($defaultConfig['groups'])) {
                 $groups = array_map(function($g) use ($absolutePath) {
                     return $absolutePath . $g;
                 }, $defaultConfig['groups']);
@@ -506,7 +554,15 @@ class Run extends Command
             }
 
             $suites = Configuration::suites();
-
+            
+            if( !empty($filterSuitesByWildcard)){
+                $suites = array_intersect($suites, $filterSuitesByWildcard);
+            }
+            
+            if( isset($filterAppSuites[$relativePath])) {
+                $suites = array_intersect($suites, $filterAppSuites[$relativePath]);
+            }
+            
             $namespace = $this->currentNamespace();
             $this->output->writeln(
                 "\n<fg=white;bg=magenta>\n[$namespace]: tests from $current_dir\n</fg=white;bg=magenta>"
@@ -661,4 +717,42 @@ class Run extends Command
             );
         }
     }
+    
+    /**
+     * @param  string  $suite_name
+     *
+     * @return bool
+     */
+    private function isWildcardSuiteName($suite_name)
+    {
+        return '*::' === substr($suite_name, 0, 3);
+    }
+    
+    /**
+     * @param  string  $suite_name
+     *
+     * @return bool
+     */
+    private function isSuiteInMultiApplication($suite_name)
+    {
+        return false !== strpos($suite_name, '::');
+    }
+    
+    /**
+     * @return array
+     */
+    private function addRuntimeOptionsToCurrentConfig(array $config)
+    {
+        // update config from options
+        if (count($this->options['override'])) {
+            $config = $this->overrideConfig($this->options['override']);
+        }
+        // enable extensions
+        if ($this->options['ext']) {
+            $config = $this->enableExtensions($this->options['ext']);
+        }
+        
+        return $config;
+    }
+    
 }

@@ -29,30 +29,31 @@ final class ClassConstManipulator
      * @var \Rector\Core\PhpParser\AstResolver
      */
     private $astResolver;
-    public function __construct(\Rector\Core\PhpParser\Node\BetterNodeFinder $betterNodeFinder, \Rector\NodeNameResolver\NodeNameResolver $nodeNameResolver, \Rector\Core\PhpParser\AstResolver $astResolver)
+    public function __construct(BetterNodeFinder $betterNodeFinder, NodeNameResolver $nodeNameResolver, AstResolver $astResolver)
     {
         $this->betterNodeFinder = $betterNodeFinder;
         $this->nodeNameResolver = $nodeNameResolver;
         $this->astResolver = $astResolver;
     }
-    public function hasClassConstFetch(\PhpParser\Node\Stmt\ClassConst $classConst, \PHPStan\Reflection\ClassReflection $classReflection) : bool
+    public function hasClassConstFetch(ClassConst $classConst, ClassReflection $classReflection) : bool
     {
-        $class = $this->betterNodeFinder->findParentType($classConst, \PhpParser\Node\Stmt\Class_::class);
-        if (!$class instanceof \PhpParser\Node\Stmt\Class_) {
+        $class = $this->betterNodeFinder->findParentType($classConst, Class_::class);
+        if (!$class instanceof Class_) {
             return \false;
         }
+        $className = (string) $this->nodeNameResolver->getName($class);
         foreach ($classReflection->getAncestors() as $ancestorClassReflection) {
             $ancestorClass = $this->astResolver->resolveClassFromClassReflection($ancestorClassReflection, $ancestorClassReflection->getName());
-            if (!$ancestorClass instanceof \PhpParser\Node\Stmt\ClassLike) {
+            if (!$ancestorClass instanceof ClassLike) {
                 continue;
             }
             // has in class?
-            $isClassConstFetchFound = (bool) $this->betterNodeFinder->find($ancestorClass, function (\PhpParser\Node $node) use($classConst) : bool {
+            $isClassConstFetchFound = (bool) $this->betterNodeFinder->find($ancestorClass, function (Node $node) use($classConst, $className) : bool {
                 // property + static fetch
-                if (!$node instanceof \PhpParser\Node\Expr\ClassConstFetch) {
+                if (!$node instanceof ClassConstFetch) {
                     return \false;
                 }
-                return $this->isNameMatch($node, $classConst);
+                return $this->isNameMatch($node, $classConst, $className);
             });
             if ($isClassConstFetchFound) {
                 return \true;
@@ -60,10 +61,12 @@ final class ClassConstManipulator
         }
         return \false;
     }
-    private function isNameMatch(\PhpParser\Node\Expr\ClassConstFetch $classConstFetch, \PhpParser\Node\Stmt\ClassConst $classConst) : bool
+    private function isNameMatch(ClassConstFetch $classConstFetch, ClassConst $classConst, string $className) : bool
     {
-        $selfConstantName = 'self::' . $this->nodeNameResolver->getName($classConst);
-        $staticConstantName = 'static::' . $this->nodeNameResolver->getName($classConst);
-        return $this->nodeNameResolver->isNames($classConstFetch, [$selfConstantName, $staticConstantName]);
+        $classConstName = (string) $this->nodeNameResolver->getName($classConst);
+        $selfConstantName = 'self::' . $classConstName;
+        $staticConstantName = 'static::' . $classConstName;
+        $classNameConstantName = $className . '::' . $classConstName;
+        return $this->nodeNameResolver->isNames($classConstFetch, [$selfConstantName, $staticConstantName, $classNameConstantName]);
     }
 }

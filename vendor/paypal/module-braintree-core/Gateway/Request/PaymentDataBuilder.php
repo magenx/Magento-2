@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © 2013-2017 Magento, Inc. All rights reserved.
+ * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
 namespace PayPal\Braintree\Gateway\Request;
@@ -19,7 +19,7 @@ class PaymentDataBuilder implements BuilderInterface
      * The billing amount of the request. This value must be greater than 0,
      * and must match the currency format of the merchant account.
      */
-    const AMOUNT = 'amount';
+    public const AMOUNT = 'amount';
 
     /**
      * One-time-use token that references a payment method provided by your customer,
@@ -30,19 +30,19 @@ class PaymentDataBuilder implements BuilderInterface
      * that accept new or saved payment details.
      * This can be passed instead of a payment_method_token parameter.
      */
-    const PAYMENT_METHOD_NONCE = 'paymentMethodNonce';
+    public const PAYMENT_METHOD_NONCE = 'paymentMethodNonce';
 
     /**
      * The merchant account ID used to create a transaction.
      * Currency is also determined by merchant account ID.
      * If no merchant account ID is specified, Braintree will use your default merchant account.
      */
-    const MERCHANT_ACCOUNT_ID = 'merchantAccountId';
+    public const MERCHANT_ACCOUNT_ID = 'merchantAccountId';
 
     /**
      * Order ID Key
      */
-    const ORDER_ID = 'orderId';
+    public const ORDER_ID = 'orderId';
 
     /**
      * @var Config $config

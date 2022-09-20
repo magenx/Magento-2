@@ -15,18 +15,21 @@ use Rector\StaticTypeMapper\StaticTypeMapper;
 final class VariableWithTypesFactory
 {
     /**
+     * @readonly
      * @var \Rector\NodeTypeResolver\NodeTypeResolver
      */
     private $nodeTypeResolver;
     /**
+     * @readonly
      * @var \Rector\StaticTypeMapper\StaticTypeMapper
      */
     private $staticTypeMapper;
     /**
+     * @readonly
      * @var \Rector\Naming\Naming\VariableNaming
      */
     private $variableNaming;
-    public function __construct(\Rector\NodeTypeResolver\NodeTypeResolver $nodeTypeResolver, \Rector\StaticTypeMapper\StaticTypeMapper $staticTypeMapper, \Rector\Naming\Naming\VariableNaming $variableNaming)
+    public function __construct(NodeTypeResolver $nodeTypeResolver, StaticTypeMapper $staticTypeMapper, VariableNaming $variableNaming)
     {
         $this->nodeTypeResolver = $nodeTypeResolver;
         $this->staticTypeMapper = $staticTypeMapper;
@@ -43,14 +46,14 @@ final class VariableWithTypesFactory
             $staticType = $this->nodeTypeResolver->getType($arg->value);
             $variableName = $this->variableNaming->resolveFromNodeAndType($arg, $staticType);
             if ($variableName === null) {
-                throw new \Rector\Core\Exception\ShouldNotHappenException();
+                throw new ShouldNotHappenException();
             }
             // compensate for static
-            if ($staticType instanceof \PHPStan\Type\StaticType) {
-                $staticType = new \PHPStan\Type\ObjectType($staticType->getClassName());
+            if ($staticType instanceof StaticType) {
+                $staticType = new ObjectType($staticType->getClassName());
             }
-            $phpParserTypeNode = $this->staticTypeMapper->mapPHPStanTypeToPhpParserNode($staticType, \Rector\PHPStanStaticTypeMapper\Enum\TypeKind::PROPERTY());
-            $variablesWithTypes[] = new \Rector\Nette\Kdyby\ValueObject\VariableWithType($variableName, $staticType, $phpParserTypeNode);
+            $phpParserTypeNode = $this->staticTypeMapper->mapPHPStanTypeToPhpParserNode($staticType, TypeKind::PROPERTY);
+            $variablesWithTypes[] = new VariableWithType($variableName, $staticType, $phpParserTypeNode);
         }
         return $variablesWithTypes;
     }

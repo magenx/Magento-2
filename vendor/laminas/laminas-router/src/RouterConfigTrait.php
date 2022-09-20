@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Laminas\Router;
 
-use Interop\Container\ContainerInterface;
+use Psr\Container\ContainerInterface;
 
 use function class_exists;
 use function sprintf;

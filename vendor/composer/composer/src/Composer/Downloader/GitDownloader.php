@@ -70,7 +70,7 @@ class GitDownloader extends VcsDownloader implements DvcsDownloaderInterface
             $this->io->writeError("  - Syncing <info>" . $package->getName() . "</info> (<comment>" . $package->getFullPrettyVersion() . "</comment>) into cache");
             $this->io->writeError(sprintf('    Cloning to cache at %s', ProcessExecutor::escape($cachePath)), true, IOInterface::DEBUG);
             $ref = $package->getSourceReference();
-            if ($this->gitUtil->fetchRefOrSyncMirror($url, $cachePath, $ref) && is_dir($cachePath)) {
+            if ($this->gitUtil->fetchRefOrSyncMirror($url, $cachePath, $ref, $package->getPrettyVersion()) && is_dir($cachePath)) {
                 $this->cachedPackages[$package->getId()][$ref] = true;
             }
         } elseif (null === $gitVersion) {
@@ -458,7 +458,7 @@ class GitDownloader extends VcsDownloader implements DvcsDownloaderInterface
         // check whether non-commitish are branches or tags, and fetch branches with the remote name
         $gitRef = $reference;
         if (!Preg::isMatch('{^[a-f0-9]{40}$}', $reference)
-            && $branches
+            && null !== $branches
             && Preg::isMatch('{^\s+composer/'.preg_quote($reference).'$}m', $branches)
         ) {
             $command = sprintf('git checkout '.$force.'-B %s %s -- && git reset --hard %2$s --', ProcessExecutor::escape($branch), ProcessExecutor::escape('composer/'.$reference));
@@ -470,7 +470,7 @@ class GitDownloader extends VcsDownloader implements DvcsDownloaderInterface
         // try to checkout branch by name and then reset it so it's on the proper branch name
         if (Preg::isMatch('{^[a-f0-9]{40}$}', $reference)) {
             // add 'v' in front of the branch if it was stripped when generating the pretty name
-            if (!Preg::isMatch('{^\s+composer/'.preg_quote($branch).'$}m', $branches) && Preg::isMatch('{^\s+composer/v'.preg_quote($branch).'$}m', $branches)) {
+            if (null !== $branches && !Preg::isMatch('{^\s+composer/'.preg_quote($branch).'$}m', $branches) && Preg::isMatch('{^\s+composer/v'.preg_quote($branch).'$}m', $branches)) {
                 $branch = 'v' . $branch;
             }
 

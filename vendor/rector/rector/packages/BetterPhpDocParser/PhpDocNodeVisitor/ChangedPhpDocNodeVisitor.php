@@ -5,20 +5,20 @@ namespace Rector\BetterPhpDocParser\PhpDocNodeVisitor;
 
 use PHPStan\PhpDocParser\Ast\Node;
 use Rector\BetterPhpDocParser\ValueObject\PhpDocAttributeKey;
-use RectorPrefix20211221\Symplify\SimplePhpDocParser\PhpDocNodeVisitor\AbstractPhpDocNodeVisitor;
-final class ChangedPhpDocNodeVisitor extends \RectorPrefix20211221\Symplify\SimplePhpDocParser\PhpDocNodeVisitor\AbstractPhpDocNodeVisitor
+use RectorPrefix202208\Symplify\Astral\PhpDocParser\PhpDocNodeVisitor\AbstractPhpDocNodeVisitor;
+final class ChangedPhpDocNodeVisitor extends AbstractPhpDocNodeVisitor
 {
     /**
      * @var bool
      */
     private $hasChanged = \false;
-    public function beforeTraverse(\PHPStan\PhpDocParser\Ast\Node $node) : void
+    public function beforeTraverse(Node $node) : void
     {
         $this->hasChanged = \false;
     }
-    public function enterNode(\PHPStan\PhpDocParser\Ast\Node $node) : ?\PHPStan\PhpDocParser\Ast\Node
+    public function enterNode(Node $node) : ?Node
     {
-        $origNode = $node->getAttribute(\Rector\BetterPhpDocParser\ValueObject\PhpDocAttributeKey::ORIG_NODE);
+        $origNode = $node->getAttribute(PhpDocAttributeKey::ORIG_NODE);
         if ($origNode === null) {
             $this->hasChanged = \true;
         }

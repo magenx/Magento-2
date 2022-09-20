@@ -1,7 +1,7 @@
 <?php
 
 declare (strict_types=1);
-namespace RectorPrefix20211221\Psr\Container;
+namespace RectorPrefix202208\Psr\Container;
 
 /**
  * Describes the interface of a container that exposes methods to read its entries.
@@ -30,5 +30,5 @@ interface ContainerInterface
      *
      * @return bool
      */
-    public function has(string $id);
+    public function has(string $id) : bool;
 }

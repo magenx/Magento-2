@@ -1,8 +1,9 @@
 <?php
 
 declare (strict_types=1);
-namespace RectorPrefix20211221;
+namespace RectorPrefix202208;
 
+use Rector\Config\RectorConfig;
 use Rector\Php70\Rector\Assign\ListSplitStringRector;
 use Rector\Php70\Rector\Assign\ListSwapArrayOrderRector;
 use Rector\Php70\Rector\Break_\BreakNotInLoopOrSwitchToReturnRector;
@@ -22,28 +23,25 @@ use Rector\Php70\Rector\Switch_\ReduceMultipleDefaultSwitchRector;
 use Rector\Php70\Rector\Ternary\TernaryToNullCoalescingRector;
 use Rector\Php70\Rector\Ternary\TernaryToSpaceshipRector;
 use Rector\Php70\Rector\Variable\WrapVariableVariableNameInCurlyBracesRector;
-use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
-return static function (\Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator $containerConfigurator) : void {
-    $containerConfigurator->import(__DIR__ . '/mysql-to-mysqli.php');
-    $services = $containerConfigurator->services();
-    $services->set(\Rector\Php70\Rector\ClassMethod\Php4ConstructorRector::class);
-    $services->set(\Rector\Php70\Rector\Ternary\TernaryToNullCoalescingRector::class);
-    $services->set(\Rector\Php70\Rector\FuncCall\RandomFunctionRector::class);
-    $services->set(\Rector\Php70\Rector\FunctionLike\ExceptionHandlerTypehintRector::class);
-    $services->set(\Rector\Php70\Rector\FuncCall\MultiDirnameRector::class);
-    $services->set(\Rector\Php70\Rector\Assign\ListSplitStringRector::class);
-    $services->set(\Rector\Php70\Rector\List_\EmptyListRector::class);
+return static function (RectorConfig $rectorConfig) : void {
+    $rectorConfig->rule(Php4ConstructorRector::class);
+    $rectorConfig->rule(TernaryToNullCoalescingRector::class);
+    $rectorConfig->rule(RandomFunctionRector::class);
+    $rectorConfig->rule(ExceptionHandlerTypehintRector::class);
+    $rectorConfig->rule(MultiDirnameRector::class);
+    $rectorConfig->rule(ListSplitStringRector::class);
+    $rectorConfig->rule(EmptyListRector::class);
     # be careful, run this just once, since it can keep swapping order back and forth
-    $services->set(\Rector\Php70\Rector\Assign\ListSwapArrayOrderRector::class);
-    $services->set(\Rector\Php70\Rector\FuncCall\CallUserMethodRector::class);
-    $services->set(\Rector\Php70\Rector\FuncCall\EregToPregMatchRector::class);
-    $services->set(\Rector\Php70\Rector\Switch_\ReduceMultipleDefaultSwitchRector::class);
-    $services->set(\Rector\Php70\Rector\Ternary\TernaryToSpaceshipRector::class);
-    $services->set(\Rector\Php70\Rector\Variable\WrapVariableVariableNameInCurlyBracesRector::class);
-    $services->set(\Rector\Php70\Rector\If_\IfToSpaceshipRector::class);
-    $services->set(\Rector\Php70\Rector\StaticCall\StaticCallOnNonStaticToInstanceCallRector::class);
-    $services->set(\Rector\Php70\Rector\MethodCall\ThisCallOnStaticMethodToStaticCallRector::class);
-    $services->set(\Rector\Php70\Rector\Break_\BreakNotInLoopOrSwitchToReturnRector::class);
-    $services->set(\Rector\Php70\Rector\FuncCall\RenameMktimeWithoutArgsToTimeRector::class);
-    $services->set(\Rector\Php70\Rector\FuncCall\NonVariableToVariableOnFunctionCallRector::class);
+    $rectorConfig->rule(ListSwapArrayOrderRector::class);
+    $rectorConfig->rule(CallUserMethodRector::class);
+    $rectorConfig->rule(EregToPregMatchRector::class);
+    $rectorConfig->rule(ReduceMultipleDefaultSwitchRector::class);
+    $rectorConfig->rule(TernaryToSpaceshipRector::class);
+    $rectorConfig->rule(WrapVariableVariableNameInCurlyBracesRector::class);
+    $rectorConfig->rule(IfToSpaceshipRector::class);
+    $rectorConfig->rule(StaticCallOnNonStaticToInstanceCallRector::class);
+    $rectorConfig->rule(ThisCallOnStaticMethodToStaticCallRector::class);
+    $rectorConfig->rule(BreakNotInLoopOrSwitchToReturnRector::class);
+    $rectorConfig->rule(RenameMktimeWithoutArgsToTimeRector::class);
+    $rectorConfig->rule(NonVariableToVariableOnFunctionCallRector::class);
 };

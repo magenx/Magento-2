@@ -8,7 +8,8 @@ use Rector\Nette\Contract\FormControlTypeResolverInterface;
 final class MethodNamesByInputNamesResolver
 {
     /**
-     * @var \Rector\Nette\Contract\FormControlTypeResolverInterface[]
+     * @var FormControlTypeResolverInterface[]
+     * @readonly
      */
     private $formControlTypeResolvers;
     /**
@@ -21,7 +22,7 @@ final class MethodNamesByInputNamesResolver
     /**
      * @return array<string, string>
      */
-    public function resolveExpr(\PhpParser\Node $node) : array
+    public function resolveExpr(Node $node) : array
     {
         $methodNamesByInputNames = [];
         foreach ($this->formControlTypeResolvers as $formControlTypeResolver) {

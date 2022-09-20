@@ -1,12 +1,12 @@
 <?php
 
-namespace RectorPrefix20211221\React\EventLoop;
+namespace RectorPrefix202208\React\EventLoop;
 
 use BadMethodCallException;
 use Event;
 use EventBase;
-use RectorPrefix20211221\React\EventLoop\Tick\FutureTickQueue;
-use RectorPrefix20211221\React\EventLoop\Timer\Timer;
+use RectorPrefix202208\React\EventLoop\Tick\FutureTickQueue;
+use RectorPrefix202208\React\EventLoop\Timer\Timer;
 use SplObjectStorage;
 /**
  * An `ext-event` based event loop.
@@ -15,11 +15,11 @@ use SplObjectStorage;
  * that provides an interface to `libevent` library.
  * `libevent` itself supports a number of system-specific backends (epoll, kqueue).
  *
- * This loop is known to work with PHP 5.4 through PHP 7+.
+ * This loop is known to work with PHP 5.4 through PHP 8+.
  *
  * @link https://pecl.php.net/package/event
  */
-final class ExtEventLoop implements \RectorPrefix20211221\React\EventLoop\LoopInterface
+final class ExtEventLoop implements LoopInterface
 {
     private $eventBase;
     private $futureTickQueue;
@@ -38,7 +38,7 @@ final class ExtEventLoop implements \RectorPrefix20211221\React\EventLoop\LoopIn
     public function __construct()
     {
         if (!\class_exists('EventBase', \false)) {
-            throw new \BadMethodCallException('Cannot create ExtEventLoop, ext-event extension missing');
+            throw new BadMethodCallException('Cannot create ExtEventLoop, ext-event extension missing');
         }
         // support arbitrary file descriptors and not just sockets
         // Windows only has limited file descriptor support, so do not require this (will fail otherwise)
@@ -47,10 +47,10 @@ final class ExtEventLoop implements \RectorPrefix20211221\React\EventLoop\LoopIn
         if (\DIRECTORY_SEPARATOR !== '\\') {
             $config->requireFeatures(\EventConfig::FEATURE_FDS);
         }
-        $this->eventBase = new \EventBase($config);
-        $this->futureTickQueue = new \RectorPrefix20211221\React\EventLoop\Tick\FutureTickQueue();
-        $this->timerEvents = new \SplObjectStorage();
-        $this->signals = new \RectorPrefix20211221\React\EventLoop\SignalsHandler();
+        $this->eventBase = new EventBase($config);
+        $this->futureTickQueue = new FutureTickQueue();
+        $this->timerEvents = new SplObjectStorage();
+        $this->signals = new SignalsHandler();
         $this->createTimerCallback();
         $this->createStreamCallback();
     }
@@ -69,7 +69,7 @@ final class ExtEventLoop implements \RectorPrefix20211221\React\EventLoop\LoopIn
         if (isset($this->readListeners[$key])) {
             return;
         }
-        $event = new \Event($this->eventBase, $stream, \Event::PERSIST | \Event::READ, $this->streamCallback);
+        $event = new Event($this->eventBase, $stream, Event::PERSIST | Event::READ, $this->streamCallback);
         $event->add();
         $this->readEvents[$key] = $event;
         $this->readListeners[$key] = $listener;
@@ -85,7 +85,7 @@ final class ExtEventLoop implements \RectorPrefix20211221\React\EventLoop\LoopIn
         if (isset($this->writeListeners[$key])) {
             return;
         }
-        $event = new \Event($this->eventBase, $stream, \Event::PERSIST | \Event::WRITE, $this->streamCallback);
+        $event = new Event($this->eventBase, $stream, Event::PERSIST | Event::WRITE, $this->streamCallback);
         $event->add();
         $this->writeEvents[$key] = $event;
         $this->writeListeners[$key] = $listener;
@@ -113,17 +113,17 @@ final class ExtEventLoop implements \RectorPrefix20211221\React\EventLoop\LoopIn
     }
     public function addTimer($interval, $callback)
     {
-        $timer = new \RectorPrefix20211221\React\EventLoop\Timer\Timer($interval, $callback, \false);
+        $timer = new Timer($interval, $callback, \false);
         $this->scheduleTimer($timer);
         return $timer;
     }
     public function addPeriodicTimer($interval, $callback)
     {
-        $timer = new \RectorPrefix20211221\React\EventLoop\Timer\Timer($interval, $callback, \true);
+        $timer = new Timer($interval, $callback, \true);
         $this->scheduleTimer($timer);
         return $timer;
     }
-    public function cancelTimer(\RectorPrefix20211221\React\EventLoop\TimerInterface $timer)
+    public function cancelTimer(TimerInterface $timer)
     {
         if ($this->timerEvents->contains($timer)) {
             $this->timerEvents[$timer]->free();
@@ -138,7 +138,7 @@ final class ExtEventLoop implements \RectorPrefix20211221\React\EventLoop\LoopIn
     {
         $this->signals->add($signal, $listener);
         if (!isset($this->signalEvents[$signal])) {
-            $this->signalEvents[$signal] = \Event::signal($this->eventBase, $signal, array($this->signals, 'call'));
+            $this->signalEvents[$signal] = Event::signal($this->eventBase, $signal, array($this->signals, 'call'));
             $this->signalEvents[$signal]->add();
         }
     }
@@ -155,9 +155,9 @@ final class ExtEventLoop implements \RectorPrefix20211221\React\EventLoop\LoopIn
         $this->running = \true;
         while ($this->running) {
             $this->futureTickQueue->tick();
-            $flags = \EventBase::LOOP_ONCE;
+            $flags = EventBase::LOOP_ONCE;
             if (!$this->running || !$this->futureTickQueue->isEmpty()) {
-                $flags |= \EventBase::LOOP_NONBLOCK;
+                $flags |= EventBase::LOOP_NONBLOCK;
             } elseif (!$this->readEvents && !$this->writeEvents && !$this->timerEvents->count() && $this->signals->isEmpty()) {
                 break;
             }
@@ -173,13 +173,13 @@ final class ExtEventLoop implements \RectorPrefix20211221\React\EventLoop\LoopIn
      *
      * @param TimerInterface $timer
      */
-    private function scheduleTimer(\RectorPrefix20211221\React\EventLoop\TimerInterface $timer)
+    private function scheduleTimer(TimerInterface $timer)
     {
-        $flags = \Event::TIMEOUT;
+        $flags = Event::TIMEOUT;
         if ($timer->isPeriodic()) {
-            $flags |= \Event::PERSIST;
+            $flags |= Event::PERSIST;
         }
-        $event = new \Event($this->eventBase, -1, $flags, $this->timerCallback, $timer);
+        $event = new Event($this->eventBase, -1, $flags, $this->timerCallback, $timer);
         $this->timerEvents[$timer] = $event;
         $event->add($timer->getInterval());
     }
@@ -213,10 +213,10 @@ final class ExtEventLoop implements \RectorPrefix20211221\React\EventLoop\LoopIn
         $write =& $this->writeListeners;
         $this->streamCallback = function ($stream, $flags) use(&$read, &$write) {
             $key = (int) $stream;
-            if (\Event::READ === (\Event::READ & $flags) && isset($read[$key])) {
+            if (Event::READ === (Event::READ & $flags) && isset($read[$key])) {
                 \call_user_func($read[$key], $stream);
             }
-            if (\Event::WRITE === (\Event::WRITE & $flags) && isset($write[$key])) {
+            if (Event::WRITE === (Event::WRITE & $flags) && isset($write[$key])) {
                 \call_user_func($write[$key], $stream);
             }
         };

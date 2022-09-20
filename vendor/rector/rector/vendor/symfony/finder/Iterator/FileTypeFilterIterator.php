@@ -8,7 +8,7 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix20211221\Symfony\Component\Finder\Iterator;
+namespace RectorPrefix202208\Symfony\Component\Finder\Iterator;
 
 /**
  * FileTypeFilterIterator only keeps files, directories, or both.
@@ -26,8 +26,8 @@ class FileTypeFilterIterator extends \FilterIterator
      */
     private $mode;
     /**
-     * @param \Iterator $iterator The Iterator to filter
-     * @param int       $mode     The mode (self::ONLY_FILES or self::ONLY_DIRECTORIES)
+     * @param \Iterator<string, \SplFileInfo> $iterator The Iterator to filter
+     * @param int                             $mode     The mode (self::ONLY_FILES or self::ONLY_DIRECTORIES)
      */
     public function __construct(\Iterator $iterator, int $mode)
     {

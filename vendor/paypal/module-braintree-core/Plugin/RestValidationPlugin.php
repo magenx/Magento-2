@@ -1,4 +1,8 @@
 <?php
+/**
+ * Copyright © Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
 
 declare(strict_types=1);
 
@@ -21,14 +25,14 @@ use PayPal\Braintree\Model\GooglePay\Ui\ConfigProvider as GooglePay;
 class RestValidationPlugin
 {
     /**
-     * @var ValidatorInterface
-     */
-    private $recaptchaValidator;
-
-    /**
      * @var WebapiValidationConfigProviderInterface
      */
     private $configProvider;
+
+    /**
+     * @var ValidatorInterface
+     */
+    private $recaptchaValidator;
 
     /**
      * @var RestRequest
@@ -36,14 +40,14 @@ class RestValidationPlugin
     private $request;
 
     /**
-     * @var Router
-     */
-    private $restRouter;
-
-    /**
      * @var EndpointFactory
      */
     private $endpointFactory;
+
+    /**
+     * @var Router
+     */
+    private $restRouter;
 
     /**
      * @param ValidatorInterface $recaptchaValidator
@@ -81,16 +85,18 @@ class RestValidationPlugin
         $request = clone $this->request;
         $proceed();
         $route = $this->restRouter->match($request);
-        $endpoint = $this->endpointFactory->create([
+        $endpointData = $this->endpointFactory->create([
             'class' => $route->getServiceClass(),
             'method' => $route->getServiceMethod(),
             'name' => $route->getRoutePath()
         ]);
-        $config = $this->configProvider->getConfigFor($endpoint);
+        $config = $this->configProvider->getConfigFor($endpointData);
         if ($config) {
-            if (isset($this->request->getRequestData()['paymentMethod']['method'])
-                && in_array($this->request->getRequestData()['paymentMethod']['method'],
-                    [ApplePay::METHOD_CODE, GooglePay::METHOD_CODE])) {
+            if (isset($this->request->getRequestData()['paymentMethod']['method']) && in_array(
+                $this->request->getRequestData()['paymentMethod']['method'],
+                [ApplePay::METHOD_CODE, GooglePay::METHOD_CODE]
+            )
+            ) {
                 return;
             }
             $value = (string)$this->request->getHeader('X-ReCaptcha');

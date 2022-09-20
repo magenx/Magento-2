@@ -8,7 +8,7 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix20211221\Symfony\Component\Console\SignalRegistry;
+namespace RectorPrefix202208\Symfony\Component\Console\SignalRegistry;
 
 final class SignalRegistry
 {
@@ -31,17 +31,11 @@ final class SignalRegistry
             }
         }
         $this->signalHandlers[$signal][] = $signalHandler;
-        \pcntl_signal($signal, [$this, 'handle']);
+        \pcntl_signal($signal, \Closure::fromCallable([$this, 'handle']));
     }
     public static function isSupported() : bool
     {
-        if (!\function_exists('pcntl_signal')) {
-            return \false;
-        }
-        if (\in_array('pcntl_signal', \explode(',', \ini_get('disable_functions')))) {
-            return \false;
-        }
-        return \true;
+        return \function_exists('pcntl_signal');
     }
     /**
      * @internal

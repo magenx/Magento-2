@@ -13,6 +13,7 @@ use PhpParser\Node\Expr\ClassConstFetch;
 use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Expr\Instanceof_;
 use PhpParser\Node\Expr\Ternary;
+use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Name;
 use PhpParser\Node\Name\FullyQualified;
 use PhpParser\Node\Scalar\LNumber;
@@ -21,6 +22,8 @@ use PHPStan\Type\ArrayType;
 use PHPStan\Type\NullType;
 use PHPStan\Type\Type;
 use PHPStan\Type\UnionType;
+use Rector\Core\NodeAnalyzer\VariableAnalyzer;
+use Rector\Core\Php\PhpVersionProvider;
 use Rector\Core\Rector\AbstractRector;
 use Rector\Core\ValueObject\PhpVersionFeature;
 use Rector\NodeTypeResolver\Node\AttributeKey;
@@ -30,16 +33,12 @@ use Rector\VersionBonding\Contract\MinPhpVersionInterface;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
- * @see https://3v4l.org/Bndc9
+ * @changelog https://3v4l.org/Bndc9
  *
  * @see \Rector\Tests\Php71\Rector\FuncCall\CountOnNullRector\CountOnNullRectorTest
  */
-final class CountOnNullRector extends \Rector\Core\Rector\AbstractRector implements \Rector\VersionBonding\Contract\MinPhpVersionInterface
+final class CountOnNullRector extends AbstractRector implements MinPhpVersionInterface
 {
-    /**
-     * @var string
-     */
-    private const ALREADY_CHANGED_ON_COUNT = 'already_changed_on_count';
     /**
      * @readonly
      * @var \Rector\NodeTypeResolver\TypeAnalyzer\CountableTypeAnalyzer
@@ -50,18 +49,30 @@ final class CountOnNullRector extends \Rector\Core\Rector\AbstractRector impleme
      * @var \Rector\Php71\NodeAnalyzer\CountableAnalyzer
      */
     private $countableAnalyzer;
-    public function __construct(\Rector\NodeTypeResolver\TypeAnalyzer\CountableTypeAnalyzer $countableTypeAnalyzer, \Rector\Php71\NodeAnalyzer\CountableAnalyzer $countableAnalyzer)
+    /**
+     * @readonly
+     * @var \Rector\Core\NodeAnalyzer\VariableAnalyzer
+     */
+    private $variableAnalyzer;
+    /**
+     * @readonly
+     * @var \Rector\Core\Php\PhpVersionProvider
+     */
+    private $phpVersionProvider;
+    public function __construct(CountableTypeAnalyzer $countableTypeAnalyzer, CountableAnalyzer $countableAnalyzer, VariableAnalyzer $variableAnalyzer, PhpVersionProvider $phpVersionProvider)
     {
         $this->countableTypeAnalyzer = $countableTypeAnalyzer;
         $this->countableAnalyzer = $countableAnalyzer;
+        $this->variableAnalyzer = $variableAnalyzer;
+        $this->phpVersionProvider = $phpVersionProvider;
     }
     public function provideMinPhpVersion() : int
     {
-        return \Rector\Core\ValueObject\PhpVersionFeature::COUNT_ON_NULL;
+        return PhpVersionFeature::COUNT_ON_NULL;
     }
-    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
+    public function getRuleDefinition() : RuleDefinition
     {
-        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Changes count() on null to safe ternary check', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample(<<<'CODE_SAMPLE'
+        return new RuleDefinition('Changes count() on null to safe ternary check', [new CodeSample(<<<'CODE_SAMPLE'
 $values = null;
 $count = count($values);
 CODE_SAMPLE
@@ -76,12 +87,12 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [\PhpParser\Node\Expr\FuncCall::class];
+        return [FuncCall::class];
     }
     /**
      * @param FuncCall $node
      */
-    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
+    public function refactor(Node $node) : ?Node
     {
         if ($this->shouldSkip($node)) {
             return null;
@@ -94,39 +105,37 @@ CODE_SAMPLE
         }
         // this can lead to false positive by phpstan, but that's best we can do
         $onlyValueType = $this->getType($countedNode);
-        if ($onlyValueType instanceof \PHPStan\Type\ArrayType) {
+        if ($onlyValueType instanceof ArrayType) {
             if (!$this->countableAnalyzer->isCastableArrayType($countedNode, $onlyValueType)) {
                 return null;
             }
             return $this->castToArray($countedNode, $node);
         }
-        if ($this->nodeTypeResolver->isNullableTypeOfSpecificType($countedNode, \PHPStan\Type\ArrayType::class)) {
+        if ($this->nodeTypeResolver->isNullableTypeOfSpecificType($countedNode, ArrayType::class)) {
             return $this->castToArray($countedNode, $node);
         }
         $countedType = $this->getType($countedNode);
         if ($this->isAlwaysIterableType($countedType)) {
             return null;
         }
-        if ($this->nodeTypeResolver->isNullableType($countedNode) || $countedType instanceof \PHPStan\Type\NullType) {
-            $identical = new \PhpParser\Node\Expr\BinaryOp\Identical($countedNode, $this->nodeFactory->createNull());
-            $ternary = new \PhpParser\Node\Expr\Ternary($identical, new \PhpParser\Node\Scalar\LNumber(0), $node);
-            // prevent infinity loop re-resolution
-            $node->setAttribute(self::ALREADY_CHANGED_ON_COUNT, \true);
-            return $ternary;
+        if ($this->nodeTypeResolver->isNullableType($countedNode) || $countedType instanceof NullType) {
+            $identical = new Identical($countedNode, $this->nodeFactory->createNull());
+            return new Ternary($identical, new LNumber(0), $node);
         }
-        if ($this->phpVersionProvider->isAtLeastPhpVersion(\Rector\Core\ValueObject\PhpVersionFeature::IS_COUNTABLE)) {
-            $conditionNode = new \PhpParser\Node\Expr\FuncCall(new \PhpParser\Node\Name('is_countable'), [new \PhpParser\Node\Arg($countedNode)]);
+        if ($this->phpVersionProvider->isAtLeastPhpVersion(PhpVersionFeature::IS_COUNTABLE)) {
+            $conditionNode = new FuncCall(new Name('is_countable'), [new Arg($countedNode)]);
         } else {
-            $instanceof = new \PhpParser\Node\Expr\Instanceof_($countedNode, new \PhpParser\Node\Name\FullyQualified('Countable'));
-            $conditionNode = new \PhpParser\Node\Expr\BinaryOp\BooleanOr($this->nodeFactory->createFuncCall('is_array', [new \PhpParser\Node\Arg($countedNode)]), $instanceof);
+            $instanceof = new Instanceof_($countedNode, new FullyQualified('Countable'));
+            $conditionNode = new BooleanOr($this->nodeFactory->createFuncCall('is_array', [new Arg($countedNode)]), $instanceof);
         }
-        // prevent infinity loop re-resolution
-        $node->setAttribute(self::ALREADY_CHANGED_ON_COUNT, \true);
-        return new \PhpParser\Node\Expr\Ternary($conditionNode, $node, new \PhpParser\Node\Scalar\LNumber(0));
+        return new Ternary($conditionNode, $node, new LNumber(0));
     }
-    private function isAlwaysIterableType(\PHPStan\Type\Type $possibleUnionType) : bool
+    private function isAlwaysIterableType(Type $possibleUnionType) : bool
     {
-        if (!$possibleUnionType instanceof \PHPStan\Type\UnionType) {
+        if ($possibleUnionType->isIterable()->yes()) {
+            return \true;
+        }
+        if (!$possibleUnionType instanceof UnionType) {
             return \false;
         }
         $types = $possibleUnionType->getTypes();
@@ -137,7 +146,7 @@ CODE_SAMPLE
         }
         return \true;
     }
-    private function shouldSkip(\PhpParser\Node\Expr\FuncCall $funcCall) : bool
+    private function shouldSkip(FuncCall $funcCall) : bool
     {
         if (!$this->isName($funcCall, 'count')) {
             return \true;
@@ -145,29 +154,30 @@ CODE_SAMPLE
         if (!isset($funcCall->args[0])) {
             return \true;
         }
-        if (!$funcCall->args[0] instanceof \PhpParser\Node\Arg) {
+        if (!$funcCall->args[0] instanceof Arg) {
             return \true;
         }
-        if ($funcCall->args[0]->value instanceof \PhpParser\Node\Expr\ClassConstFetch) {
+        if ($funcCall->args[0]->value instanceof ClassConstFetch) {
             return \true;
         }
-        $alreadyChangedOnCount = (bool) $funcCall->getAttribute(self::ALREADY_CHANGED_ON_COUNT, \false);
-        // check if it has some condition before already, if so, probably it's already handled
-        if ($alreadyChangedOnCount) {
-            return \true;
-        }
-        $parentNode = $funcCall->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::PARENT_NODE);
-        if ($parentNode instanceof \PhpParser\Node\Expr\Ternary) {
+        $parentNode = $funcCall->getAttribute(AttributeKey::PARENT_NODE);
+        if ($parentNode instanceof Ternary) {
             return \true;
         }
         // skip node in trait, as impossible to analyse
-        $trait = $this->betterNodeFinder->findParentType($funcCall, \PhpParser\Node\Stmt\Trait_::class);
-        return $trait instanceof \PhpParser\Node\Stmt\Trait_;
+        $trait = $this->betterNodeFinder->findParentType($funcCall, Trait_::class);
+        if ($trait instanceof Trait_) {
+            return \true;
+        }
+        if (!$funcCall->args[0]->value instanceof Variable) {
+            return \false;
+        }
+        return $this->variableAnalyzer->isStaticOrGlobal($funcCall->args[0]->value);
     }
-    private function castToArray(\PhpParser\Node\Expr $countedExpr, \PhpParser\Node\Expr\FuncCall $funcCall) : \PhpParser\Node\Expr\FuncCall
+    private function castToArray(Expr $countedExpr, FuncCall $funcCall) : FuncCall
     {
-        $castArray = new \PhpParser\Node\Expr\Cast\Array_($countedExpr);
-        $funcCall->args = [new \PhpParser\Node\Arg($castArray)];
+        $castArray = new Array_($countedExpr);
+        $funcCall->args = [new Arg($castArray)];
         return $funcCall;
     }
 }

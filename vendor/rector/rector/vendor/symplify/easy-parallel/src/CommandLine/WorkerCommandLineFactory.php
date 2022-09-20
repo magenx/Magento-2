@@ -1,12 +1,12 @@
 <?php
 
 declare (strict_types=1);
-namespace RectorPrefix20211221\Symplify\EasyParallel\CommandLine;
+namespace RectorPrefix202208\Symplify\EasyParallel\CommandLine;
 
-use RectorPrefix20211221\Symfony\Component\Console\Command\Command;
-use RectorPrefix20211221\Symfony\Component\Console\Input\InputInterface;
-use RectorPrefix20211221\Symplify\EasyParallel\Exception\ParallelShouldNotHappenException;
-use RectorPrefix20211221\Symplify\EasyParallel\Reflection\CommandFromReflectionFactory;
+use RectorPrefix202208\Symfony\Component\Console\Command\Command;
+use RectorPrefix202208\Symfony\Component\Console\Input\InputInterface;
+use RectorPrefix202208\Symplify\EasyParallel\Exception\ParallelShouldNotHappenException;
+use RectorPrefix202208\Symplify\EasyParallel\Reflection\CommandFromReflectionFactory;
 /**
  * @see \Symplify\EasyParallel\Tests\CommandLine\WorkerCommandLineFactoryTest
  */
@@ -28,19 +28,19 @@ final class WorkerCommandLineFactory
     private $commandFromReflectionFactory;
     public function __construct()
     {
-        $this->commandFromReflectionFactory = new \RectorPrefix20211221\Symplify\EasyParallel\Reflection\CommandFromReflectionFactory();
+        $this->commandFromReflectionFactory = new CommandFromReflectionFactory();
     }
     /**
      * @param class-string<Command> $mainCommandClass
      */
-    public function create(string $baseScript, string $mainCommandClass, string $workerCommandName, string $pathsOptionName, ?string $projectConfigFile, \RectorPrefix20211221\Symfony\Component\Console\Input\InputInterface $input, string $identifier, int $port) : string
+    public function create(string $baseScript, string $mainCommandClass, string $workerCommandName, string $pathsOptionName, ?string $projectConfigFile, InputInterface $input, string $identifier, int $port) : string
     {
         $commandArguments = \array_slice($_SERVER['argv'], 1);
         $args = \array_merge([\PHP_BINARY, $baseScript], $commandArguments);
         $mainCommand = $this->commandFromReflectionFactory->create($mainCommandClass);
         if ($mainCommand->getName() === null) {
             $errorMessage = \sprintf('The command name for "%s" is missing', \get_class($mainCommand));
-            throw new \RectorPrefix20211221\Symplify\EasyParallel\Exception\ParallelShouldNotHappenException($errorMessage);
+            throw new ParallelShouldNotHappenException($errorMessage);
         }
         $mainCommandName = $mainCommand->getName();
         $processCommandArray = [];
@@ -80,7 +80,7 @@ final class WorkerCommandLineFactory
     /**
      * @return string[]
      */
-    private function getCommandOptionNames(\RectorPrefix20211221\Symfony\Component\Console\Command\Command $command) : array
+    private function getCommandOptionNames(Command $command) : array
     {
         $inputDefinition = $command->getDefinition();
         $optionNames = [];
@@ -95,7 +95,7 @@ final class WorkerCommandLineFactory
      * @param string[] $mainCommandOptionNames
      * @return string[]
      */
-    private function mirrorCommandOptions(\RectorPrefix20211221\Symfony\Component\Console\Input\InputInterface $input, array $mainCommandOptionNames) : array
+    private function mirrorCommandOptions(InputInterface $input, array $mainCommandOptionNames) : array
     {
         $processCommandOptions = [];
         foreach ($mainCommandOptionNames as $mainCommandOptionName) {
@@ -114,12 +114,17 @@ final class WorkerCommandLineFactory
                 }
                 continue;
             }
-            $processCommandOptions[] = self::OPTION_DASHES . $mainCommandOptionName;
-            $processCommandOptions[] = \escapeshellarg($optionValue);
+            if ($mainCommandOptionName === 'memory-limit') {
+                // symfony/console does not accept -1 as value without assign
+                $processCommandOptions[] = '--' . $mainCommandOptionName . '=' . $optionValue;
+            } else {
+                $processCommandOptions[] = self::OPTION_DASHES . $mainCommandOptionName;
+                $processCommandOptions[] = \escapeshellarg($optionValue);
+            }
         }
         return $processCommandOptions;
     }
-    private function shouldSkipOption(\RectorPrefix20211221\Symfony\Component\Console\Input\InputInterface $input, string $optionName) : bool
+    private function shouldSkipOption(InputInterface $input, string $optionName) : bool
     {
         if (!$input->hasOption($optionName)) {
             return \true;

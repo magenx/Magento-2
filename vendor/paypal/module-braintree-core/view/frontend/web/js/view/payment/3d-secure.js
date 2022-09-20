@@ -1,5 +1,5 @@
 /**
- * Copyright © 2013-2017 Magento, Inc. All rights reserved.
+ * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
 /*browser:true*/
@@ -79,6 +79,8 @@ define([
             var firstName = this.escapeNonAsciiCharacters(billingAddress.firstname);
             var lastName = this.escapeNonAsciiCharacters(billingAddress.lastname);
 
+            let challengeRequested = this.getChallengeRequested();
+
             fullScreenLoader.startLoader();
 
             var setup3d = function(clientInstance) {
@@ -108,6 +110,7 @@ define([
                     threeDSecureInstance.verifyCard({
                         amount: totalAmount,
                         nonce: context.paymentMethodNonce,
+                        challengeRequested: challengeRequested,
                         billingAddress: {
                             givenName: firstName,
                             surname: lastName,
@@ -238,6 +241,13 @@ define([
             }
 
             return false;
+        },
+
+        /**
+         * @returns {Boolean}
+         */
+        getChallengeRequested: function () {
+            return this.config.challengeRequested;
         }
     };
 });

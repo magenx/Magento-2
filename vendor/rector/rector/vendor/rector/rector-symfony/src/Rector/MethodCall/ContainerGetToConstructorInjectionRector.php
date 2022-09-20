@@ -16,24 +16,26 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
  *
  * @see \Rector\Symfony\Tests\Rector\MethodCall\ContainerGetToConstructorInjectionRector\ContainerGetToConstructorInjectionRectorTest
  */
-final class ContainerGetToConstructorInjectionRector extends \Rector\Core\Rector\AbstractRector
+final class ContainerGetToConstructorInjectionRector extends AbstractRector
 {
     /**
+     * @readonly
      * @var \Rector\Symfony\NodeAnalyzer\DependencyInjectionMethodCallAnalyzer
      */
     private $dependencyInjectionMethodCallAnalyzer;
     /**
+     * @readonly
      * @var \Rector\PHPUnit\NodeAnalyzer\TestsNodeAnalyzer
      */
     private $testsNodeAnalyzer;
-    public function __construct(\Rector\Symfony\NodeAnalyzer\DependencyInjectionMethodCallAnalyzer $dependencyInjectionMethodCallAnalyzer, \Rector\PHPUnit\NodeAnalyzer\TestsNodeAnalyzer $testsNodeAnalyzer)
+    public function __construct(DependencyInjectionMethodCallAnalyzer $dependencyInjectionMethodCallAnalyzer, TestsNodeAnalyzer $testsNodeAnalyzer)
     {
         $this->dependencyInjectionMethodCallAnalyzer = $dependencyInjectionMethodCallAnalyzer;
         $this->testsNodeAnalyzer = $testsNodeAnalyzer;
     }
-    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
+    public function getRuleDefinition() : RuleDefinition
     {
-        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Turns fetching of dependencies via `$container->get()` in ContainerAware to constructor injection in Command and Controller in Symfony', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample(<<<'CODE_SAMPLE'
+        return new RuleDefinition('Turns fetching of dependencies via `$container->get()` in ContainerAware to constructor injection in Command and Controller in Symfony', [new CodeSample(<<<'CODE_SAMPLE'
 final class SomeCommand extends ContainerAwareCommand
 {
     public function someMethod()
@@ -67,14 +69,14 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [\PhpParser\Node\Expr\MethodCall::class];
+        return [MethodCall::class];
     }
     /**
      * @param MethodCall $node
      */
-    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
+    public function refactor(Node $node) : ?Node
     {
-        if (!$this->isObjectType($node->var, new \PHPStan\Type\ObjectType('Symfony\\Component\\DependencyInjection\\ContainerInterface'))) {
+        if (!$this->isObjectType($node->var, new ObjectType('Symfony\\Component\\DependencyInjection\\ContainerInterface'))) {
             return null;
         }
         if (!$this->isName($node->name, 'get')) {

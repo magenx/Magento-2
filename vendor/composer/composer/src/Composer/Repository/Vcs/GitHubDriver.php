@@ -59,7 +59,7 @@ class GitHubDriver extends VcsDriver
      */
     public function initialize()
     {
-        if (!Preg::isMatch('#^(?:(?:https?|git)://([^/]+)/|git@([^:]+):/?)([^/]+)/(.+?)(?:\.git|/)?$#', $this->url, $match)) {
+        if (!Preg::isMatch('#^(?:(?:https?|git)://([^/]+)/|git@([^:]+):/?)([^/]+)/([^/]+?)(?:\.git|/)?$#', $this->url, $match)) {
             throw new \InvalidArgumentException(sprintf('The GitHub repository URL %s is invalid.', $this->url));
         }
 
@@ -234,6 +234,10 @@ class GitHubDriver extends VcsDriver
         foreach (Preg::split('{\r?\n}', $funding) as $line) {
             $line = trim($line);
             if (Preg::isMatch('{^(\w+)\s*:\s*(.+)$}', $line, $match)) {
+                if ($match[2] === '[') {
+                    $key = $match[1];
+                    continue;
+                }
                 if (Preg::isMatch('{^\[(.*)\](?:\s*#.*)?$}', $match[2], $match2)) {
                     foreach (array_map('trim', Preg::split('{[\'"]?\s*,\s*[\'"]?}', $match2[1])) as $item) {
                         $result[] = array('type' => $match[1], 'url' => trim($item, '"\' '));
@@ -244,8 +248,13 @@ class GitHubDriver extends VcsDriver
                 $key = null;
             } elseif (Preg::isMatch('{^(\w+)\s*:\s*#\s*$}', $line, $match)) {
                 $key = $match[1];
-            } elseif ($key && Preg::isMatch('{^-\s*(.+)(\s+#.*)?$}', $line, $match)) {
+            } elseif ($key && (
+                Preg::isMatch('{^-\s*(.+)(\s+#.*)?$}', $line, $match)
+                || Preg::isMatch('{^(.+),(\s*#.*)?$}', $line, $match)
+            )) {
                 $result[] = array('type' => $key, 'url' => trim($match[1], '"\' '));
+            } elseif ($key && $line === ']') {
+                $key = null;
             }
         }
 
@@ -381,7 +390,7 @@ class GitHubDriver extends VcsDriver
      */
     public static function supports(IOInterface $io, Config $config, $url, $deep = false)
     {
-        if (!Preg::isMatch('#^((?:https?|git)://([^/]+)/|git@([^:]+):/?)([^/]+)/(.+?)(?:\.git|/)?$#', $url, $matches)) {
+        if (!Preg::isMatch('#^((?:https?|git)://([^/]+)/|git@([^:]+):/?)([^/]+)/([^/]+?)(?:\.git|/)?$#', $url, $matches)) {
             return false;
         }
 

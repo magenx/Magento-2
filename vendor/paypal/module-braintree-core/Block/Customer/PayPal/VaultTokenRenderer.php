@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © 2013-2017 Magento, Inc. All rights reserved.
+ * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
 namespace PayPal\Braintree\Block\Customer\PayPal;
@@ -11,6 +11,10 @@ use Magento\Framework\View\Element\Template;
 use Magento\Vault\Api\Data\PaymentTokenInterface;
 use Magento\Vault\Block\AbstractTokenRenderer;
 
+/**
+ * @api
+ * @since 100.0.2
+ */
 class VaultTokenRenderer extends AbstractTokenRenderer
 {
     /**

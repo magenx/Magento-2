@@ -39,14 +39,14 @@
     "require-dev": {
         "composer/package-versions-deprecated": "^1.0",
         "laminas/laminas-coding-standard": "~2.3.0",
-        "laminas/laminas-container-config-test": "^0.6",
+        "laminas/laminas-container-config-test": "^0.7",
         "laminas/laminas-dependency-plugin": "^2.1.2",
         "mikey179/vfsstream": "^1.6.10@alpha",
         "ocramius/proxy-manager": "^2.11",
         "phpbench/phpbench": "^1.1",
         "phpspec/prophecy-phpunit": "^2.0",
         "phpunit/phpunit": "^9.5.5",
-        "psalm/plugin-phpunit": "^0.16.1",
+        "psalm/plugin-phpunit": "^0.17.0",
         "vimeo/psalm": "^4.8"
     },
     "provide": {

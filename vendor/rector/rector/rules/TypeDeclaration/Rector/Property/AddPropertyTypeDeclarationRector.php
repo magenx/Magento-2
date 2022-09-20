@@ -5,31 +5,39 @@ namespace Rector\TypeDeclaration\Rector\Property;
 
 use PhpParser\Node;
 use PhpParser\Node\Stmt\Property;
-use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\ClassReflection;
 use PHPStan\Type\StringType;
 use Rector\Core\Contract\Rector\ConfigurableRectorInterface;
 use Rector\Core\Exception\ShouldNotHappenException;
 use Rector\Core\Rector\AbstractRector;
-use Rector\NodeTypeResolver\Node\AttributeKey;
+use Rector\Core\Reflection\ReflectionResolver;
 use Rector\PHPStanStaticTypeMapper\Enum\TypeKind;
 use Rector\TypeDeclaration\ValueObject\AddPropertyTypeDeclaration;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
-use RectorPrefix20211221\Webmozart\Assert\Assert;
+use RectorPrefix202208\Webmozart\Assert\Assert;
 /**
  * @see \Rector\Tests\TypeDeclaration\Rector\Property\AddPropertyTypeDeclarationRector\AddPropertyTypeDeclarationRectorTest
  */
-final class AddPropertyTypeDeclarationRector extends \Rector\Core\Rector\AbstractRector implements \Rector\Core\Contract\Rector\ConfigurableRectorInterface
+final class AddPropertyTypeDeclarationRector extends AbstractRector implements ConfigurableRectorInterface
 {
     /**
      * @var AddPropertyTypeDeclaration[]
      */
     private $addPropertyTypeDeclarations = [];
-    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
+    /**
+     * @readonly
+     * @var \Rector\Core\Reflection\ReflectionResolver
+     */
+    private $reflectionResolver;
+    public function __construct(ReflectionResolver $reflectionResolver)
     {
-        $configuration = [new \Rector\TypeDeclaration\ValueObject\AddPropertyTypeDeclaration('ParentClass', 'name', new \PHPStan\Type\StringType())];
-        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Add type to property by added rules, mostly public/property by parent type', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample(<<<'CODE_SAMPLE'
+        $this->reflectionResolver = $reflectionResolver;
+    }
+    public function getRuleDefinition() : RuleDefinition
+    {
+        $configuration = [new AddPropertyTypeDeclaration('ParentClass', 'name', new StringType())];
+        return new RuleDefinition('Add type to property by added rules, mostly public/property by parent type', [new ConfiguredCodeSample(<<<'CODE_SAMPLE'
 class SomeClass extends ParentClass
 {
     public $name;
@@ -48,23 +56,19 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [\PhpParser\Node\Stmt\Property::class];
+        return [Property::class];
     }
     /**
      * @param Property $node
      */
-    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
+    public function refactor(Node $node) : ?Node
     {
         // type is already known
         if ($node->type !== null) {
             return null;
         }
-        $scope = $node->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::SCOPE);
-        if (!$scope instanceof \PHPStan\Analyser\Scope) {
-            throw new \Rector\Core\Exception\ShouldNotHappenException();
-        }
-        $classReflection = $scope->getClassReflection();
-        if (!$classReflection instanceof \PHPStan\Reflection\ClassReflection) {
+        $classReflection = $this->reflectionResolver->resolveClassReflection($node);
+        if (!$classReflection instanceof ClassReflection) {
             return null;
         }
         foreach ($this->addPropertyTypeDeclarations as $addPropertyTypeDeclaration) {
@@ -74,10 +78,10 @@ CODE_SAMPLE
             if (!$this->isName($node, $addPropertyTypeDeclaration->getPropertyName())) {
                 continue;
             }
-            $typeNode = $this->staticTypeMapper->mapPHPStanTypeToPhpParserNode($addPropertyTypeDeclaration->getType(), \Rector\PHPStanStaticTypeMapper\Enum\TypeKind::PROPERTY());
+            $typeNode = $this->staticTypeMapper->mapPHPStanTypeToPhpParserNode($addPropertyTypeDeclaration->getType(), TypeKind::PROPERTY);
             if ($typeNode === null) {
                 // invalid configuration
-                throw new \Rector\Core\Exception\ShouldNotHappenException();
+                throw new ShouldNotHappenException();
             }
             $node->type = $typeNode;
             return $node;
@@ -89,10 +93,10 @@ CODE_SAMPLE
      */
     public function configure(array $configuration) : void
     {
-        \RectorPrefix20211221\Webmozart\Assert\Assert::allIsAOf($configuration, \Rector\TypeDeclaration\ValueObject\AddPropertyTypeDeclaration::class);
+        Assert::allIsAOf($configuration, AddPropertyTypeDeclaration::class);
         $this->addPropertyTypeDeclarations = $configuration;
     }
-    private function isClassReflectionType(\PHPStan\Reflection\ClassReflection $classReflection, string $type) : bool
+    private function isClassReflectionType(ClassReflection $classReflection, string $type) : bool
     {
         if ($classReflection->hasTraitUse($type)) {
             return \true;

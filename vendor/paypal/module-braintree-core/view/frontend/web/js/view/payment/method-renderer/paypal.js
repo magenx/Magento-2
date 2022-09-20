@@ -1,5 +1,5 @@
 /**
- * Copyright © 2013-2017 Magento, Inc. All rights reserved.
+ * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
 /*browser:true*/
@@ -339,10 +339,12 @@ define([
             var paypalPayment = Braintree.config.paypal,
                 onPaymentMethodReceived = Braintree.config.onPaymentMethodReceived;
             var style = {
-                color: Braintree.getColor(),
-                shape: Braintree.getShape(),
-                layout: Braintree.getLayout(),
-                size: Braintree.getSize()
+                color: Braintree.getColor(funding),
+                shape: Braintree.getShape(funding),
+                layout: Braintree.getLayout(funding),
+                size: Braintree.getSize(funding),
+                tagline: Braintree.getTagline(funding),
+                label: Braintree.getLabel(funding)
             };
 
             if (Braintree.getBranding()) {
@@ -353,12 +355,8 @@ define([
             }
 
             if (funding === 'credit') {
-                style.layout = "horizontal";
-                style.color = "darkblue";
                 Braintree.config.buttonId = this.clientConfig.buttonCreditId;
             } else if (funding === 'paylater') {
-                style.layout = "horizontal";
-                style.color = "white";
                 Braintree.config.buttonId = this.clientConfig.buttonPaylaterId;
             } else {
                 Braintree.config.buttonId = this.clientConfig.buttonPayPalId;
@@ -688,5 +686,36 @@ define([
             return window.checkoutConfig.payment['braintree_paypal_credit']['isActive'];
         },
 
+        /**
+         * Get Message Layout
+         * @returns {*}
+         */
+        getMessagingLayout: function () {
+            return window.checkoutConfig.payment['braintree_paypal_paylater']['message']['layout'];
+        },
+
+        /**
+         * Get Message Logo
+         * @returns {*}
+         */
+        getMessagingLogo: function () {
+            return window.checkoutConfig.payment['braintree_paypal_paylater']['message']['logo'];
+        },
+
+        /**
+         * Get Message Logo position
+         * @returns {*}
+         */
+        getMessagingLogoPosition: function () {
+            return window.checkoutConfig.payment['braintree_paypal_paylater']['message']['logo_position'];
+        },
+
+        /**
+         * Get Message Text Color
+         * @returns {*}
+         */
+        getMessagingTextColor: function () {
+            return window.checkoutConfig.payment['braintree_paypal_paylater']['message']['text_color'];
+        }
     });
 });

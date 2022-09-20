@@ -9,7 +9,7 @@ use Rector\PhpAttribute\Contract\AnnotationToAttributeMapperInterface;
 /**
  * @implements AnnotationToAttributeMapperInterface<string>
  */
-final class ClassConstFetchAnnotationToAttributeMapper implements \Rector\PhpAttribute\Contract\AnnotationToAttributeMapperInterface
+final class ClassConstFetchAnnotationToAttributeMapper implements AnnotationToAttributeMapperInterface
 {
     /**
      * @param mixed $value
@@ -24,9 +24,9 @@ final class ClassConstFetchAnnotationToAttributeMapper implements \Rector\PhpAtt
     /**
      * @param string $value
      */
-    public function map($value) : \PhpParser\Node\Expr\ClassConstFetch
+    public function map($value) : \PhpParser\Node\Expr
     {
         [$class, $constant] = \explode('::', $value);
-        return new \PhpParser\Node\Expr\ClassConstFetch(new \PhpParser\Node\Name($class), $constant);
+        return new ClassConstFetch(new Name($class), $constant);
     }
 }

@@ -23,23 +23,25 @@ final class ClassConstantFactory
      * @var \Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfoFactory
      */
     private $phpDocInfoFactory;
-    public function __construct(\Rector\Privatization\Naming\ConstantNaming $constantNaming, \Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfoFactory $phpDocInfoFactory)
+    public function __construct(ConstantNaming $constantNaming, PhpDocInfoFactory $phpDocInfoFactory)
     {
         $this->constantNaming = $constantNaming;
         $this->phpDocInfoFactory = $phpDocInfoFactory;
     }
-    public function createFromProperty(\PhpParser\Node\Stmt\Property $property) : \PhpParser\Node\Stmt\ClassConst
+    public function createFromProperty(Property $property) : ClassConst
     {
         $propertyProperty = $property->props[0];
         $constantName = $this->constantNaming->createFromProperty($propertyProperty);
         /** @var Expr $defaultValue */
         $defaultValue = $propertyProperty->default;
-        $const = new \PhpParser\Node\Const_($constantName, $defaultValue);
-        $classConst = new \PhpParser\Node\Stmt\ClassConst([$const]);
-        $classConst->flags = $property->flags & ~\PhpParser\Node\Stmt\Class_::MODIFIER_STATIC;
+        $const = new Const_($constantName, $defaultValue);
+        $classConst = new ClassConst([$const]);
+        $classConst->flags = $property->flags & ~Class_::MODIFIER_STATIC;
+        $const->setAttribute(AttributeKey::PARENT_NODE, $classConst);
         $phpDocInfo = $this->phpDocInfoFactory->createFromNodeOrEmpty($property);
         $phpDocInfo->markAsChanged();
-        $classConst->setAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::PHP_DOC_INFO, $phpDocInfo);
+        $classConst->setAttribute(AttributeKey::PHP_DOC_INFO, $phpDocInfo);
+        $classConst->setAttribute(AttributeKey::PARENT_NODE, $property->getAttribute(AttributeKey::PARENT_NODE));
         return $classConst;
     }
 }

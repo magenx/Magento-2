@@ -8,93 +8,96 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix20211221\Symfony\Contracts\Tests\Service;
+namespace RectorPrefix202208\Symfony\Contracts\Tests\Service;
 
-use RectorPrefix20211221\PHPUnit\Framework\TestCase;
-use RectorPrefix20211221\Psr\Container\ContainerInterface;
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\Tests\Fixtures\Prototype\OtherDir\Component1\Dir1\Service1;
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\Tests\Fixtures\Prototype\OtherDir\Component1\Dir2\Service2;
-use RectorPrefix20211221\Symfony\Contracts\Service\Attribute\SubscribedService;
-use RectorPrefix20211221\Symfony\Contracts\Service\ServiceLocatorTrait;
-use RectorPrefix20211221\Symfony\Contracts\Service\ServiceSubscriberInterface;
-use RectorPrefix20211221\Symfony\Contracts\Service\ServiceSubscriberTrait;
-use RectorPrefix20211221\Symfony\Contracts\Tests\Fixtures\TestServiceSubscriberUnion;
-class ServiceSubscriberTraitTest extends \RectorPrefix20211221\PHPUnit\Framework\TestCase
+use PHPUnit\Framework\TestCase;
+use RectorPrefix202208\Psr\Container\ContainerInterface;
+use RectorPrefix202208\Symfony\Component\DependencyInjection\Tests\Fixtures\Prototype\OtherDir\Component1\Dir1\Service1;
+use RectorPrefix202208\Symfony\Component\DependencyInjection\Tests\Fixtures\Prototype\OtherDir\Component1\Dir2\Service2;
+use RectorPrefix202208\Symfony\Contracts\Service\Attribute\SubscribedService;
+use RectorPrefix202208\Symfony\Contracts\Service\ServiceLocatorTrait;
+use RectorPrefix202208\Symfony\Contracts\Service\ServiceSubscriberInterface;
+use RectorPrefix202208\Symfony\Contracts\Service\ServiceSubscriberTrait;
+class ServiceSubscriberTraitTest extends TestCase
 {
-    /**
-     * @group legacy
-     */
-    public function testLegacyMethodsOnParentsAndChildrenAreIgnoredInGetSubscribedServices()
-    {
-        $expected = [\RectorPrefix20211221\Symfony\Contracts\Tests\Service\LegacyTestService::class . '::aService' => '?' . \RectorPrefix20211221\Symfony\Component\DependencyInjection\Tests\Fixtures\Prototype\OtherDir\Component1\Dir2\Service2::class];
-        $this->assertEquals($expected, \RectorPrefix20211221\Symfony\Contracts\Tests\Service\LegacyChildTestService::getSubscribedServices());
-    }
-    /**
-     * @requires PHP 8
-     */
     public function testMethodsOnParentsAndChildrenAreIgnoredInGetSubscribedServices()
     {
-        $expected = [\RectorPrefix20211221\Symfony\Contracts\Tests\Service\TestService::class . '::aService' => \RectorPrefix20211221\Symfony\Component\DependencyInjection\Tests\Fixtures\Prototype\OtherDir\Component1\Dir2\Service2::class, \RectorPrefix20211221\Symfony\Contracts\Tests\Service\TestService::class . '::nullableService' => '?' . \RectorPrefix20211221\Symfony\Component\DependencyInjection\Tests\Fixtures\Prototype\OtherDir\Component1\Dir2\Service2::class];
-        $this->assertEquals($expected, \RectorPrefix20211221\Symfony\Contracts\Tests\Service\ChildTestService::getSubscribedServices());
+        $expected = [TestService::class . '::aService' => Service2::class, TestService::class . '::nullableService' => '?' . Service2::class];
+        $this->assertEquals($expected, ChildTestService::getSubscribedServices());
     }
     public function testSetContainerIsCalledOnParent()
     {
-        $container = new class([]) implements \RectorPrefix20211221\Psr\Container\ContainerInterface
+        $container = new class([]) implements ContainerInterface
         {
             use ServiceLocatorTrait;
         };
-        $this->assertSame($container, (new \RectorPrefix20211221\Symfony\Contracts\Tests\Service\TestService())->setContainer($container));
+        $this->assertSame($container, (new TestService())->setContainer($container));
     }
-    /**
-     * @requires PHP 8
-     * @group legacy
-     */
-    public function testMethodsWithUnionReturnTypesAreIgnored()
+    public function testParentNotCalledIfHasMagicCall()
     {
-        $expected = [\RectorPrefix20211221\Symfony\Contracts\Tests\Fixtures\TestServiceSubscriberUnion::class . '::method1' => 'RectorPrefix20211221\\?Symfony\\Contracts\\Tests\\Fixtures\\Service1'];
-        $this->assertEquals($expected, \RectorPrefix20211221\Symfony\Contracts\Tests\Fixtures\TestServiceSubscriberUnion::getSubscribedServices());
+        $container = new class([]) implements ContainerInterface
+        {
+            use ServiceLocatorTrait;
+        };
+        $service = new class extends ParentWithMagicCall
+        {
+            use ServiceSubscriberTrait;
+        };
+        $this->assertNull($service->setContainer($container));
+        $this->assertSame([], $service::getSubscribedServices());
+    }
+    public function testParentNotCalledIfNoParent()
+    {
+        $container = new class([]) implements ContainerInterface
+        {
+            use ServiceLocatorTrait;
+        };
+        $service = new class
+        {
+            use ServiceSubscriberTrait;
+        };
+        $this->assertNull($service->setContainer($container));
+        $this->assertSame([], $service::getSubscribedServices());
     }
 }
 class ParentTestService
 {
-    public function aParentService() : \RectorPrefix20211221\Symfony\Component\DependencyInjection\Tests\Fixtures\Prototype\OtherDir\Component1\Dir1\Service1
+    public function aParentService() : Service1
     {
     }
-    public function setContainer(\RectorPrefix20211221\Psr\Container\ContainerInterface $container)
+    public function setContainer(ContainerInterface $container)
     {
         return $container;
     }
 }
-class LegacyTestService extends \RectorPrefix20211221\Symfony\Contracts\Tests\Service\ParentTestService implements \RectorPrefix20211221\Symfony\Contracts\Service\ServiceSubscriberInterface
+class TestService extends ParentTestService implements ServiceSubscriberInterface
 {
     use ServiceSubscriberTrait;
-    public function aService() : \RectorPrefix20211221\Symfony\Component\DependencyInjection\Tests\Fixtures\Prototype\OtherDir\Component1\Dir2\Service2
+    #[\Symfony\Contracts\Service\Attribute\SubscribedService]
+    public function aService() : Service2
+    {
+    }
+    #[\Symfony\Contracts\Service\Attribute\SubscribedService]
+    public function nullableService() : ?Service2
     {
     }
 }
-class LegacyChildTestService extends \RectorPrefix20211221\Symfony\Contracts\Tests\Service\LegacyTestService
+class ChildTestService extends TestService
 {
-    public function aChildService() : \RectorPrefix20211221\Symfony\Contracts\Tests\Service\Service3
+    #[\Symfony\Contracts\Service\Attribute\SubscribedService]
+    public function aChildService() : Service3
     {
     }
 }
-class TestService extends \RectorPrefix20211221\Symfony\Contracts\Tests\Service\ParentTestService implements \RectorPrefix20211221\Symfony\Contracts\Service\ServiceSubscriberInterface
+class ParentWithMagicCall
 {
-    use ServiceSubscriberTrait;
-    #[SubscribedService]
-    public function aService() : \RectorPrefix20211221\Symfony\Component\DependencyInjection\Tests\Fixtures\Prototype\OtherDir\Component1\Dir2\Service2
+    public function __call($method, $args)
     {
+        throw new \BadMethodCallException('Should not be called.');
     }
-    #[SubscribedService]
-    public function nullableService() : ?\RectorPrefix20211221\Symfony\Component\DependencyInjection\Tests\Fixtures\Prototype\OtherDir\Component1\Dir2\Service2
+    public static function __callStatic($method, $args)
     {
-    }
-}
-class ChildTestService extends \RectorPrefix20211221\Symfony\Contracts\Tests\Service\TestService
-{
-    #[SubscribedService]
-    public function aChildService() : \RectorPrefix20211221\Symfony\Contracts\Tests\Service\Service3
-    {
+        throw new \BadMethodCallException('Should not be called.');
     }
 }
 class Service3

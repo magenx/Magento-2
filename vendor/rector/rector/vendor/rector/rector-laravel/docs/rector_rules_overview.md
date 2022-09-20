@@ -1,4 +1,4 @@
-# 20 Rules Overview
+# 26 Rules Overview
 
 ## AddArgumentDefaultValueRector
 
@@ -9,17 +9,16 @@ Adds default value for arguments in defined methods.
 - class: [`Rector\Laravel\Rector\ClassMethod\AddArgumentDefaultValueRector`](../src/Rector/ClassMethod/AddArgumentDefaultValueRector.php)
 
 ```php
+use Rector\Config\RectorConfig;
 use Rector\Laravel\Rector\ClassMethod\AddArgumentDefaultValueRector;
 use Rector\Laravel\ValueObject\AddArgumentDefaultValue;
-use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
-use Symplify\SymfonyPhpConfig\ValueObjectInliner;
 
-return static function (ContainerConfigurator $containerConfigurator): void {
-    $services = $containerConfigurator->services();
-
-    $services->set(AddArgumentDefaultValueRector::class)
-->configure([                new AddArgumentDefaultValue('SomeClass', 'someMethod', 0, false),
-]);
+return static function (RectorConfig $rectorConfig): void {
+    $rectorConfig->ruleWithConfiguration(AddArgumentDefaultValueRector::class, [
+        AddArgumentDefaultValueRector::ADDED_ARGUMENTS => [
+            new AddArgumentDefaultValue('SomeClass', 'someMethod', 0, false),
+        ],
+    ]);
 };
 ```
 
@@ -31,6 +30,29 @@ return static function (ContainerConfigurator $containerConfigurator): void {
 -    public function someMethod($value)
 +    public function someMethod($value = false)
      {
+     }
+ }
+```
+
+<br>
+
+## AddGenericReturnTypeToRelationsRector
+
+Add generic return type to relations in child of `Illuminate\Database\Eloquent\Model`
+
+- class: [`Rector\Laravel\Rector\ClassMethod\AddGenericReturnTypeToRelationsRector`](../src/Rector/ClassMethod/AddGenericReturnTypeToRelationsRector.php)
+
+```diff
+ use App\Account;
+ use Illuminate\Database\Eloquent\Model;
+ use Illuminate\Database\Eloquent\Relations\HasMany;
+
+ class User extends Model
+ {
++    /** @return HasMany<Account> */
+     public function accounts(): HasMany
+     {
+         return $this->hasMany(Account::class);
      }
  }
 ```
@@ -272,6 +294,34 @@ Change `app()` func calls to facade calls
 
 <br>
 
+## LumenRoutesStringActionToUsesArrayRector
+
+Changes action in rule definitions from string to array notation.
+
+- class: [`Rector\Laravel\Rector\MethodCall\LumenRoutesStringActionToUsesArrayRector`](../src/Rector/MethodCall/LumenRoutesStringActionToUsesArrayRector.php)
+
+```diff
+-$router->get('/user', 'UserController@get');
++$router->get('/user', ['uses => 'UserController@get']);
+```
+
+<br>
+
+## LumenRoutesStringMiddlewareToArrayRector
+
+Changes middlewares from rule definitions from string to array notation.
+
+- class: [`Rector\Laravel\Rector\MethodCall\LumenRoutesStringMiddlewareToArrayRector`](../src/Rector/MethodCall/LumenRoutesStringMiddlewareToArrayRector.php)
+
+```diff
+-$router->get('/user', ['middleware => 'test']);
+-$router->post('/user', ['middleware => 'test|authentication']);
++$router->get('/user', ['middleware => ['test']]);
++$router->post('/user', ['middleware => ['test', 'authentication']]);
+```
+
+<br>
+
 ## MinutesToSecondsInCacheRector
 
 Change minutes argument to seconds in `Illuminate\Contracts\Cache\Store` and Illuminate\Support\Facades\Cache
@@ -300,16 +350,13 @@ Convert simple calls to optional helper to use the nullsafe operator
 - class: [`Rector\Laravel\Rector\PropertyFetch\OptionalToNullsafeOperatorRector`](../src/Rector/PropertyFetch/OptionalToNullsafeOperatorRector.php)
 
 ```php
+use Rector\Config\RectorConfig;
 use Rector\Laravel\Rector\PropertyFetch\OptionalToNullsafeOperatorRector;
-use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 
-return static function (ContainerConfigurator $containerConfigurator): void {
-    $services = $containerConfigurator->services();
-
-    $services->set(OptionalToNullsafeOperatorRector::class)
-        ->call('configure', [[
-            OptionalToNullsafeOperatorRector::EXCLUDE_METHODS => ['present'],
-        ]]);
+return static function (RectorConfig $rectorConfig): void {
+    $rectorConfig->ruleWithConfiguration(OptionalToNullsafeOperatorRector::class, [
+        OptionalToNullsafeOperatorRector::EXCLUDE_METHODS => ['present'],
+    ]);
 };
 ```
 
@@ -367,6 +414,60 @@ Change "redirect" call with 301 to "permanentRedirect"
 
 <br>
 
+## RedirectBackToBackHelperRector
+
+Replace `redirect()->back()` and `Redirect::back()` with `back()`
+
+- class: [`Rector\Laravel\Rector\MethodCall\RedirectBackToBackHelperRector`](../src/Rector/MethodCall/RedirectBackToBackHelperRector.php)
+
+```diff
+ use Illuminate\Support\Facades\Redirect;
+
+ class MyController
+ {
+     public function store()
+     {
+-        return redirect()->back()->with('error', 'Incorrect Details.')
++        return back()->with('error', 'Incorrect Details.')
+     }
+
+     public function update()
+     {
+-        return Redirect::back()->with('error', 'Incorrect Details.')
++        return back()->with('error', 'Incorrect Details.')
+     }
+ }
+```
+
+<br>
+
+## RedirectRouteToToRouteHelperRector
+
+Replace `redirect()->route("home")` and `Redirect::route("home")` with `to_route("home")`
+
+- class: [`Rector\Laravel\Rector\MethodCall\RedirectRouteToToRouteHelperRector`](../src/Rector/MethodCall/RedirectRouteToToRouteHelperRector.php)
+
+```diff
+ use Illuminate\Support\Facades\Redirect;
+
+ class MyController
+ {
+     public function store()
+     {
+-        return redirect()->route('home')->with('error', 'Incorrect Details.')
++        return to_route('home')->with('error', 'Incorrect Details.')
+     }
+
+     public function update()
+     {
+-        return Redirect::route('home')->with('error', 'Incorrect Details.')
++        return to_route('home')->with('error', 'Incorrect Details.')
+     }
+ }
+```
+
+<br>
+
 ## RemoveAllOnDispatchingMethodsWithJobChainingRector
 
 Remove `allOnQueue()` and `allOnConnection()` methods used with job chaining, use the `onQueue()` and `onConnection()` methods instead.
@@ -383,6 +484,31 @@ Remove `allOnQueue()` and `allOnConnection()` methods used with job chaining, us
 +    ->onQueue('podcasts')
 +    ->onConnection('redis')
 +    ->dispatch();
+```
+
+<br>
+
+## RemoveDumpDataDeadCodeRector
+
+It will removes the dump data just like dd or dump functions from the code.`
+
+- class: [`Rector\Laravel\Rector\FuncCall\RemoveDumpDataDeadCodeRector`](../src/Rector/FuncCall/RemoveDumpDataDeadCodeRector.php)
+
+```diff
+ class MyController
+ {
+     public function store()
+     {
+-        dd('test');
+         return true;
+     }
+
+     public function update()
+     {
+-        dump('test');
+         return true;
+     }
+ }
 ```
 
 <br>
@@ -418,16 +544,13 @@ Use PHP callable syntax instead of string syntax for controller route declaratio
 - class: [`Rector\Laravel\Rector\StaticCall\RouteActionCallableRector`](../src/Rector/StaticCall/RouteActionCallableRector.php)
 
 ```php
+use Rector\Config\RectorConfig;
 use Rector\Laravel\Rector\StaticCall\RouteActionCallableRector;
-use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 
-return static function (ContainerConfigurator $containerConfigurator): void {
-    $services = $containerConfigurator->services();
-
-    $services->set(RouteActionCallableRector::class)
-        ->call('configure', [[
-            RouteActionCallableRector::NAMESPACE => 'App\Http\Controllers',
-        ]]);
+return static function (RectorConfig $rectorConfig): void {
+    $rectorConfig->ruleWithConfiguration(RouteActionCallableRector::class, [
+        RouteActionCallableRector::NAMESPACE => 'App\Http\Controllers',
+    ]);
 };
 ```
 

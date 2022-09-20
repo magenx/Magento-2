@@ -6,16 +6,28 @@ namespace Rector\DeadCode\Rector\Property;
 use PhpParser\Node;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\Property;
+use Rector\Core\Contract\Rector\AllowEmptyConfigurableRectorInterface;
 use Rector\Core\NodeManipulator\PropertyManipulator;
 use Rector\Core\Rector\AbstractRector;
 use Rector\Removing\NodeManipulator\ComplexNodeRemover;
-use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
+use Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
  * @see \Rector\Tests\DeadCode\Rector\Property\RemoveUnusedPrivatePropertyRector\RemoveUnusedPrivatePropertyRectorTest
  */
-final class RemoveUnusedPrivatePropertyRector extends \Rector\Core\Rector\AbstractRector
+final class RemoveUnusedPrivatePropertyRector extends AbstractRector implements AllowEmptyConfigurableRectorInterface
 {
+    /**
+     * @api
+     * @var string
+     */
+    public const REMOVE_ASSIGN_SIDE_EFFECT = 'remove_assign_side_effect';
+    /**
+     * Default to true, which apply remove assign even has side effect.
+     * Set to false will allow to skip when assign has side effect.
+     * @var bool
+     */
+    private $removeAssignSideEffect = \true;
     /**
      * @readonly
      * @var \Rector\Core\NodeManipulator\PropertyManipulator
@@ -26,14 +38,21 @@ final class RemoveUnusedPrivatePropertyRector extends \Rector\Core\Rector\Abstra
      * @var \Rector\Removing\NodeManipulator\ComplexNodeRemover
      */
     private $complexNodeRemover;
-    public function __construct(\Rector\Core\NodeManipulator\PropertyManipulator $propertyManipulator, \Rector\Removing\NodeManipulator\ComplexNodeRemover $complexNodeRemover)
+    public function __construct(PropertyManipulator $propertyManipulator, ComplexNodeRemover $complexNodeRemover)
     {
         $this->propertyManipulator = $propertyManipulator;
         $this->complexNodeRemover = $complexNodeRemover;
     }
-    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
+    /**
+     * @param mixed[] $configuration
+     */
+    public function configure(array $configuration) : void
     {
-        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Remove unused private properties', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample(<<<'CODE_SAMPLE'
+        $this->removeAssignSideEffect = $configuration[self::REMOVE_ASSIGN_SIDE_EFFECT] ?? (bool) \current($configuration);
+    }
+    public function getRuleDefinition() : RuleDefinition
+    {
+        return new RuleDefinition('Remove unused private properties', [new ConfiguredCodeSample(<<<'CODE_SAMPLE'
 class SomeClass
 {
     private $property;
@@ -44,38 +63,42 @@ class SomeClass
 {
 }
 CODE_SAMPLE
-)]);
+, [self::REMOVE_ASSIGN_SIDE_EFFECT => \true])]);
     }
     /**
      * @return array<class-string<Node>>
      */
     public function getNodeTypes() : array
     {
-        return [\PhpParser\Node\Stmt\Property::class];
+        return [Class_::class];
     }
     /**
-     * @param Property $node
+     * @param Class_ $node
      */
-    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
+    public function refactor(Node $node) : ?Node
     {
-        if ($this->shouldSkipProperty($node)) {
-            return null;
+        $hasRemoved = \false;
+        foreach ($node->getProperties() as $property) {
+            if ($this->shouldSkipProperty($property)) {
+                continue;
+            }
+            if ($this->propertyManipulator->isPropertyUsedInReadContext($node, $property)) {
+                continue;
+            }
+            // use different variable to avoid re-assign back $hasRemoved to false
+            // when already asssigned to true
+            $isRemoved = $this->complexNodeRemover->removePropertyAndUsages($node, $property, $this->removeAssignSideEffect);
+            if ($isRemoved) {
+                $hasRemoved = \true;
+            }
         }
-        if ($this->propertyManipulator->isPropertyUsedInReadContext($node)) {
-            return null;
-        }
-        $this->complexNodeRemover->removePropertyAndUsages($node);
-        return $node;
+        return $hasRemoved ? $node : null;
     }
-    private function shouldSkipProperty(\PhpParser\Node\Stmt\Property $property) : bool
+    private function shouldSkipProperty(Property $property) : bool
     {
         if (\count($property->props) !== 1) {
             return \true;
         }
-        if (!$property->isPrivate()) {
-            return \true;
-        }
-        $class = $this->betterNodeFinder->findParentType($property, \PhpParser\Node\Stmt\Class_::class);
-        return !$class instanceof \PhpParser\Node\Stmt\Class_;
+        return !$property->isPrivate();
     }
 }

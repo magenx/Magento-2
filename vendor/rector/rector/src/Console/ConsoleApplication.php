@@ -3,20 +3,17 @@
 declare (strict_types=1);
 namespace Rector\Core\Console;
 
-use RectorPrefix20211221\Composer\XdebugHandler\XdebugHandler;
+use RectorPrefix202208\Composer\XdebugHandler\XdebugHandler;
 use Rector\ChangesReporting\Output\ConsoleOutputFormatter;
 use Rector\Core\Application\VersionResolver;
 use Rector\Core\Configuration\Option;
-use Rector\Core\Console\Command\ProcessCommand;
-use Rector\Core\Exception\Configuration\InvalidConfigurationException;
-use RectorPrefix20211221\Symfony\Component\Console\Application;
-use RectorPrefix20211221\Symfony\Component\Console\Command\Command;
-use RectorPrefix20211221\Symfony\Component\Console\Input\InputDefinition;
-use RectorPrefix20211221\Symfony\Component\Console\Input\InputInterface;
-use RectorPrefix20211221\Symfony\Component\Console\Input\InputOption;
-use RectorPrefix20211221\Symfony\Component\Console\Output\OutputInterface;
-use RectorPrefix20211221\Symplify\PackageBuilder\Console\Command\CommandNaming;
-final class ConsoleApplication extends \RectorPrefix20211221\Symfony\Component\Console\Application
+use RectorPrefix202208\Symfony\Component\Console\Application;
+use RectorPrefix202208\Symfony\Component\Console\Command\Command;
+use RectorPrefix202208\Symfony\Component\Console\Input\InputDefinition;
+use RectorPrefix202208\Symfony\Component\Console\Input\InputInterface;
+use RectorPrefix202208\Symfony\Component\Console\Input\InputOption;
+use RectorPrefix202208\Symfony\Component\Console\Output\OutputInterface;
+final class ConsoleApplication extends Application
 {
     /**
      * @var string
@@ -25,37 +22,22 @@ final class ConsoleApplication extends \RectorPrefix20211221\Symfony\Component\C
     /**
      * @param Command[] $commands
      */
-    public function __construct(\RectorPrefix20211221\Symplify\PackageBuilder\Console\Command\CommandNaming $commandNaming, array $commands = [])
+    public function __construct(array $commands = [])
     {
-        $version = \Rector\Core\Application\VersionResolver::PACKAGE_VERSION;
-        parent::__construct(self::NAME, $version);
-        foreach ($commands as $command) {
-            $commandName = $commandNaming->resolveFromCommand($command);
-            $command->setName($commandName);
-        }
+        parent::__construct(self::NAME, VersionResolver::PACKAGE_VERSION);
         $this->addCommands($commands);
-        $this->setDefaultCommand(\RectorPrefix20211221\Symplify\PackageBuilder\Console\Command\CommandNaming::classToName(\Rector\Core\Console\Command\ProcessCommand::class));
+        $this->setDefaultCommand('process');
     }
-    public function doRun(\RectorPrefix20211221\Symfony\Component\Console\Input\InputInterface $input, \RectorPrefix20211221\Symfony\Component\Console\Output\OutputInterface $output) : int
+    public function doRun(InputInterface $input, OutputInterface $output) : int
     {
         // @fixes https://github.com/rectorphp/rector/issues/2205
         $isXdebugAllowed = $input->hasParameterOption('--xdebug');
         if (!$isXdebugAllowed) {
-            $xdebugHandler = new \RectorPrefix20211221\Composer\XdebugHandler\XdebugHandler('rector');
+            $xdebugHandler = new XdebugHandler('rector');
             $xdebugHandler->check();
             unset($xdebugHandler);
         }
         $shouldFollowByNewline = \false;
-        // switch working dir
-        $newWorkDir = $this->getNewWorkingDir($input);
-        if ($newWorkDir !== '') {
-            $oldWorkingDir = \getcwd();
-            \chdir($newWorkDir);
-            if ($output->isDebug()) {
-                $message = \sprintf('Changed working directory from "%s" to "%s"', $oldWorkingDir, \getcwd());
-                $output->writeln($message);
-            }
-        }
         // skip in this case, since generate content must be clear from meta-info
         if ($this->shouldPrintMetaInformation($input)) {
             $output->writeln($this->getLongVersion());
@@ -66,23 +48,14 @@ final class ConsoleApplication extends \RectorPrefix20211221\Symfony\Component\C
         }
         return parent::doRun($input, $output);
     }
-    protected function getDefaultInputDefinition() : \RectorPrefix20211221\Symfony\Component\Console\Input\InputDefinition
+    protected function getDefaultInputDefinition() : InputDefinition
     {
         $defaultInputDefinition = parent::getDefaultInputDefinition();
         $this->removeUnusedOptions($defaultInputDefinition);
         $this->addCustomOptions($defaultInputDefinition);
         return $defaultInputDefinition;
     }
-    private function getNewWorkingDir(\RectorPrefix20211221\Symfony\Component\Console\Input\InputInterface $input) : string
-    {
-        $workingDir = $input->getParameterOption('--working-dir');
-        if (\is_string($workingDir) && !\is_dir($workingDir)) {
-            $errorMessage = \sprintf('Invalid working directory specified, "%s" does not exist.', $workingDir);
-            throw new \Rector\Core\Exception\Configuration\InvalidConfigurationException($errorMessage);
-        }
-        return (string) $workingDir;
-    }
-    private function shouldPrintMetaInformation(\RectorPrefix20211221\Symfony\Component\Console\Input\InputInterface $input) : bool
+    private function shouldPrintMetaInformation(InputInterface $input) : bool
     {
         $hasNoArguments = $input->getFirstArgument() === null;
         if ($hasNoArguments) {
@@ -93,21 +66,20 @@ final class ConsoleApplication extends \RectorPrefix20211221\Symfony\Component\C
             return \false;
         }
         $outputFormat = $input->getParameterOption(['-o', '--output-format']);
-        return $outputFormat === \Rector\ChangesReporting\Output\ConsoleOutputFormatter::NAME;
+        return $outputFormat === ConsoleOutputFormatter::NAME;
     }
-    private function removeUnusedOptions(\RectorPrefix20211221\Symfony\Component\Console\Input\InputDefinition $inputDefinition) : void
+    private function removeUnusedOptions(InputDefinition $inputDefinition) : void
     {
         $options = $inputDefinition->getOptions();
         unset($options['quiet'], $options['no-interaction']);
         $inputDefinition->setOptions($options);
     }
-    private function addCustomOptions(\RectorPrefix20211221\Symfony\Component\Console\Input\InputDefinition $inputDefinition) : void
+    private function addCustomOptions(InputDefinition $inputDefinition) : void
     {
-        $inputDefinition->addOption(new \RectorPrefix20211221\Symfony\Component\Console\Input\InputOption(\Rector\Core\Configuration\Option::CONFIG, 'c', \RectorPrefix20211221\Symfony\Component\Console\Input\InputOption::VALUE_REQUIRED, 'Path to config file', $this->getDefaultConfigPath()));
-        $inputDefinition->addOption(new \RectorPrefix20211221\Symfony\Component\Console\Input\InputOption(\Rector\Core\Configuration\Option::DEBUG, null, \RectorPrefix20211221\Symfony\Component\Console\Input\InputOption::VALUE_NONE, 'Enable debug verbosity (-vvv)'));
-        $inputDefinition->addOption(new \RectorPrefix20211221\Symfony\Component\Console\Input\InputOption(\Rector\Core\Configuration\Option::XDEBUG, null, \RectorPrefix20211221\Symfony\Component\Console\Input\InputOption::VALUE_NONE, 'Allow running xdebug'));
-        $inputDefinition->addOption(new \RectorPrefix20211221\Symfony\Component\Console\Input\InputOption(\Rector\Core\Configuration\Option::CLEAR_CACHE, null, \RectorPrefix20211221\Symfony\Component\Console\Input\InputOption::VALUE_NONE, 'Clear cache'));
-        $inputDefinition->addOption(new \RectorPrefix20211221\Symfony\Component\Console\Input\InputOption('working-dir', null, \RectorPrefix20211221\Symfony\Component\Console\Input\InputOption::VALUE_REQUIRED, 'If specified, use the given directory as working directory.'));
+        $inputDefinition->addOption(new InputOption(Option::CONFIG, 'c', InputOption::VALUE_REQUIRED, 'Path to config file', $this->getDefaultConfigPath()));
+        $inputDefinition->addOption(new InputOption(Option::DEBUG, null, InputOption::VALUE_NONE, 'Enable debug verbosity (-vvv)'));
+        $inputDefinition->addOption(new InputOption(Option::XDEBUG, null, InputOption::VALUE_NONE, 'Allow running xdebug'));
+        $inputDefinition->addOption(new InputOption(Option::CLEAR_CACHE, null, InputOption::VALUE_NONE, 'Clear cache'));
     }
     private function getDefaultConfigPath() : string
     {

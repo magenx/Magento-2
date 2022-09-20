@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © 2013-2017 Magento, Inc. All rights reserved.
+ * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
 namespace PayPal\Braintree\Model\Adapter;
@@ -24,6 +24,9 @@ use Magento\Framework\Exception\InputException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Psr\Log\LoggerInterface;
 
+/**
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+ */
 class BraintreeAdapter
 {
     /**
@@ -35,6 +38,7 @@ class BraintreeAdapter
      * @var StoreConfigResolver
      */
     private $storeConfigResolver;
+
     /**
      * @var LoggerInterface
      */
@@ -101,33 +105,41 @@ class BraintreeAdapter
     }
 
     /**
+     * Init environment
+     *
      * @param string|null $value
      * @return mixed
      */
-    public function environment($value = null)
+    public function environment(string $value = null)
     {
         return Configuration::environment($value);
     }
 
     /**
+     * Init merchant id
+     *
      * @param string|null $value
      * @return mixed
      */
-    public function merchantId($value = null)
+    public function merchantId(string $value = null)
     {
         return Configuration::merchantId($value);
     }
 
     /**
+     * Init public key
+     *
      * @param string|null $value
      * @return mixed
      */
-    public function publicKey($value = null)
+    public function publicKey(string $value = null)
     {
         return Configuration::publicKey($value);
     }
 
     /**
+     * Init private key
+     *
      * @param string|null $value
      * @return mixed
      */
@@ -137,6 +149,8 @@ class BraintreeAdapter
     }
 
     /**
+     * Generate client token
+     *
      * @param array $params
      * @return string
      */
@@ -151,10 +165,12 @@ class BraintreeAdapter
     }
 
     /**
+     * Find token
+     *
      * @param string $token
      * @return CreditCard|null
      */
-    public function find($token)
+    public function find(string $token)
     {
         try {
             return CreditCard::find($token);
@@ -165,6 +181,8 @@ class BraintreeAdapter
     }
 
     /**
+     * Search transactions
+     *
      * @param array $filters
      * @return ResourceCollection|null
      */
@@ -174,8 +192,10 @@ class BraintreeAdapter
     }
 
     /**
+     * Find transaction by Id
+     *
      * @param string $id
-     * @return Transaction|null
+     * @return NotFound|Successful
      */
     public function findById(string $id)
     {
@@ -183,15 +203,19 @@ class BraintreeAdapter
     }
 
     /**
+     * Create payment nonce
+     *
      * @param string $token
-     * @return Successful|Error
+     * @return Error|PaymentMethodNonce
      */
-    public function createNonce($token)
+    public function createNonce(string $token)
     {
         return PaymentMethodNonce::create($token);
     }
 
     /**
+     * Transaction sale
+     *
      * @param array $attributes
      * @return Successful|Error
      */
@@ -201,80 +225,95 @@ class BraintreeAdapter
     }
 
     /**
+     * Submit transaction for settlement
+     *
      * @param string $transactionId
      * @param null|float $amount
      * @return Successful|Error
      */
-    public function submitForSettlement($transactionId, $amount = null)
+    public function submitForSettlement(string $transactionId, $amount = null)
     {
         return Transaction::submitForSettlement($transactionId, $amount);
     }
 
     /**
+     * Submit transaction for partial settlement
+     *
      * @param string $transactionId
      * @param null|float $amount
      * @return Successful|Error
      */
-    public function submitForPartialSettlement($transactionId, $amount = null)
+    public function submitForPartialSettlement(string $transactionId, $amount = null)
     {
         return Transaction::submitForPartialSettlement($transactionId, $amount);
     }
 
     /**
+     * Void transaction
+     *
      * @param string $transactionId
      * @return Successful|Error
      */
-    public function void($transactionId)
+    public function void(string $transactionId)
     {
         return Transaction::void($transactionId);
     }
 
     /**
+     * Refund transaction
+     *
      * @param string $transactionId
      * @param null|float $amount
      * @return Successful|Error
      */
-    public function refund($transactionId, $amount = null)
+    public function refund(string $transactionId, $amount = null)
     {
         return Transaction::refund($transactionId, $amount);
     }
 
     /**
      * Clone original transaction
+     *
      * @param string $transactionId
      * @param array $attributes
      * @return mixed
      */
-    public function cloneTransaction($transactionId, array $attributes)
+    public function cloneTransaction(string $transactionId, array $attributes)
     {
         return Transaction::cloneTransaction($transactionId, $attributes);
     }
 
     /**
-     * @param $token
+     * Delete payment method token
+     *
+     * @param string $token
      * @return mixed
      */
-    public function deletePaymentMethod($token)
+    public function deletePaymentMethod(string $token)
     {
         return PaymentMethod::delete($token)->success;
     }
 
     /**
-     * @param $token
-     * @param $attribs
+     * Update payment method token
+     *
+     * @param string $token
+     * @param array $attribs
      * @return mixed
      */
-    public function updatePaymentMethod($token, $attribs)
+    public function updatePaymentMethod(string $token, array $attribs)
     {
         return PaymentMethod::update($token, $attribs);
     }
 
     /**
-     * @param $id
+     * Get customer by Id
+     *
+     * @param string $id
      * @return Customer
      * @throws NotFound
      */
-    public function getCustomerById($id)
+    public function getCustomerById(string $id)
     {
         return Customer::find($id);
     }

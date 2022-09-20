@@ -7,24 +7,26 @@ use Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfo;
 final class PropertyNameAndPhpDocInfo
 {
     /**
+     * @readonly
      * @var string
      */
     private $propertyName;
     /**
+     * @readonly
      * @var \Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfo
      */
-    private $phpDocInfos;
-    public function __construct(string $propertyName, \Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfo $phpDocInfos)
+    private $phpDocInfo;
+    public function __construct(string $propertyName, PhpDocInfo $phpDocInfo)
     {
         $this->propertyName = $propertyName;
-        $this->phpDocInfos = $phpDocInfos;
+        $this->phpDocInfo = $phpDocInfo;
     }
     public function getPropertyName() : string
     {
         return $this->propertyName;
     }
-    public function getPhpDocInfo() : \Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfo
+    public function getPhpDocInfo() : PhpDocInfo
     {
-        return $this->phpDocInfos;
+        return $this->phpDocInfo;
     }
 }

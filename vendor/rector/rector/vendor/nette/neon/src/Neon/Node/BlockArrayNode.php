@@ -5,24 +5,23 @@
  * Copyright (c) 2004 David Grudl (https://davidgrudl.com)
  */
 declare (strict_types=1);
-namespace RectorPrefix20211221\Nette\Neon\Node;
+namespace RectorPrefix202208\Nette\Neon\Node;
 
 /** @internal */
-final class BlockArrayNode extends \RectorPrefix20211221\Nette\Neon\Node\ArrayNode
+final class BlockArrayNode extends ArrayNode
 {
     /** @var string */
     public $indentation;
-    public function __construct(string $indentation = '', int $pos = null)
+    public function __construct(string $indentation = '')
     {
         $this->indentation = $indentation;
-        $this->startPos = $this->endPos = $pos;
     }
     public function toString() : string
     {
         if (\count($this->items) === 0) {
             return '[]';
         }
-        $res = \RectorPrefix20211221\Nette\Neon\Node\ArrayItemNode::itemsToBlockString($this->items);
+        $res = ArrayItemNode::itemsToBlockString($this->items);
         return \preg_replace('#^(?=.)#m', $this->indentation, $res);
     }
 }

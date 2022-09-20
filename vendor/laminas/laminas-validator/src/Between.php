@@ -23,15 +23,13 @@ class Between extends AbstractValidator
 
     /**
      * Retain if min and max are numeric values. Allow to not compare string and numeric types
-     *
-     * @var boolean
      */
-    private $numeric;
+    private ?bool $numeric = null;
 
     /**
      * Validation failure message template definitions
      *
-     * @var array
+     * @var array<string, string>
      */
     protected $messageTemplates = [
         self::NOT_BETWEEN        => "The input is not between '%min%' and '%max%', inclusively",
@@ -69,7 +67,7 @@ class Between extends AbstractValidator
      *   'max' => scalar, maximum border
      *   'inclusive' => boolean, inclusive border values
      *
-     * @param  array|Traversable $options
+     * @param  array<string, mixed>|Traversable<string, mixed> $options
      * @throws Exception\InvalidArgumentException
      */
     public function __construct($options = null)
@@ -78,6 +76,8 @@ class Between extends AbstractValidator
             $options = ArrayUtils::iteratorToArray($options);
         }
         if (! is_array($options)) {
+            $temp = [];
+            /** @psalm-var array<string, int|string> $options */
             $options     = func_get_args();
             $temp['min'] = array_shift($options);
             if (! empty($options)) {

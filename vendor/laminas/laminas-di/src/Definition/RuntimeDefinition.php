@@ -16,20 +16,19 @@ use function class_exists;
  */
 class RuntimeDefinition implements DefinitionInterface
 {
-    /** @var ClassDefinition[] */
-    private $definition = [];
+    /** @var array<class-string, ClassDefinition> */
+    private array $definition = [];
 
-    /** @var bool[] */
-    private $explicitClasses;
+    /** @var array<class-string, bool> */
+    private array $explicitClasses;
 
     /**
-     * @param null|string[] $explicitClasses
+     * @param null|class-string[] $explicitClasses
      */
     public function __construct(?array $explicitClasses = null)
     {
-        if ($explicitClasses) {
-            $this->setExplicitClasses($explicitClasses);
-        }
+        $this->explicitClasses = [];
+        $this->setExplicitClasses($explicitClasses ?? []);
     }
 
     /**
@@ -37,7 +36,7 @@ class RuntimeDefinition implements DefinitionInterface
      *
      * @see addExplicitClass()
      *
-     * @param string[] $explicitClasses An array of class names
+     * @param class-string[] $explicitClasses An array of class names
      * @throws Exception\ClassNotFoundException
      */
     public function setExplicitClasses(array $explicitClasses): self
@@ -57,44 +56,38 @@ class RuntimeDefinition implements DefinitionInterface
      * Adding classes this way will cause the defintion to report them when getClasses()
      * is called, even when they're not yet loaded.
      *
+     * @param class-string $class
      * @throws Exception\ClassNotFoundException
      */
     public function addExplicitClass(string $class): self
     {
-        if (! class_exists($class)) {
-            throw new Exception\ClassNotFoundException($class);
-        }
-
-        if (! $this->explicitClasses) {
-            $this->explicitClasses = [];
-        }
-
+        $this->ensureClassExists($class);
         $this->explicitClasses[$class] = true;
         return $this;
     }
 
-    /**
-     * @param string $class The class name to load
-     * @throws Exception\ClassNotFoundException
-     */
-    private function loadClass(string $class)
+    /** @param class-string $class */
+    private function ensureClassExists(string $class): void
     {
         if (! $this->hasClass($class)) {
             throw new Exception\ClassNotFoundException($class);
         }
+    }
+
+    /**
+     * @param class-string $class The class name to load
+     * @throws Exception\ClassNotFoundException
+     */
+    private function loadClass(string $class): void
+    {
+        $this->ensureClassExists($class);
 
         $this->definition[$class] = new ClassDefinition($class);
     }
 
-    /**
-     * @return string[]
-     */
+    /** @return list<class-string> */
     public function getClasses(): array
     {
-        if (! $this->explicitClasses) {
-            return array_keys($this->definition);
-        }
-
         return array_keys(array_merge($this->definition, $this->explicitClasses));
     }
 
@@ -104,6 +97,7 @@ class RuntimeDefinition implements DefinitionInterface
     }
 
     /**
+     * @param class-string $class
      * @return ClassDefinition
      * @throws Exception\ClassNotFoundException
      */

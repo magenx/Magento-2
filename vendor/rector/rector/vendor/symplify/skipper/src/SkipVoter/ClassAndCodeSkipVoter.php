@@ -1,16 +1,16 @@
 <?php
 
 declare (strict_types=1);
-namespace RectorPrefix20211221\Symplify\Skipper\SkipVoter;
+namespace RectorPrefix202208\Symplify\Skipper\SkipVoter;
 
-use RectorPrefix20211221\Symplify\Skipper\Contract\SkipVoterInterface;
-use RectorPrefix20211221\Symplify\Skipper\Matcher\FileInfoMatcher;
-use RectorPrefix20211221\Symplify\Skipper\SkipCriteriaResolver\SkippedClassAndCodesResolver;
-use Symplify\SmartFileSystem\SmartFileInfo;
+use RectorPrefix202208\Symplify\Skipper\Contract\SkipVoterInterface;
+use RectorPrefix202208\Symplify\Skipper\Matcher\FileInfoMatcher;
+use RectorPrefix202208\Symplify\Skipper\SkipCriteriaResolver\SkippedClassAndCodesResolver;
+use RectorPrefix202208\Symplify\SmartFileSystem\SmartFileInfo;
 /**
  * Matching class and code, e.g. App\Category\ArraySniff.SomeCode
  */
-final class ClassAndCodeSkipVoter implements \RectorPrefix20211221\Symplify\Skipper\Contract\SkipVoterInterface
+final class ClassAndCodeSkipVoter implements SkipVoterInterface
 {
     /**
      * @var \Symplify\Skipper\SkipCriteriaResolver\SkippedClassAndCodesResolver
@@ -20,13 +20,13 @@ final class ClassAndCodeSkipVoter implements \RectorPrefix20211221\Symplify\Skip
      * @var \Symplify\Skipper\Matcher\FileInfoMatcher
      */
     private $fileInfoMatcher;
-    public function __construct(\RectorPrefix20211221\Symplify\Skipper\SkipCriteriaResolver\SkippedClassAndCodesResolver $skippedClassAndCodesResolver, \RectorPrefix20211221\Symplify\Skipper\Matcher\FileInfoMatcher $fileInfoMatcher)
+    public function __construct(SkippedClassAndCodesResolver $skippedClassAndCodesResolver, FileInfoMatcher $fileInfoMatcher)
     {
         $this->skippedClassAndCodesResolver = $skippedClassAndCodesResolver;
         $this->fileInfoMatcher = $fileInfoMatcher;
     }
     /**
-     * @param object|string $element
+     * @param string|object $element
      */
     public function match($element) : bool
     {
@@ -36,9 +36,9 @@ final class ClassAndCodeSkipVoter implements \RectorPrefix20211221\Symplify\Skip
         return \substr_count($element, '.') === 1;
     }
     /**
-     * @param object|string $element
+     * @param string|object $element
      */
-    public function shouldSkip($element, \Symplify\SmartFileSystem\SmartFileInfo $smartFileInfo) : bool
+    public function shouldSkip($element, SmartFileInfo $smartFileInfo) : bool
     {
         if (\is_object($element)) {
             return \false;

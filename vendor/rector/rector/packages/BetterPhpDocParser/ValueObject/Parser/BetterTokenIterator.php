@@ -5,8 +5,8 @@ namespace Rector\BetterPhpDocParser\ValueObject\Parser;
 
 use PHPStan\PhpDocParser\Parser\TokenIterator;
 use Rector\Core\Exception\ShouldNotHappenException;
-use RectorPrefix20211221\Symplify\PackageBuilder\Reflection\PrivatesAccessor;
-final class BetterTokenIterator extends \PHPStan\PhpDocParser\Parser\TokenIterator
+use RectorPrefix202208\Symplify\PackageBuilder\Reflection\PrivatesAccessor;
+final class BetterTokenIterator extends TokenIterator
 {
     /**
      * @var string
@@ -26,7 +26,7 @@ final class BetterTokenIterator extends \PHPStan\PhpDocParser\Parser\TokenIterat
      */
     public function __construct(array $tokens, int $index = 0)
     {
-        $this->privatesAccessor = new \RectorPrefix20211221\Symplify\PackageBuilder\Reflection\PrivatesAccessor();
+        $this->privatesAccessor = new PrivatesAccessor();
         if ($tokens === []) {
             $this->privatesAccessor->setPrivateProperty($this, self::TOKENS, []);
             $this->privatesAccessor->setPrivateProperty($this, self::INDEX, 0);
@@ -41,18 +41,6 @@ final class BetterTokenIterator extends \PHPStan\PhpDocParser\Parser\TokenIterat
     {
         foreach ($types as $type) {
             if ($this->isNextTokenType($type)) {
-                return \true;
-            }
-        }
-        return \false;
-    }
-    /**
-     * @param int[] $tokenTypes
-     */
-    public function isCurrentTokenTypes(array $tokenTypes) : bool
-    {
-        foreach ($tokenTypes as $tokenType) {
-            if ($this->isCurrentTokenType($tokenType)) {
                 return \true;
             }
         }
@@ -77,7 +65,7 @@ final class BetterTokenIterator extends \PHPStan\PhpDocParser\Parser\TokenIterat
     public function printFromTo(int $from, int $to) : string
     {
         if ($to < $from) {
-            throw new \Rector\Core\Exception\ShouldNotHappenException('Arguments are flipped');
+            throw new ShouldNotHappenException('Arguments are flipped');
         }
         $tokens = $this->getTokens();
         $content = '';
@@ -119,7 +107,7 @@ final class BetterTokenIterator extends \PHPStan\PhpDocParser\Parser\TokenIterat
         return $this->privatesAccessor->getPrivateProperty($this, self::INDEX);
     }
     /**
-     * @return mixed[]
+     * @return array<array{0: string, 1: int}>
      */
     public function getTokens() : array
     {
@@ -130,16 +118,11 @@ final class BetterTokenIterator extends \PHPStan\PhpDocParser\Parser\TokenIterat
         return \count($this->getTokens());
     }
     /**
-     * @return mixed[]
+     * @return array<array{0: string, 1: int}>
      */
     public function partialTokens(int $start, int $end) : array
     {
-        $tokens = $this->getTokens();
-        $chunkTokens = [];
-        for ($i = $start; $i <= $end; ++$i) {
-            $chunkTokens[$i] = $tokens[$i];
-        }
-        return $chunkTokens;
+        return \array_slice($this->getTokens(), $start, $end);
     }
     public function containsTokenType(int $type) : bool
     {

@@ -1,8 +1,8 @@
 <?php
 
-namespace RectorPrefix20211221\React\EventLoop\Timer;
+namespace RectorPrefix202208\React\EventLoop\Timer;
 
-use RectorPrefix20211221\React\EventLoop\TimerInterface;
+use RectorPrefix202208\React\EventLoop\TimerInterface;
 /**
  * A scheduler implementation that can hold multiple timer instances
  *
@@ -31,18 +31,18 @@ final class Timers
     {
         return $this->time ?: $this->updateTime();
     }
-    public function add(\RectorPrefix20211221\React\EventLoop\TimerInterface $timer)
+    public function add(TimerInterface $timer)
     {
         $id = \spl_object_hash($timer);
         $this->timers[$id] = $timer;
         $this->schedule[$id] = $timer->getInterval() + $this->updateTime();
         $this->sorted = \false;
     }
-    public function contains(\RectorPrefix20211221\React\EventLoop\TimerInterface $timer)
+    public function contains(TimerInterface $timer)
     {
         return isset($this->timers[\spl_object_hash($timer)]);
     }
-    public function cancel(\RectorPrefix20211221\React\EventLoop\TimerInterface $timer)
+    public function cancel(TimerInterface $timer)
     {
         $id = \spl_object_hash($timer);
         unset($this->timers[$id], $this->schedule[$id]);
@@ -62,6 +62,10 @@ final class Timers
     }
     public function tick()
     {
+        // hot path: skip timers if nothing is scheduled
+        if (!$this->schedule) {
+            return;
+        }
         // ensure timers are sorted so we can execute in order
         if (!$this->sorted) {
             $this->sorted = \true;

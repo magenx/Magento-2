@@ -5,13 +5,14 @@ namespace Rector\Symfony\PhpDocNode;
 
 use PHPStan\PhpDocParser\Ast\Type\IdentifierTypeNode;
 use Rector\BetterPhpDocParser\PhpDoc\DoctrineAnnotationTagValueNode;
+use Rector\Symfony\Enum\SymfonyAnnotation;
 final class SymfonyRouteTagValueNodeFactory
 {
     /**
      * @param array<string, mixed> $items
      */
-    public function createFromItems(array $items) : \Rector\BetterPhpDocParser\PhpDoc\DoctrineAnnotationTagValueNode
+    public function createFromItems(array $items) : DoctrineAnnotationTagValueNode
     {
-        return new \Rector\BetterPhpDocParser\PhpDoc\DoctrineAnnotationTagValueNode(new \PHPStan\PhpDocParser\Ast\Type\IdentifierTypeNode('Symfony\\Component\\Routing\\Annotation\\Route'), null, $items, 'path');
+        return new DoctrineAnnotationTagValueNode(new IdentifierTypeNode(SymfonyAnnotation::ROUTE), null, $items, 'path');
     }
 }

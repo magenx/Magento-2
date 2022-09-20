@@ -3454,7 +3454,11 @@ class WebDriver extends CodeceptionModule implements
      */
     public function closeTab()
     {
+        $currentTab = $this->webDriver->getWindowHandle();
         $prevTab = $this->getRelativeTabHandle(-1);
+        if ($prevTab === $currentTab) {
+            throw new ModuleException($this, 'Will not close the last open tab');
+        }
         $this->webDriver->close();
         $this->webDriver->switchTo()->window($prevTab);
     }
@@ -3503,8 +3507,12 @@ class WebDriver extends CodeceptionModule implements
         }
         $handle = $this->webDriver->getWindowHandle();
         $handles = $this->webDriver->getWindowHandles();
-        $idx = array_search($handle, $handles);
-        return $handles[($idx + $offset) % count($handles)];
+        $currentHandleIdx = array_search($handle, $handles);
+        $newHandleIdx = ($currentHandleIdx + $offset) % count($handles);
+        if ($newHandleIdx < 0) {
+            $newHandleIdx = count($handles) + $newHandleIdx;
+        }
+        return $handles[$newHandleIdx];
     }
 
     /**

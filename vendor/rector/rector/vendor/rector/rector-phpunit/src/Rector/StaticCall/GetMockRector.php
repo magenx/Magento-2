@@ -7,53 +7,88 @@ use PhpParser\Node;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Expr\StaticCall;
 use PhpParser\Node\Identifier;
+use PHPStan\Reflection\ClassReflection;
 use Rector\Core\Rector\AbstractRector;
+use Rector\Core\Reflection\ReflectionResolver;
 use Rector\PHPUnit\NodeAnalyzer\TestsNodeAnalyzer;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
- * @see https://github.com/sebastianbergmann/phpunit/blob/5.7.0/src/Framework/TestCase.php#L1623
- * @see https://github.com/sebastianbergmann/phpunit/blob/6.0.0/src/Framework/TestCase.php#L1452
+ * @changelog https://github.com/sebastianbergmann/phpunit/blob/5.7.0/src/Framework/TestCase.php#L1623
+ * @changelog https://github.com/sebastianbergmann/phpunit/blob/6.0.0/src/Framework/TestCase.php#L1452
  *
  * @see \Rector\PHPUnit\Tests\Rector\StaticCall\GetMockRector\GetMockRectorTest
  */
-final class GetMockRector extends \Rector\Core\Rector\AbstractRector
+final class GetMockRector extends AbstractRector
 {
     /**
+     * @readonly
      * @var \Rector\PHPUnit\NodeAnalyzer\TestsNodeAnalyzer
      */
     private $testsNodeAnalyzer;
-    public function __construct(\Rector\PHPUnit\NodeAnalyzer\TestsNodeAnalyzer $testsNodeAnalyzer)
+    /**
+     * @readonly
+     * @var \Rector\Core\Reflection\ReflectionResolver
+     */
+    private $reflectionResolver;
+    public function __construct(TestsNodeAnalyzer $testsNodeAnalyzer, ReflectionResolver $reflectionResolver)
     {
         $this->testsNodeAnalyzer = $testsNodeAnalyzer;
+        $this->reflectionResolver = $reflectionResolver;
     }
-    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
+    public function getRuleDefinition() : RuleDefinition
     {
-        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Turns getMock*() methods to createMock()', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample('$this->getMock("Class");', '$this->createMock("Class");'), new \Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample('$this->getMockWithoutInvokingTheOriginalConstructor("Class");', '$this->createMock("Class");')]);
+        return new RuleDefinition('Turns getMock*() methods to createMock()', [new CodeSample(<<<'CODE_SAMPLE'
+use PHPUnit\Framework\TestCase;
+
+final class SomeTest extends TestCase
+{
+    public function test()
+    {
+        $classMock = $this->getMock("Class");
+    }
+}
+CODE_SAMPLE
+, <<<'CODE_SAMPLE'
+use PHPUnit\Framework\TestCase;
+
+final class SomeTest extends TestCase
+{
+    public function test()
+    {
+        $classMock = $this->createMock("Class");
+    }
+}
+CODE_SAMPLE
+)]);
     }
     /**
      * @return array<class-string<Node>>
      */
     public function getNodeTypes() : array
     {
-        return [\PhpParser\Node\Expr\MethodCall::class, \PhpParser\Node\Expr\StaticCall::class];
+        return [MethodCall::class, StaticCall::class];
     }
     /**
      * @param MethodCall|StaticCall $node
      */
-    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
+    public function refactor(Node $node) : ?Node
     {
         if (!$this->testsNodeAnalyzer->isPHPUnitMethodCallNames($node, ['getMock', 'getMockWithoutInvokingTheOriginalConstructor'])) {
             return null;
         }
-        if ($node instanceof \PhpParser\Node\Expr\MethodCall && $node->var instanceof \PhpParser\Node\Expr\MethodCall) {
+        if ($node instanceof MethodCall && $node->var instanceof MethodCall) {
+            return null;
+        }
+        $classReflection = $this->reflectionResolver->resolveClassReflectionSourceObject($node);
+        if ($classReflection instanceof ClassReflection && $classReflection->getName() !== 'PHPUnit\\Framework\\TestCase') {
             return null;
         }
         // narrow args to one
         if (\count($node->args) > 1) {
             $node->args = [$node->args[0]];
         }
-        $node->name = new \PhpParser\Node\Identifier('createMock');
+        $node->name = new Identifier('createMock');
         return $node;
     }
 }

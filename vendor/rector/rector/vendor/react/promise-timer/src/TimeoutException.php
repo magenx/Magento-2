@@ -1,9 +1,9 @@
 <?php
 
-namespace RectorPrefix20211221\React\Promise\Timer;
+namespace RectorPrefix202208\React\Promise\Timer;
 
 use RuntimeException;
-class TimeoutException extends \RuntimeException
+class TimeoutException extends RuntimeException
 {
     /** @var float */
     private $timeout;

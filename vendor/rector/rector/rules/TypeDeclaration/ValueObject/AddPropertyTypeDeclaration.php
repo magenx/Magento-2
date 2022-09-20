@@ -8,8 +8,8 @@ use Rector\Core\Validation\RectorAssert;
 final class AddPropertyTypeDeclaration
 {
     /**
+     * @var class-string
      * @readonly
-     * @var string
      */
     private $class;
     /**
@@ -22,12 +22,15 @@ final class AddPropertyTypeDeclaration
      * @var \PHPStan\Type\Type
      */
     private $type;
-    public function __construct(string $class, string $propertyName, \PHPStan\Type\Type $type)
+    /**
+     * @param class-string $class
+     */
+    public function __construct(string $class, string $propertyName, Type $type)
     {
         $this->class = $class;
         $this->propertyName = $propertyName;
         $this->type = $type;
-        \Rector\Core\Validation\RectorAssert::className($class);
+        RectorAssert::className($class);
     }
     public function getClass() : string
     {
@@ -37,7 +40,7 @@ final class AddPropertyTypeDeclaration
     {
         return $this->propertyName;
     }
-    public function getType() : \PHPStan\Type\Type
+    public function getType() : Type
     {
         return $this->type;
     }

@@ -8,24 +8,24 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix20211221\Symfony\Contracts\HttpClient\Test;
+namespace RectorPrefix202208\Symfony\Contracts\HttpClient\Test;
 
-use RectorPrefix20211221\PHPUnit\Framework\TestCase;
-use RectorPrefix20211221\Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
-use RectorPrefix20211221\Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
-use RectorPrefix20211221\Symfony\Contracts\HttpClient\Exception\TimeoutExceptionInterface;
-use RectorPrefix20211221\Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
-use RectorPrefix20211221\Symfony\Contracts\HttpClient\HttpClientInterface;
+use PHPUnit\Framework\TestCase;
+use RectorPrefix202208\Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
+use RectorPrefix202208\Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
+use RectorPrefix202208\Symfony\Contracts\HttpClient\Exception\TimeoutExceptionInterface;
+use RectorPrefix202208\Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
+use RectorPrefix202208\Symfony\Contracts\HttpClient\HttpClientInterface;
 /**
  * A reference test suite for HttpClientInterface implementations.
  */
-abstract class HttpClientTestCase extends \RectorPrefix20211221\PHPUnit\Framework\TestCase
+abstract class HttpClientTestCase extends TestCase
 {
     public static function setUpBeforeClass() : void
     {
-        \RectorPrefix20211221\Symfony\Contracts\HttpClient\Test\TestHttpServer::start();
+        TestHttpServer::start();
     }
-    protected abstract function getHttpClient(string $testCase) : \RectorPrefix20211221\Symfony\Contracts\HttpClient\HttpClientInterface;
+    protected abstract function getHttpClient(string $testCase) : HttpClientInterface;
     public function testGetRequest()
     {
         $client = $this->getHttpClient(__FUNCTION__);
@@ -50,7 +50,7 @@ abstract class HttpClientTestCase extends \RectorPrefix20211221\PHPUnit\Framewor
         $this->assertSame('localhost:8057', $body['HTTP_HOST']);
         $this->assertSame('baR', $body['HTTP_FOO']);
         $response = $client->request('GET', 'http://localhost:8057/length-broken');
-        $this->expectException(\RectorPrefix20211221\Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface::class);
+        $this->expectException(TransportExceptionInterface::class);
         $response->getContent();
     }
     public function testHeadRequest()
@@ -74,7 +74,7 @@ abstract class HttpClientTestCase extends \RectorPrefix20211221\PHPUnit\Framewor
         $response = $client->request('GET', 'http://localhost:8057', ['buffer' => \false, 'headers' => ['Foo' => 'baR']]);
         $body = $response->toArray();
         $this->assertSame('baR', $body['HTTP_FOO']);
-        $this->expectException(\RectorPrefix20211221\Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface::class);
+        $this->expectException(TransportExceptionInterface::class);
         $response->getContent();
     }
     public function testBufferSink()
@@ -99,7 +99,7 @@ abstract class HttpClientTestCase extends \RectorPrefix20211221\PHPUnit\Framewor
             return \false;
         }]);
         $response->getContent();
-        $this->expectException(\RectorPrefix20211221\Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface::class);
+        $this->expectException(TransportExceptionInterface::class);
         $response->getContent();
     }
     public function testReentrantBufferCallback()
@@ -110,7 +110,7 @@ abstract class HttpClientTestCase extends \RectorPrefix20211221\PHPUnit\Framewor
             return \true;
         }]);
         $this->assertSame(200, $response->getStatusCode());
-        $this->expectException(\RectorPrefix20211221\Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface::class);
+        $this->expectException(TransportExceptionInterface::class);
         $response->getContent();
     }
     public function testThrowingBufferCallback()
@@ -120,7 +120,7 @@ abstract class HttpClientTestCase extends \RectorPrefix20211221\PHPUnit\Framewor
             throw new \Exception('Boo.');
         }]);
         $this->assertSame(200, $response->getStatusCode());
-        $this->expectException(\RectorPrefix20211221\Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface::class);
+        $this->expectException(TransportExceptionInterface::class);
         $this->expectExceptionMessage('Boo');
         $response->getContent();
     }
@@ -148,7 +148,7 @@ abstract class HttpClientTestCase extends \RectorPrefix20211221\PHPUnit\Framewor
         $this->assertSame(['chunked'], $response->getHeaders()['transfer-encoding']);
         $this->assertSame('Symfony is awesome!', $response->getContent());
         $response = $client->request('GET', 'http://localhost:8057/chunked-broken');
-        $this->expectException(\RectorPrefix20211221\Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface::class);
+        $this->expectException(TransportExceptionInterface::class);
         $response->getContent();
     }
     public function testClientError()
@@ -159,13 +159,13 @@ abstract class HttpClientTestCase extends \RectorPrefix20211221\PHPUnit\Framewor
         $this->assertSame(404, $response->getInfo('http_code'));
         try {
             $response->getHeaders();
-            $this->fail(\RectorPrefix20211221\Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface::class . ' expected');
-        } catch (\RectorPrefix20211221\Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface $e) {
+            $this->fail(ClientExceptionInterface::class . ' expected');
+        } catch (ClientExceptionInterface) {
         }
         try {
             $response->getContent();
-            $this->fail(\RectorPrefix20211221\Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface::class . ' expected');
-        } catch (\RectorPrefix20211221\Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface $e) {
+            $this->fail(ClientExceptionInterface::class . ' expected');
+        } catch (ClientExceptionInterface) {
         }
         $this->assertSame(404, $response->getStatusCode());
         $this->assertSame(['application/json'], $response->getHeaders(\false)['content-type']);
@@ -175,8 +175,8 @@ abstract class HttpClientTestCase extends \RectorPrefix20211221\PHPUnit\Framewor
             foreach ($client->stream($response) as $chunk) {
                 $this->assertTrue($chunk->isFirst());
             }
-            $this->fail(\RectorPrefix20211221\Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface::class . ' expected');
-        } catch (\RectorPrefix20211221\Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface $e) {
+            $this->fail(ClientExceptionInterface::class . ' expected');
+        } catch (ClientExceptionInterface) {
         }
     }
     public function testIgnoreErrors()
@@ -191,27 +191,27 @@ abstract class HttpClientTestCase extends \RectorPrefix20211221\PHPUnit\Framewor
         $response = $client->request('GET', 'http://localhost:8057/301/bad-tld');
         try {
             $response->getStatusCode();
-            $this->fail(\RectorPrefix20211221\Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface::class . ' expected');
-        } catch (\RectorPrefix20211221\Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface $e) {
+            $this->fail(TransportExceptionInterface::class . ' expected');
+        } catch (TransportExceptionInterface) {
             $this->addToAssertionCount(1);
         }
         try {
             $response->getStatusCode();
-            $this->fail(\RectorPrefix20211221\Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface::class . ' still expected');
-        } catch (\RectorPrefix20211221\Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface $e) {
+            $this->fail(TransportExceptionInterface::class . ' still expected');
+        } catch (TransportExceptionInterface) {
             $this->addToAssertionCount(1);
         }
         $response = $client->request('GET', 'http://localhost:8057/301/bad-tld');
         try {
             foreach ($client->stream($response) as $r => $chunk) {
             }
-            $this->fail(\RectorPrefix20211221\Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface::class . ' expected');
-        } catch (\RectorPrefix20211221\Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface $e) {
+            $this->fail(TransportExceptionInterface::class . ' expected');
+        } catch (TransportExceptionInterface) {
             $this->addToAssertionCount(1);
         }
         $this->assertSame($response, $r);
         $this->assertNotNull($chunk->getError());
-        $this->expectException(\RectorPrefix20211221\Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface::class);
+        $this->expectException(TransportExceptionInterface::class);
         foreach ($client->stream($response) as $chunk) {
         }
     }
@@ -226,7 +226,7 @@ abstract class HttpClientTestCase extends \RectorPrefix20211221\PHPUnit\Framewor
     public function testBadRequestBody()
     {
         $client = $this->getHttpClient(__FUNCTION__);
-        $this->expectException(\RectorPrefix20211221\Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface::class);
+        $this->expectException(TransportExceptionInterface::class);
         $response = $client->request('POST', 'http://localhost:8057/', ['body' => function () {
             (yield []);
         }]);
@@ -239,10 +239,14 @@ abstract class HttpClientTestCase extends \RectorPrefix20211221\PHPUnit\Framewor
         $this->assertSame(304, $response->getStatusCode());
         $this->assertSame('', $response->getContent(\false));
     }
-    public function testRedirects()
+    /**
+     * @testWith [[]]
+     *           [["Content-Length: 7"]]
+     */
+    public function testRedirects(array $headers = [])
     {
         $client = $this->getHttpClient(__FUNCTION__);
-        $response = $client->request('POST', 'http://localhost:8057/301', ['auth_basic' => 'foo:bar', 'body' => function () {
+        $response = $client->request('POST', 'http://localhost:8057/301', ['auth_basic' => 'foo:bar', 'headers' => $headers, 'body' => function () {
             (yield 'foo=bar');
         }]);
         $body = $response->toArray();
@@ -265,7 +269,7 @@ abstract class HttpClientTestCase extends \RectorPrefix20211221\PHPUnit\Framewor
         $this->assertSame(['//?foo=bar'], $response->getHeaders(\false)['location']);
         $this->assertSame(0, $response->getInfo('redirect_count'));
         $this->assertNull($response->getInfo('redirect_url'));
-        $this->expectException(\RectorPrefix20211221\Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface::class);
+        $this->expectException(RedirectionExceptionInterface::class);
         $response->getHeaders();
     }
     public function testRelativeRedirects()
@@ -296,8 +300,8 @@ abstract class HttpClientTestCase extends \RectorPrefix20211221\PHPUnit\Framewor
         $response = $client->request('GET', 'http://localhost:8057/301', ['max_redirects' => 1, 'auth_basic' => 'foo:bar']);
         try {
             $response->getHeaders();
-            $this->fail(\RectorPrefix20211221\Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface::class . ' expected');
-        } catch (\RectorPrefix20211221\Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface $e) {
+            $this->fail(RedirectionExceptionInterface::class . ' expected');
+        } catch (RedirectionExceptionInterface) {
         }
         $this->assertSame(302, $response->getStatusCode());
         $this->assertSame(1, $response->getInfo('redirect_count'));
@@ -415,7 +419,7 @@ abstract class HttpClientTestCase extends \RectorPrefix20211221\PHPUnit\Framewor
         $client = $this->getHttpClient(__FUNCTION__);
         $response = $client->request('GET', 'http://localhost:8057/timeout-header');
         $response->cancel();
-        $this->expectException(\RectorPrefix20211221\Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface::class);
+        $this->expectException(TransportExceptionInterface::class);
         $response->getHeaders();
     }
     public function testInfoOnCanceledResponse()
@@ -433,7 +437,7 @@ abstract class HttpClientTestCase extends \RectorPrefix20211221\PHPUnit\Framewor
         foreach ($client->stream($response) as $chunk) {
             $response->cancel();
         }
-        $this->expectException(\RectorPrefix20211221\Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface::class);
+        $this->expectException(TransportExceptionInterface::class);
         foreach ($client->stream($response) as $chunk) {
         }
     }
@@ -448,12 +452,12 @@ abstract class HttpClientTestCase extends \RectorPrefix20211221\PHPUnit\Framewor
         try {
             foreach ($client->stream([$response]) as $chunk) {
             }
-            $this->fail(\RectorPrefix20211221\Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface::class . ' expected');
-        } catch (\RectorPrefix20211221\Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface $e) {
+            $this->fail(ClientExceptionInterface::class . ' expected');
+        } catch (TransportExceptionInterface $e) {
             $this->assertSame('Aborting the request.', $e->getPrevious()->getMessage());
         }
         $this->assertNotNull($response->getInfo('error'));
-        $this->expectException(\RectorPrefix20211221\Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface::class);
+        $this->expectException(TransportExceptionInterface::class);
         $response->getContent();
     }
     public function testOnProgressError()
@@ -472,7 +476,7 @@ abstract class HttpClientTestCase extends \RectorPrefix20211221\PHPUnit\Framewor
             $this->assertSame('BUG.', $e->getMessage());
         }
         $this->assertNotNull($response->getInfo('error'));
-        $this->expectException(\RectorPrefix20211221\Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface::class);
+        $this->expectException(TransportExceptionInterface::class);
         $response->getContent();
     }
     public function testResolve()
@@ -482,7 +486,7 @@ abstract class HttpClientTestCase extends \RectorPrefix20211221\PHPUnit\Framewor
         $this->assertSame(200, $response->getStatusCode());
         $this->assertSame(200, $client->request('GET', 'http://symfony.com:8057/')->getStatusCode());
         $response = null;
-        $this->expectException(\RectorPrefix20211221\Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface::class);
+        $this->expectException(TransportExceptionInterface::class);
         $client->request('GET', 'http://symfony.com:8057/', ['timeout' => 1]);
     }
     public function testIdnResolve()
@@ -504,7 +508,7 @@ abstract class HttpClientTestCase extends \RectorPrefix20211221\PHPUnit\Framewor
     {
         $client = $this->getHttpClient(__FUNCTION__);
         $response = $client->request('GET', 'http://localhost:8057/timeout-header', ['timeout' => 0.1]);
-        $this->expectException(\RectorPrefix20211221\Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface::class);
+        $this->expectException(TransportExceptionInterface::class);
         $response->getHeaders();
     }
     public function testTimeoutIsNotAFatalError()
@@ -515,14 +519,14 @@ abstract class HttpClientTestCase extends \RectorPrefix20211221\PHPUnit\Framewor
         $response = $client->request('GET', 'http://localhost:8057/timeout-body', ['timeout' => 0.25]);
         try {
             $response->getContent();
-            $this->fail(\RectorPrefix20211221\Symfony\Contracts\HttpClient\Exception\TimeoutExceptionInterface::class . ' expected');
-        } catch (\RectorPrefix20211221\Symfony\Contracts\HttpClient\Exception\TimeoutExceptionInterface $e) {
+            $this->fail(TimeoutExceptionInterface::class . ' expected');
+        } catch (TimeoutExceptionInterface $e) {
         }
         for ($i = 0; $i < 10; ++$i) {
             try {
                 $this->assertSame('<1><2>', $response->getContent());
                 break;
-            } catch (\RectorPrefix20211221\Symfony\Contracts\HttpClient\Exception\TimeoutExceptionInterface $e) {
+            } catch (TimeoutExceptionInterface $e) {
             }
         }
         if (10 === $i) {
@@ -557,20 +561,20 @@ abstract class HttpClientTestCase extends \RectorPrefix20211221\PHPUnit\Framewor
         $client = $this->getHttpClient(__FUNCTION__);
         $response = $client->request('GET', 'http://localhost:8057/timeout-body');
         $chunks = $client->stream([$response], 0.1);
-        $this->expectException(\RectorPrefix20211221\Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface::class);
+        $this->expectException(TransportExceptionInterface::class);
         foreach ($chunks as $r => $chunk) {
         }
     }
     public function testTimeoutWithActiveConcurrentStream()
     {
-        $p1 = \RectorPrefix20211221\Symfony\Contracts\HttpClient\Test\TestHttpServer::start(8067);
-        $p2 = \RectorPrefix20211221\Symfony\Contracts\HttpClient\Test\TestHttpServer::start(8077);
+        $p1 = TestHttpServer::start(8067);
+        $p2 = TestHttpServer::start(8077);
         $client = $this->getHttpClient(__FUNCTION__);
         $streamingResponse = $client->request('GET', 'http://localhost:8067/max-duration');
         $blockingResponse = $client->request('GET', 'http://localhost:8077/timeout-body', ['timeout' => 0.25]);
         $this->assertSame(200, $streamingResponse->getStatusCode());
         $this->assertSame(200, $blockingResponse->getStatusCode());
-        $this->expectException(\RectorPrefix20211221\Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface::class);
+        $this->expectException(TransportExceptionInterface::class);
         try {
             $blockingResponse->getContent();
         } finally {
@@ -578,10 +582,37 @@ abstract class HttpClientTestCase extends \RectorPrefix20211221\PHPUnit\Framewor
             $p2->stop();
         }
     }
+    public function testTimeoutOnInitialize()
+    {
+        $p1 = TestHttpServer::start(8067);
+        $p2 = TestHttpServer::start(8077);
+        $client = $this->getHttpClient(__FUNCTION__);
+        $start = \microtime(\true);
+        $responses = [];
+        $responses[] = $client->request('GET', 'http://localhost:8067/timeout-header', ['timeout' => 0.25]);
+        $responses[] = $client->request('GET', 'http://localhost:8077/timeout-header', ['timeout' => 0.25]);
+        $responses[] = $client->request('GET', 'http://localhost:8067/timeout-header', ['timeout' => 0.25]);
+        $responses[] = $client->request('GET', 'http://localhost:8077/timeout-header', ['timeout' => 0.25]);
+        try {
+            foreach ($responses as $response) {
+                try {
+                    $response->getContent();
+                    $this->fail(TransportExceptionInterface::class . ' expected');
+                } catch (TransportExceptionInterface) {
+                }
+            }
+            $responses = [];
+            $duration = \microtime(\true) - $start;
+            $this->assertLessThan(1.0, $duration);
+        } finally {
+            $p1->stop();
+            $p2->stop();
+        }
+    }
     public function testTimeoutOnDestruct()
     {
-        $p1 = \RectorPrefix20211221\Symfony\Contracts\HttpClient\Test\TestHttpServer::start(8067);
-        $p2 = \RectorPrefix20211221\Symfony\Contracts\HttpClient\Test\TestHttpServer::start(8077);
+        $p1 = TestHttpServer::start(8067);
+        $p2 = TestHttpServer::start(8077);
         $client = $this->getHttpClient(__FUNCTION__);
         $start = \microtime(\true);
         $responses = [];
@@ -593,8 +624,8 @@ abstract class HttpClientTestCase extends \RectorPrefix20211221\PHPUnit\Framewor
             while ($response = \array_shift($responses)) {
                 try {
                     unset($response);
-                    $this->fail(\RectorPrefix20211221\Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface::class . ' expected');
-                } catch (\RectorPrefix20211221\Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface $e) {
+                    $this->fail(TransportExceptionInterface::class . ' expected');
+                } catch (TransportExceptionInterface) {
                 }
             }
             $duration = \microtime(\true) - $start;
@@ -619,8 +650,8 @@ abstract class HttpClientTestCase extends \RectorPrefix20211221\PHPUnit\Framewor
         $client = $this->getHttpClient(__FUNCTION__);
         try {
             $client->request('GET', 'http://localhost:8057/404');
-            $this->fail(\RectorPrefix20211221\Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface::class . ' expected');
-        } catch (\RectorPrefix20211221\Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface $e) {
+            $this->fail(ClientExceptionInterface::class . ' expected');
+        } catch (ClientExceptionInterface $e) {
             $this->assertSame('GET', $e->getResponse()->toArray(\false)['REQUEST_METHOD']);
         }
     }
@@ -629,8 +660,8 @@ abstract class HttpClientTestCase extends \RectorPrefix20211221\PHPUnit\Framewor
         $client = $this->getHttpClient(__FUNCTION__);
         try {
             $client->request('GET', 'http://localhost:8057/404-gzipped');
-            $this->fail(\RectorPrefix20211221\Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface::class . ' expected');
-        } catch (\RectorPrefix20211221\Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface $e) {
+            $this->fail(ClientExceptionInterface::class . ' expected');
+        } catch (ClientExceptionInterface $e) {
             $this->assertSame('some text', $e->getResponse()->getContent(\false));
         }
     }
@@ -644,6 +675,15 @@ abstract class HttpClientTestCase extends \RectorPrefix20211221\PHPUnit\Framewor
         $response = $client->request('GET', 'http://localhost:8057/', ['proxy' => 'http://foo:b%3Dar@localhost:8057']);
         $body = $response->toArray();
         $this->assertSame('Basic Zm9vOmI9YXI=', $body['HTTP_PROXY_AUTHORIZATION']);
+        $_SERVER['http_proxy'] = 'http://localhost:8057';
+        try {
+            $response = $client->request('GET', 'http://localhost:8057/');
+            $body = $response->toArray();
+            $this->assertSame('localhost:8057', $body['HTTP_HOST']);
+            $this->assertMatchesRegularExpression('#^http://(localhost|127\\.0\\.0\\.1):8057/$#', $body['REQUEST_URI']);
+        } finally {
+            unset($_SERVER['http_proxy']);
+        }
     }
     public function testNoProxy()
     {
@@ -724,7 +764,7 @@ abstract class HttpClientTestCase extends \RectorPrefix20211221\PHPUnit\Framewor
         $this->assertSame(['Accept-Encoding'], $headers['vary']);
         $this->assertStringContainsString('gzip', $headers['content-encoding'][0]);
         $body = $response->getContent();
-        $this->assertSame("\37", $body[0]);
+        $this->assertSame("\x1f", $body[0]);
         $body = \json_decode(\gzdecode($body), \true);
         $this->assertSame('gzip', $body['HTTP_ACCEPT_ENCODING']);
     }
@@ -735,7 +775,7 @@ abstract class HttpClientTestCase extends \RectorPrefix20211221\PHPUnit\Framewor
     {
         $client = $this->getHttpClient(__FUNCTION__);
         $response = $client->request('GET', 'http://localhost:8057/gzip-broken');
-        $this->expectException(\RectorPrefix20211221\Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface::class);
+        $this->expectException(TransportExceptionInterface::class);
         $response->getContent();
     }
     public function testMaxDuration()
@@ -745,7 +785,7 @@ abstract class HttpClientTestCase extends \RectorPrefix20211221\PHPUnit\Framewor
         $start = \microtime(\true);
         try {
             $response->getContent();
-        } catch (\RectorPrefix20211221\Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface $e) {
+        } catch (TransportExceptionInterface) {
             $this->addToAssertionCount(1);
         }
         $duration = \microtime(\true) - $start;
@@ -754,9 +794,6 @@ abstract class HttpClientTestCase extends \RectorPrefix20211221\PHPUnit\Framewor
     public function testWithOptions()
     {
         $client = $this->getHttpClient(__FUNCTION__);
-        if (!\method_exists($client, 'withOptions')) {
-            $this->markTestSkipped(\sprintf('Not implementing "%s::withOptions()" is deprecated.', \get_debug_type($client)));
-        }
         $client2 = $client->withOptions(['base_uri' => 'http://localhost:8057/']);
         $this->assertNotSame($client, $client2);
         $this->assertSame(\get_class($client), \get_class($client2));

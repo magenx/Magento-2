@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © 2013-2017 Magento, Inc. All rights reserved.
+ * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
 namespace PayPal\Braintree\Model\Adapter;
@@ -16,6 +16,8 @@ use Braintree\TransactionSearch;
 class BraintreeSearchAdapter
 {
     /**
+     * Transaction search Id
+     *
      * @return TextNode
      * @SuppressWarnings(PHPMD.ShortMethodName)
      */
@@ -25,6 +27,8 @@ class BraintreeSearchAdapter
     }
 
     /**
+     * Merchant Account Id
+     *
      * @return MultipleValueNode
      */
     public function merchantAccountId(): MultipleValueNode
@@ -33,6 +37,8 @@ class BraintreeSearchAdapter
     }
 
     /**
+     * Order Id
+     *
      * @return TextNode
      */
     public function orderId(): TextNode
@@ -41,6 +47,8 @@ class BraintreeSearchAdapter
     }
 
     /**
+     * PayPal payment id
+     *
      * @return TextNode
      */
     public function paypalPaymentId(): TextNode
@@ -49,6 +57,8 @@ class BraintreeSearchAdapter
     }
 
     /**
+     * Created using
+     *
      * @return MultipleValueNode
      */
     public function createdUsing(): MultipleValueNode
@@ -57,6 +67,8 @@ class BraintreeSearchAdapter
     }
 
     /**
+     * Transaction search type
+     *
      * @return MultipleValueNode
      */
     public function type(): MultipleValueNode
@@ -65,6 +77,8 @@ class BraintreeSearchAdapter
     }
 
     /**
+     * Search transaction by created at
+     *
      * @return RangeNode
      */
     public function createdAt(): RangeNode
@@ -73,6 +87,8 @@ class BraintreeSearchAdapter
     }
 
     /**
+     * Search transaction by amount
+     *
      * @return RangeNode
      */
     public function amount(): RangeNode
@@ -81,6 +97,8 @@ class BraintreeSearchAdapter
     }
 
     /**
+     * Search transaction by status
+     *
      * @return MultipleValueNode
      */
     public function status(): MultipleValueNode
@@ -89,6 +107,8 @@ class BraintreeSearchAdapter
     }
 
     /**
+     * Settlement batch Id
+     *
      * @return TextNode
      */
     public function settlementBatchId(): TextNode
@@ -97,6 +117,8 @@ class BraintreeSearchAdapter
     }
 
     /**
+     * Payment instrument type
+     *
      * @return MultipleValueNode
      */
     public function paymentInstrumentType(): MultipleValueNode

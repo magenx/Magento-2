@@ -18,10 +18,8 @@ final class TypeInjection implements InjectionInterface
 {
     /**
      * Holds the type name to look up
-     *
-     * @var string
      */
-    private $type;
+    private string $type;
 
     /**
      * Constructor

@@ -3,7 +3,7 @@
 declare (strict_types=1);
 namespace Rector\Nette\Latte\Parser;
 
-use RectorPrefix20211221\Nette\Utils\Strings;
+use RectorPrefix202208\Nette\Utils\Strings;
 use PHPStan\BetterReflection\Reflection\ReflectionClass;
 use PHPStan\BetterReflection\Reflection\ReflectionNamedType;
 use PHPStan\BetterReflection\Reflector\Exception\IdentifierNotFound;
@@ -20,20 +20,20 @@ final class TemplateTypeParser
      */
     public function parse(string $content) : array
     {
-        $templateTypeMatch = \RectorPrefix20211221\Nette\Utils\Strings::match($content, self::TEMPLATE_TYPE_REGEX);
+        $templateTypeMatch = Strings::match($content, self::TEMPLATE_TYPE_REGEX);
         if (!isset($templateTypeMatch['template'])) {
             return [];
         }
         try {
-            $reflectionClass = \PHPStan\BetterReflection\Reflection\ReflectionClass::createFromName($templateTypeMatch['template']);
-        } catch (\PHPStan\BetterReflection\Reflector\Exception\IdentifierNotFound $exception) {
+            $reflectionClass = ReflectionClass::createFromName($templateTypeMatch['template']);
+        } catch (IdentifierNotFound $exception) {
             return [];
         }
         $variableTypes = [];
         foreach ($reflectionClass->getProperties() as $property) {
             /** @var ReflectionNamedType $type */
             $type = $property->getType();
-            $variableTypes[] = new \Rector\Nette\ValueObject\LatteVariableType($property->getName(), (string) $type);
+            $variableTypes[] = new LatteVariableType($property->getName(), (string) $type);
         }
         return $variableTypes;
     }

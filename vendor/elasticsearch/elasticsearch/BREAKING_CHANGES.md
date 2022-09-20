@@ -1,3 +1,8 @@
+# 7.17
+
+- We changed the signature of `Elasticsearch\Common\EmptyLogger::log` adding the `void` return type.
+  This change has been needed to support psr/log v3.
+
 # 7.4
 
 - Using a deprecated parameter is notified triggering a [E_USER_DEPRECATED](https://www.php.net/manual/en/errorfunc.constants.php)
@@ -18,6 +23,10 @@
 
 - Added type hints and return type declarations where possible
   [#897](https://github.com/elastic/elasticsearch-php/pull/897)
+
+# 6.8
+
+- Method taskList() renamed to list() in TasksNamespace
 
 # 6.7
 

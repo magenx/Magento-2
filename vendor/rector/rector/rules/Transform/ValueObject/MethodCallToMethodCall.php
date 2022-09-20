@@ -36,8 +36,10 @@ final class MethodCallToMethodCall
         $this->oldMethod = $oldMethod;
         $this->newType = $newType;
         $this->newMethod = $newMethod;
-        \Rector\Core\Validation\RectorAssert::className($oldType);
-        \Rector\Core\Validation\RectorAssert::className($newType);
+        RectorAssert::className($oldType);
+        RectorAssert::methodName($oldMethod);
+        RectorAssert::className($newType);
+        RectorAssert::methodName($newMethod);
     }
     public function getOldType() : string
     {

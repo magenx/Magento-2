@@ -13,14 +13,16 @@ use Rector\NodeTypeResolver\NodeTypeResolver;
 final class RouterRegisterNodeAnalyzer
 {
     /**
+     * @readonly
      * @var \Rector\NodeNameResolver\NodeNameResolver
      */
     private $nodeNameResolver;
     /**
+     * @readonly
      * @var \Rector\NodeTypeResolver\NodeTypeResolver
      */
     private $nodeTypeResolver;
-    public function __construct(\Rector\NodeNameResolver\NodeNameResolver $nodeNameResolver, \Rector\NodeTypeResolver\NodeTypeResolver $nodeTypeResolver)
+    public function __construct(NodeNameResolver $nodeNameResolver, NodeTypeResolver $nodeTypeResolver)
     {
         $this->nodeNameResolver = $nodeNameResolver;
         $this->nodeTypeResolver = $nodeTypeResolver;
@@ -33,13 +35,13 @@ final class RouterRegisterNodeAnalyzer
         if (!$this->isRegisterName($node->name)) {
             return \false;
         }
-        if ($node instanceof \PhpParser\Node\Expr\MethodCall && $this->nodeTypeResolver->isObjectTypes($node->var, [new \PHPStan\Type\ObjectType('Illuminate\\Routing\\Router'), new \PHPStan\Type\ObjectType('Illuminate\\Routing\\RouteRegistrar')])) {
+        if ($node instanceof MethodCall && $this->nodeTypeResolver->isObjectTypes($node->var, [new ObjectType('Illuminate\\Routing\\Router'), new ObjectType('Illuminate\\Routing\\RouteRegistrar')])) {
             return \true;
         }
-        return $node instanceof \PhpParser\Node\Expr\StaticCall && $this->nodeNameResolver->isName($node->class, 'Illuminate\\Support\\Facades\\Route');
+        return $node instanceof StaticCall && $this->nodeNameResolver->isName($node->class, 'Illuminate\\Support\\Facades\\Route');
     }
     /**
-     * @param \PhpParser\Node\Expr|\PhpParser\Node\Identifier $name
+     * @param \PhpParser\Node\Identifier|\PhpParser\Node\Expr $name
      */
     public function isRegisterName($name) : bool
     {
@@ -55,28 +57,28 @@ final class RouterRegisterNodeAnalyzer
         return $this->isRegisterFallback($name);
     }
     /**
-     * @param \PhpParser\Node\Expr|\PhpParser\Node\Identifier $name
+     * @param \PhpParser\Node\Identifier|\PhpParser\Node\Expr $name
      */
     public function isRegisterMultipleVerbs($name) : bool
     {
         return $this->nodeNameResolver->isName($name, 'match');
     }
     /**
-     * @param \PhpParser\Node\Expr|\PhpParser\Node\Identifier $name
+     * @param \PhpParser\Node\Identifier|\PhpParser\Node\Expr $name
      */
     public function isRegisterAllVerbs($name) : bool
     {
         return $this->nodeNameResolver->isName($name, 'any');
     }
     /**
-     * @param \PhpParser\Node\Expr|\PhpParser\Node\Identifier $name
+     * @param \PhpParser\Node\Identifier|\PhpParser\Node\Expr $name
      */
     public function isRegisterAnyVerb($name) : bool
     {
         return $this->nodeNameResolver->isNames($name, ['delete', 'get', 'options', 'patch', 'post', 'put']);
     }
     /**
-     * @param \PhpParser\Node\Expr|\PhpParser\Node\Identifier $name
+     * @param \PhpParser\Node\Identifier|\PhpParser\Node\Expr $name
      */
     public function isRegisterFallback($name) : bool
     {

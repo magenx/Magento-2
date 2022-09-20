@@ -7,12 +7,13 @@ use PhpParser\Node\FunctionLike;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\Trait_;
 use PHPStan\PhpDocParser\Ast\PhpDoc\ReturnTagValueNode;
-use PHPStan\PhpDocParser\Ast\Type\GenericTypeNode;
+use PHPStan\PhpDocParser\Ast\Type\IdentifierTypeNode;
 use PHPStan\PhpDocParser\Ast\Type\ThisTypeNode;
+use Rector\BetterPhpDocParser\PhpDocManipulator\PhpDocTypeChanger;
 use Rector\BetterPhpDocParser\ValueObject\Type\BracketsAwareUnionTypeNode;
-use Rector\BetterPhpDocParser\ValueObject\Type\SpacingAwareCallableTypeNode;
 use Rector\Core\PhpParser\Node\BetterNodeFinder;
 use Rector\DeadCode\TypeNodeAnalyzer\GenericTypeNodeAnalyzer;
+use Rector\DeadCode\TypeNodeAnalyzer\MixedArrayTypeNodeAnalyzer;
 use Rector\NodeTypeResolver\TypeComparator\TypeComparator;
 final class DeadReturnTagValueNodeAnalyzer
 {
@@ -31,33 +32,59 @@ final class DeadReturnTagValueNodeAnalyzer
      * @var \Rector\DeadCode\TypeNodeAnalyzer\GenericTypeNodeAnalyzer
      */
     private $genericTypeNodeAnalyzer;
-    public function __construct(\Rector\NodeTypeResolver\TypeComparator\TypeComparator $typeComparator, \Rector\Core\PhpParser\Node\BetterNodeFinder $betterNodeFinder, \Rector\DeadCode\TypeNodeAnalyzer\GenericTypeNodeAnalyzer $genericTypeNodeAnalyzer)
+    /**
+     * @readonly
+     * @var \Rector\DeadCode\TypeNodeAnalyzer\MixedArrayTypeNodeAnalyzer
+     */
+    private $mixedArrayTypeNodeAnalyzer;
+    public function __construct(TypeComparator $typeComparator, BetterNodeFinder $betterNodeFinder, GenericTypeNodeAnalyzer $genericTypeNodeAnalyzer, MixedArrayTypeNodeAnalyzer $mixedArrayTypeNodeAnalyzer)
     {
         $this->typeComparator = $typeComparator;
         $this->betterNodeFinder = $betterNodeFinder;
         $this->genericTypeNodeAnalyzer = $genericTypeNodeAnalyzer;
+        $this->mixedArrayTypeNodeAnalyzer = $mixedArrayTypeNodeAnalyzer;
     }
-    public function isDead(\PHPStan\PhpDocParser\Ast\PhpDoc\ReturnTagValueNode $returnTagValueNode, \PhpParser\Node\FunctionLike $functionLike) : bool
+    public function isDead(ReturnTagValueNode $returnTagValueNode, FunctionLike $functionLike) : bool
     {
         $returnType = $functionLike->getReturnType();
         if ($returnType === null) {
             return \false;
         }
-        $classLike = $this->betterNodeFinder->findParentType($functionLike, \PhpParser\Node\Stmt\ClassLike::class);
-        if ($classLike instanceof \PhpParser\Node\Stmt\Trait_ && $returnTagValueNode->type instanceof \PHPStan\PhpDocParser\Ast\Type\ThisTypeNode) {
+        $classLike = $this->betterNodeFinder->findParentType($functionLike, ClassLike::class);
+        if ($classLike instanceof Trait_ && $returnTagValueNode->type instanceof ThisTypeNode) {
             return \false;
         }
         if (!$this->typeComparator->arePhpParserAndPhpStanPhpDocTypesEqual($returnType, $returnTagValueNode->type, $functionLike)) {
             return \false;
         }
-        if (\in_array(\get_class($returnTagValueNode->type), [\PHPStan\PhpDocParser\Ast\Type\GenericTypeNode::class, \Rector\BetterPhpDocParser\ValueObject\Type\SpacingAwareCallableTypeNode::class], \true)) {
+        if (\in_array(\get_class($returnTagValueNode->type), PhpDocTypeChanger::ALLOWED_TYPES, \true)) {
             return \false;
         }
-        if (!$returnTagValueNode->type instanceof \Rector\BetterPhpDocParser\ValueObject\Type\BracketsAwareUnionTypeNode) {
+        if (!$returnTagValueNode->type instanceof BracketsAwareUnionTypeNode) {
             return $returnTagValueNode->description === '';
         }
-        if (!$this->genericTypeNodeAnalyzer->hasGenericType($returnTagValueNode->type)) {
-            return $returnTagValueNode->description === '';
+        if ($this->genericTypeNodeAnalyzer->hasGenericType($returnTagValueNode->type)) {
+            return \false;
+        }
+        if ($this->mixedArrayTypeNodeAnalyzer->hasMixedArrayType($returnTagValueNode->type)) {
+            return \false;
+        }
+        if ($this->hasTruePseudoType($returnTagValueNode->type)) {
+            return \false;
+        }
+        return $returnTagValueNode->description === '';
+    }
+    private function hasTruePseudoType(BracketsAwareUnionTypeNode $bracketsAwareUnionTypeNode) : bool
+    {
+        $unionTypes = $bracketsAwareUnionTypeNode->types;
+        foreach ($unionTypes as $unionType) {
+            if (!$unionType instanceof IdentifierTypeNode) {
+                continue;
+            }
+            $name = \strtolower((string) $unionType);
+            if ($name === 'true') {
+                return \true;
+            }
         }
         return \false;
     }

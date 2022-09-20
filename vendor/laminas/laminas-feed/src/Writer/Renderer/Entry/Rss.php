@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Laminas\Feed\Writer\Renderer\Entry;
 
 use DateTime;
@@ -79,7 +81,7 @@ class Rss extends Renderer\AbstractRenderer implements Renderer\RendererInterfac
         }
         $title = $dom->createElement('title');
         $root->appendChild($title);
-        $text = $dom->createTextNode($this->getDataContainer()->getTitle());
+        $text = $dom->createTextNode((string) $this->getDataContainer()->getTitle());
         $title->appendChild($text);
     }
 
@@ -169,7 +171,7 @@ class Rss extends Renderer\AbstractRenderer implements Renderer\RendererInterfac
             if (array_key_exists('email', $data)) {
                 $name = $data['email'] . ' (' . $data['name'] . ')';
             }
-            $text = $dom->createTextNode($name);
+            $text = $dom->createTextNode((string) $name);
             $author->appendChild($text);
             $root->appendChild($author);
         }
@@ -218,7 +220,7 @@ class Rss extends Renderer\AbstractRenderer implements Renderer\RendererInterfac
         }
         $enclosure = $this->dom->createElement('enclosure');
         $enclosure->setAttribute('type', $data['type']);
-        $enclosure->setAttribute('length', $data['length']);
+        $enclosure->setAttribute('length', (string) $data['length']);
         $enclosure->setAttribute('url', $data['uri']);
         $root->appendChild($enclosure);
     }
@@ -235,7 +237,7 @@ class Rss extends Renderer\AbstractRenderer implements Renderer\RendererInterfac
         }
         $link = $dom->createElement('link');
         $root->appendChild($link);
-        $text = $dom->createTextNode($this->getDataContainer()->getLink());
+        $text = $dom->createTextNode((string) $this->getDataContainer()->getLink());
         $link->appendChild($text);
     }
 
@@ -260,7 +262,7 @@ class Rss extends Renderer\AbstractRenderer implements Renderer\RendererInterfac
                 $this->getDataContainer()->getLink()
             );
         }
-        $text = $dom->createTextNode($this->getDataContainer()->getId());
+        $text = $dom->createTextNode((string) $this->getDataContainer()->getId());
         $id->appendChild($text);
 
         $uri = Uri::factory($this->getDataContainer()->getId());
@@ -282,7 +284,7 @@ class Rss extends Renderer\AbstractRenderer implements Renderer\RendererInterfac
             return;
         }
         $clink = $this->dom->createElement('comments');
-        $text  = $dom->createTextNode($link);
+        $text  = $dom->createTextNode((string) $link);
         $clink->appendChild($text);
         $root->appendChild($clink);
     }

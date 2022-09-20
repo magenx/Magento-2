@@ -11,9 +11,9 @@ use Psr\Container\ContainerInterface;
  * Encapsulates the injection to perform for a parameter
  *
  * Implementations of this class will handle how the resolved dependency is provided and how (if possible) it can
- * be generated to php code for AoT compilation.
+ * be generated to PHP code for AoT compilation.
  *
- * For example the `TypeInjection`, that implements this interface, handles when the injections resolves to a specific
+ * For example the `TypeInjection`, that implements this interface, handles when the injection resolves to a specific
  * type. It will provide the injection with help of the di container. `ValueInjection` on the other hand handles
  * when a concrete value or instance should be injected.
  *
@@ -24,9 +24,9 @@ use Psr\Container\ContainerInterface;
  * @internal
  *
  * @see DependencyResolverInterface::resolveParameters() The resolver method's return type
- * @see \Laminas\Di\Injector::getInjectionValue()           The default injector implementation
+ * @see \Laminas\Di\Injector::getInjectionValue()        The default injector implementation
  * @see TypeInjection                                    Implementation for injecting an instance of a specific type
- * @see ValueInjection                                   Implementation for injection an existing value
+ * @see ValueInjection                                   Implementation for injecting an existing value
  */
 interface InjectionInterface
 {
@@ -53,7 +53,7 @@ interface InjectionInterface
      *
      * Implementations may use this method to indicate if they may be exported to PHP code. This may not be possible
      * in some situations, for example when the injection is a `resource` that cannot be provided with a piece
-     * of php code.
+     * of PHP code.
      *
      * When this method returns false, a call to `export()` should throw a
      * `Laminas\Di\Exception\LogicException`

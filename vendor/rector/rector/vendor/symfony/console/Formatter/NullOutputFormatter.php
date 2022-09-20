@@ -8,13 +8,16 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix20211221\Symfony\Component\Console\Formatter;
+namespace RectorPrefix202208\Symfony\Component\Console\Formatter;
 
 /**
  * @author Tien Xuan Vo <tien.xuan.vo@gmail.com>
  */
-final class NullOutputFormatter implements \RectorPrefix20211221\Symfony\Component\Console\Formatter\OutputFormatterInterface
+final class NullOutputFormatter implements OutputFormatterInterface
 {
+    /**
+     * @var \Symfony\Component\Console\Formatter\NullOutputFormatterStyle
+     */
     private $style;
     /**
      * {@inheritdoc}
@@ -26,10 +29,10 @@ final class NullOutputFormatter implements \RectorPrefix20211221\Symfony\Compone
     /**
      * {@inheritdoc}
      */
-    public function getStyle(string $name) : \RectorPrefix20211221\Symfony\Component\Console\Formatter\OutputFormatterStyleInterface
+    public function getStyle(string $name) : OutputFormatterStyleInterface
     {
         // to comply with the interface we must return a OutputFormatterStyleInterface
-        return $this->style ?? ($this->style = new \RectorPrefix20211221\Symfony\Component\Console\Formatter\NullOutputFormatterStyle());
+        return $this->style = $this->style ?? new NullOutputFormatterStyle();
     }
     /**
      * {@inheritdoc}
@@ -55,7 +58,7 @@ final class NullOutputFormatter implements \RectorPrefix20211221\Symfony\Compone
     /**
      * {@inheritdoc}
      */
-    public function setStyle(string $name, \RectorPrefix20211221\Symfony\Component\Console\Formatter\OutputFormatterStyleInterface $style) : void
+    public function setStyle(string $name, OutputFormatterStyleInterface $style) : void
     {
         // do nothing
     }

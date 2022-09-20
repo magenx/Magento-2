@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Laminas\Router\Http;
 
-use Interop\Container\ContainerInterface;
 use Laminas\Router\RouterConfigTrait;
 use Laminas\Router\RouteStackInterface;
 use Laminas\ServiceManager\FactoryInterface;
 use Laminas\ServiceManager\ServiceLocatorInterface;
+use Psr\Container\ContainerInterface;
 
 /** @psalm-suppress DeprecatedInterface */
 class HttpRouterFactory implements FactoryInterface

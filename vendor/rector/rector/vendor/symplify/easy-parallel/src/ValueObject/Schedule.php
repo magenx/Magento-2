@@ -1,7 +1,7 @@
 <?php
 
 declare (strict_types=1);
-namespace RectorPrefix20211221\Symplify\EasyParallel\ValueObject;
+namespace RectorPrefix202208\Symplify\EasyParallel\ValueObject;
 
 /**
  * From
@@ -14,7 +14,7 @@ final class Schedule
      */
     private $numberOfProcesses;
     /**
-     * @var string[][]
+     * @var array<array<string>>
      */
     private $jobs;
     /**

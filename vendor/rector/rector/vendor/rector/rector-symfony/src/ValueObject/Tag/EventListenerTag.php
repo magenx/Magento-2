@@ -4,17 +4,20 @@ declare (strict_types=1);
 namespace Rector\Symfony\ValueObject\Tag;
 
 use Rector\Symfony\Contract\Tag\TagInterface;
-final class EventListenerTag implements \Rector\Symfony\Contract\Tag\TagInterface
+final class EventListenerTag implements TagInterface
 {
     /**
+     * @readonly
      * @var string
      */
     private $event;
     /**
+     * @readonly
      * @var string
      */
     private $method;
     /**
+     * @readonly
      * @var int
      */
     private $priority;

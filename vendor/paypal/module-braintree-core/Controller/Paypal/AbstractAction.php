@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © 2013-2017 Magento, Inc. All rights reserved.
+ * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
 namespace PayPal\Braintree\Controller\Paypal;
@@ -47,8 +47,6 @@ abstract class AbstractAction extends Action
     }
 
     /**
-     * Check whether payment method is enabled
-     *
      * @inheritdoc
      */
     public function dispatch(RequestInterface $request)
@@ -67,6 +65,8 @@ abstract class AbstractAction extends Action
     }
 
     /**
+     * Validate quote
+     *
      * @param CartInterface $quote
      * @return void
      * @throws InvalidArgumentException

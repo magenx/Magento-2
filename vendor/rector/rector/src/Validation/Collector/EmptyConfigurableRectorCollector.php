@@ -6,8 +6,8 @@ namespace Rector\Core\Validation\Collector;
 use Rector\Core\Contract\Rector\AllowEmptyConfigurableRectorInterface;
 use Rector\Core\Contract\Rector\ConfigurableRectorInterface;
 use Rector\Core\NonPhpFile\Rector\RenameClassNonPhpRector;
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\ContainerBuilder;
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\Definition;
+use RectorPrefix202208\Symfony\Component\DependencyInjection\ContainerBuilder;
+use RectorPrefix202208\Symfony\Component\DependencyInjection\Definition;
 /**
  * @see \Rector\Core\Tests\Validation\Collector\EmptyConfigurableRectorCollector\EmptyConfigurableRectorCollectorTest
  */
@@ -18,7 +18,7 @@ final class EmptyConfigurableRectorCollector
      * @var \Symfony\Component\DependencyInjection\ContainerBuilder
      */
     private $containerBuilder;
-    public function __construct(\RectorPrefix20211221\Symfony\Component\DependencyInjection\ContainerBuilder $containerBuilder)
+    public function __construct(ContainerBuilder $containerBuilder)
     {
         $this->containerBuilder = $containerBuilder;
     }
@@ -29,14 +29,14 @@ final class EmptyConfigurableRectorCollector
     {
         $emptyConfigurableRectorClasses = [];
         foreach ($this->containerBuilder->getServiceIds() as $serviceId) {
-            if (!\is_a($serviceId, \Rector\Core\Contract\Rector\ConfigurableRectorInterface::class, \true)) {
+            if (!\is_a($serviceId, ConfigurableRectorInterface::class, \true)) {
                 continue;
             }
-            if (\is_a($serviceId, \Rector\Core\Contract\Rector\AllowEmptyConfigurableRectorInterface::class, \true)) {
+            if (\is_a($serviceId, AllowEmptyConfigurableRectorInterface::class, \true)) {
                 continue;
             }
             // it seems always loaded
-            if (\is_a($serviceId, \Rector\Core\NonPhpFile\Rector\RenameClassNonPhpRector::class, \true)) {
+            if (\is_a($serviceId, RenameClassNonPhpRector::class, \true)) {
                 continue;
             }
             $serviceDefinition = $this->containerBuilder->getDefinition($serviceId);
@@ -47,7 +47,7 @@ final class EmptyConfigurableRectorCollector
         }
         return $emptyConfigurableRectorClasses;
     }
-    private function hasConfigureMethodCall(\RectorPrefix20211221\Symfony\Component\DependencyInjection\Definition $definition) : bool
+    private function hasConfigureMethodCall(Definition $definition) : bool
     {
         foreach ($definition->getMethodCalls() as $methodCall) {
             if ($methodCall[0] === 'configure') {

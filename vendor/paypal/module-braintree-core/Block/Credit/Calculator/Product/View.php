@@ -8,6 +8,10 @@ use Magento\Framework\Registry;
 use Magento\Framework\View\Element\Template;
 use PayPal\Braintree\Gateway\Config\PayPalCredit\Config as PayPalCreditConfig;
 
+/**
+ * @api
+ * @since 100.0.2
+ */
 class View extends Template
 {
     /**

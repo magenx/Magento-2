@@ -80,7 +80,7 @@ class TypeParser
 			$tokens->consumeTokenType(Lexer::TOKEN_CLOSE_PARENTHESES);
 
 			if ($tokens->isCurrentTokenType(Lexer::TOKEN_OPEN_SQUARE_BRACKET)) {
-				return $this->tryParseArray($tokens, $type);
+				return $this->tryParseArrayOrOffsetAccess($tokens, $type);
 			}
 
 			return $type;
@@ -90,7 +90,7 @@ class TypeParser
 			$type = new Ast\Type\ThisTypeNode();
 
 			if ($tokens->isCurrentTokenType(Lexer::TOKEN_OPEN_SQUARE_BRACKET)) {
-				return $this->tryParseArray($tokens, $type);
+				return $this->tryParseArrayOrOffsetAccess($tokens, $type);
 			}
 
 			return $type;
@@ -115,19 +115,19 @@ class TypeParser
 					$type = $this->parseGeneric($tokens, $type);
 
 					if ($tokens->isCurrentTokenType(Lexer::TOKEN_OPEN_SQUARE_BRACKET)) {
-						$type = $this->tryParseArray($tokens, $type);
+						$type = $this->tryParseArrayOrOffsetAccess($tokens, $type);
 					}
 				} elseif ($tokens->isCurrentTokenType(Lexer::TOKEN_OPEN_PARENTHESES)) {
 					$type = $this->tryParseCallable($tokens, $type);
 
 				} elseif ($tokens->isCurrentTokenType(Lexer::TOKEN_OPEN_SQUARE_BRACKET)) {
-					$type = $this->tryParseArray($tokens, $type);
+					$type = $this->tryParseArrayOrOffsetAccess($tokens, $type);
 
 				} elseif ($type->name === 'array' && $tokens->isCurrentTokenType(Lexer::TOKEN_OPEN_CURLY_BRACKET) && !$tokens->isPrecededByHorizontalWhitespace()) {
 					$type = $this->parseArrayShape($tokens, $type);
 
 					if ($tokens->isCurrentTokenType(Lexer::TOKEN_OPEN_SQUARE_BRACKET)) {
-						$type = $this->tryParseArray($tokens, $type);
+						$type = $this->tryParseArrayOrOffsetAccess($tokens, $type);
 					}
 				}
 
@@ -259,15 +259,19 @@ class TypeParser
 			$tokens->consumeTokenType(Lexer::TOKEN_IDENTIFIER);
 		}
 
-		$targetType = $this->parseAtomic($tokens);
+		$targetType = $this->parse($tokens);
 
+		$tokens->tryConsumeTokenType(Lexer::TOKEN_PHPDOC_EOL);
 		$tokens->consumeTokenType(Lexer::TOKEN_NULLABLE);
+		$tokens->tryConsumeTokenType(Lexer::TOKEN_PHPDOC_EOL);
 
-		$ifType = $this->parseAtomic($tokens);
+		$ifType = $this->parse($tokens);
 
+		$tokens->tryConsumeTokenType(Lexer::TOKEN_PHPDOC_EOL);
 		$tokens->consumeTokenType(Lexer::TOKEN_COLON);
+		$tokens->tryConsumeTokenType(Lexer::TOKEN_PHPDOC_EOL);
 
-		$elseType = $this->parseAtomic($tokens);
+		$elseType = $this->parse($tokens);
 
 		return new Ast\Type\ConditionalTypeForParameterNode($parameterName, $targetType, $ifType, $elseType, $negated);
 	}
@@ -278,19 +282,7 @@ class TypeParser
 	{
 		$tokens->consumeTokenType(Lexer::TOKEN_NULLABLE);
 
-		$type = new Ast\Type\IdentifierTypeNode($tokens->currentTokenValue());
-		$tokens->consumeTokenType(Lexer::TOKEN_IDENTIFIER);
-
-		if ($tokens->isCurrentTokenType(Lexer::TOKEN_OPEN_ANGLE_BRACKET)) {
-			$type = $this->parseGeneric($tokens, $type);
-
-		} elseif ($type->name === 'array' && $tokens->isCurrentTokenType(Lexer::TOKEN_OPEN_CURLY_BRACKET) && !$tokens->isPrecededByHorizontalWhitespace()) {
-			$type = $this->parseArrayShape($tokens, $type);
-		}
-
-		if ($tokens->isCurrentTokenType(Lexer::TOKEN_OPEN_SQUARE_BRACKET)) {
-			$type = $this->tryParseArray($tokens, $type);
-		}
+		$type = $this->parseAtomic($tokens);
 
 		return new Ast\Type\NullableTypeNode($type);
 	}
@@ -423,7 +415,7 @@ class TypeParser
 		}
 
 		if ($tokens->isCurrentTokenType(Lexer::TOKEN_OPEN_SQUARE_BRACKET)) {
-			$type = $this->tryParseArray($tokens, $type);
+			$type = $this->tryParseArrayOrOffsetAccess($tokens, $type);
 		}
 
 		return $type;
@@ -448,15 +440,25 @@ class TypeParser
 
 
 	/** @phpstan-impure */
-	private function tryParseArray(TokenIterator $tokens, Ast\Type\TypeNode $type): Ast\Type\TypeNode
+	private function tryParseArrayOrOffsetAccess(TokenIterator $tokens, Ast\Type\TypeNode $type): Ast\Type\TypeNode
 	{
 		try {
 			while ($tokens->isCurrentTokenType(Lexer::TOKEN_OPEN_SQUARE_BRACKET)) {
 				$tokens->pushSavePoint();
+
+				$canBeOffsetAccessType = !$tokens->isPrecededByHorizontalWhitespace();
 				$tokens->consumeTokenType(Lexer::TOKEN_OPEN_SQUARE_BRACKET);
-				$tokens->consumeTokenType(Lexer::TOKEN_CLOSE_SQUARE_BRACKET);
-				$tokens->dropSavePoint();
-				$type = new Ast\Type\ArrayTypeNode($type);
+
+				if ($canBeOffsetAccessType && !$tokens->isCurrentTokenType(Lexer::TOKEN_CLOSE_SQUARE_BRACKET)) {
+					$offset = $this->parse($tokens);
+					$tokens->consumeTokenType(Lexer::TOKEN_CLOSE_SQUARE_BRACKET);
+					$tokens->dropSavePoint();
+					$type = new Ast\Type\OffsetAccessTypeNode($type, $offset);
+				} else {
+					$tokens->consumeTokenType(Lexer::TOKEN_CLOSE_SQUARE_BRACKET);
+					$tokens->dropSavePoint();
+					$type = new Ast\Type\ArrayTypeNode($type);
+				}
 			}
 
 		} catch (ParserException $e) {

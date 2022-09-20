@@ -8,7 +8,7 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix20211221\Symfony\Component\Finder\Iterator;
+namespace RectorPrefix202208\Symfony\Component\Finder\Iterator;
 
 /**
  * SortableIterator applies a sort on a given Iterator.
@@ -26,9 +26,7 @@ class SortableIterator implements \IteratorAggregate
     public const SORT_BY_CHANGED_TIME = 4;
     public const SORT_BY_MODIFIED_TIME = 5;
     public const SORT_BY_NAME_NATURAL = 6;
-    /**
-     * @var \Traversable
-     */
+    /** @var \Traversable<string, \SplFileInfo> */
     private $iterator;
     /**
      * @var \Closure|int

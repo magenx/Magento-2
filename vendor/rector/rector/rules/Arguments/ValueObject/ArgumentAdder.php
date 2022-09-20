@@ -9,8 +9,8 @@ use Rector\Core\Validation\RectorAssert;
 final class ArgumentAdder
 {
     /**
+     * @var class-string
      * @readonly
-     * @var string
      */
     private $class;
     /**
@@ -43,6 +43,7 @@ final class ArgumentAdder
      */
     private $scope;
     /**
+     * @param class-string $class
      * @param mixed|null $argumentDefaultValue
      * @param \PHPStan\Type\Type|null $argumentType
      */
@@ -55,11 +56,11 @@ final class ArgumentAdder
         $this->argumentDefaultValue = $argumentDefaultValue;
         $this->argumentType = $argumentType;
         $this->scope = $scope;
-        \Rector\Core\Validation\RectorAssert::className($class);
+        RectorAssert::className($class);
     }
-    public function getObjectType() : \PHPStan\Type\ObjectType
+    public function getObjectType() : ObjectType
     {
-        return new \PHPStan\Type\ObjectType($this->class);
+        return new ObjectType($this->class);
     }
     public function getMethod() : string
     {
@@ -80,7 +81,7 @@ final class ArgumentAdder
     {
         return $this->argumentDefaultValue;
     }
-    public function getArgumentType() : ?\PHPStan\Type\Type
+    public function getArgumentType() : ?Type
     {
         return $this->argumentType;
     }

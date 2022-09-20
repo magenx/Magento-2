@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © 2013-2017 Magento, Inc. All rights reserved.
+ * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
 namespace PayPal\Braintree\Block\Adminhtml\Form\Field;
@@ -44,6 +44,7 @@ class Countries extends Select
 
     /**
      * Sets name for input element
+     *
      * @param string $value
      * @return $this
      */

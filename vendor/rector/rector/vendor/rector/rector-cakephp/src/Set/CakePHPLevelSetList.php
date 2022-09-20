@@ -4,7 +4,7 @@ declare (strict_types=1);
 namespace Rector\CakePHP\Set;
 
 use Rector\Set\Contract\SetListInterface;
-final class CakePHPLevelSetList implements \Rector\Set\Contract\SetListInterface
+final class CakePHPLevelSetList implements SetListInterface
 {
     /**
      * @var string
@@ -42,4 +42,8 @@ final class CakePHPLevelSetList implements \Rector\Set\Contract\SetListInterface
      * @var string
      */
     public const UP_TO_CAKEPHP_43 = __DIR__ . '/../../config/sets/level/up-to-cakephp-43.php';
+    /**
+     * @var string
+     */
+    public const UP_TO_CAKEPHP_44 = __DIR__ . '/../../config/sets/level/up-to-cakephp-44.php';
 }

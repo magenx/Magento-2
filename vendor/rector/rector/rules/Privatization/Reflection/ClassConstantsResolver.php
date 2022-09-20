@@ -15,7 +15,7 @@ final class ClassConstantsResolver
      * @var \PHPStan\Reflection\ReflectionProvider
      */
     private $reflectionProvider;
-    public function __construct(\PHPStan\Reflection\ReflectionProvider $reflectionProvider)
+    public function __construct(ReflectionProvider $reflectionProvider)
     {
         $this->reflectionProvider = $reflectionProvider;
     }
@@ -31,8 +31,8 @@ final class ClassConstantsResolver
             return [];
         }
         $classReflection = $this->reflectionProvider->getClass($classWithConstants);
-        $reflectionClass = $classReflection->getNativeReflection();
-        $constantNamesToValues = $reflectionClass->getConstants();
+        $nativeReflection = $classReflection->getNativeReflection();
+        $constantNamesToValues = $nativeReflection->getConstants();
         $this->cachedConstantNamesToValues = $constantNamesToValues;
         return $constantNamesToValues;
     }

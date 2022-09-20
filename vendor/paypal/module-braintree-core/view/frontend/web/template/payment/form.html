@@ -1,6 +1,6 @@
 <!--
 /**
- * Copyright © 2013-2017 Magento, Inc. All rights reserved.
+ * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
 -->
@@ -14,7 +14,7 @@
                     value: getCode(),
                     checked: isChecked,
                     click: selectPaymentMethod,
-                    visible: isRadioButtonVisible()"/>
+                    visible: isRadioButtonVisible()">
         <label class="label" data-bind="attr: {'for': getCode()}">
             <span data-bind="text: getTitle()"></span>
         </label>
@@ -117,7 +117,7 @@
                     <input type="checkbox"
                            name="vault[is_enabled]"
                            class="checkbox"
-                           data-bind="attr: {'id': getCode() + '_enable_vault'}, checked: vaultEnabler.isActivePaymentTokenEnabler"/>
+                           data-bind="attr: {'id': getCode() + '_enable_vault'}, checked: vaultEnabler.isActivePaymentTokenEnabler">
                     <label class="label" data-bind="attr: {'for': getCode() + '_enable_vault'}">
                         <span><!-- ko i18n: 'Save for later use.'--><!-- /ko --></span>
                     </label>
@@ -135,7 +135,7 @@
                 </div>
                 <!-- /ko -->
             </fieldset>
-            <input type="submit" id="braintree_submit"  style="display:none" />
+            <input type="submit" id="braintree_submit"  style="display:none">
         </form>
         <div class="checkout-agreements-block">
             <!-- ko foreach: $parent.getRegion('before-place-order') -->

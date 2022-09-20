@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © 2013-2017 Magento, Inc. All rights reserved.
+ * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
 namespace PayPal\Braintree\Gateway\Response;
@@ -15,15 +15,15 @@ use Magento\Sales\Api\Data\OrderPaymentInterface;
 
 class CardDetailsHandler implements HandlerInterface
 {
-    const CARD_TYPE = 'cardType';
+    private const CARD_TYPE = 'cardType';
 
-    const CARD_EXP_MONTH = 'expirationMonth';
+    private const CARD_EXP_MONTH = 'expirationMonth';
 
-    const CARD_EXP_YEAR = 'expirationYear';
+    private const CARD_EXP_YEAR = 'expirationYear';
 
-    const CARD_LAST4 = 'last4';
+    private const CARD_LAST4 = 'last4';
 
-    const CARD_NUMBER = 'cc_number';
+    private const CARD_NUMBER = 'cc_number';
 
     /**
      * @var Config
@@ -50,6 +50,8 @@ class CardDetailsHandler implements HandlerInterface
     }
 
     /**
+     * Handle additional information
+     *
      * @param array $handlingSubject
      * @param array $response
      * @throws InputException
@@ -72,7 +74,7 @@ class CardDetailsHandler implements HandlerInterface
             $payment->setCcType($this->getCreditCardType($creditCard['sourceCardType']));
             $payment->setAdditionalInformation(OrderPaymentInterface::CC_TYPE, $creditCard['sourceCardType']);
             $payment->setAdditionalInformation(self::CARD_NUMBER, 'xxxx-' . $creditCard['sourceCardLast4']);
-        } elseif (!empty($transaction->applePay[self::CARD_LAST4])){
+        } elseif (!empty($transaction->applePay[self::CARD_LAST4])) {
             $creditCard = $transaction->applePay;
             $ccType = str_replace('Apple Pay - ', '', $creditCard[self::CARD_TYPE]);
             $payment->setCcLast4($creditCard[self::CARD_LAST4]);

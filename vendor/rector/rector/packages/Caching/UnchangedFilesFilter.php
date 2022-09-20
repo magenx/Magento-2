@@ -4,7 +4,7 @@ declare (strict_types=1);
 namespace Rector\Caching;
 
 use Rector\Caching\Detector\ChangedFilesDetector;
-use Symplify\SmartFileSystem\SmartFileInfo;
+use RectorPrefix202208\Symplify\SmartFileSystem\SmartFileInfo;
 final class UnchangedFilesFilter
 {
     /**
@@ -12,12 +12,12 @@ final class UnchangedFilesFilter
      * @var \Rector\Caching\Detector\ChangedFilesDetector
      */
     private $changedFilesDetector;
-    public function __construct(\Rector\Caching\Detector\ChangedFilesDetector $changedFilesDetector)
+    public function __construct(ChangedFilesDetector $changedFilesDetector)
     {
         $this->changedFilesDetector = $changedFilesDetector;
     }
     /**
-     * @param SmartFileInfo[] $fileInfos
+     * @param SmartFileInfo[]|string[] $fileInfos
      * @return SmartFileInfo[]
      */
     public function filterAndJoinWithDependentFileInfos(array $fileInfos) : array
@@ -25,6 +25,9 @@ final class UnchangedFilesFilter
         $changedFileInfos = [];
         $dependentFileInfos = [];
         foreach ($fileInfos as $fileInfo) {
+            if (\is_string($fileInfo)) {
+                $fileInfo = new SmartFileInfo($fileInfo);
+            }
             if (!$this->changedFilesDetector->hasFileChanged($fileInfo)) {
                 continue;
             }

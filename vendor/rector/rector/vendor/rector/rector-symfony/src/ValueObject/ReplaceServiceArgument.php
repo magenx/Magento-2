@@ -12,13 +12,14 @@ final class ReplaceServiceArgument
      */
     private $oldValue;
     /**
+     * @readonly
      * @var \PhpParser\Node\Expr
      */
     private $newValueExpr;
     /**
      * @param mixed $oldValue
      */
-    public function __construct($oldValue, \PhpParser\Node\Expr $newValueExpr)
+    public function __construct($oldValue, Expr $newValueExpr)
     {
         $this->oldValue = $oldValue;
         $this->newValueExpr = $newValueExpr;
@@ -30,7 +31,7 @@ final class ReplaceServiceArgument
     {
         return $this->oldValue;
     }
-    public function getNewValueExpr() : \PhpParser\Node\Expr
+    public function getNewValueExpr() : Expr
     {
         return $this->newValueExpr;
     }

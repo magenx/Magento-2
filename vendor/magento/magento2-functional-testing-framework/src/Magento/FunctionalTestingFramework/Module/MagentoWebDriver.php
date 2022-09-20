@@ -21,6 +21,7 @@ use Magento\FunctionalTestingFramework\DataTransport\Auth\WebApiAuth;
 use Magento\FunctionalTestingFramework\DataTransport\Auth\Tfa\OTP;
 use Magento\FunctionalTestingFramework\DataTransport\Protocol\CurlInterface;
 use Magento\FunctionalTestingFramework\DataGenerator\Handlers\CredentialStore;
+use Magento\FunctionalTestingFramework\Module\Util\ModuleUtils;
 use Magento\FunctionalTestingFramework\Util\Path\UrlFormatter;
 use Magento\FunctionalTestingFramework\Util\ConfigSanitizerUtil;
 use Yandex\Allure\Adapter\AllureException;
@@ -584,7 +585,9 @@ class MagentoWebDriver extends WebDriver
         $response = $executor->read();
         $executor->close();
 
-        return $response;
+        $util = new ModuleUtils();
+        $response = trim($util->utf8SafeControlCharacterTrim($response));
+        return $response != "" ? $response : "CLI did not return output.";
     }
 
     /**
@@ -788,6 +791,54 @@ class MagentoWebDriver extends WebDriver
             $action->moveToElement($tnodes);
             $action->release($tnodes)->perform();
         }
+    }
+    
+    /**
+     * Simple rapid click as per given count number.
+     *
+     * @param string $selector
+     * @param string $count
+     * @return void
+     * @throws \Exception
+     */
+    public function rapidClick($selector, $count)
+    {
+        for ($i = 0; $i < $count; $i++) {
+            $this->click($selector);
+        }
+    }
+
+  /**
+   * Grabs a cookie attributes value.
+   * You can set additional cookie params like `domain`, `path` in array passed as last argument.
+   * If the cookie is set by an ajax request (XMLHttpRequest),
+   * there might be some delay caused by the browser, so try `$I->wait(0.1)`.
+   * @param  string $cookie
+   * @param array  $params
+   * @return mixed
+   */
+    public function grabCookieAttributes(string $cookie, array $params = []): array
+    {
+        $params['name'] = $cookie;
+        $cookieArrays = $this->filterCookies($this->webDriver->manage()->getCookies(), $params);
+        $cookieAttributes = [];
+        if (is_array($cookieArrays)) { // Microsoft Edge returns null if there are no cookies...
+            foreach ($cookieArrays as $cookieArray) {
+                if ($cookieArray->getName() === $cookie) {
+                    $cookieAttributes['name'] = $cookieArray->getValue();
+                    $cookieAttributes['path'] = $cookieArray->getPath();
+                    $cookieAttributes['domain'] = $cookieArray->getDomain();
+                    $cookieAttributes['secure'] = $cookieArray->isSecure();
+                    $cookieAttributes['httpOnly'] = $cookieArray->isHttpOnly();
+                    $cookieAttributes['sameSite'] = $cookieArray->getSameSite();
+                    $cookieAttributes['expiry']  = date('d/m/Y', $cookieArray->getExpiry());
+
+                    return $cookieAttributes;
+                }
+            }
+        }
+
+        return $cookieAttributes;
     }
 
     /**

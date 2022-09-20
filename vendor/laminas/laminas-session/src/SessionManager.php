@@ -415,9 +415,7 @@ class SessionManager extends AbstractManager
         $event->setTarget($this);
         $event->setParams($this);
 
-        $falseResult = function ($test) {
-            return false === $test;
-        };
+        $falseResult = static fn($test): bool => false === $test;
 
         $responses = $validator->triggerEventUntil($falseResult, $event);
 
@@ -449,8 +447,8 @@ class SessionManager extends AbstractManager
             $_SERVER['REQUEST_TIME'] - 42000, // TTL for cookie
             $config->getCookiePath(),
             $config->getCookieDomain(),
-            $config->getCookieSecure(),
-            $config->getCookieHttpOnly()
+            (bool) $config->getCookieSecure(),
+            (bool) $config->getCookieHttpOnly()
         );
     }
 

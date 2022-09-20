@@ -18,14 +18,14 @@ use Rector\Laravel\NodeFactory\RouterRegisterNodeAnalyzer;
 use Rector\NodeTypeResolver\Node\AttributeKey;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
-use Symplify\SmartFileSystem\SmartFileInfo;
-use RectorPrefix20211221\Webmozart\Assert\Assert;
+use RectorPrefix202208\Symplify\SmartFileSystem\SmartFileInfo;
+use RectorPrefix202208\Webmozart\Assert\Assert;
 /**
- * @see https://laravel.com/docs/8.x/upgrade#automatic-controller-namespace-prefixing
+ * @changelog https://laravel.com/docs/8.x/upgrade#automatic-controller-namespace-prefixing
  *
  * @see \Rector\Laravel\Tests\Rector\StaticCall\RouteActionCallableRector\RouteActionCallableRectorTest
  */
-final class RouteActionCallableRector extends \Rector\Core\Rector\AbstractRector implements \Rector\Core\Contract\Rector\ConfigurableRectorInterface
+final class RouteActionCallableRector extends AbstractRector implements ConfigurableRectorInterface
 {
     /**
      * @var string
@@ -48,21 +48,23 @@ final class RouteActionCallableRector extends \Rector\Core\Rector\AbstractRector
      */
     private $routes = [];
     /**
+     * @readonly
      * @var \Rector\Core\Reflection\ReflectionResolver
      */
     private $reflectionResolver;
     /**
+     * @readonly
      * @var \Rector\Laravel\NodeFactory\RouterRegisterNodeAnalyzer
      */
     private $routerRegisterNodeAnalyzer;
-    public function __construct(\Rector\Core\Reflection\ReflectionResolver $reflectionResolver, \Rector\Laravel\NodeFactory\RouterRegisterNodeAnalyzer $routerRegisterNodeAnalyzer)
+    public function __construct(ReflectionResolver $reflectionResolver, RouterRegisterNodeAnalyzer $routerRegisterNodeAnalyzer)
     {
         $this->reflectionResolver = $reflectionResolver;
         $this->routerRegisterNodeAnalyzer = $routerRegisterNodeAnalyzer;
     }
-    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
+    public function getRuleDefinition() : RuleDefinition
     {
-        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Use PHP callable syntax instead of string syntax for controller route declarations.', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample(<<<'CODE_SAMPLE'
+        return new RuleDefinition('Use PHP callable syntax instead of string syntax for controller route declarations.', [new ConfiguredCodeSample(<<<'CODE_SAMPLE'
 Route::get('/users', 'UserController@index');
 CODE_SAMPLE
 , <<<'CODE_SAMPLE'
@@ -75,12 +77,12 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [\PhpParser\Node\Expr\MethodCall::class, \PhpParser\Node\Expr\StaticCall::class];
+        return [MethodCall::class, StaticCall::class];
     }
     /**
      * @param Node\Expr\MethodCall|StaticCall $node
      */
-    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
+    public function refactor(Node $node) : ?Node
     {
         if (!$this->routerRegisterNodeAnalyzer->isRegisterMethodStaticCall($node)) {
             return null;
@@ -89,7 +91,7 @@ CODE_SAMPLE
         if (!isset($node->args[$position])) {
             return null;
         }
-        if (!$node->args[$position] instanceof \PhpParser\Node\Arg) {
+        if (!$node->args[$position] instanceof Arg) {
             return null;
         }
         $arg = $node->args[$position];
@@ -98,12 +100,12 @@ CODE_SAMPLE
         if ($segments === null) {
             return null;
         }
-        $scope = $node->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::SCOPE);
-        if (!$scope instanceof \PHPStan\Analyser\Scope) {
+        $scope = $node->getAttribute(AttributeKey::SCOPE);
+        if (!$scope instanceof Scope) {
             return null;
         }
         $phpMethodReflection = $this->reflectionResolver->resolveMethodReflection($segments[0], $segments[1], $scope);
-        if (!$phpMethodReflection instanceof \PHPStan\Reflection\Php\PhpMethodReflection) {
+        if (!$phpMethodReflection instanceof PhpMethodReflection) {
             return null;
         }
         $node->args[$position]->value = $this->nodeFactory->createArray([$this->nodeFactory->createClassConstReference($segments[0]), $segments[1]]);
@@ -115,16 +117,16 @@ CODE_SAMPLE
     public function configure(array $configuration) : void
     {
         $routes = $configuration[self::ROUTES] ?? [];
-        \RectorPrefix20211221\Webmozart\Assert\Assert::isArray($routes);
-        \RectorPrefix20211221\Webmozart\Assert\Assert::allString(\array_keys($routes));
-        \RectorPrefix20211221\Webmozart\Assert\Assert::allString($routes);
+        Assert::isArray($routes);
+        Assert::allString(\array_keys($routes));
+        Assert::allString($routes);
         $this->routes = $routes;
         $namespace = $configuration[self::NAMESPACE] ?? self::DEFAULT_NAMESPACE;
-        \RectorPrefix20211221\Webmozart\Assert\Assert::string($namespace);
+        Assert::string($namespace);
         $this->namespace = $namespace;
     }
     /**
-     * @return array<string>|null
+     * @return array{string, string}|null
      * @param mixed $action
      */
     private function resolveControllerFromAction($action) : ?array
@@ -145,7 +147,7 @@ CODE_SAMPLE
         return [$controller, $method];
     }
     /**
-     * @param \PhpParser\Node\Expr|\PhpParser\Node\Identifier $name
+     * @param \PhpParser\Node\Identifier|\PhpParser\Node\Expr $name
      */
     private function getActionPosition($name) : int
     {
@@ -167,7 +169,7 @@ CODE_SAMPLE
         }
         return \strpos($action, '@') !== \false;
     }
-    private function getNamespace(\Symplify\SmartFileSystem\SmartFileInfo $fileInfo) : string
+    private function getNamespace(SmartFileInfo $fileInfo) : string
     {
         $realpath = $fileInfo->getRealPath();
         return $this->routes[$realpath] ?? $this->namespace;

@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © 2013-2017 Magento, Inc. All rights reserved.
+ * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
 namespace PayPal\Braintree\Model;
@@ -13,7 +13,9 @@ use Magento\Sales\Model\OrderRepository;
 use Magento\Backend\Model\Session\Quote as SessionQuote;
 use Magento\Setup\Exception;
 
-/** @codeCoverageIgnore
+/**
+ * @codeCoverageIgnore
+ * @SuppressWarnings(PHPMD.CookieAndSessionMisuse)
  */
 class StoreConfigResolver
 {

@@ -10,24 +10,19 @@ use Rector\Core\Rector\AbstractRector;
 use Rector\Transform\ValueObject\StringToClassConstant;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
-use RectorPrefix20211221\Webmozart\Assert\Assert;
+use RectorPrefix202208\Webmozart\Assert\Assert;
 /**
  * @see \Rector\Tests\Transform\Rector\String_\StringToClassConstantRector\StringToClassConstantRectorTest
  */
-final class StringToClassConstantRector extends \Rector\Core\Rector\AbstractRector implements \Rector\Core\Contract\Rector\ConfigurableRectorInterface
+final class StringToClassConstantRector extends AbstractRector implements ConfigurableRectorInterface
 {
-    /**
-     * @deprecated
-     * @var string
-     */
-    public const STRINGS_TO_CLASS_CONSTANTS = 'strings_to_class_constants';
     /**
      * @var StringToClassConstant[]
      */
     private $stringsToClassConstants = [];
-    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
+    public function getRuleDefinition() : RuleDefinition
     {
-        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Changes strings to specific constants', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample(<<<'CODE_SAMPLE'
+        return new RuleDefinition('Changes strings to specific constants', [new ConfiguredCodeSample(<<<'CODE_SAMPLE'
 final class SomeSubscriber
 {
     public static function getSubscribedEvents()
@@ -45,19 +40,19 @@ final class SomeSubscriber
     }
 }
 CODE_SAMPLE
-, [new \Rector\Transform\ValueObject\StringToClassConstant('compiler.post_dump', 'Yet\\AnotherClass', 'CONSTANT')])]);
+, [new StringToClassConstant('compiler.post_dump', 'Yet\\AnotherClass', 'CONSTANT')])]);
     }
     /**
      * @return array<class-string<Node>>
      */
     public function getNodeTypes() : array
     {
-        return [\PhpParser\Node\Scalar\String_::class];
+        return [String_::class];
     }
     /**
      * @param String_ $node
      */
-    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
+    public function refactor(Node $node) : ?Node
     {
         foreach ($this->stringsToClassConstants as $stringToClassConstant) {
             if (!$this->valueResolver->isValue($node, $stringToClassConstant->getString())) {
@@ -72,9 +67,7 @@ CODE_SAMPLE
      */
     public function configure(array $configuration) : void
     {
-        $stringToClassConstants = $configuration[self::STRINGS_TO_CLASS_CONSTANTS] ?? $configuration;
-        \RectorPrefix20211221\Webmozart\Assert\Assert::isArray($stringToClassConstants);
-        \RectorPrefix20211221\Webmozart\Assert\Assert::allIsAOf($stringToClassConstants, \Rector\Transform\ValueObject\StringToClassConstant::class);
-        $this->stringsToClassConstants = $stringToClassConstants;
+        Assert::allIsAOf($configuration, StringToClassConstant::class);
+        $this->stringsToClassConstants = $configuration;
     }
 }

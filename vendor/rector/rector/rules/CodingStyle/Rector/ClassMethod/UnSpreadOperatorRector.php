@@ -9,20 +9,19 @@ use PhpParser\Node\Expr\Array_;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Stmt\ClassMethod;
-use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\ClassReflection;
 use PHPStan\Reflection\MethodReflection;
 use Rector\CodingStyle\NodeAnalyzer\SpreadVariablesCollector;
 use Rector\CodingStyle\Reflection\VendorLocationDetector;
 use Rector\Core\Rector\AbstractRector;
 use Rector\Core\Reflection\ReflectionResolver;
-use Rector\NodeTypeResolver\Node\AttributeKey;
+use Rector\FamilyTree\NodeAnalyzer\ClassChildAnalyzer;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
  * @see \Rector\Tests\CodingStyle\Rector\ClassMethod\UnSpreadOperatorRector\UnSpreadOperatorRectorTest
  */
-final class UnSpreadOperatorRector extends \Rector\Core\Rector\AbstractRector
+final class UnSpreadOperatorRector extends AbstractRector
 {
     /**
      * @readonly
@@ -39,15 +38,21 @@ final class UnSpreadOperatorRector extends \Rector\Core\Rector\AbstractRector
      * @var \Rector\CodingStyle\Reflection\VendorLocationDetector
      */
     private $vendorLocationDetector;
-    public function __construct(\Rector\CodingStyle\NodeAnalyzer\SpreadVariablesCollector $spreadVariablesCollector, \Rector\Core\Reflection\ReflectionResolver $reflectionResolver, \Rector\CodingStyle\Reflection\VendorLocationDetector $vendorLocationDetector)
+    /**
+     * @readonly
+     * @var \Rector\FamilyTree\NodeAnalyzer\ClassChildAnalyzer
+     */
+    private $classChildAnalyzer;
+    public function __construct(SpreadVariablesCollector $spreadVariablesCollector, ReflectionResolver $reflectionResolver, VendorLocationDetector $vendorLocationDetector, ClassChildAnalyzer $classChildAnalyzer)
     {
         $this->spreadVariablesCollector = $spreadVariablesCollector;
         $this->reflectionResolver = $reflectionResolver;
         $this->vendorLocationDetector = $vendorLocationDetector;
+        $this->classChildAnalyzer = $classChildAnalyzer;
     }
-    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
+    public function getRuleDefinition() : RuleDefinition
     {
-        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Remove spread operator', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample(<<<'CODE_SAMPLE'
+        return new RuleDefinition('Remove spread operator', [new CodeSample(<<<'CODE_SAMPLE'
 class SomeClass
 {
     public function run(...$array)
@@ -80,21 +85,29 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [\PhpParser\Node\Stmt\ClassMethod::class, \PhpParser\Node\Expr\MethodCall::class];
+        return [ClassMethod::class, MethodCall::class];
     }
     /**
      * @param ClassMethod|MethodCall $node
      */
-    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
+    public function refactor(Node $node) : ?Node
     {
-        if ($node instanceof \PhpParser\Node\Stmt\ClassMethod) {
+        if ($node instanceof ClassMethod) {
             return $this->refactorClassMethod($node);
         }
         return $this->refactorMethodCall($node);
     }
-    private function refactorClassMethod(\PhpParser\Node\Stmt\ClassMethod $classMethod) : ?\PhpParser\Node\Stmt\ClassMethod
+    private function refactorClassMethod(ClassMethod $classMethod) : ?ClassMethod
     {
-        if ($this->isInPHPUnitTestCase($classMethod)) {
+        $classReflection = $this->reflectionResolver->resolveClassReflection($classMethod);
+        if (!$classReflection instanceof ClassReflection) {
+            return null;
+        }
+        if ($this->isInPHPUnitTestCase($classReflection, $classMethod)) {
+            return null;
+        }
+        $methodName = $this->nodeNameResolver->getName($classMethod);
+        if ($this->classChildAnalyzer->hasParentClassMethod($classReflection, $methodName)) {
             return null;
         }
         $spreadParams = $this->spreadVariablesCollector->resolveFromClassMethod($classMethod);
@@ -103,15 +116,15 @@ CODE_SAMPLE
         }
         foreach ($spreadParams as $spreadParam) {
             $spreadParam->variadic = \false;
-            $spreadParam->type = new \PhpParser\Node\Identifier('array');
+            $spreadParam->type = new Identifier('array');
             $spreadParam->default = $this->nodeFactory->createArray([]);
         }
         return $classMethod;
     }
-    private function refactorMethodCall(\PhpParser\Node\Expr\MethodCall $methodCall) : ?\PhpParser\Node\Expr\MethodCall
+    private function refactorMethodCall(MethodCall $methodCall) : ?MethodCall
     {
         $methodReflection = $this->reflectionResolver->resolveMethodReflectionFromMethodCall($methodCall);
-        if (!$methodReflection instanceof \PHPStan\Reflection\MethodReflection) {
+        if (!$methodReflection instanceof MethodReflection) {
             return null;
         }
         // skip those in vendor
@@ -133,13 +146,13 @@ CODE_SAMPLE
             $array = $this->nodeFactory->createArray($variadicArgs);
             $spreadArg = $methodCall->args[$firstSpreadParamPosition] ?? null;
             // already set value
-            if ($spreadArg instanceof \PhpParser\Node\Arg && $spreadArg->value instanceof \PhpParser\Node\Expr\Array_) {
+            if ($spreadArg instanceof Arg && $spreadArg->value instanceof Array_) {
                 return null;
             }
             if (\count($variadicArgs) === 1) {
                 return null;
             }
-            $methodCall->args[$firstSpreadParamPosition] = new \PhpParser\Node\Arg($array);
+            $methodCall->args[$firstSpreadParamPosition] = new Arg($array);
             $this->removeLaterArguments($methodCall, $firstSpreadParamPosition);
             return $methodCall;
         }
@@ -148,21 +161,21 @@ CODE_SAMPLE
     /**
      * @return Arg[]
      */
-    private function resolveVariadicArgsByVariadicParams(\PhpParser\Node\Expr\MethodCall $methodCall, int $firstSpreadParamPosition) : array
+    private function resolveVariadicArgsByVariadicParams(MethodCall $methodCall, int $firstSpreadParamPosition) : array
     {
         $variadicArgs = [];
         foreach ($methodCall->args as $position => $arg) {
             if ($position < $firstSpreadParamPosition) {
                 continue;
             }
-            if (!$arg instanceof \PhpParser\Node\Arg) {
+            if (!$arg instanceof Arg) {
                 continue;
             }
             $variadicArgs[] = $arg;
         }
         return $variadicArgs;
     }
-    private function removeLaterArguments(\PhpParser\Node\Expr\MethodCall $methodCall, int $argumentPosition) : void
+    private function removeLaterArguments(MethodCall $methodCall, int $argumentPosition) : void
     {
         $argCount = \count($methodCall->args);
         for ($i = $argumentPosition + 1; $i < $argCount; ++$i) {
@@ -172,7 +185,7 @@ CODE_SAMPLE
     /**
      * @param Arg[] $variadicArgs
      */
-    private function changeArgToPacked(array $variadicArgs, \PhpParser\Node\Expr\MethodCall $methodCall) : void
+    private function changeArgToPacked(array $variadicArgs, MethodCall $methodCall) : void
     {
         foreach ($variadicArgs as $position => $variadicArg) {
             if ($variadicArg->unpack) {
@@ -193,17 +206,9 @@ CODE_SAMPLE
         }
         return \false;
     }
-    private function isInPHPUnitTestCase(\PhpParser\Node\Stmt\ClassMethod $classMethod) : bool
+    private function isInPHPUnitTestCase(ClassReflection $classReflection, ClassMethod $classMethod) : bool
     {
-        $scope = $classMethod->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::SCOPE);
-        if (!$scope instanceof \PHPStan\Analyser\Scope) {
-            return \false;
-        }
         if (!$classMethod->isPublic()) {
-            return \false;
-        }
-        $classReflection = $scope->getClassReflection();
-        if (!$classReflection instanceof \PHPStan\Reflection\ClassReflection) {
             return \false;
         }
         return $classReflection->isSubclassOf('PHPUnit\\Framework\\TestCase');

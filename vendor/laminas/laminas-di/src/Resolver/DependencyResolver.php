@@ -10,7 +10,6 @@ use Laminas\Di\Definition\DefinitionInterface;
 use Laminas\Di\Exception;
 use Psr\Container\ContainerInterface;
 use ReflectionClass;
-use Traversable;
 
 use function array_filter;
 use function array_merge;
@@ -18,8 +17,8 @@ use function class_exists;
 use function gettype;
 use function in_array;
 use function interface_exists;
-use function is_array;
 use function is_callable;
+use function is_iterable;
 use function is_numeric;
 use function is_string;
 use function sprintf;
@@ -39,7 +38,7 @@ class DependencyResolver implements DependencyResolverInterface
     protected $container;
 
     /** @var string[] */
-    private $builtinTypes = [
+    private array $builtinTypes = [
         'string',
         'int',
         'bool',
@@ -52,7 +51,7 @@ class DependencyResolver implements DependencyResolverInterface
     ];
 
     /** @var array<string, string> */
-    private $gettypeMap = [
+    private array $gettypeMap = [
         'boolean' => 'bool',
         'integer' => 'int',
         'double'  => 'float',
@@ -107,9 +106,7 @@ class DependencyResolver implements DependencyResolverInterface
 
         // A type configuration may define a parameter should be auto resolved
         // even it was defined earlier
-        $params = array_filter($params, function ($value) {
-            return $value !== '*';
-        });
+        $params = array_filter($params, fn($value) => $value !== '*');
 
         return $params;
     }
@@ -176,7 +173,7 @@ class DependencyResolver implements DependencyResolverInterface
         }
 
         if ($type === 'iterable') {
-            return is_array($value) || $value instanceof Traversable;
+            return is_iterable($value);
         }
 
         $valueType = $this->getTypeNameFromValue($value);

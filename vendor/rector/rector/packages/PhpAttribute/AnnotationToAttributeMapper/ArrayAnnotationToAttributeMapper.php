@@ -4,14 +4,17 @@ declare (strict_types=1);
 namespace Rector\PhpAttribute\AnnotationToAttributeMapper;
 
 use PhpParser\Node\Expr;
+use PhpParser\Node\Expr\Array_;
+use PhpParser\Node\Expr\ArrayItem;
 use Rector\PhpAttribute\AnnotationToAttributeMapper;
 use Rector\PhpAttribute\Contract\AnnotationToAttributeMapperInterface;
 use Rector\PhpAttribute\Enum\DocTagNodeState;
-use RectorPrefix20211221\Symfony\Contracts\Service\Attribute\Required;
+use RectorPrefix202208\Symfony\Contracts\Service\Attribute\Required;
+use RectorPrefix202208\Webmozart\Assert\Assert;
 /**
  * @implements AnnotationToAttributeMapperInterface<mixed[]>
  */
-final class ArrayAnnotationToAttributeMapper implements \Rector\PhpAttribute\Contract\AnnotationToAttributeMapperInterface
+final class ArrayAnnotationToAttributeMapper implements AnnotationToAttributeMapperInterface
 {
     /**
      * @var \Rector\PhpAttribute\AnnotationToAttributeMapper
@@ -21,7 +24,7 @@ final class ArrayAnnotationToAttributeMapper implements \Rector\PhpAttribute\Con
      * Avoid circular reference
      * @required
      */
-    public function autowire(\Rector\PhpAttribute\AnnotationToAttributeMapper $annotationToAttributeMapper) : void
+    public function autowire(AnnotationToAttributeMapper $annotationToAttributeMapper) : void
     {
         $this->annotationToAttributeMapper = $annotationToAttributeMapper;
     }
@@ -34,30 +37,38 @@ final class ArrayAnnotationToAttributeMapper implements \Rector\PhpAttribute\Con
     }
     /**
      * @param mixed[] $value
-     * @return mixed[]|\PhpParser\Node\Expr
      */
-    public function map($value)
+    public function map($value) : Expr
     {
-        $values = \array_map(function ($item) {
-            return $this->annotationToAttributeMapper->map($item);
-        }, $value);
-        foreach ($values as $key => $value) {
-            // remove the key and value? useful in case of unwrapping nested attributes
-            if (!$this->isRemoveArrayPlaceholder($value)) {
+        $arrayItems = [];
+        foreach ($value as $key => $singleValue) {
+            $valueExpr = $this->annotationToAttributeMapper->map($singleValue);
+            // remove node
+            if ($valueExpr === DocTagNodeState::REMOVE_ARRAY) {
                 continue;
             }
-            unset($values[$key]);
+            Assert::isInstanceOf($valueExpr, Expr::class);
+            // remove value
+            if ($this->isRemoveArrayPlaceholder($singleValue)) {
+                continue;
+            }
+            $keyExpr = null;
+            if (!\is_int($key)) {
+                $keyExpr = $this->annotationToAttributeMapper->map($key);
+                Assert::isInstanceOf($keyExpr, Expr::class);
+            }
+            $arrayItems[] = new ArrayItem($valueExpr, $keyExpr);
         }
-        return $values;
+        return new Array_($arrayItems);
     }
     /**
-     * @param mixed[]|\PhpParser\Node\Expr $value
+     * @param mixed $value
      */
     private function isRemoveArrayPlaceholder($value) : bool
     {
         if (!\is_array($value)) {
             return \false;
         }
-        return \in_array(\Rector\PhpAttribute\Enum\DocTagNodeState::REMOVE_ARRAY, $value, \true);
+        return \in_array(DocTagNodeState::REMOVE_ARRAY, $value, \true);
     }
 }

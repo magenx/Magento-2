@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © 2013-2017 Magento, Inc. All rights reserved.
+ * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
 namespace PayPal\Braintree\Gateway\Command;
@@ -21,29 +21,30 @@ use Magento\Sales\Api\TransactionRepositoryInterface;
 use Magento\Sales\Api\Data\TransactionInterface;
 use PayPal\Braintree\Model\Ui\PayPal\ConfigProvider as PaypalConfigProvider;
 
-/** @SuppressWarnings(PHPMD)
+/**
+ * @SuppressWarnings(PHPMD)
  */
 class CaptureStrategyCommand implements CommandInterface
 {
     /**
      * Braintree Intent Sale command
      */
-    const SALE = 'sale';
+    public const SALE = 'sale';
 
     /**
      * Braintree capture command
      */
-    const CAPTURE = 'settlement';
+    public const CAPTURE = 'settlement';
 
     /**
      * Braintree partial capture command
      */
-    const PARTIAL_CAPTURE = 'partial_capture';
+    public const PARTIAL_CAPTURE = 'partial_capture';
 
     /**
      * Braintree vault capture command
      */
-    const VAULT_CAPTURE = 'vault_capture';
+    public const VAULT_CAPTURE = 'vault_capture';
 
     /**
      * @var CommandPoolInterface
@@ -111,6 +112,7 @@ class CaptureStrategyCommand implements CommandInterface
 
     /**
      * @inheritdoc
+     *
      * @throws NotFoundException
      */
     public function execute(array $commandSubject)
@@ -124,11 +126,12 @@ class CaptureStrategyCommand implements CommandInterface
         ContextHelper::assertOrderPayment($paymentInfo);
 
         $command = $this->getCommand($paymentInfo, $amount);
-        $this->commandPool->get($command)->execute($commandSubject);
+        return $this->commandPool->get($command)->execute($commandSubject);
     }
 
     /**
      * Get execution command name
+     *
      * @param OrderPaymentInterface $payment
      * @param float $amount
      * @return string
@@ -158,6 +161,8 @@ class CaptureStrategyCommand implements CommandInterface
     }
 
     /**
+     * Check if authorization is expired
+     *
      * @param OrderPaymentInterface $payment
      * @return boolean
      */

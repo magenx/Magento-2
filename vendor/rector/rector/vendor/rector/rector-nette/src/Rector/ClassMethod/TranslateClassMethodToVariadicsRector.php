@@ -13,28 +13,45 @@ use PhpParser\Node\Param;
 use PhpParser\Node\Scalar\LNumber;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\NodeTraverser;
-use PHPStan\Type\ObjectType;
+use PHPStan\Reflection\ClassReflection;
 use Rector\Core\Exception\ShouldNotHappenException;
 use Rector\Core\Rector\AbstractRector;
-use Rector\NodeTypeResolver\Node\AttributeKey;
+use Rector\Core\Reflection\ReflectionResolver;
+use Rector\PostRector\Collector\NodesToAddCollector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
- * @see https://github.com/nette/utils/pull/178
- * @see https://github.com/contributte/translation/commit/d374c4c05b57dff1e5b327bb9bf98c392769806c
+ * @changelog https://github.com/nette/utils/pull/178
+ * @changelog https://github.com/contributte/translation/commit/d374c4c05b57dff1e5b327bb9bf98c392769806c
  *
  * @see \Rector\Nette\Tests\Rector\ClassMethod\TranslateClassMethodToVariadicsRector\TranslateClassMethodToVariadicsRectorTest
+ *
  * @note must be run before "composer update nette/utils:^3.0", because param contract break causes fatal error
  */
-final class TranslateClassMethodToVariadicsRector extends \Rector\Core\Rector\AbstractRector
+final class TranslateClassMethodToVariadicsRector extends AbstractRector
 {
     /**
      * @var string
      */
     private const PARAMETERS = 'parameters';
-    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
+    /**
+     * @readonly
+     * @var \Rector\Core\Reflection\ReflectionResolver
+     */
+    private $reflectionResolver;
+    /**
+     * @readonly
+     * @var \Rector\PostRector\Collector\NodesToAddCollector
+     */
+    private $nodesToAddCollector;
+    public function __construct(ReflectionResolver $reflectionResolver, NodesToAddCollector $nodesToAddCollector)
     {
-        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Change translate() method call 2nd arg to variadic', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample(<<<'CODE_SAMPLE'
+        $this->reflectionResolver = $reflectionResolver;
+        $this->nodesToAddCollector = $nodesToAddCollector;
+    }
+    public function getRuleDefinition() : RuleDefinition
+    {
+        return new RuleDefinition('Change translate() method call 2nd arg to variadic', [new CodeSample(<<<'CODE_SAMPLE'
 use Nette\Localization\ITranslator;
 
 final class SomeClass implements ITranslator
@@ -64,14 +81,18 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [\PhpParser\Node\Stmt\ClassMethod::class];
+        return [ClassMethod::class];
     }
     /**
      * @param ClassMethod $node
      */
-    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
+    public function refactor(Node $node) : ?Node
     {
-        if (!$this->nodeTypeResolver->isMethodStaticCallOrClassMethodObjectType($node, new \PHPStan\Type\ObjectType('Nette\\Localization\\ITranslator'))) {
+        $classReflection = $this->reflectionResolver->resolveClassReflection($node);
+        if (!$classReflection instanceof ClassReflection) {
+            return null;
+        }
+        if (!$classReflection->isSubclassOf('Nette\\Localization\\ITranslator')) {
             return null;
         }
         if (!$this->isName($node->name, 'translate')) {
@@ -81,7 +102,7 @@ CODE_SAMPLE
             return null;
         }
         $secondParam = $node->params[1];
-        if (!$secondParam->var instanceof \PhpParser\Node\Expr\Variable) {
+        if (!$secondParam->var instanceof Variable) {
             return null;
         }
         if ($secondParam->variadic) {
@@ -90,20 +111,20 @@ CODE_SAMPLE
         $this->replaceSecondParamInClassMethodBody($node, $secondParam);
         $secondParam->default = null;
         $secondParam->variadic = \true;
-        if ($secondParam->var instanceof \PhpParser\Node\Expr\Error) {
-            throw new \Rector\Core\Exception\ShouldNotHappenException();
+        if ($secondParam->var instanceof Error) {
+            throw new ShouldNotHappenException();
         }
         $secondParam->var->name = self::PARAMETERS;
         return $node;
     }
-    private function replaceSecondParamInClassMethodBody(\PhpParser\Node\Stmt\ClassMethod $classMethod, \PhpParser\Node\Param $param) : void
+    private function replaceSecondParamInClassMethodBody(ClassMethod $classMethod, Param $param) : void
     {
         $paramName = $this->getName($param->var);
         if ($paramName === null) {
             return;
         }
-        $this->traverseNodesWithCallable((array) $classMethod->stmts, function (\PhpParser\Node $node) use($paramName) : ?int {
-            if (!$node instanceof \PhpParser\Node\Expr\Variable) {
+        $this->traverseNodesWithCallable((array) $classMethod->stmts, function (Node $node) use($paramName) : ?int {
+            if (!$node instanceof Variable) {
                 return null;
             }
             if (!$this->isName($node, $paramName)) {
@@ -111,19 +132,14 @@ CODE_SAMPLE
             }
             // instantiate
             $assign = $this->createCoalesceAssign($node);
-            $currentStmt = $node->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::CURRENT_STATEMENT);
-            $positionNode = $currentStmt ?? $node;
-            if (!$positionNode instanceof \PhpParser\Node) {
-                throw new \Rector\Core\Exception\ShouldNotHappenException();
-            }
-            $this->nodesToAddCollector->addNodeBeforeNode($assign, $positionNode);
-            return \PhpParser\NodeTraverser::STOP_TRAVERSAL;
+            $this->nodesToAddCollector->addNodeBeforeNode($assign, $node);
+            return NodeTraverser::STOP_TRAVERSAL;
         });
     }
-    private function createCoalesceAssign(\PhpParser\Node\Expr\Variable $variable) : \PhpParser\Node\Expr\Assign
+    private function createCoalesceAssign(Variable $variable) : Assign
     {
-        $arrayDimFetch = new \PhpParser\Node\Expr\ArrayDimFetch(new \PhpParser\Node\Expr\Variable(self::PARAMETERS), new \PhpParser\Node\Scalar\LNumber(0));
-        $coalesce = new \PhpParser\Node\Expr\BinaryOp\Coalesce($arrayDimFetch, $this->nodeFactory->createNull());
-        return new \PhpParser\Node\Expr\Assign(new \PhpParser\Node\Expr\Variable($variable->name), $coalesce);
+        $arrayDimFetch = new ArrayDimFetch(new Variable(self::PARAMETERS), new LNumber(0));
+        $coalesce = new Coalesce($arrayDimFetch, $this->nodeFactory->createNull());
+        return new Assign(new Variable($variable->name), $coalesce);
     }
 }

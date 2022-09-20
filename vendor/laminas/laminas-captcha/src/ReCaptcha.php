@@ -1,9 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Laminas\Captcha;
 
 use Laminas\ReCaptcha\ReCaptcha as ReCaptchaService;
-use Traversable;
 
 use function array_key_exists;
 use function is_array;
@@ -156,7 +157,7 @@ class ReCaptcha extends AbstractAdapter
     /**
      * Constructor
      *
-     * @param  null|array|Traversable $options
+     * @param array<string, mixed>|null $options
      */
     public function __construct($options = null)
     {
@@ -215,7 +216,7 @@ class ReCaptcha extends AbstractAdapter
      *
      * @param  string $key
      * @param  mixed $value
-     * @return ReCaptcha Provides a fluent interface
+     * @return $this Provides a fluent interface
      */
     public function setOption($key, $value)
     {
@@ -268,11 +269,6 @@ class ReCaptcha extends AbstractAdapter
             $res = $service->verify($context[$value]);
         } else {
             $res = $service->verify($value);
-        }
-
-        if (! $res) {
-            $this->error(self::ERR_CAPTCHA);
-            return false;
         }
 
         if (! $res->isValid()) {

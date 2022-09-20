@@ -8,9 +8,10 @@
  * For the full copyright and license information, please view
  * the LICENSE file that was distributed with this source code.
  */
-namespace RectorPrefix20211221\Composer\XdebugHandler;
+declare (strict_types=1);
+namespace RectorPrefix202208\Composer\XdebugHandler;
 
-use RectorPrefix20211221\Composer\Pcre\Preg;
+use RectorPrefix202208\Composer\Pcre\Preg;
 /**
  * Process utility functions
  *
@@ -25,20 +26,18 @@ class Process
      * MIT Licensed (c) John Stevenson <john-stevenson@blueyonder.co.uk>
      *
      * @param string $arg  The argument to be escaped
-     * @param bool   $meta Additionally escape cmd.exe meta characters
+     * @param bool $meta Additionally escape cmd.exe meta characters
      * @param bool $module The argument is the module to invoke
-     *
-     * @return string The escaped argument
      */
-    public static function escape($arg, $meta = \true, $module = \false)
+    public static function escape(string $arg, bool $meta = \true, bool $module = \false) : string
     {
         if (!\defined('PHP_WINDOWS_VERSION_BUILD')) {
             return "'" . \str_replace("'", "'\\''", $arg) . "'";
         }
         $quote = \strpbrk($arg, " \t") !== \false || $arg === '';
-        $arg = \RectorPrefix20211221\Composer\Pcre\Preg::replace('/(\\\\*)"/', '$1$1\\"', $arg, -1, $dquotes);
+        $arg = Preg::replace('/(\\\\*)"/', '$1$1\\"', $arg, -1, $dquotes);
         if ($meta) {
-            $meta = $dquotes || \RectorPrefix20211221\Composer\Pcre\Preg::isMatch('/%[^%]+%/', $arg);
+            $meta = $dquotes || Preg::isMatch('/%[^%]+%/', $arg);
             if (!$meta) {
                 $quote = $quote || \strpbrk($arg, '^&|<>()') !== \false;
             } elseif ($module && !$dquotes && $quote) {
@@ -46,10 +45,10 @@ class Process
             }
         }
         if ($quote) {
-            $arg = '"' . \RectorPrefix20211221\Composer\Pcre\Preg::replace('/(\\\\*)$/', '$1$1', $arg) . '"';
+            $arg = '"' . Preg::replace('/(\\\\*)$/', '$1$1', $arg) . '"';
         }
         if ($meta) {
-            $arg = \RectorPrefix20211221\Composer\Pcre\Preg::replace('/(["^&|<>()%])/', '^$1', $arg);
+            $arg = Preg::replace('/(["^&|<>()%])/', '^$1', $arg);
         }
         return $arg;
     }
@@ -57,10 +56,8 @@ class Process
      * Escapes an array of arguments that make up a shell command
      *
      * @param string[] $args Argument list, with the module name first
-     *
-     * @return string The escaped command line
      */
-    public static function escapeShellCommand(array $args)
+    public static function escapeShellCommand(array $args) : string
     {
         $command = '';
         $module = \array_shift($args);
@@ -76,11 +73,9 @@ class Process
      * Makes putenv environment changes available in $_SERVER and $_ENV
      *
      * @param string $name
-     * @param string|null $value A null value unsets the variable
-     *
-     * @return bool Whether the environment variable was set
+     * @param ?string $value A null value unsets the variable
      */
-    public static function setEnv($name, $value = null)
+    public static function setEnv(string $name, ?string $value = null) : bool
     {
         $unset = null === $value;
         if (!\putenv($unset ? $name : $name . '=' . $value)) {

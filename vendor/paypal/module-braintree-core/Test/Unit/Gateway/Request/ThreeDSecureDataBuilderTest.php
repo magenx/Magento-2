@@ -57,7 +57,7 @@ class ThreeDSecureDataBuilderTest extends \PHPUnit\Framework\TestCase
             ->willReturn($this->order);
 
         $this->configMock = $this->getMockBuilder(Config::class)
-            ->setMethods(['isVerify3DSecure', 'getThresholdAmount', 'get3DSecureSpecificCountries'])
+            ->setMethods(['isVerify3DSecure', 'is3DSAlwaysRequested', 'getThresholdAmount', 'get3DSecureSpecificCountries'])
             ->disableOriginalConstructor()
             ->getMock();
         $this->subjectReaderMock = $this->getMockBuilder(SubjectReader::class)
@@ -68,15 +68,16 @@ class ThreeDSecureDataBuilderTest extends \PHPUnit\Framework\TestCase
     }
 
     /**
-     * @param bool $verify
-     * @param float $thresholdAmount
-     * @param string $countryId
+     * @param $verify
+     * @param $challengeRequested
+     * @param $thresholdAmount
+     * @param $countryId
      * @param array $countries
      * @param array $expected
      * @covers \PayPal\Braintree\Gateway\Request\ThreeDSecureDataBuilder::build
      * @dataProvider buildDataProvider
      */
-    public function testBuild($verify, $thresholdAmount, $countryId, array $countries, array $expected)
+    public function testBuild($verify, $challengeRequested, $thresholdAmount, $countryId, array $countries, array $expected)
     {
         $this->markTestSkipped('Skip this test');
         $buildSubject = [
@@ -87,6 +88,10 @@ class ThreeDSecureDataBuilderTest extends \PHPUnit\Framework\TestCase
         $this->configMock->expects(static::once())
             ->method('isVerify3DSecure')
             ->willReturn($verify);
+
+        $this->configMock->expects(static::once())
+            ->method('is3DSAlwaysRequested')
+            ->willReturn($challengeRequested);
 
         $this->configMock->expects(static::any())
             ->method('getThresholdAmount')
@@ -120,24 +125,24 @@ class ThreeDSecureDataBuilderTest extends \PHPUnit\Framework\TestCase
     public function buildDataProvider()
     {
         return [
-            ['verify' => true, 'amount' => 20, 'countryId' => 'US', 'countries' => [], 'result' => [
+            ['verify' => true, 'challengeRequested' => true, 'amount' => 20, 'countryId' => 'US', 'countries' => [], 'result' => [
                 'options' => [
-                    'three_d_secure' => [
+                    'threeDSecure' => [
                         'required' => true
                     ]
                 ]
             ]],
-            ['verify' => true, 'amount' => 0, 'countryId' => 'US', 'countries' => ['US', 'GB'], 'result' => [
+            ['verify' => true, 'challengeRequested' => true, 'amount' => 0, 'countryId' => 'US', 'countries' => ['US', 'GB'], 'result' => [
                 'options' => [
-                    'three_d_secure' => [
+                    'threeDSecure' => [
                         'required' => true
                     ]
                 ]
             ]],
-            ['verify' => true, 'amount' => 40, 'countryId' => 'US', 'countries' => [], 'result' => []],
-            ['verify' => false, 'amount' => 40, 'countryId' => 'US', 'countries' => [], 'result' => []],
-            ['verify' => false, 'amount' => 20, 'countryId' => 'US', 'countries' => [], 'result' => []],
-            ['verify' => true, 'amount' => 20, 'countryId' => 'CA', 'countries' => ['US', 'GB'], 'result' => []],
+            ['verify' => true, 'challengeRequested' => true, 'amount' => 40, 'countryId' => 'US', 'countries' => [], 'result' => []],
+            ['verify' => false, 'challengeRequested' => false, 'amount' => 40, 'countryId' => 'US', 'countries' => [], 'result' => []],
+            ['verify' => false, 'challengeRequested' => false, 'amount' => 20, 'countryId' => 'US', 'countries' => [], 'result' => []],
+            ['verify' => true, 'challengeRequested' => true, 'amount' => 20, 'countryId' => 'CA', 'countries' => ['US', 'GB'], 'result' => []],
         ];
     }
 

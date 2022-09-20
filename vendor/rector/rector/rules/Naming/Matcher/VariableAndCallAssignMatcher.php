@@ -3,6 +3,7 @@
 declare (strict_types=1);
 namespace Rector\Naming\Matcher;
 
+use PhpParser\Node;
 use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\Closure;
 use PhpParser\Node\Expr\Variable;
@@ -29,19 +30,19 @@ final class VariableAndCallAssignMatcher
      * @var \Rector\Core\PhpParser\Node\BetterNodeFinder
      */
     private $betterNodeFinder;
-    public function __construct(\Rector\Naming\Matcher\CallMatcher $callMatcher, \Rector\NodeNameResolver\NodeNameResolver $nodeNameResolver, \Rector\Core\PhpParser\Node\BetterNodeFinder $betterNodeFinder)
+    public function __construct(\Rector\Naming\Matcher\CallMatcher $callMatcher, NodeNameResolver $nodeNameResolver, BetterNodeFinder $betterNodeFinder)
     {
         $this->callMatcher = $callMatcher;
         $this->nodeNameResolver = $nodeNameResolver;
         $this->betterNodeFinder = $betterNodeFinder;
     }
-    public function match(\PhpParser\Node\Expr\Assign $assign) : ?\Rector\Naming\ValueObject\VariableAndCallAssign
+    public function match(Assign $assign) : ?VariableAndCallAssign
     {
         $call = $this->callMatcher->matchCall($assign);
         if ($call === null) {
             return null;
         }
-        if (!$assign->var instanceof \PhpParser\Node\Expr\Variable) {
+        if (!$assign->var instanceof Variable) {
             return null;
         }
         $variableName = $this->nodeNameResolver->getName($assign->var);
@@ -49,16 +50,22 @@ final class VariableAndCallAssignMatcher
             return null;
         }
         $functionLike = $this->getFunctionLike($assign);
-        if (!$functionLike instanceof \PhpParser\Node\FunctionLike) {
+        if (!$functionLike instanceof FunctionLike) {
             return null;
         }
-        return new \Rector\Naming\ValueObject\VariableAndCallAssign($assign->var, $call, $assign, $variableName, $functionLike);
+        $isVariableFoundInCallArgs = (bool) $this->betterNodeFinder->findFirst($call->getArgs(), function (Node $subNode) use($variableName) : bool {
+            return $subNode instanceof Variable && $this->nodeNameResolver->isName($subNode, $variableName);
+        });
+        if ($isVariableFoundInCallArgs) {
+            return null;
+        }
+        return new VariableAndCallAssign($assign->var, $call, $assign, $variableName, $functionLike);
     }
     /**
-     * @return \PhpParser\Node\Expr\Closure|\PhpParser\Node\Stmt\ClassMethod|\PhpParser\Node\Stmt\Function_|null
+     * @return \PhpParser\Node\Stmt\ClassMethod|\PhpParser\Node\Stmt\Function_|\PhpParser\Node\Expr\Closure|null
      */
-    private function getFunctionLike(\PhpParser\Node\Expr\Assign $assign)
+    private function getFunctionLike(Assign $assign)
     {
-        return $this->betterNodeFinder->findParentByTypes($assign, [\PhpParser\Node\Expr\Closure::class, \PhpParser\Node\Stmt\ClassMethod::class, \PhpParser\Node\Stmt\Function_::class]);
+        return $this->betterNodeFinder->findParentByTypes($assign, [Closure::class, ClassMethod::class, Function_::class]);
     }
 }

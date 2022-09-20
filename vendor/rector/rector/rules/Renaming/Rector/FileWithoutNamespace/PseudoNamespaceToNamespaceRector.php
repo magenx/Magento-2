@@ -3,7 +3,7 @@
 declare (strict_types=1);
 namespace Rector\Renaming\Rector\FileWithoutNamespace;
 
-use RectorPrefix20211221\Nette\Utils\Strings;
+use RectorPrefix202208\Nette\Utils\Strings;
 use PhpParser\Node;
 use PhpParser\Node\FunctionLike;
 use PhpParser\Node\Identifier;
@@ -21,17 +21,12 @@ use Rector\NodeTypeResolver\PhpDoc\PhpDocTypeRenamer;
 use Rector\Renaming\ValueObject\PseudoNamespaceToNamespace;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
-use RectorPrefix20211221\Webmozart\Assert\Assert;
+use RectorPrefix202208\Webmozart\Assert\Assert;
 /**
  * @see \Rector\Tests\Renaming\Rector\FileWithoutNamespace\PseudoNamespaceToNamespaceRector\PseudoNamespaceToNamespaceRectorTest
  */
-final class PseudoNamespaceToNamespaceRector extends \Rector\Core\Rector\AbstractRector implements \Rector\Core\Contract\Rector\ConfigurableRectorInterface
+final class PseudoNamespaceToNamespaceRector extends AbstractRector implements ConfigurableRectorInterface
 {
-    /**
-     * @deprecated
-     * @var string
-     */
-    public const NAMESPACE_PREFIXES_WITH_EXCLUDED_CLASSES = 'namespace_prefixed_with_excluded_classes';
     /**
      * @see https://regex101.com/r/chvLgs/1/
      * @var string
@@ -50,13 +45,13 @@ final class PseudoNamespaceToNamespaceRector extends \Rector\Core\Rector\Abstrac
      * @var \Rector\NodeTypeResolver\PhpDoc\PhpDocTypeRenamer
      */
     private $phpDocTypeRenamer;
-    public function __construct(\Rector\NodeTypeResolver\PhpDoc\PhpDocTypeRenamer $phpDocTypeRenamer)
+    public function __construct(PhpDocTypeRenamer $phpDocTypeRenamer)
     {
         $this->phpDocTypeRenamer = $phpDocTypeRenamer;
     }
-    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
+    public function getRuleDefinition() : RuleDefinition
     {
-        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Replaces defined Pseudo_Namespaces by Namespace\\Ones.', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample(<<<'CODE_SAMPLE'
+        return new RuleDefinition('Replaces defined Pseudo_Namespaces by Namespace\\Ones.', [new ConfiguredCodeSample(<<<'CODE_SAMPLE'
 /** @var Some_Chicken $someService */
 $someService = new Some_Chicken;
 $someClassToKeep = new Some_Class_To_Keep;
@@ -66,7 +61,7 @@ CODE_SAMPLE
 $someService = new Some\Chicken;
 $someClassToKeep = new Some_Class_To_Keep;
 CODE_SAMPLE
-, [new \Rector\Renaming\ValueObject\PseudoNamespaceToNamespace('Some_', ['Some_Class_To_Keep'])])]);
+, [new PseudoNamespaceToNamespace('Some_', ['Some_Class_To_Keep'])])]);
     }
     /**
      * @return array<class-string<Node>>
@@ -74,27 +69,27 @@ CODE_SAMPLE
     public function getNodeTypes() : array
     {
         // property, method
-        return [\Rector\Core\PhpParser\Node\CustomNode\FileWithoutNamespace::class, \PhpParser\Node\Stmt\Namespace_::class];
+        return [FileWithoutNamespace::class, Namespace_::class];
     }
     /**
      * @param Namespace_|FileWithoutNamespace $node
      */
-    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
+    public function refactor(Node $node) : ?Node
     {
         $this->newNamespace = null;
-        if ($node instanceof \Rector\Core\PhpParser\Node\CustomNode\FileWithoutNamespace) {
-            $stmts = $this->refactorStmts($node->stmts);
-            $node->stmts = $stmts;
+        if ($node instanceof FileWithoutNamespace) {
+            $changedStmts = $this->refactorStmts($node->stmts);
+            if ($changedStmts === null) {
+                return null;
+            }
+            $node->stmts = $changedStmts;
             // add a new namespace?
             if ($this->newNamespace !== null) {
-                $namespace = new \PhpParser\Node\Stmt\Namespace_(new \PhpParser\Node\Name($this->newNamespace));
-                $namespace->stmts = $stmts;
-                return $namespace;
+                return new Namespace_(new Name($this->newNamespace), $changedStmts);
             }
         }
-        if ($node instanceof \PhpParser\Node\Stmt\Namespace_) {
-            $this->refactorStmts([$node]);
-            return $node;
+        if ($node instanceof Namespace_) {
+            return $this->refactorNamespace($node);
         }
         return null;
     }
@@ -103,38 +98,43 @@ CODE_SAMPLE
      */
     public function configure(array $configuration) : void
     {
-        $namespacePrefixesWithExcludedClasses = $configuration[self::NAMESPACE_PREFIXES_WITH_EXCLUDED_CLASSES] ?? $configuration;
-        \RectorPrefix20211221\Webmozart\Assert\Assert::allIsAOf($namespacePrefixesWithExcludedClasses, \Rector\Renaming\ValueObject\PseudoNamespaceToNamespace::class);
-        $this->pseudoNamespacesToNamespaces = $namespacePrefixesWithExcludedClasses;
+        Assert::allIsAOf($configuration, PseudoNamespaceToNamespace::class);
+        $this->pseudoNamespacesToNamespaces = $configuration;
     }
     /**
      * @param Stmt[] $stmts
-     * @return Stmt[]
+     * @return Stmt[]|null
      */
-    private function refactorStmts(array $stmts) : array
+    private function refactorStmts(array $stmts) : ?array
     {
-        $this->traverseNodesWithCallable($stmts, function (\PhpParser\Node $node) : ?Node {
-            if (!$node instanceof \PhpParser\Node\Name && !$node instanceof \PhpParser\Node\Identifier && !$node instanceof \PhpParser\Node\Stmt\Property && !$node instanceof \PhpParser\Node\FunctionLike) {
+        $hasChanged = \false;
+        $this->traverseNodesWithCallable($stmts, function (Node $node) use(&$hasChanged) : ?Node {
+            if (!$node instanceof Name && !$node instanceof Identifier && !$node instanceof Property && !$node instanceof FunctionLike) {
                 return null;
             }
-            $phpDocInfo = $this->phpDocInfoFactory->createFromNodeOrEmpty($node);
-            // replace on @var/@param/@return/@throws
-            foreach ($this->pseudoNamespacesToNamespaces as $pseudoNamespaceToNamespace) {
-                $this->phpDocTypeRenamer->changeUnderscoreType($phpDocInfo, $node, $pseudoNamespaceToNamespace);
+            if ($this->refactorPhpDoc($node)) {
+                $hasChanged = \true;
             }
             // @todo - update rule to allow for bool instanceof check
-            if ($node instanceof \PhpParser\Node\Name || $node instanceof \PhpParser\Node\Identifier) {
-                return $this->processNameOrIdentifier($node);
+            if ($node instanceof Name || $node instanceof Identifier) {
+                $changedNode = $this->processNameOrIdentifier($node);
+                if ($changedNode instanceof Node) {
+                    $hasChanged = \true;
+                    return $changedNode;
+                }
             }
             return null;
         });
-        return $stmts;
+        if ($hasChanged) {
+            return $stmts;
+        }
+        return null;
     }
     /**
-     * @return Name|Identifier
-     * @param \PhpParser\Node\Identifier|\PhpParser\Node\Name $node
+     * @return Identifier|Name|null
+     * @param \PhpParser\Node\Name|\PhpParser\Node\Identifier $node
      */
-    private function processNameOrIdentifier($node) : ?\PhpParser\Node
+    private function processNameOrIdentifier($node) : ?Node
     {
         // no name → skip
         if ($node->toString() === '') {
@@ -148,23 +148,23 @@ CODE_SAMPLE
             if ($excludedClasses !== [] && $this->isNames($node, $excludedClasses)) {
                 return null;
             }
-            if ($node instanceof \PhpParser\Node\Name) {
+            if ($node instanceof Name) {
                 return $this->processName($node);
             }
             return $this->processIdentifier($node);
         }
         return null;
     }
-    private function processName(\PhpParser\Node\Name $name) : \PhpParser\Node\Name
+    private function processName(Name $name) : Name
     {
         $nodeName = $this->getName($name);
         $name->parts = \explode('_', $nodeName);
         return $name;
     }
-    private function processIdentifier(\PhpParser\Node\Identifier $identifier) : ?\PhpParser\Node\Identifier
+    private function processIdentifier(Identifier $identifier) : ?Identifier
     {
-        $parentNode = $identifier->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::PARENT_NODE);
-        if (!$parentNode instanceof \PhpParser\Node\Stmt\Class_) {
+        $parentNode = $identifier->getAttribute(AttributeKey::PARENT_NODE);
+        if (!$parentNode instanceof Class_) {
             return null;
         }
         $name = $this->getName($identifier);
@@ -172,15 +172,39 @@ CODE_SAMPLE
             return null;
         }
         /** @var string $namespaceName */
-        $namespaceName = \RectorPrefix20211221\Nette\Utils\Strings::before($name, '_', -1);
+        $namespaceName = Strings::before($name, '_', -1);
         /** @var string $lastNewNamePart */
-        $lastNewNamePart = \RectorPrefix20211221\Nette\Utils\Strings::after($name, '_', -1);
-        $newNamespace = \RectorPrefix20211221\Nette\Utils\Strings::replace($namespaceName, self::SPLIT_BY_UNDERSCORE_REGEX, '$1$2\\\\$4');
+        $lastNewNamePart = Strings::after($name, '_', -1);
+        $newNamespace = Strings::replace($namespaceName, self::SPLIT_BY_UNDERSCORE_REGEX, '$1$2\\\\$4');
         if ($this->newNamespace !== null && $this->newNamespace !== $newNamespace) {
-            throw new \Rector\Core\Exception\ShouldNotHappenException('There cannot be 2 different namespaces in one file');
+            throw new ShouldNotHappenException('There cannot be 2 different namespaces in one file');
         }
         $this->newNamespace = $newNamespace;
         $identifier->name = $lastNewNamePart;
         return $identifier;
+    }
+    private function refactorNamespace(Namespace_ $namespace) : ?Namespace_
+    {
+        $changedStmts = $this->refactorStmts($namespace->stmts);
+        if ($changedStmts === null) {
+            return null;
+        }
+        return $namespace;
+    }
+    /**
+     * @param \PhpParser\Node\Name|\PhpParser\Node\FunctionLike|\PhpParser\Node\Identifier|\PhpParser\Node\Stmt\Property $node
+     */
+    private function refactorPhpDoc($node) : bool
+    {
+        $hasChanged = \false;
+        $phpDocInfo = $this->phpDocInfoFactory->createFromNodeOrEmpty($node);
+        // replace on @var/@param/@return/@throws
+        foreach ($this->pseudoNamespacesToNamespaces as $pseudoNamespaceToNamespace) {
+            $hasDocTypeChanged = $this->phpDocTypeRenamer->changeUnderscoreType($phpDocInfo, $node, $pseudoNamespaceToNamespace);
+            if ($hasDocTypeChanged) {
+                $hasChanged = \true;
+            }
+        }
+        return $hasChanged;
     }
 }

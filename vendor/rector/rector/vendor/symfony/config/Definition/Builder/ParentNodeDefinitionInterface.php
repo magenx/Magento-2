@@ -8,21 +8,19 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix20211221\Symfony\Component\Config\Definition\Builder;
+namespace RectorPrefix202208\Symfony\Component\Config\Definition\Builder;
 
 /**
  * An interface that must be implemented by nodes which can have children.
  *
  * @author Victor Berchet <victor@suumit.com>
  */
-interface ParentNodeDefinitionInterface extends \RectorPrefix20211221\Symfony\Component\Config\Definition\Builder\BuilderAwareInterface
+interface ParentNodeDefinitionInterface extends BuilderAwareInterface
 {
     /**
      * Returns a builder to add children nodes.
-     *
-     * @return NodeBuilder
      */
-    public function children();
+    public function children() : NodeBuilder;
     /**
      * Appends a node definition.
      *
@@ -38,11 +36,11 @@ interface ParentNodeDefinitionInterface extends \RectorPrefix20211221\Symfony\Co
      *
      * @return $this
      */
-    public function append(\RectorPrefix20211221\Symfony\Component\Config\Definition\Builder\NodeDefinition $node);
+    public function append(NodeDefinition $node);
     /**
      * Gets the child node definitions.
      *
      * @return NodeDefinition[]
      */
-    public function getChildNodeDefinitions();
+    public function getChildNodeDefinitions() : array;
 }

@@ -8,30 +8,35 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix20211221\Symfony\Component\DependencyInjection;
+namespace RectorPrefix202208\Symfony\Component\DependencyInjection;
 
-use RectorPrefix20211221\Psr\Container\ContainerExceptionInterface;
-use RectorPrefix20211221\Psr\Container\NotFoundExceptionInterface;
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\RuntimeException;
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\ServiceCircularReferenceException;
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
-use RectorPrefix20211221\Symfony\Contracts\Service\ServiceLocatorTrait;
-use RectorPrefix20211221\Symfony\Contracts\Service\ServiceProviderInterface;
-use RectorPrefix20211221\Symfony\Contracts\Service\ServiceSubscriberInterface;
+use RectorPrefix202208\Psr\Container\ContainerExceptionInterface;
+use RectorPrefix202208\Psr\Container\NotFoundExceptionInterface;
+use RectorPrefix202208\Symfony\Component\DependencyInjection\Exception\RuntimeException;
+use RectorPrefix202208\Symfony\Component\DependencyInjection\Exception\ServiceCircularReferenceException;
+use RectorPrefix202208\Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
+use RectorPrefix202208\Symfony\Contracts\Service\ServiceLocatorTrait;
+use RectorPrefix202208\Symfony\Contracts\Service\ServiceProviderInterface;
+use RectorPrefix202208\Symfony\Contracts\Service\ServiceSubscriberInterface;
 /**
  * @author Robin Chalas <robin.chalas@gmail.com>
  * @author Nicolas Grekas <p@tchwork.com>
  */
-class ServiceLocator implements \RectorPrefix20211221\Symfony\Contracts\Service\ServiceProviderInterface
+class ServiceLocator implements ServiceProviderInterface, \Countable
 {
     use ServiceLocatorTrait {
         get as private doGet;
     }
+    /**
+     * @var string|null
+     */
     private $externalId;
+    /**
+     * @var \Symfony\Component\DependencyInjection\Container|null
+     */
     private $container;
     /**
      * {@inheritdoc}
-     *
      * @return mixed
      */
     public function get(string $id)
@@ -41,14 +46,13 @@ class ServiceLocator implements \RectorPrefix20211221\Symfony\Contracts\Service\
         }
         try {
             return $this->doGet($id);
-        } catch (\RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\RuntimeException $e) {
+        } catch (RuntimeException $e) {
             $what = \sprintf('service "%s" required by "%s"', $id, $this->externalId);
             $message = \preg_replace('/service "\\.service_locator\\.[^"]++"/', $what, $e->getMessage());
             if ($e->getMessage() === $message) {
                 $message = \sprintf('Cannot resolve %s: %s', $what, $message);
             }
             $r = new \ReflectionProperty($e, 'message');
-            $r->setAccessible(\true);
             $r->setValue($e, $message);
             throw $e;
         }
@@ -59,21 +63,24 @@ class ServiceLocator implements \RectorPrefix20211221\Symfony\Contracts\Service\
     }
     /**
      * @internal
-     *
-     * @return static
+     * @return $this
      */
-    public function withContext(string $externalId, \RectorPrefix20211221\Symfony\Component\DependencyInjection\Container $container) : self
+    public function withContext(string $externalId, Container $container)
     {
         $locator = clone $this;
         $locator->externalId = $externalId;
         $locator->container = $container;
         return $locator;
     }
-    private function createNotFoundException(string $id) : \RectorPrefix20211221\Psr\Container\NotFoundExceptionInterface
+    public function count() : int
+    {
+        return \count($this->getProvidedServices());
+    }
+    private function createNotFoundException(string $id) : NotFoundExceptionInterface
     {
         if ($this->loading) {
             $msg = \sprintf('The service "%s" has a dependency on a non-existent service "%s". This locator %s', \end($this->loading), $id, $this->formatAlternatives());
-            return new \RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException($id, \end($this->loading) ?: null, null, [], $msg);
+            return new ServiceNotFoundException($id, \end($this->loading) ?: null, null, [], $msg);
         }
         $class = \debug_backtrace(\DEBUG_BACKTRACE_PROVIDE_OBJECT | \DEBUG_BACKTRACE_IGNORE_ARGS, 4);
         $class = isset($class[3]['object']) ? \get_class($class[3]['object']) : null;
@@ -88,7 +95,7 @@ class ServiceLocator implements \RectorPrefix20211221\Symfony\Contracts\Service\
             try {
                 $this->container->get($id);
                 $class = null;
-            } catch (\RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException $e) {
+            } catch (ServiceNotFoundException $e) {
                 if ($e->getAlternatives()) {
                     $msg[] = \sprintf('did you mean %s? Anyway,', $this->formatAlternatives($e->getAlternatives(), 'or'));
                 } else {
@@ -103,16 +110,16 @@ class ServiceLocator implements \RectorPrefix20211221\Symfony\Contracts\Service\
         }
         if (!$class) {
             // no-op
-        } elseif (\is_subclass_of($class, \RectorPrefix20211221\Symfony\Contracts\Service\ServiceSubscriberInterface::class)) {
+        } elseif (\is_subclass_of($class, ServiceSubscriberInterface::class)) {
             $msg[] = \sprintf('Unless you need extra laziness, try using dependency injection instead. Otherwise, you need to declare it using "%s::getSubscribedServices()".', \preg_replace('/([^\\\\]++\\\\)++/', '', $class));
         } else {
             $msg[] = 'Try using dependency injection instead.';
         }
-        return new \RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException($id, \end($this->loading) ?: null, null, [], \implode(' ', $msg));
+        return new ServiceNotFoundException($id, \end($this->loading) ?: null, null, [], \implode(' ', $msg));
     }
-    private function createCircularReferenceException(string $id, array $path) : \RectorPrefix20211221\Psr\Container\ContainerExceptionInterface
+    private function createCircularReferenceException(string $id, array $path) : ContainerExceptionInterface
     {
-        return new \RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\ServiceCircularReferenceException($id, $path);
+        return new ServiceCircularReferenceException($id, $path);
     }
     private function formatAlternatives(array $alternatives = null, string $separator = 'and') : string
     {

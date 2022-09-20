@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Laminas\Di;
 
-use Interop\Container\ContainerInterface as LegacyContainerInterface;
 use Laminas\Di\Definition\DefinitionInterface;
 use Laminas\Di\Exception\ClassNotFoundException;
 use Laminas\Di\Exception\InvalidCallbackException;
@@ -19,7 +18,6 @@ use function array_pop;
 use function class_exists;
 use function implode;
 use function in_array;
-use function interface_exists;
 use function sprintf;
 
 /**
@@ -106,15 +104,15 @@ class Injector implements InjectorInterface
     public function canCreate(string $name): bool
     {
         $class = $this->getClassName($name);
-        return class_exists($class) && ! interface_exists($class);
+        return class_exists($class);
     }
 
     /**
      * Create the instance with auto wiring
      *
-     * @param string $name Class name or service alias
-     * @param array  $parameters Constructor parameters, keyed by the parameter name.
-     * @return object|null
+     * @param string               $name Class name or service alias
+     * @param array<string, mixed> $parameters Constructor parameters, keyed by the parameter name.
+     * @return object
      * @throws ClassNotFoundException
      * @throws RuntimeException
      */
@@ -144,8 +142,8 @@ class Injector implements InjectorInterface
      *
      * Any parameters provided will be used as constructor arguments only.
      *
-     * @param string $name The type name to instantiate.
-     * @param array  $params Constructor arguments, keyed by the parameter name.
+     * @param string               $name The type name to instantiate.
+     * @param array<string, mixed> $params Constructor arguments, keyed by the parameter name.
      * @return object
      * @throws InvalidCallbackException
      * @throws ClassNotFoundException
@@ -183,7 +181,8 @@ class Injector implements InjectorInterface
         $container      = $this->container;
         $containerTypes = [
             ContainerInterface::class,
-            LegacyContainerInterface::class, // Be backwards compatible with interop/container
+            // Be backwards compatible with interop/container:
+            'Interop\Container\ContainerInterface', // phpcs:ignore 
         ];
 
         if (
@@ -204,9 +203,9 @@ class Injector implements InjectorInterface
      * If this was successful (the resolver returned a non-null value), it will use
      * the ioc container to fetch the instances
      *
-     * @param string $type The class or alias name to resolve for
-     * @param array  $params Provided call time parameters
-     * @return array The resulting arguments in call order
+     * @param string                $type The class or alias name to resolve for
+     * @param array<string, mixed>  $params Provided call time parameters
+     * @return list<mixed> The resulting arguments in call order
      * @throws Exception\UndefinedReferenceException When a type cannot be
      *     obtained via the ioc container and the method is required for
      *     injection.
@@ -217,7 +216,7 @@ class Injector implements InjectorInterface
         $resolved = $this->resolver->resolveParameters($type, $params);
         $params   = [];
 
-        foreach ($resolved as $position => $injection) {
+        foreach ($resolved as $injection) {
             try {
                 $params[] = $this->getInjectionValue($injection);
             } catch (NotFoundExceptionInterface $containerException) {

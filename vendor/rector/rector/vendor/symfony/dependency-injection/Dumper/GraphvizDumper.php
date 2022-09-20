@@ -8,15 +8,15 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix20211221\Symfony\Component\DependencyInjection\Dumper;
+namespace RectorPrefix202208\Symfony\Component\DependencyInjection\Dumper;
 
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\Argument\ArgumentInterface;
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\ContainerBuilder;
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\Definition;
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\ParameterNotFoundException;
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\Parameter;
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\ParameterBag\ParameterBag;
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\Reference;
+use RectorPrefix202208\Symfony\Component\DependencyInjection\Argument\ArgumentInterface;
+use RectorPrefix202208\Symfony\Component\DependencyInjection\ContainerBuilder;
+use RectorPrefix202208\Symfony\Component\DependencyInjection\Definition;
+use RectorPrefix202208\Symfony\Component\DependencyInjection\Exception\ParameterNotFoundException;
+use RectorPrefix202208\Symfony\Component\DependencyInjection\Parameter;
+use RectorPrefix202208\Symfony\Component\DependencyInjection\ParameterBag\ParameterBag;
+use RectorPrefix202208\Symfony\Component\DependencyInjection\Reference;
 /**
  * GraphvizDumper dumps a service container as a graphviz file.
  *
@@ -26,11 +26,20 @@ use RectorPrefix20211221\Symfony\Component\DependencyInjection\Reference;
  *
  * @author Fabien Potencier <fabien@symfony.com>
  */
-class GraphvizDumper extends \RectorPrefix20211221\Symfony\Component\DependencyInjection\Dumper\Dumper
+class GraphvizDumper extends Dumper
 {
+    /**
+     * @var mixed[]
+     */
     private $nodes;
+    /**
+     * @var mixed[]
+     */
     private $edges;
     // All values should be strings
+    /**
+     * @var mixed[]
+     */
     private $options = ['graph' => ['ratio' => 'compress'], 'node' => ['fontsize' => '11', 'fontname' => 'Arial', 'shape' => 'record'], 'edge' => ['fontsize' => '9', 'fontname' => 'Arial', 'color' => 'grey', 'arrowhead' => 'open', 'arrowsize' => '0.5'], 'node.instance' => ['fillcolor' => '#9999ff', 'style' => 'filled'], 'node.definition' => ['fillcolor' => '#eeeeee'], 'node.missing' => ['fillcolor' => '#ff9999', 'style' => 'filled']];
     /**
      * Dumps the service container as a graphviz graph.
@@ -43,10 +52,8 @@ class GraphvizDumper extends \RectorPrefix20211221\Symfony\Component\DependencyI
      *  * node.instance: The default options for services that are defined directly by object instances
      *  * node.definition: The default options for services that are defined via service definition instances
      *  * node.missing: The default options for missing services
-     *
-     * @return string
      */
-    public function dump(array $options = [])
+    public function dump(array $options = []) : string
     {
         foreach (['graph', 'node', 'edge', 'node.instance', 'node.definition', 'node.missing'] as $key) {
             if (isset($options[$key])) {
@@ -89,12 +96,12 @@ class GraphvizDumper extends \RectorPrefix20211221\Symfony\Component\DependencyI
     {
         $edges = [];
         foreach ($arguments as $argument) {
-            if ($argument instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Parameter) {
+            if ($argument instanceof Parameter) {
                 $argument = $this->container->hasParameter($argument) ? $this->container->getParameter($argument) : null;
             } elseif (\is_string($argument) && \preg_match('/^%([^%]+)%$/', $argument, $match)) {
                 $argument = $this->container->hasParameter($match[1]) ? $this->container->getParameter($match[1]) : null;
             }
-            if ($argument instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Reference) {
+            if ($argument instanceof Reference) {
                 $lazyEdge = $lazy;
                 if (!$this->container->has((string) $argument)) {
                     $this->nodes[(string) $argument] = ['name' => $name, 'required' => $required, 'class' => '', 'attributes' => $this->options['node.missing']];
@@ -102,9 +109,9 @@ class GraphvizDumper extends \RectorPrefix20211221\Symfony\Component\DependencyI
                     $lazyEdge = $lazy || $this->container->getDefinition((string) $argument)->isLazy();
                 }
                 $edges[] = [['name' => $name, 'required' => $required, 'to' => $argument, 'lazy' => $lazyEdge]];
-            } elseif ($argument instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Argument\ArgumentInterface) {
+            } elseif ($argument instanceof ArgumentInterface) {
                 $edges[] = $this->findEdges($id, $argument->getValues(), $required, $name, \true);
-            } elseif ($argument instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Definition) {
+            } elseif ($argument instanceof Definition) {
                 $edges[] = $this->findEdges($id, $argument->getArguments(), $required, '');
                 $edges[] = $this->findEdges($id, $argument->getProperties(), \false, '');
                 foreach ($argument->getMethodCalls() as $call) {
@@ -122,15 +129,15 @@ class GraphvizDumper extends \RectorPrefix20211221\Symfony\Component\DependencyI
         $container = $this->cloneContainer();
         foreach ($container->getDefinitions() as $id => $definition) {
             $class = $definition->getClass();
-            if ('\\' === \substr($class, 0, 1)) {
+            if (\strncmp($class, '\\', \strlen('\\')) === 0) {
                 $class = \substr($class, 1);
             }
             try {
                 $class = $this->container->getParameterBag()->resolveValue($class);
-            } catch (\RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\ParameterNotFoundException $e) {
+            } catch (ParameterNotFoundException $exception) {
             }
             $nodes[$id] = ['class' => \str_replace('\\', '\\\\', $class), 'attributes' => \array_merge($this->options['node.definition'], ['style' => $definition->isShared() ? 'filled' : 'dotted'])];
-            $container->setDefinition($id, new \RectorPrefix20211221\Symfony\Component\DependencyInjection\Definition('stdClass'));
+            $container->setDefinition($id, new Definition('stdClass'));
         }
         foreach ($container->getServiceIds() as $id) {
             if (\array_key_exists($id, $container->getAliases())) {
@@ -142,10 +149,10 @@ class GraphvizDumper extends \RectorPrefix20211221\Symfony\Component\DependencyI
         }
         return $nodes;
     }
-    private function cloneContainer() : \RectorPrefix20211221\Symfony\Component\DependencyInjection\ContainerBuilder
+    private function cloneContainer() : ContainerBuilder
     {
-        $parameterBag = new \RectorPrefix20211221\Symfony\Component\DependencyInjection\ParameterBag\ParameterBag($this->container->getParameterBag()->all());
-        $container = new \RectorPrefix20211221\Symfony\Component\DependencyInjection\ContainerBuilder($parameterBag);
+        $parameterBag = new ParameterBag($this->container->getParameterBag()->all());
+        $container = new ContainerBuilder($parameterBag);
         $container->setDefinitions($this->container->getDefinitions());
         $container->setAliases($this->container->getAliases());
         $container->setResources($this->container->getResources());

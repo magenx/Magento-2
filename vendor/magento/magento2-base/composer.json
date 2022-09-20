@@ -6,35 +6,30 @@
         "OSL-3.0",
         "AFL-3.0"
     ],
-    "version": "2.4.4",
+    "version": "2.4.5",
     "require": {
         "magento/magento-composer-installer": "*",
         "php": "~7.4.0||~8.1.0",
         "ext-intl": "*",
         "ext-mbstring": "*",
-        "composer/composer": "^1.9 || ^2.0",
+        "composer/composer": "^1.9 || ^2.0, !=2.2.16",
         "laminas/laminas-code": "~4.5.0",
-        "laminas/laminas-di": "^3.3.0",
-        "laminas/laminas-eventmanager": "^3.4.0",
+        "laminas/laminas-di": "^3.7.0",
+        "laminas/laminas-eventmanager": "^3.5.0",
         "laminas/laminas-http": "^2.15.0",
-        "laminas/laminas-json": "^3.3.0",
         "laminas/laminas-modulemanager": "^2.11.0",
-        "laminas/laminas-mvc": "^3.3.0",
-        "laminas/laminas-server": "^2.11.0",
-        "laminas/laminas-servicemanager": "^3.10.0",
+        "laminas/laminas-mvc": "^3.3.3",
+        "laminas/laminas-servicemanager": "^3.11.0",
         "laminas/laminas-soap": "^2.10.0",
-        "laminas/laminas-stdlib": "^3.6.0",
-        "laminas/laminas-text": "^2.9.0",
+        "laminas/laminas-stdlib": "^3.7.1",
         "laminas/laminas-uri": "^2.9.1",
-        "laminas/laminas-validator": "^2.15.0",
-        "laminas/laminas-view": "~2.14.1",
+        "laminas/laminas-validator": "^2.17.0",
         "magento/composer": "~1.8.0",
         "magento/zendframework1": "~1.15.0",
-        "monolog/monolog": "^2.3",
+        "monolog/monolog": "^2.7",
         "pelago/emogrifier": "^6.0.0",
-        "phpseclib/phpseclib": "~3.0.9",
+        "phpseclib/phpseclib": "~3.0.13",
         "symfony/console": "~4.4.0",
-        "symfony/event-dispatcher": "~4.4.0",
         "tedivm/jshrink": "~1.4.0",
         "tubalmartin/cssmin": "4.1.1"
     },
@@ -378,6 +373,14 @@
                 "lib/web/jquery.js"
             ],
             [
+                "lib/web/js-cookie",
+                "lib/web/js-cookie"
+            ],
+            [
+                "lib/web/js-storage",
+                "lib/web/js-storage"
+            ],
+            [
                 "lib/web/knockoutjs",
                 "lib/web/knockoutjs"
             ],
@@ -440,6 +443,10 @@
             [
                 "lib/web/varien",
                 "lib/web/varien"
+            ],
+            [
+                "lib/web/vimeo",
+                "lib/web/vimeo"
             ],
             [
                 "nginx.conf.sample",

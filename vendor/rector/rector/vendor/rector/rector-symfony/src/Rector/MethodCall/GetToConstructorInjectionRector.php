@@ -13,24 +13,26 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
  * @see \Rector\Symfony\Tests\Rector\MethodCall\GetToConstructorInjectionRector\GetToConstructorInjectionRectorTest
  */
-final class GetToConstructorInjectionRector extends \Rector\Core\Rector\AbstractRector
+final class GetToConstructorInjectionRector extends AbstractRector
 {
     /**
+     * @readonly
      * @var \Rector\Symfony\NodeAnalyzer\DependencyInjectionMethodCallAnalyzer
      */
     private $dependencyInjectionMethodCallAnalyzer;
     /**
+     * @readonly
      * @var \Rector\Symfony\TypeAnalyzer\ContainerAwareAnalyzer
      */
     private $containerAwareAnalyzer;
-    public function __construct(\Rector\Symfony\NodeAnalyzer\DependencyInjectionMethodCallAnalyzer $dependencyInjectionMethodCallAnalyzer, \Rector\Symfony\TypeAnalyzer\ContainerAwareAnalyzer $containerAwareAnalyzer)
+    public function __construct(DependencyInjectionMethodCallAnalyzer $dependencyInjectionMethodCallAnalyzer, ContainerAwareAnalyzer $containerAwareAnalyzer)
     {
         $this->dependencyInjectionMethodCallAnalyzer = $dependencyInjectionMethodCallAnalyzer;
         $this->containerAwareAnalyzer = $containerAwareAnalyzer;
     }
-    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
+    public function getRuleDefinition() : RuleDefinition
     {
-        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Turns fetching of dependencies via `$this->get()` to constructor injection in Command and Controller', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample(<<<'CODE_SAMPLE'
+        return new RuleDefinition('Turns fetching of dependencies via `$this->get()` to constructor injection in Command and Controller', [new CodeSample(<<<'CODE_SAMPLE'
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 
 final class SomeController extend Controller
@@ -65,12 +67,12 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [\PhpParser\Node\Expr\MethodCall::class];
+        return [MethodCall::class];
     }
     /**
      * @param MethodCall $node
      */
-    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
+    public function refactor(Node $node) : ?Node
     {
         if (!$this->containerAwareAnalyzer->isGetMethodAwareType($node->var)) {
             return null;

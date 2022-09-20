@@ -36,11 +36,13 @@ final class MethodCallToAnotherMethodCallWithArguments
         $this->oldMethod = $oldMethod;
         $this->newMethod = $newMethod;
         $this->newArguments = $newArguments;
-        \Rector\Core\Validation\RectorAssert::className($type);
+        RectorAssert::className($type);
+        RectorAssert::methodName($oldMethod);
+        RectorAssert::methodName($newMethod);
     }
-    public function getObjectType() : \PHPStan\Type\ObjectType
+    public function getObjectType() : ObjectType
     {
-        return new \PHPStan\Type\ObjectType($this->type);
+        return new ObjectType($this->type);
     }
     public function getOldMethod() : string
     {

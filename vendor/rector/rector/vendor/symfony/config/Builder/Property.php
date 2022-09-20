@@ -8,7 +8,7 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix20211221\Symfony\Component\Config\Builder;
+namespace RectorPrefix202208\Symfony\Component\Config\Builder;
 
 /**
  * Represents a property when building classes.
@@ -19,10 +19,29 @@ namespace RectorPrefix20211221\Symfony\Component\Config\Builder;
  */
 class Property
 {
+    /**
+     * @var string
+     */
     private $name;
+    /**
+     * @var string
+     */
     private $originalName;
+    /**
+     * @var bool
+     */
     private $array = \false;
-    private $type = null;
+    /**
+     * @var bool
+     */
+    private $scalarsAllowed = \false;
+    /**
+     * @var string|null
+     */
+    private $type;
+    /**
+     * @var string|null
+     */
     private $content;
     public function __construct(string $originalName, string $name)
     {
@@ -41,7 +60,11 @@ class Property
     {
         $this->array = \false;
         $this->type = $type;
-        if ('[]' === \substr($type, -2)) {
+        if (\substr_compare($type, '|scalar', -\strlen('|scalar')) === 0) {
+            $this->scalarsAllowed = \true;
+            $this->type = $type = \substr($type, 0, -7);
+        }
+        if (\substr_compare($type, '[]', -\strlen('[]')) === 0) {
             $this->array = \true;
             $this->type = \substr($type, 0, -2);
         }
@@ -61,5 +84,9 @@ class Property
     public function isArray() : bool
     {
         return $this->array;
+    }
+    public function areScalarsAllowed() : bool
+    {
+        return $this->scalarsAllowed;
     }
 }

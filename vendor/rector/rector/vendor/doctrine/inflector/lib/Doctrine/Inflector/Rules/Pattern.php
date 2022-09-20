@@ -1,7 +1,7 @@
 <?php
 
 declare (strict_types=1);
-namespace RectorPrefix20211221\Doctrine\Inflector\Rules;
+namespace RectorPrefix202208\Doctrine\Inflector\Rules;
 
 use function preg_match;
 final class Pattern
@@ -29,6 +29,6 @@ final class Pattern
     }
     public function matches(string $word) : bool
     {
-        return \preg_match($this->getRegex(), $word) === 1;
+        return preg_match($this->getRegex(), $word) === 1;
     }
 }

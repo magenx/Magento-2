@@ -26,8 +26,7 @@ helper is available:
 
 ## allow-plugins
 
-Defaults to `null` (allow all plugins implicitly) for backwards compatibility until July 2022.
-At that point the default will become `{}` and plugins will not load anymore unless allowed.
+Defaults to `{}` which does not allow any plugins to be loaded.
 
 As of Composer 2.2.0, the `allow-plugins` option adds a layer of security
 allowing you to restrict which Composer plugins are able to execute code during
@@ -53,7 +52,15 @@ and **false** to disallow while suppressing further warnings and prompts.
 }
 ```
 
-You can also set the config option itself to `false` to disallow all plugins, or `true` to allow all plugins to run (NOT recommended).
+You can also set the config option itself to `false` to disallow all plugins, or `true` to allow all plugins to run (NOT recommended). For example:
+
+```json
+{
+    "config": {
+        "allow-plugins": false
+    }
+}
+```
 
 ## use-include-path
 
@@ -315,8 +322,8 @@ with other autoloaders.
 
 ## autoloader-suffix
 
-Defaults to `null`. String to be used as a suffix for the generated Composer
-autoloader. When null a random one will be generated.
+Defaults to `null`. Non-empty string to be used as a suffix for the generated
+Composer autoloader. When null a random one will be generated.
 
 ## optimize-autoloader
 
@@ -396,7 +403,7 @@ in the Composer home, cache, and data directories.
 ## lock
 
 Defaults to `true`. If set to `false`, Composer will not create a `composer.lock`
-file.
+file and will ignore it if one is present.
 
 ## platform-check
 

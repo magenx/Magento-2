@@ -4,18 +4,11 @@ declare (strict_types=1);
 namespace Rector\Core\FileSystem;
 
 use Rector\Caching\UnchangedFilesFilter;
-use Symplify\SmartFileSystem\SmartFileInfo;
+use Rector\Core\Util\StringUtils;
+use Rector\Core\ValueObject\StaticNonPhpFileSuffixes;
+use RectorPrefix202208\Symplify\SmartFileSystem\SmartFileInfo;
 final class PhpFilesFinder
 {
-    /**
-     * @var string[]
-     */
-    private const NON_PHP_FILE_EXTENSIONS = [
-        // Laravel
-        '.blade.php',
-        // Smarty
-        '.tpl',
-    ];
     /**
      * @readonly
      * @var \Rector\Core\FileSystem\FilesFinder
@@ -26,7 +19,7 @@ final class PhpFilesFinder
      * @var \Rector\Caching\UnchangedFilesFilter
      */
     private $unchangedFilesFilter;
-    public function __construct(\Rector\Core\FileSystem\FilesFinder $filesFinder, \Rector\Caching\UnchangedFilesFilter $unchangedFilesFilter)
+    public function __construct(\Rector\Core\FileSystem\FilesFinder $filesFinder, UnchangedFilesFilter $unchangedFilesFilter)
     {
         $this->filesFinder = $filesFinder;
         $this->unchangedFilesFilter = $unchangedFilesFilter;
@@ -38,14 +31,28 @@ final class PhpFilesFinder
     public function findInPaths(array $paths) : array
     {
         $phpFileInfos = $this->filesFinder->findInDirectoriesAndFiles($paths);
+        $suffixRegexPattern = StaticNonPhpFileSuffixes::getSuffixRegexPattern();
         // filter out non-PHP files
         foreach ($phpFileInfos as $key => $phpFileInfo) {
-            $pathName = $phpFileInfo->getPathname();
-            foreach (self::NON_PHP_FILE_EXTENSIONS as $nonPHPFileExtension) {
-                if (\substr_compare($pathName, $nonPHPFileExtension, -\strlen($nonPHPFileExtension)) === 0) {
-                    unset($phpFileInfos[$key]);
-                    continue 2;
-                }
+            $pathname = $phpFileInfo->getPathname();
+            /**
+             *  check .blade.php early so next .php check in next if can be skipped
+             */
+            if (\substr_compare($pathname, '.blade.php', -\strlen('.blade.php')) === 0) {
+                unset($phpFileInfos[$key]);
+                continue;
+            }
+            /**
+             * obvious
+             */
+            if (\substr_compare($pathname, '.php', -\strlen('.php')) === 0) {
+                continue;
+            }
+            /**
+             * only check with regex when needed
+             */
+            if (StringUtils::isMatch($pathname, $suffixRegexPattern)) {
+                unset($phpFileInfos[$key]);
             }
         }
         return $this->unchangedFilesFilter->filterAndJoinWithDependentFileInfos($phpFileInfos);

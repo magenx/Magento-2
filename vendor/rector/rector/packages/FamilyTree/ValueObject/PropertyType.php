@@ -15,23 +15,23 @@ final class PropertyType
     private $varType;
     /**
      * @readonly
-     * @var \PhpParser\Node\ComplexType|\PhpParser\Node\Name|null
+     * @var \PhpParser\Node\Name|\PhpParser\Node\ComplexType|null
      */
     private $propertyTypeNode;
     /**
-     * @param \PhpParser\Node\ComplexType|\PhpParser\Node\Name|null $propertyTypeNode
+     * @param \PhpParser\Node\Name|\PhpParser\Node\ComplexType|null $propertyTypeNode
      */
-    public function __construct(\PHPStan\Type\Type $varType, $propertyTypeNode)
+    public function __construct(Type $varType, $propertyTypeNode)
     {
         $this->varType = $varType;
         $this->propertyTypeNode = $propertyTypeNode;
     }
-    public function getVarType() : \PHPStan\Type\Type
+    public function getVarType() : Type
     {
         return $this->varType;
     }
     /**
-     * @return \PhpParser\Node\ComplexType|\PhpParser\Node\Name|null
+     * @return \PhpParser\Node\Name|\PhpParser\Node\ComplexType|null
      */
     public function getPropertyTypeNode()
     {

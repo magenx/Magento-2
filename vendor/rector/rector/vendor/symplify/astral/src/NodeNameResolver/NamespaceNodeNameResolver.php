@@ -1,21 +1,21 @@
 <?php
 
 declare (strict_types=1);
-namespace RectorPrefix20211221\Symplify\Astral\NodeNameResolver;
+namespace RectorPrefix202208\Symplify\Astral\NodeNameResolver;
 
 use PhpParser\Node;
 use PhpParser\Node\Stmt\Namespace_;
-use RectorPrefix20211221\Symplify\Astral\Contract\NodeNameResolverInterface;
-final class NamespaceNodeNameResolver implements \RectorPrefix20211221\Symplify\Astral\Contract\NodeNameResolverInterface
+use RectorPrefix202208\Symplify\Astral\Contract\NodeNameResolverInterface;
+final class NamespaceNodeNameResolver implements NodeNameResolverInterface
 {
-    public function match(\PhpParser\Node $node) : bool
+    public function match(Node $node) : bool
     {
-        return $node instanceof \PhpParser\Node\Stmt\Namespace_;
+        return $node instanceof Namespace_;
     }
     /**
      * @param Namespace_ $node
      */
-    public function resolve(\PhpParser\Node $node) : ?string
+    public function resolve(Node $node) : ?string
     {
         if ($node->name === null) {
             return null;

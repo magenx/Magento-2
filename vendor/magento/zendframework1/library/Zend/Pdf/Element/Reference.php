@@ -82,14 +82,18 @@ class Zend_Pdf_Element_Reference extends Zend_Pdf_Element
     /**
      * Object constructor:
      *
-     * @param integer $objNum
-     * @param integer $genNum
+     * @param int $objNum
+     * @param int $genNum
      * @param Zend_Pdf_Element_Reference_Context $context
      * @param Zend_Pdf_ElementFactory $factory
      * @throws Zend_Pdf_Exception
      */
-    public function __construct($objNum, $genNum = 0, Zend_Pdf_Element_Reference_Context $context, Zend_Pdf_ElementFactory $factory)
-    {
+    public function __construct(
+        $objNum,
+        $genNum,
+        Zend_Pdf_Element_Reference_Context $context,
+        Zend_Pdf_ElementFactory $factory
+    ){
         if ( !(is_integer($objNum) && $objNum > 0) ) {
             #require_once 'Zend/Pdf/Exception.php';
             throw new Zend_Pdf_Exception('Object number must be positive integer');

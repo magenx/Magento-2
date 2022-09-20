@@ -4,14 +4,11 @@ declare (strict_types=1);
 namespace Rector\CodeQuality\Rector\FunctionLike;
 
 use PhpParser\Node;
-use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\Assign;
-use PhpParser\Node\Expr\Closure;
 use PhpParser\Node\Expr\PropertyFetch;
 use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassMethod;
-use PhpParser\Node\Stmt\Expression;
 use PhpParser\Node\Stmt\If_;
 use PhpParser\Node\Stmt\Property;
 use PhpParser\NodeTraverser;
@@ -29,7 +26,7 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
  *
  * @see \Rector\Tests\CodeQuality\Rector\FunctionLike\RemoveAlwaysTrueConditionSetInConstructorRector\RemoveAlwaysTrueConditionSetInConstructorRectorTest
  */
-final class RemoveAlwaysTrueConditionSetInConstructorRector extends \Rector\Core\Rector\AbstractRector
+final class RemoveAlwaysTrueConditionSetInConstructorRector extends AbstractRector
 {
     /**
      * @readonly
@@ -41,14 +38,14 @@ final class RemoveAlwaysTrueConditionSetInConstructorRector extends \Rector\Core
      * @var \Rector\NodeTypeResolver\PHPStan\Type\TypeFactory
      */
     private $typeFactory;
-    public function __construct(\Rector\NodeTypeResolver\PHPStan\Type\StaticTypeAnalyzer $staticTypeAnalyzer, \Rector\NodeTypeResolver\PHPStan\Type\TypeFactory $typeFactory)
+    public function __construct(StaticTypeAnalyzer $staticTypeAnalyzer, TypeFactory $typeFactory)
     {
         $this->staticTypeAnalyzer = $staticTypeAnalyzer;
         $this->typeFactory = $typeFactory;
     }
-    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
+    public function getRuleDefinition() : RuleDefinition
     {
-        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('If conditions is always true, perform the content right away', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample(<<<'CODE_SAMPLE'
+        return new RuleDefinition('If conditions is always true, perform the content right away', [new CodeSample(<<<'CODE_SAMPLE'
 final class SomeClass
 {
     private $value;
@@ -89,93 +86,68 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [\PhpParser\Node\Stmt\ClassMethod::class, \PhpParser\Node\Expr\Closure::class];
+        return [If_::class];
     }
     /**
-     * @param ClassMethod|Closure $node
+     * @param If_ $node
+     * @return null|If_|Stmt[]
      */
-    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
+    public function refactor(Node $node)
     {
-        if ($node->stmts === null) {
+        $ifStmt = $this->matchTruableIf($node);
+        if (!$ifStmt instanceof If_) {
             return null;
         }
-        if ($node->stmts === []) {
-            return null;
+        if ($ifStmt->stmts === []) {
+            $this->removeNode($ifStmt);
+            return $ifStmt;
         }
-        $haveNodeChanged = \false;
-        foreach ($node->stmts as $key => $stmt) {
-            if ($stmt instanceof \PhpParser\Node\Stmt\Expression) {
-                $stmt = $stmt->expr;
-            }
-            $ifStmt = $this->matchTruableIf($stmt);
-            if (!$ifStmt instanceof \PhpParser\Node\Stmt\If_) {
-                continue;
-            }
-            if ($ifStmt->stmts === null) {
-                continue;
-            }
-            if (\count($ifStmt->stmts) === 1) {
-                $node->stmts[$key] = $ifStmt->stmts[0];
-                continue;
-            }
-            $haveNodeChanged = \true;
-            // move all nodes one level up
-            \array_splice($node->stmts, $key, \count($ifStmt->stmts) - 1, $ifStmt->stmts);
-        }
-        if ($haveNodeChanged) {
-            return $node;
-        }
-        return null;
+        return $ifStmt->stmts;
     }
     /**
-     * @param \PhpParser\Node\Expr|\PhpParser\Node\Stmt $node
      * @return \PhpParser\Node\Stmt\If_|null
      */
-    private function matchTruableIf($node)
+    private function matchTruableIf(If_ $if)
     {
-        if (!$node instanceof \PhpParser\Node\Stmt\If_) {
-            return null;
-        }
         // just one if
-        if ($node->elseifs !== []) {
+        if ($if->elseifs !== []) {
             return null;
         }
         // there is some else
-        if ($node->else !== null) {
+        if ($if->else !== null) {
             return null;
         }
         // only property fetch, because of constructor set
-        if (!$node->cond instanceof \PhpParser\Node\Expr\PropertyFetch) {
+        if (!$if->cond instanceof PropertyFetch) {
             return null;
         }
-        $propertyFetchType = $this->resolvePropertyFetchType($node->cond);
+        $propertyFetchType = $this->resolvePropertyFetchType($if->cond);
         if (!$this->staticTypeAnalyzer->isAlwaysTruableType($propertyFetchType)) {
             return null;
         }
-        return $node;
+        return $if;
     }
-    private function resolvePropertyFetchType(\PhpParser\Node\Expr\PropertyFetch $propertyFetch) : \PHPStan\Type\Type
+    private function resolvePropertyFetchType(PropertyFetch $propertyFetch) : Type
     {
-        $classLike = $this->betterNodeFinder->findParentType($propertyFetch, \PhpParser\Node\Stmt\Class_::class);
-        if (!$classLike instanceof \PhpParser\Node\Stmt\Class_) {
-            return new \PHPStan\Type\MixedType();
+        $classLike = $this->betterNodeFinder->findParentType($propertyFetch, Class_::class);
+        if (!$classLike instanceof Class_) {
+            return new MixedType();
         }
         $propertyName = $this->getName($propertyFetch);
         if ($propertyName === null) {
-            return new \PHPStan\Type\MixedType();
+            return new MixedType();
         }
         $property = $classLike->getProperty($propertyName);
-        if (!$property instanceof \PhpParser\Node\Stmt\Property) {
-            return new \PHPStan\Type\MixedType();
+        if (!$property instanceof Property) {
+            return new MixedType();
         }
         // anything but private can be changed from outer scope
         if (!$property->isPrivate()) {
-            return new \PHPStan\Type\MixedType();
+            return new MixedType();
         }
         // set in constructor + changed in class
-        $propertyTypeFromConstructor = $this->resolvePropertyTypeAfterConstructor($classLike, $propertyName);
-        $resolvedTypes = [];
-        $resolvedTypes[] = $propertyTypeFromConstructor;
+        $propertyType = $this->resolvePropertyTypeAfterConstructor($classLike, $propertyName);
+        $resolvedTypes = [$propertyType];
         $defaultValue = $property->props[0]->default;
         if ($defaultValue !== null) {
             $resolvedTypes[] = $this->getType($defaultValue);
@@ -186,10 +158,10 @@ CODE_SAMPLE
         }
         return $this->typeFactory->createMixedPassedOrUnionTypeAndKeepConstant($resolvedTypes);
     }
-    private function resolvePropertyTypeAfterConstructor(\PhpParser\Node\Stmt\Class_ $class, string $propertyName) : \PHPStan\Type\Type
+    private function resolvePropertyTypeAfterConstructor(Class_ $class, string $propertyName) : Type
     {
         $propertyTypeFromConstructor = null;
-        $constructClassMethod = $class->getMethod(\Rector\Core\ValueObject\MethodName::CONSTRUCT);
+        $constructClassMethod = $class->getMethod(MethodName::CONSTRUCT);
         if ($constructClassMethod !== null) {
             $propertyTypeFromConstructor = $this->resolveAssignedTypeInStmtsByPropertyName((array) $constructClassMethod->stmts, $propertyName);
         }
@@ -197,22 +169,22 @@ CODE_SAMPLE
             return $propertyTypeFromConstructor;
         }
         // undefined property is null by default
-        return new \PHPStan\Type\NullType();
+        return new NullType();
     }
     /**
      * @param Stmt[] $stmts
      */
-    private function resolveAssignedTypeInStmtsByPropertyName(array $stmts, string $propertyName) : ?\PHPStan\Type\Type
+    private function resolveAssignedTypeInStmtsByPropertyName(array $stmts, string $propertyName) : ?Type
     {
         $resolvedTypes = [];
-        $this->traverseNodesWithCallable($stmts, function (\PhpParser\Node $node) use($propertyName, &$resolvedTypes) : ?int {
-            if ($node instanceof \PhpParser\Node\Stmt\ClassMethod && $this->isName($node, \Rector\Core\ValueObject\MethodName::CONSTRUCT)) {
-                return \PhpParser\NodeTraverser::DONT_TRAVERSE_CHILDREN;
+        $this->traverseNodesWithCallable($stmts, function (Node $node) use($propertyName, &$resolvedTypes) : ?int {
+            if ($node instanceof ClassMethod && $this->isName($node, MethodName::CONSTRUCT)) {
+                return NodeTraverser::DONT_TRAVERSE_CHILDREN;
             }
             if (!$this->isPropertyFetchAssignOfPropertyName($node, $propertyName)) {
                 return null;
             }
-            if (!$node instanceof \PhpParser\Node\Expr\Assign) {
+            if (!$node instanceof Assign) {
                 return null;
             }
             $resolvedTypes[] = $this->getType($node->expr);
@@ -226,12 +198,12 @@ CODE_SAMPLE
     /**
      * E.g. $this->{value} = x
      */
-    private function isPropertyFetchAssignOfPropertyName(\PhpParser\Node $node, string $propertyName) : bool
+    private function isPropertyFetchAssignOfPropertyName(Node $node, string $propertyName) : bool
     {
-        if (!$node instanceof \PhpParser\Node\Expr\Assign) {
+        if (!$node instanceof Assign) {
             return \false;
         }
-        if (!$node->var instanceof \PhpParser\Node\Expr\PropertyFetch) {
+        if (!$node->var instanceof PropertyFetch) {
             return \false;
         }
         return $this->isName($node->var, $propertyName);

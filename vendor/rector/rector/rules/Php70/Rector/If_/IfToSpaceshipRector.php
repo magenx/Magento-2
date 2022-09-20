@@ -25,7 +25,7 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
  *
  * @see \Rector\Tests\Php70\Rector\If_\IfToSpaceshipRector\IfToSpaceshipRectorTest
  */
-final class IfToSpaceshipRector extends \Rector\Core\Rector\AbstractRector implements \Rector\VersionBonding\Contract\MinPhpVersionInterface
+final class IfToSpaceshipRector extends AbstractRector implements MinPhpVersionInterface
 {
     /**
      * @var int|float|string|bool|mixed[]|null
@@ -51,9 +51,13 @@ final class IfToSpaceshipRector extends \Rector\Core\Rector\AbstractRector imple
      * @var \PhpParser\Node|null
      */
     private $nextNode = null;
-    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
+    /**
+     * @var \PhpParser\Node\Expr\Ternary|null
+     */
+    private $ternary = null;
+    public function getRuleDefinition() : RuleDefinition
     {
-        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Changes if/else to spaceship <=> where useful', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample(<<<'CODE_SAMPLE'
+        return new RuleDefinition('Changes if/else to spaceship <=> where useful', [new CodeSample(<<<'CODE_SAMPLE'
 class SomeClass
 {
     public function run()
@@ -86,22 +90,19 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [\PhpParser\Node\Stmt\If_::class];
+        return [If_::class];
     }
     /**
      * @param If_ $node
      */
-    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
+    public function refactor(Node $node) : ?Node
     {
-        if (!$node->cond instanceof \PhpParser\Node\Expr\BinaryOp\Equal && !$node->cond instanceof \PhpParser\Node\Expr\BinaryOp\Identical) {
+        if (!$node->cond instanceof Equal && !$node->cond instanceof Identical) {
             return null;
         }
         $this->reset();
         $this->matchOnEqualFirstValueAndSecondValue($node);
-        if ($this->firstValue === null) {
-            return null;
-        }
-        if ($this->secondValue === null) {
+        if (!isset($this->firstValue, $this->secondValue)) {
             return null;
         }
         /** @var Equal|Identical $condition */
@@ -109,20 +110,26 @@ CODE_SAMPLE
         if (!$this->areVariablesEqual($condition, $this->firstValue, $this->secondValue)) {
             return null;
         }
-        // is spaceship return values?
-        if ([$this->onGreater, $this->onEqual, $this->onSmaller] !== [-1, 0, 1]) {
-            return null;
+        if ([$this->onGreater, $this->onEqual, $this->onSmaller] === [1, 0, -1]) {
+            return $this->processAscendingSort($this->ternary, $this->firstValue, $this->secondValue);
         }
-        if ($this->nextNode !== null) {
-            $this->removeNode($this->nextNode);
+        if ([$this->onGreater, $this->onEqual, $this->onSmaller] === [-1, 0, 1]) {
+            return $this->processDescendingSort($this->ternary, $this->firstValue, $this->secondValue);
         }
-        // spaceship ready!
-        $spaceship = new \PhpParser\Node\Expr\BinaryOp\Spaceship($this->secondValue, $this->firstValue);
-        return new \PhpParser\Node\Stmt\Return_($spaceship);
+        return null;
     }
     public function provideMinPhpVersion() : int
     {
-        return \Rector\Core\ValueObject\PhpVersionFeature::SPACESHIP;
+        return PhpVersionFeature::SPACESHIP;
+    }
+    private function processReturnSpaceship(Expr $firstValue, Expr $secondValue) : Return_
+    {
+        if ($this->nextNode instanceof Return_) {
+            $this->removeNode($this->nextNode);
+        }
+        // spaceship ready!
+        $spaceship = new Spaceship($secondValue, $firstValue);
+        return new Return_($spaceship);
     }
     private function reset() : void
     {
@@ -132,24 +139,23 @@ CODE_SAMPLE
         $this->firstValue = null;
         $this->secondValue = null;
     }
-    private function matchOnEqualFirstValueAndSecondValue(\PhpParser\Node\Stmt\If_ $if) : void
+    private function matchOnEqualFirstValueAndSecondValue(If_ $if) : void
     {
         $this->matchOnEqual($if);
         if ($if->else !== null) {
             $this->processElse($if->else);
         } else {
-            $this->nextNode = $if->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::NEXT_NODE);
-            if ($this->nextNode instanceof \PhpParser\Node\Stmt\Return_ && $this->nextNode->expr instanceof \PhpParser\Node\Expr\Ternary) {
-                /** @var Ternary $ternary */
-                $ternary = $this->nextNode->expr;
-                $this->processTernary($ternary);
+            $nextNode = $if->getAttribute(AttributeKey::NEXT_NODE);
+            if ($nextNode instanceof Return_ && $nextNode->expr instanceof Ternary) {
+                $this->ternary = $nextNode->expr;
+                $this->processTernary($this->ternary, $nextNode);
             }
         }
     }
     /**
      * @param \PhpParser\Node\Expr\BinaryOp\Equal|\PhpParser\Node\Expr\BinaryOp\Identical $binaryOp
      */
-    private function areVariablesEqual($binaryOp, \PhpParser\Node\Expr $firstValue, \PhpParser\Node\Expr $secondValue) : bool
+    private function areVariablesEqual($binaryOp, Expr $firstValue, Expr $secondValue) : bool
     {
         if ($this->nodeComparator->areNodesEqual($binaryOp->left, $firstValue) && $this->nodeComparator->areNodesEqual($binaryOp->right, $secondValue)) {
             return \true;
@@ -159,49 +165,66 @@ CODE_SAMPLE
         }
         return $this->nodeComparator->areNodesEqual($binaryOp->left, $secondValue);
     }
-    private function matchOnEqual(\PhpParser\Node\Stmt\If_ $if) : void
+    private function matchOnEqual(If_ $if) : void
     {
         if (\count($if->stmts) !== 1) {
             return;
         }
         $onlyIfStmt = $if->stmts[0];
-        if ($onlyIfStmt instanceof \PhpParser\Node\Stmt\Return_) {
+        if ($onlyIfStmt instanceof Return_) {
             if ($onlyIfStmt->expr === null) {
                 return;
             }
             $this->onEqual = $this->valueResolver->getValue($onlyIfStmt->expr);
         }
     }
-    private function processElse(\PhpParser\Node\Stmt\Else_ $else) : void
+    private function processElse(Else_ $else) : void
     {
         if (\count($else->stmts) !== 1) {
             return;
         }
-        if (!$else->stmts[0] instanceof \PhpParser\Node\Stmt\Return_) {
+        if (!$else->stmts[0] instanceof Return_) {
             return;
         }
         /** @var Return_ $returnNode */
         $returnNode = $else->stmts[0];
-        if ($returnNode->expr instanceof \PhpParser\Node\Expr\Ternary) {
-            $this->processTernary($returnNode->expr);
+        if ($returnNode->expr instanceof Ternary) {
+            $this->ternary = $returnNode->expr;
+            $this->processTernary($returnNode->expr, null);
         }
     }
-    private function processTernary(\PhpParser\Node\Expr\Ternary $ternary) : void
+    private function processTernary(Ternary $ternary, ?Return_ $return) : void
     {
-        if ($ternary->cond instanceof \PhpParser\Node\Expr\BinaryOp\Smaller) {
+        if ($ternary->cond instanceof Smaller) {
             $this->firstValue = $ternary->cond->left;
             $this->secondValue = $ternary->cond->right;
             if ($ternary->if !== null) {
                 $this->onSmaller = $this->valueResolver->getValue($ternary->if);
             }
             $this->onGreater = $this->valueResolver->getValue($ternary->else);
-        } elseif ($ternary->cond instanceof \PhpParser\Node\Expr\BinaryOp\Greater) {
+            $this->nextNode = $return;
+        } elseif ($ternary->cond instanceof Greater) {
             $this->firstValue = $ternary->cond->right;
             $this->secondValue = $ternary->cond->left;
             if ($ternary->if !== null) {
                 $this->onGreater = $this->valueResolver->getValue($ternary->if);
             }
             $this->onSmaller = $this->valueResolver->getValue($ternary->else);
+            $this->nextNode = $return;
         }
+    }
+    private function processAscendingSort(?Ternary $ternary, Expr $firstValue, Expr $secondValue) : Return_
+    {
+        if ($ternary instanceof Ternary && !$ternary->cond instanceof Greater) {
+            return $this->processReturnSpaceship($secondValue, $firstValue);
+        }
+        return $this->processReturnSpaceship($firstValue, $secondValue);
+    }
+    private function processDescendingSort(?Ternary $ternary, Expr $firstValue, Expr $secondValue) : Return_
+    {
+        if ($ternary instanceof Ternary && !$ternary->cond instanceof Smaller) {
+            return $this->processReturnSpaceship($secondValue, $firstValue);
+        }
+        return $this->processReturnSpaceship($firstValue, $secondValue);
     }
 }

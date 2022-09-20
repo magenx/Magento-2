@@ -8,7 +8,10 @@
     </DuplicateArrayKey>
   </file>
   <file src="src/Autoloader.php">
-    <MixedArgumentTypeCoercion occurrences="2"/>
+    <MixedArgumentTypeCoercion occurrences="2">
+      <code>RewriteRules::namespaceReverse()</code>
+      <code>RewriteRules::namespaceRewrite()</code>
+    </MixedArgumentTypeCoercion>
   </file>
   <file src="src/ConfigPostProcessor.php">
     <InvalidArgument occurrences="1">
@@ -38,9 +41,7 @@
       <code>$newKey</code>
       <code>$target</code>
     </MixedArgument>
-    <MixedArgumentTypeCoercion occurrences="1">
-      <code>[$key]</code>
-    </MixedArgumentTypeCoercion>
+    <MixedArgumentTypeCoercion occurrences="1"/>
     <MixedArrayAssignment occurrences="4">
       <code>$config[$key]</code>
       <code>$config['aliases'][$alias]</code>
@@ -59,7 +60,7 @@
     <MixedArrayTypeCoercion occurrences="1">
       <code>$aliases[$name]</code>
     </MixedArrayTypeCoercion>
-    <MixedAssignment occurrences="25">
+    <MixedAssignment occurrences="26">
       <code>$a[$key]</code>
       <code>$a[$key]</code>
       <code>$a[]</code>
@@ -77,6 +78,7 @@
       <code>$newKey</code>
       <code>$notIn[]</code>
       <code>$result</code>
+      <code>$rewritten[$key]</code>
       <code>$rewritten[$key]</code>
       <code>$rewritten[$newKey]</code>
       <code>$rewritten[$newKey][]</code>

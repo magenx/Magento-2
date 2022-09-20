@@ -62,6 +62,7 @@ class ContentSecurityPolicy implements MultipleHeaderInterface
         // Other directives
         'block-all-mixed-content',
         'require-sri-for',
+        'require-trusted-types-for',
         'trusted-types',
         'upgrade-insecure-requests',
     ];

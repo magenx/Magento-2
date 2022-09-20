@@ -73,39 +73,54 @@ define([
             return window.checkoutConfig.payment[this.getCode()].environment;
         },
 
-        /**
-         * @returns {String}
-         */
-        getColor: function () {
-            return window.checkoutConfig.payment[this.getCode()].style.color;
+        getCurrentCode: function (paypalType = null) {
+            var code = 'braintree_paypal';
+            if (paypalType !== 'paypal') {
+                code = code + '_' + paypalType;
+            }
+            return code;
         },
 
         /**
          * @returns {String}
          */
-        getShape: function () {
-            return window.checkoutConfig.payment[this.getCode()].style.shape;
+        getColor: function (paypalType = null) {
+            return window.checkoutConfig.payment[this.getCurrentCode(paypalType)].style.color;
         },
 
         /**
          * @returns {String}
          */
-        getLayout: function () {
-            return window.checkoutConfig.payment[this.getCode()].style.layout;
+        getShape: function (paypalType = null) {
+            return window.checkoutConfig.payment[this.getCurrentCode(paypalType)].style.shape;
         },
 
         /**
          * @returns {String}
          */
-        getSize: function () {
-            return window.checkoutConfig.payment[this.getCode()].style.size;
+        getLayout: function (paypalType = null) {
+            return window.checkoutConfig.payment[this.getCurrentCode(paypalType)].style.layout;
         },
 
         /**
          * @returns {String}
          */
-        getLabel: function () {
-            return null;
+        getSize: function (paypalType = null) {
+            return window.checkoutConfig.payment[this.getCurrentCode(paypalType)].style.size;
+        },
+
+        /**
+         * @returns {String}
+         */
+        getLabel: function (paypalType = null) {
+            return window.checkoutConfig.payment[this.getCurrentCode(paypalType)].style.label;
+        },
+
+        /**
+         * @returns {String}
+         */
+        getTagline: function (paypalType = null) {
+            return window.checkoutConfig.payment[this.getCurrentCode(paypalType)].style.tagline;
         },
 
         /**
@@ -208,8 +223,6 @@ define([
 
                 if (typeof this.config.dataCollector === 'object' && typeof this.config.dataCollector.paypal === 'boolean') {
                     options.paypal = true;
-                } else {
-                    options.kount = true;
                 }
 
                 dataCollector.create(options, function (err, dataCollectorInstance) {

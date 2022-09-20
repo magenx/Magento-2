@@ -4,8 +4,10 @@ declare (strict_types=1);
 namespace Rector\Naming\PropertyRenamer;
 
 use PhpParser\Node\Param;
+use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\ClassMethod;
+use PhpParser\Node\Stmt\Interface_;
 use PHPStan\PhpDocParser\Ast\PhpDoc\ParamTagValueNode;
 use Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfo;
 use Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfoFactory;
@@ -60,7 +62,7 @@ final class PropertyPromotionRenamer
      * @var \Rector\Naming\VariableRenamer
      */
     private $variableRenamer;
-    public function __construct(\Rector\Core\Php\PhpVersionProvider $phpVersionProvider, \Rector\Naming\ExpectedNameResolver\MatchParamTypeExpectedNameResolver $matchParamTypeExpectedNameResolver, \Rector\Naming\ValueObjectFactory\ParamRenameFactory $paramRenameFactory, \Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfoFactory $phpDocInfoFactory, \Rector\Naming\ParamRenamer\ParamRenamer $paramRenamer, \Rector\Naming\PropertyRenamer\PropertyFetchRenamer $propertyFetchRenamer, \Rector\NodeNameResolver\NodeNameResolver $nodeNameResolver, \Rector\Naming\VariableRenamer $variableRenamer)
+    public function __construct(PhpVersionProvider $phpVersionProvider, MatchParamTypeExpectedNameResolver $matchParamTypeExpectedNameResolver, ParamRenameFactory $paramRenameFactory, PhpDocInfoFactory $phpDocInfoFactory, ParamRenamer $paramRenamer, \Rector\Naming\PropertyRenamer\PropertyFetchRenamer $propertyFetchRenamer, NodeNameResolver $nodeNameResolver, VariableRenamer $variableRenamer)
     {
         $this->phpVersionProvider = $phpVersionProvider;
         $this->matchParamTypeExpectedNameResolver = $matchParamTypeExpectedNameResolver;
@@ -71,13 +73,16 @@ final class PropertyPromotionRenamer
         $this->nodeNameResolver = $nodeNameResolver;
         $this->variableRenamer = $variableRenamer;
     }
-    public function renamePropertyPromotion(\PhpParser\Node\Stmt\ClassLike $classLike) : void
+    /**
+     * @param \PhpParser\Node\Stmt\Class_|\PhpParser\Node\Stmt\Interface_ $classLike
+     */
+    public function renamePropertyPromotion($classLike) : void
     {
-        if (!$this->phpVersionProvider->isAtLeastPhpVersion(\Rector\Core\ValueObject\PhpVersionFeature::PROPERTY_PROMOTION)) {
+        if (!$this->phpVersionProvider->isAtLeastPhpVersion(PhpVersionFeature::PROPERTY_PROMOTION)) {
             return;
         }
-        $constructClassMethod = $classLike->getMethod(\Rector\Core\ValueObject\MethodName::CONSTRUCT);
-        if (!$constructClassMethod instanceof \PhpParser\Node\Stmt\ClassMethod) {
+        $constructClassMethod = $classLike->getMethod(MethodName::CONSTRUCT);
+        if (!$constructClassMethod instanceof ClassMethod) {
             return;
         }
         // resolve possible and existing param names
@@ -101,7 +106,7 @@ final class PropertyPromotionRenamer
             $this->renameParamVarNameAndVariableUsage($classLike, $constructClassMethod, $desiredPropertyName, $param);
         }
     }
-    private function renameParamVarNameAndVariableUsage(\PhpParser\Node\Stmt\ClassLike $classLike, \PhpParser\Node\Stmt\ClassMethod $classMethod, string $desiredPropertyName, \PhpParser\Node\Param $param) : void
+    private function renameParamVarNameAndVariableUsage(ClassLike $classLike, ClassMethod $classMethod, string $desiredPropertyName, Param $param) : void
     {
         $classMethodPhpDocInfo = $this->phpDocInfoFactory->createFromNodeOrEmpty($classMethod);
         $currentParamName = $this->nodeNameResolver->getName($param);
@@ -112,14 +117,14 @@ final class PropertyPromotionRenamer
         $param->var->name = $desiredPropertyName;
         $this->variableRenamer->renameVariableInFunctionLike($classMethod, $paramVarName, $desiredPropertyName);
     }
-    private function renameParamDoc(\Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfo $phpDocInfo, \PhpParser\Node\Param $param, string $paramVarName, string $desiredPropertyName) : void
+    private function renameParamDoc(PhpDocInfo $phpDocInfo, Param $param, string $paramVarName, string $desiredPropertyName) : void
     {
-        $paramTagValueNode = $phpDocInfo->getParamTagValueNodeByName($paramVarName);
-        if (!$paramTagValueNode instanceof \PHPStan\PhpDocParser\Ast\PhpDoc\ParamTagValueNode) {
+        $paramTagValueNode = $phpDocInfo->getParamTagValueByName($paramVarName);
+        if (!$paramTagValueNode instanceof ParamTagValueNode) {
             return;
         }
         $paramRename = $this->paramRenameFactory->createFromResolvedExpectedName($param, $desiredPropertyName);
-        if (!$paramRename instanceof \Rector\Naming\ValueObject\ParamRename) {
+        if (!$paramRename instanceof ParamRename) {
             return;
         }
         $this->paramRenamer->rename($paramRename);
@@ -137,7 +142,7 @@ final class PropertyPromotionRenamer
     /**
      * @return int[]|string[]
      */
-    private function resolveBlockingParamNames(\PhpParser\Node\Stmt\ClassMethod $classMethod) : array
+    private function resolveBlockingParamNames(ClassMethod $classMethod) : array
     {
         $futureParamNames = [];
         foreach ($classMethod->params as $param) {

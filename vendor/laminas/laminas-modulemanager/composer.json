@@ -16,7 +16,13 @@
         "forum": "https://discourse.laminas.dev"
     },
     "config": {
-        "sort-packages": true
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        },
+        "sort-packages": true,
+        "platform": {
+            "php": "7.3.99"
+        }
     },
     "extra": {
     },
@@ -33,7 +39,9 @@
         "laminas/laminas-loader": "^2.8",
         "laminas/laminas-mvc": "^3.1.1",
         "laminas/laminas-servicemanager": "^3.7",
-        "phpunit/phpunit": "^9.5.5"
+        "phpunit/phpunit": "^9.5.5",
+        "psalm/plugin-phpunit": "^0.16.1",
+        "vimeo/psalm": "^4.10"
     },
     "suggest": {
         "laminas/laminas-console": "Laminas\\Console component",
@@ -61,6 +69,7 @@
         "cs-check": "phpcs",
         "cs-fix": "phpcbf",
         "test": "phpunit --colors=always",
+        "static-analysis": "psalm --shepherd --stats",
         "test-coverage": "phpunit --colors=always --coverage-clover clover.xml"
     },
     "conflict": {

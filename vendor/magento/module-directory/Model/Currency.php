@@ -438,14 +438,8 @@ class Currency extends \Magento\Framework\Model\AbstractModel
         }
 
         if ((array_key_exists(LocaleCurrency::CURRENCY_OPTION_DISPLAY, $options)
-                && $options[LocaleCurrency::CURRENCY_OPTION_DISPLAY] === \Magento\Framework\Currency::NO_SYMBOL)) {
-            if ($this->isArabicSymbols($formattedCurrency)) {
-                /* Workaround. We need to provide Arabic symbols range and Unicode modifier into expression
-                   to bypass issue when preg_replace with Arabic symbol return corrupted result */
-                $formattedCurrency = preg_replace(['/[^0-9\x{0600}-\x{06FF}.,۰٫]+/u', '/ /'], '', $formattedCurrency);
-            } else {
-                $formattedCurrency = preg_replace(['/[^0-9.,۰٫]+/', '/ /'], '', $formattedCurrency);
-            }
+            && $options[LocaleCurrency::CURRENCY_OPTION_DISPLAY] === \Magento\Framework\Currency::NO_SYMBOL)) {
+            $formattedCurrency = str_replace(' ', '', $formattedCurrency);
         }
 
         return preg_replace('/^\s+|\s+$/u', '', $formattedCurrency);
@@ -459,13 +453,11 @@ class Currency extends \Magento\Framework\Model\AbstractModel
      */
     private function getNumberFormatter(array $options): \Magento\Framework\NumberFormatter
     {
-        $key = 'currency_' . hash(
-            'sha256',
-            ($this->localeResolver->getLocale() . $this->serializer->serialize($options))
-        );
+        $locale = $this->localeResolver->getLocale() . ($this->getCode() ? '@currency=' . $this->getCode() : '');
+        $key = 'currency_' . hash('sha256', $locale . $this->serializer->serialize($options));
         if (!isset($this->numberFormatterCache[$key])) {
             $this->numberFormatter = $this->numberFormatterFactory->create(
-                ['locale' => $this->localeResolver->getLocale(), 'style' => \NumberFormatter::CURRENCY]
+                ['locale' => $locale, 'style' => \NumberFormatter::CURRENCY]
             );
 
             $this->setOptions($options);
@@ -517,7 +509,7 @@ class Currency extends \Magento\Framework\Model\AbstractModel
     {
         $formatted = $this->formatTxt(0);
         $number = $this->formatTxt(0, ['display' => \Magento\Framework\Currency::NO_SYMBOL]);
-        return str_replace($this->trimUnicodeDirectionMark($number), '%s', $formatted);
+        return $formatted !== null ? str_replace($this->trimUnicodeDirectionMark($number), '%s', $formatted) : '';
     }
 
     /**
@@ -602,16 +594,5 @@ class Currency extends \Magento\Framework\Model\AbstractModel
             $string = preg_replace('/^'.$match[1].'/u', '', $string);
         }
         return $string;
-    }
-
-    /**
-     * Checks if given string is of Arabic symbols
-     *
-     * @param string $string
-     * @return bool
-     */
-    private function isArabicSymbols(string $string): bool
-    {
-        return preg_match('/[\p{Arabic}]/u', $string) > 0;
     }
 }

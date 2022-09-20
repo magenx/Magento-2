@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © 2013-2017 Magento, Inc. All rights reserved.
+ * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
 namespace PayPal\Braintree\Gateway\Response;
@@ -11,6 +11,8 @@ use Magento\Sales\Model\Order\Payment;
 class VoidHandler extends TransactionIdHandler
 {
     /**
+     * Set transaction Id
+     *
      * @param Payment $orderPayment
      * @param Transaction $transaction
      * @return void

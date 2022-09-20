@@ -1,21 +1,30 @@
 <?php
 
 declare (strict_types=1);
-namespace RectorPrefix20211221;
+namespace RectorPrefix202208;
 
 use PhpParser\ConstExprEvaluator;
 use PhpParser\NodeFinder;
-use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
-use RectorPrefix20211221\Symplify\Astral\PhpParser\SmartPhpParser;
-use RectorPrefix20211221\Symplify\Astral\PhpParser\SmartPhpParserFactory;
-use RectorPrefix20211221\Symplify\PackageBuilder\Php\TypeChecker;
-use function RectorPrefix20211221\Symfony\Component\DependencyInjection\Loader\Configurator\service;
-return static function (\Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator $containerConfigurator) : void {
+use PHPStan\PhpDocParser\Lexer\Lexer;
+use PHPStan\PhpDocParser\Parser\ConstExprParser;
+use PHPStan\PhpDocParser\Parser\PhpDocParser;
+use PHPStan\PhpDocParser\Parser\TypeParser;
+use RectorPrefix202208\Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+use RectorPrefix202208\Symplify\Astral\PhpParser\SmartPhpParser;
+use RectorPrefix202208\Symplify\Astral\PhpParser\SmartPhpParserFactory;
+use RectorPrefix202208\Symplify\PackageBuilder\Php\TypeChecker;
+use function RectorPrefix202208\Symfony\Component\DependencyInjection\Loader\Configurator\service;
+return static function (ContainerConfigurator $containerConfigurator) : void {
     $services = $containerConfigurator->services();
-    $services->defaults()->autowire()->autoconfigure()->public();
-    $services->load('RectorPrefix20211221\Symplify\\Astral\\', __DIR__ . '/../src')->exclude([__DIR__ . '/../src/StaticFactory', __DIR__ . '/../src/ValueObject', __DIR__ . '/../src/NodeVisitor', __DIR__ . '/../src/PhpParser/SmartPhpParser.php']);
-    $services->set(\RectorPrefix20211221\Symplify\Astral\PhpParser\SmartPhpParser::class)->factory([\RectorPrefix20211221\Symfony\Component\DependencyInjection\Loader\Configurator\service(\RectorPrefix20211221\Symplify\Astral\PhpParser\SmartPhpParserFactory::class), 'create']);
-    $services->set(\PhpParser\ConstExprEvaluator::class);
-    $services->set(\RectorPrefix20211221\Symplify\PackageBuilder\Php\TypeChecker::class);
-    $services->set(\PhpParser\NodeFinder::class);
+    $services->defaults()->autowire()->public();
+    $services->load('RectorPrefix202208\Symplify\\Astral\\', __DIR__ . '/../src')->exclude([__DIR__ . '/../src/StaticFactory', __DIR__ . '/../src/ValueObject', __DIR__ . '/../src/NodeVisitor', __DIR__ . '/../src/PhpParser/SmartPhpParser.php', __DIR__ . '/../src/PhpDocParser/PhpDocNodeVisitor/CallablePhpDocNodeVisitor.php']);
+    $services->set(SmartPhpParser::class)->factory([service(SmartPhpParserFactory::class), 'create']);
+    $services->set(ConstExprEvaluator::class);
+    $services->set(TypeChecker::class);
+    $services->set(NodeFinder::class);
+    // phpdoc parser
+    $services->set(PhpDocParser::class);
+    $services->set(Lexer::class);
+    $services->set(TypeParser::class);
+    $services->set(ConstExprParser::class);
 };

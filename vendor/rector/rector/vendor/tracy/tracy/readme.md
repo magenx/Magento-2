@@ -49,7 +49,7 @@ Alternatively, you can download the whole package or [tracy.phar](https://github
 
 | Tracy     | compatible with PHP | compatible with browsers
 |-----------|---------------|----------
-| Tracy 2.9 | PHP 7.2 – 8.1 | Chrome 55+, Firefox 53+, Safari 11+ and iOS Safari 11+
+| Tracy 2.9 | PHP 7.2 – 8.1 | Chrome 64+, Firefox 69+, Safari 13.1+ and iOS Safari 13.4+
 | Tracy 2.8 | PHP 7.2 – 8.1 | Chrome 55+, Firefox 53+, Safari 11+ and iOS Safari 11+
 | Tracy 2.7 | PHP 7.1 – 8.0 | Chrome 55+, Firefox 53+, MS Edge 16+, Safari 11+ and iOS Safari 11+
 | Tracy 2.6 | PHP 7.1 – 8.0 | Chrome 49+, Firefox 45+, MS Edge 14+, Safari 10+ and iOS Safari 10.2+
@@ -143,7 +143,8 @@ In order to detect misspellings when assigning to an object, we use [trait Nette
 Content Security Policy
 -----------------------
 
-If your site uses Content Security Policy, you'll need to add `'nonce-<value>'` to `script-src` and eventually the same nonce to `style-src` for Tracy to work properly. Some 3rd plugins may require additional directives. Avoid adding `'unsafe-inline'` & `'unsafe-eval'` in production mode, if you can.
+If your site uses Content Security Policy, you'll need to add `'nonce-<value>'` to `script-src` for Tracy to work properly. Some 3rd plugins may require additional directives.
+Nonce is not supported in the `style-src` directive, if you use this directive you need to add `'unsafe-inline'`, but this should be avoided in production mode.
 
 Configuration example for [Nette Framework](https://nette.org):
 
@@ -151,7 +152,13 @@ Configuration example for [Nette Framework](https://nette.org):
 http:
 	csp:
 		script-src: nonce
-		style-src: nonce
+```
+
+Example in pure PHP:
+
+```php
+$nonce = base64_encode(random_bytes(20));
+header("Content-Security-Policy: script-src 'nonce-$nonce';");
 ```
 
 

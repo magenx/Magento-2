@@ -4,7 +4,6 @@ declare (strict_types=1);
 namespace Rector\Naming\Guard\PropertyConflictingNameGuard;
 
 use PhpParser\Node\Stmt\ClassLike;
-use Rector\Naming\Contract\RenameValueObjectInterface;
 use Rector\Naming\ExpectedNameResolver\MatchPropertyTypeExpectedNameResolver;
 use Rector\Naming\PhpArray\ArrayFilter;
 use Rector\Naming\ValueObject\PropertyRename;
@@ -26,24 +25,21 @@ final class MatchPropertyTypeConflictingNameGuard
      * @var \Rector\Naming\PhpArray\ArrayFilter
      */
     private $arrayFilter;
-    public function __construct(\Rector\Naming\ExpectedNameResolver\MatchPropertyTypeExpectedNameResolver $matchPropertyTypeExpectedNameResolver, \Rector\NodeNameResolver\NodeNameResolver $nodeNameResolver, \Rector\Naming\PhpArray\ArrayFilter $arrayFilter)
+    public function __construct(MatchPropertyTypeExpectedNameResolver $matchPropertyTypeExpectedNameResolver, NodeNameResolver $nodeNameResolver, ArrayFilter $arrayFilter)
     {
         $this->matchPropertyTypeExpectedNameResolver = $matchPropertyTypeExpectedNameResolver;
         $this->nodeNameResolver = $nodeNameResolver;
         $this->arrayFilter = $arrayFilter;
     }
-    /**
-     * @param PropertyRename $renameValueObject
-     */
-    public function isConflicting(\Rector\Naming\Contract\RenameValueObjectInterface $renameValueObject) : bool
+    public function isConflicting(PropertyRename $propertyRename) : bool
     {
-        $conflictingPropertyNames = $this->resolve($renameValueObject->getClassLike());
-        return \in_array($renameValueObject->getExpectedName(), $conflictingPropertyNames, \true);
+        $conflictingPropertyNames = $this->resolve($propertyRename->getClassLike());
+        return \in_array($propertyRename->getExpectedName(), $conflictingPropertyNames, \true);
     }
     /**
      * @return string[]
      */
-    public function resolve(\PhpParser\Node\Stmt\ClassLike $classLike) : array
+    public function resolve(ClassLike $classLike) : array
     {
         $expectedNames = [];
         foreach ($classLike->getProperties() as $property) {

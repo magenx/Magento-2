@@ -8,12 +8,8 @@ use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Expr\StaticCall;
 use PhpParser\Node\Name;
-use PHPStan\Type\MixedType;
-use PHPStan\Type\Type;
 use Rector\NodeNameResolver\NodeNameResolver;
 use Rector\NodeTypeResolver\Node\AttributeKey;
-use Rector\NodeTypeResolver\NodeTypeResolver;
-use Rector\StaticTypeMapper\ValueObject\Type\FullyQualifiedObjectType;
 /**
  * Utils for chain of MethodCall Node:
  * "$this->methodCall()->chainedMethodCall()"
@@ -25,20 +21,14 @@ final class FluentChainMethodCallNodeAnalyzer
      * @var \Rector\NodeNameResolver\NodeNameResolver
      */
     private $nodeNameResolver;
-    /**
-     * @readonly
-     * @var \Rector\NodeTypeResolver\NodeTypeResolver
-     */
-    private $nodeTypeResolver;
-    public function __construct(\Rector\NodeNameResolver\NodeNameResolver $nodeNameResolver, \Rector\NodeTypeResolver\NodeTypeResolver $nodeTypeResolver)
+    public function __construct(NodeNameResolver $nodeNameResolver)
     {
         $this->nodeNameResolver = $nodeNameResolver;
-        $this->nodeTypeResolver = $nodeTypeResolver;
     }
     /**
      * @return string[]
      */
-    public function collectMethodCallNamesInChain(\PhpParser\Node\Expr\MethodCall $desiredMethodCall) : array
+    public function collectMethodCallNamesInChain(MethodCall $desiredMethodCall) : array
     {
         $methodCalls = $this->collectAllMethodCallsInChain($desiredMethodCall);
         $methodNames = [];
@@ -54,75 +44,43 @@ final class FluentChainMethodCallNodeAnalyzer
     /**
      * @return MethodCall[]
      */
-    public function collectAllMethodCallsInChain(\PhpParser\Node\Expr\MethodCall $methodCall) : array
+    public function collectAllMethodCallsInChain(MethodCall $methodCall) : array
     {
         $chainMethodCalls = [$methodCall];
         // traverse up
         $currentNode = $methodCall->var;
-        while ($currentNode instanceof \PhpParser\Node\Expr\MethodCall) {
+        while ($currentNode instanceof MethodCall) {
             $chainMethodCalls[] = $currentNode;
             $currentNode = $currentNode->var;
         }
         // traverse down
         if (\count($chainMethodCalls) === 1) {
-            $currentNode = $methodCall->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::PARENT_NODE);
-            while ($currentNode instanceof \PhpParser\Node\Expr\MethodCall) {
+            $currentNode = $methodCall->getAttribute(AttributeKey::PARENT_NODE);
+            while ($currentNode instanceof MethodCall) {
                 $chainMethodCalls[] = $currentNode;
-                $currentNode = $currentNode->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::PARENT_NODE);
+                $currentNode = $currentNode->getAttribute(AttributeKey::PARENT_NODE);
             }
         }
         return $chainMethodCalls;
     }
     /**
-     * Checks "$this->someMethod()->anotherMethod()"
-     *
-     * @param string[] $methods
-     */
-    public function isTypeAndChainCalls(\PhpParser\Node $node, \PHPStan\Type\Type $type, array $methods) : bool
-    {
-        if (!$node instanceof \PhpParser\Node\Expr\MethodCall) {
-            return \false;
-        }
-        $rootMethodCall = $this->resolveRootMethodCall($node);
-        if (!$rootMethodCall instanceof \PhpParser\Node\Expr\MethodCall) {
-            return \false;
-        }
-        $rootMethodCallVarType = $this->nodeTypeResolver->getType($rootMethodCall->var);
-        if (!$rootMethodCallVarType instanceof \Rector\StaticTypeMapper\ValueObject\Type\FullyQualifiedObjectType) {
-            return \false;
-        }
-        // node chaining is in reverse order than code
-        $methods = \array_reverse($methods);
-        foreach ($methods as $method) {
-            if (!$this->nodeNameResolver->isName($node->name, $method)) {
-                return \false;
-            }
-            $node = $node->var;
-        }
-        $variableType = $this->nodeTypeResolver->getType($node);
-        if ($variableType instanceof \PHPStan\Type\MixedType) {
-            return \false;
-        }
-        return $variableType->isSuperTypeOf($type)->yes();
-    }
-    /**
      * @return \PhpParser\Node\Expr|\PhpParser\Node\Name
      */
-    public function resolveRootExpr(\PhpParser\Node\Expr\MethodCall $methodCall)
+    public function resolveRootExpr(MethodCall $methodCall)
     {
         $callerNode = $methodCall->var;
-        while ($callerNode instanceof \PhpParser\Node\Expr\MethodCall || $callerNode instanceof \PhpParser\Node\Expr\StaticCall) {
-            $callerNode = $callerNode instanceof \PhpParser\Node\Expr\StaticCall ? $callerNode->class : $callerNode->var;
+        while ($callerNode instanceof MethodCall || $callerNode instanceof StaticCall) {
+            $callerNode = $callerNode instanceof StaticCall ? $callerNode->class : $callerNode->var;
         }
         return $callerNode;
     }
-    public function resolveRootMethodCall(\PhpParser\Node\Expr\MethodCall $methodCall) : ?\PhpParser\Node\Expr\MethodCall
+    public function resolveRootMethodCall(MethodCall $methodCall) : ?MethodCall
     {
         $callerNode = $methodCall->var;
-        while ($callerNode instanceof \PhpParser\Node\Expr\MethodCall && $callerNode->var instanceof \PhpParser\Node\Expr\MethodCall) {
+        while ($callerNode instanceof MethodCall && $callerNode->var instanceof MethodCall) {
             $callerNode = $callerNode->var;
         }
-        if ($callerNode instanceof \PhpParser\Node\Expr\MethodCall) {
+        if ($callerNode instanceof MethodCall) {
             return $callerNode;
         }
         return null;

@@ -3,8 +3,8 @@
 declare (strict_types=1);
 namespace Rector\VendorLocker;
 
-use PhpParser\Node;
 use PhpParser\Node\Stmt\ClassMethod;
+use PhpParser\Node\Stmt\Function_;
 use PhpParser\Node\Stmt\Property;
 use Rector\VendorLocker\NodeVendorLocker\ClassMethodParamVendorLockResolver;
 use Rector\VendorLocker\NodeVendorLocker\ClassMethodReturnVendorLockResolver;
@@ -26,24 +26,27 @@ final class VendorLockResolver
      * @var \Rector\VendorLocker\NodeVendorLocker\PropertyTypeVendorLockResolver
      */
     private $propertyTypeVendorLockResolver;
-    public function __construct(\Rector\VendorLocker\NodeVendorLocker\ClassMethodParamVendorLockResolver $classMethodParamVendorLockResolver, \Rector\VendorLocker\NodeVendorLocker\ClassMethodReturnVendorLockResolver $classMethodReturnVendorLockResolver, \Rector\VendorLocker\NodeVendorLocker\PropertyTypeVendorLockResolver $propertyTypeVendorLockResolver)
+    public function __construct(ClassMethodParamVendorLockResolver $classMethodParamVendorLockResolver, ClassMethodReturnVendorLockResolver $classMethodReturnVendorLockResolver, PropertyTypeVendorLockResolver $propertyTypeVendorLockResolver)
     {
         $this->classMethodParamVendorLockResolver = $classMethodParamVendorLockResolver;
         $this->classMethodReturnVendorLockResolver = $classMethodReturnVendorLockResolver;
         $this->propertyTypeVendorLockResolver = $propertyTypeVendorLockResolver;
     }
-    public function isClassMethodParamLockedIn(\PhpParser\Node $node) : bool
+    /**
+     * @param \PhpParser\Node\Stmt\ClassMethod|\PhpParser\Node\Stmt\Function_ $node
+     */
+    public function isClassMethodParamLockedIn($node) : bool
     {
-        if (!$node instanceof \PhpParser\Node\Stmt\ClassMethod) {
+        if (!$node instanceof ClassMethod) {
             return \false;
         }
         return $this->classMethodParamVendorLockResolver->isVendorLocked($node);
     }
-    public function isReturnChangeVendorLockedIn(\PhpParser\Node\Stmt\ClassMethod $classMethod) : bool
+    public function isReturnChangeVendorLockedIn(ClassMethod $classMethod) : bool
     {
         return $this->classMethodReturnVendorLockResolver->isVendorLocked($classMethod);
     }
-    public function isPropertyTypeChangeVendorLockedIn(\PhpParser\Node\Stmt\Property $property) : bool
+    public function isPropertyTypeChangeVendorLockedIn(Property $property) : bool
     {
         return $this->propertyTypeVendorLockResolver->isVendorLocked($property);
     }

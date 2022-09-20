@@ -6,19 +6,18 @@ namespace Rector\Privatization\Rector\Class_;
 use PhpParser\Node;
 use PhpParser\Node\Name\FullyQualified;
 use PhpParser\Node\Stmt\Class_;
-use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\ClassReflection;
 use Rector\Core\NodeAnalyzer\ClassAnalyzer;
 use Rector\Core\Rector\AbstractRector;
+use Rector\Core\Reflection\ReflectionResolver;
 use Rector\FamilyTree\Reflection\FamilyRelationsAnalyzer;
-use Rector\NodeTypeResolver\Node\AttributeKey;
 use Rector\Privatization\NodeManipulator\VisibilityManipulator;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
  * @see \Rector\Tests\Privatization\Rector\Class_\FinalizeClassesWithoutChildrenRector\FinalizeClassesWithoutChildrenRectorTest
  */
-final class FinalizeClassesWithoutChildrenRector extends \Rector\Core\Rector\AbstractRector
+final class FinalizeClassesWithoutChildrenRector extends AbstractRector
 {
     /**
      * @var string[]
@@ -43,15 +42,21 @@ final class FinalizeClassesWithoutChildrenRector extends \Rector\Core\Rector\Abs
      * @var \Rector\Privatization\NodeManipulator\VisibilityManipulator
      */
     private $visibilityManipulator;
-    public function __construct(\Rector\Core\NodeAnalyzer\ClassAnalyzer $classAnalyzer, \Rector\FamilyTree\Reflection\FamilyRelationsAnalyzer $familyRelationsAnalyzer, \Rector\Privatization\NodeManipulator\VisibilityManipulator $visibilityManipulator)
+    /**
+     * @readonly
+     * @var \Rector\Core\Reflection\ReflectionResolver
+     */
+    private $reflectionResolver;
+    public function __construct(ClassAnalyzer $classAnalyzer, FamilyRelationsAnalyzer $familyRelationsAnalyzer, VisibilityManipulator $visibilityManipulator, ReflectionResolver $reflectionResolver)
     {
         $this->classAnalyzer = $classAnalyzer;
         $this->familyRelationsAnalyzer = $familyRelationsAnalyzer;
         $this->visibilityManipulator = $visibilityManipulator;
+        $this->reflectionResolver = $reflectionResolver;
     }
-    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
+    public function getRuleDefinition() : RuleDefinition
     {
-        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Finalize every class that has no children', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample(<<<'CODE_SAMPLE'
+        return new RuleDefinition('Finalize every class that has no children', [new CodeSample(<<<'CODE_SAMPLE'
 class FirstClass
 {
 }
@@ -84,12 +89,12 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [\PhpParser\Node\Stmt\Class_::class];
+        return [Class_::class];
     }
     /**
      * @param Class_ $node
      */
-    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
+    public function refactor(Node $node) : ?Node
     {
         if ($this->shouldSkipClass($node)) {
             return null;
@@ -101,12 +106,8 @@ CODE_SAMPLE
         if ($phpDocInfo->hasByAnnotationClasses(self::DOCTRINE_ODM_MAPPING_ANNOTATION)) {
             return null;
         }
-        $scope = $node->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::SCOPE);
-        if (!$scope instanceof \PHPStan\Analyser\Scope) {
-            return null;
-        }
-        $classReflection = $scope->getClassReflection();
-        if (!$classReflection instanceof \PHPStan\Reflection\ClassReflection) {
+        $classReflection = $this->reflectionResolver->resolveClassReflection($node);
+        if (!$classReflection instanceof ClassReflection) {
             return null;
         }
         $childrenClassReflections = $this->familyRelationsAnalyzer->getChildrenOfClassReflection($classReflection);
@@ -119,11 +120,11 @@ CODE_SAMPLE
         $this->visibilityManipulator->makeFinal($node);
         return $node;
     }
-    private function hasDoctrineAttr(\PhpParser\Node\Stmt\Class_ $class) : bool
+    private function hasDoctrineAttr(Class_ $class) : bool
     {
         foreach ($class->attrGroups as $attrGroup) {
             foreach ($attrGroup->attrs as $attribute) {
-                if (!$attribute->name instanceof \PhpParser\Node\Name\FullyQualified) {
+                if (!$attribute->name instanceof FullyQualified) {
                     continue;
                 }
                 $className = $this->nodeNameResolver->getName($attribute->name);
@@ -137,7 +138,7 @@ CODE_SAMPLE
         }
         return \false;
     }
-    private function shouldSkipClass(\PhpParser\Node\Stmt\Class_ $class) : bool
+    private function shouldSkipClass(Class_ $class) : bool
     {
         if ($class->isFinal()) {
             return \true;

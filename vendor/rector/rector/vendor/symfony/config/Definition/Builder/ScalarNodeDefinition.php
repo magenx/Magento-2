@@ -8,23 +8,21 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix20211221\Symfony\Component\Config\Definition\Builder;
+namespace RectorPrefix202208\Symfony\Component\Config\Definition\Builder;
 
-use RectorPrefix20211221\Symfony\Component\Config\Definition\ScalarNode;
+use RectorPrefix202208\Symfony\Component\Config\Definition\ScalarNode;
 /**
  * This class provides a fluent interface for defining a node.
  *
  * @author Johannes M. Schmitt <schmittjoh@gmail.com>
  */
-class ScalarNodeDefinition extends \RectorPrefix20211221\Symfony\Component\Config\Definition\Builder\VariableNodeDefinition
+class ScalarNodeDefinition extends VariableNodeDefinition
 {
     /**
      * Instantiate a Node.
-     *
-     * @return ScalarNode
      */
-    protected function instantiateNode()
+    protected function instantiateNode() : \RectorPrefix202208\Symfony\Component\Config\Definition\VariableNode
     {
-        return new \RectorPrefix20211221\Symfony\Component\Config\Definition\ScalarNode($this->name, $this->parent, $this->pathSeparator);
+        return new ScalarNode($this->name, $this->parent, $this->pathSeparator);
     }
 }

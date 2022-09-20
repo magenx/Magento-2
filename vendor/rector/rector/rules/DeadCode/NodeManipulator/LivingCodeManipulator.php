@@ -28,66 +28,51 @@ use PhpParser\Node\Expr\UnaryMinus;
 use PhpParser\Node\Expr\UnaryPlus;
 use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Scalar;
-use PhpParser\Node\Stmt\Expression;
 use PHPStan\Type\ObjectType;
 use Rector\NodeTypeResolver\NodeTypeResolver;
-use Rector\PostRector\Collector\NodesToAddCollector;
 final class LivingCodeManipulator
 {
-    /**
-     * @readonly
-     * @var \Rector\PostRector\Collector\NodesToAddCollector
-     */
-    private $nodesToAddCollector;
     /**
      * @readonly
      * @var \Rector\NodeTypeResolver\NodeTypeResolver
      */
     private $nodeTypeResolver;
-    public function __construct(\Rector\PostRector\Collector\NodesToAddCollector $nodesToAddCollector, \Rector\NodeTypeResolver\NodeTypeResolver $nodeTypeResolver)
+    public function __construct(NodeTypeResolver $nodeTypeResolver)
     {
-        $this->nodesToAddCollector = $nodesToAddCollector;
         $this->nodeTypeResolver = $nodeTypeResolver;
-    }
-    public function addLivingCodeBeforeNode(\PhpParser\Node\Expr $expr, \PhpParser\Node $addBeforeThisNode) : void
-    {
-        $livinExprs = $this->keepLivingCodeFromExpr($expr);
-        foreach ($livinExprs as $livinExpr) {
-            $this->nodesToAddCollector->addNodeBeforeNode(new \PhpParser\Node\Stmt\Expression($livinExpr), $addBeforeThisNode);
-        }
     }
     /**
      * @return Expr[]|mixed[]
-     * @param int|\PhpParser\Node|string|null $expr
+     * @param \PhpParser\Node|int|string|null $expr
      */
     public function keepLivingCodeFromExpr($expr) : array
     {
-        if (!$expr instanceof \PhpParser\Node\Expr) {
+        if (!$expr instanceof Expr) {
             return [];
         }
-        if ($expr instanceof \PhpParser\Node\Expr\Closure || $expr instanceof \PhpParser\Node\Scalar || $expr instanceof \PhpParser\Node\Expr\ConstFetch) {
+        if ($expr instanceof Closure || $expr instanceof Scalar || $expr instanceof ConstFetch) {
             return [];
         }
         if ($this->isNestedExpr($expr)) {
             return $this->keepLivingCodeFromExpr($expr->expr);
         }
-        if ($expr instanceof \PhpParser\Node\Expr\Variable) {
+        if ($expr instanceof Variable) {
             return $this->keepLivingCodeFromExpr($expr->name);
         }
-        if ($expr instanceof \PhpParser\Node\Expr\PropertyFetch) {
+        if ($expr instanceof PropertyFetch) {
             return \array_merge($this->keepLivingCodeFromExpr($expr->var), $this->keepLivingCodeFromExpr($expr->name));
         }
-        if ($expr instanceof \PhpParser\Node\Expr\ArrayDimFetch) {
+        if ($expr instanceof ArrayDimFetch) {
             $type = $this->nodeTypeResolver->getType($expr->var);
-            if ($type instanceof \PHPStan\Type\ObjectType) {
-                $objectType = new \PHPStan\Type\ObjectType('ArrayAccess');
+            if ($type instanceof ObjectType) {
+                $objectType = new ObjectType('ArrayAccess');
                 if ($objectType->isSuperTypeOf($type)->yes()) {
                     return [$expr];
                 }
             }
             return \array_merge($this->keepLivingCodeFromExpr($expr->var), $this->keepLivingCodeFromExpr($expr->dim));
         }
-        if ($expr instanceof \PhpParser\Node\Expr\ClassConstFetch || $expr instanceof \PhpParser\Node\Expr\StaticPropertyFetch) {
+        if ($expr instanceof ClassConstFetch || $expr instanceof StaticPropertyFetch) {
             return \array_merge($this->keepLivingCodeFromExpr($expr->class), $this->keepLivingCodeFromExpr($expr->name));
         }
         if ($this->isBinaryOpWithoutChange($expr)) {
@@ -95,36 +80,36 @@ final class LivingCodeManipulator
             $binaryOp = $expr;
             return $this->processBinary($binaryOp);
         }
-        if ($expr instanceof \PhpParser\Node\Expr\Instanceof_) {
+        if ($expr instanceof Instanceof_) {
             return \array_merge($this->keepLivingCodeFromExpr($expr->expr), $this->keepLivingCodeFromExpr($expr->class));
         }
-        if ($expr instanceof \PhpParser\Node\Expr\Isset_) {
+        if ($expr instanceof Isset_) {
             return $this->processIsset($expr);
         }
         return [$expr];
     }
-    private function isNestedExpr(\PhpParser\Node\Expr $expr) : bool
+    private function isNestedExpr(Expr $expr) : bool
     {
-        return $expr instanceof \PhpParser\Node\Expr\Cast || $expr instanceof \PhpParser\Node\Expr\Empty_ || $expr instanceof \PhpParser\Node\Expr\UnaryMinus || $expr instanceof \PhpParser\Node\Expr\UnaryPlus || $expr instanceof \PhpParser\Node\Expr\BitwiseNot || $expr instanceof \PhpParser\Node\Expr\BooleanNot || $expr instanceof \PhpParser\Node\Expr\Clone_;
+        return $expr instanceof Cast || $expr instanceof Empty_ || $expr instanceof UnaryMinus || $expr instanceof UnaryPlus || $expr instanceof BitwiseNot || $expr instanceof BooleanNot || $expr instanceof Clone_;
     }
-    private function isBinaryOpWithoutChange(\PhpParser\Node\Expr $expr) : bool
+    private function isBinaryOpWithoutChange(Expr $expr) : bool
     {
-        if (!$expr instanceof \PhpParser\Node\Expr\BinaryOp) {
+        if (!$expr instanceof BinaryOp) {
             return \false;
         }
-        return !($expr instanceof \PhpParser\Node\Expr\BinaryOp\LogicalAnd || $expr instanceof \PhpParser\Node\Expr\BinaryOp\BooleanAnd || $expr instanceof \PhpParser\Node\Expr\BinaryOp\LogicalOr || $expr instanceof \PhpParser\Node\Expr\BinaryOp\BooleanOr || $expr instanceof \PhpParser\Node\Expr\BinaryOp\Coalesce);
+        return !($expr instanceof LogicalAnd || $expr instanceof BooleanAnd || $expr instanceof LogicalOr || $expr instanceof BooleanOr || $expr instanceof Coalesce);
     }
     /**
      * @return Expr[]
      */
-    private function processBinary(\PhpParser\Node\Expr\BinaryOp $binaryOp) : array
+    private function processBinary(BinaryOp $binaryOp) : array
     {
         return \array_merge($this->keepLivingCodeFromExpr($binaryOp->left), $this->keepLivingCodeFromExpr($binaryOp->right));
     }
     /**
      * @return mixed[]
      */
-    private function processIsset(\PhpParser\Node\Expr\Isset_ $isset) : array
+    private function processIsset(Isset_ $isset) : array
     {
         $livingExprs = [];
         foreach ($isset->vars as $expr) {

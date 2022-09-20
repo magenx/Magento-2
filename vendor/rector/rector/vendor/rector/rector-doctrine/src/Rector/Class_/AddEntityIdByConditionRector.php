@@ -13,13 +13,14 @@ use Rector\Core\Rector\AbstractRector;
 use Rector\Doctrine\NodeFactory\EntityIdNodeFactory;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
-use RectorPrefix20211221\Webmozart\Assert\Assert;
+use RectorPrefix202208\Webmozart\Assert\Assert;
 /**
  * @see \Rector\Doctrine\Tests\Rector\Class_\AddEntityIdByConditionRector\AddEntityIdByConditionRectorTest
  */
-final class AddEntityIdByConditionRector extends \Rector\Core\Rector\AbstractRector implements \Rector\Core\Contract\Rector\ConfigurableRectorInterface
+final class AddEntityIdByConditionRector extends AbstractRector implements ConfigurableRectorInterface
 {
     /**
+     * @api
      * @var string
      */
     public const DETECTED_TRAITS = 'detected_traits';
@@ -28,31 +29,35 @@ final class AddEntityIdByConditionRector extends \Rector\Core\Rector\AbstractRec
      */
     private $detectedTraits = [];
     /**
+     * @readonly
      * @var \Rector\Doctrine\NodeFactory\EntityIdNodeFactory
      */
     private $entityIdNodeFactory;
     /**
+     * @readonly
      * @var \Rector\Core\NodeManipulator\ClassInsertManipulator
      */
     private $classInsertManipulator;
     /**
+     * @readonly
      * @var \PHPStan\Reflection\ReflectionProvider
      */
     private $reflectionProvider;
     /**
+     * @readonly
      * @var \Rector\Core\NodeAnalyzer\ClassAnalyzer
      */
     private $classAnalyzer;
-    public function __construct(\Rector\Doctrine\NodeFactory\EntityIdNodeFactory $entityIdNodeFactory, \Rector\Core\NodeManipulator\ClassInsertManipulator $classInsertManipulator, \PHPStan\Reflection\ReflectionProvider $reflectionProvider, \Rector\Core\NodeAnalyzer\ClassAnalyzer $classAnalyzer)
+    public function __construct(EntityIdNodeFactory $entityIdNodeFactory, ClassInsertManipulator $classInsertManipulator, ReflectionProvider $reflectionProvider, ClassAnalyzer $classAnalyzer)
     {
         $this->entityIdNodeFactory = $entityIdNodeFactory;
         $this->classInsertManipulator = $classInsertManipulator;
         $this->reflectionProvider = $reflectionProvider;
         $this->classAnalyzer = $classAnalyzer;
     }
-    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
+    public function getRuleDefinition() : RuleDefinition
     {
-        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Add entity id with annotations when meets condition', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample(<<<'CODE_SAMPLE'
+        return new RuleDefinition('Add entity id with annotations when meets condition', [new ConfiguredCodeSample(<<<'CODE_SAMPLE'
 class SomeClass
 {
     use SomeTrait;
@@ -85,12 +90,12 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [\PhpParser\Node\Stmt\Class_::class];
+        return [Class_::class];
     }
     /**
      * @param Class_ $node
      */
-    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
+    public function refactor(Node $node) : ?Node
     {
         if ($this->shouldSkip($node)) {
             return null;
@@ -105,11 +110,11 @@ CODE_SAMPLE
     public function configure(array $configuration) : void
     {
         $detectTraits = $configuration[self::DETECTED_TRAITS] ?? $configuration;
-        \RectorPrefix20211221\Webmozart\Assert\Assert::isArray($detectTraits);
-        \RectorPrefix20211221\Webmozart\Assert\Assert::allString($detectTraits);
+        Assert::isArray($detectTraits);
+        Assert::allString($detectTraits);
         $this->detectedTraits = $detectTraits;
     }
-    private function shouldSkip(\PhpParser\Node\Stmt\Class_ $class) : bool
+    private function shouldSkip(Class_ $class) : bool
     {
         if ($this->classAnalyzer->isAnonymousClass($class)) {
             return \true;
@@ -119,7 +124,7 @@ CODE_SAMPLE
         }
         return (bool) $class->getProperty('id');
     }
-    private function isTraitMatch(\PhpParser\Node\Stmt\Class_ $class) : bool
+    private function isTraitMatch(Class_ $class) : bool
     {
         $className = $this->getName($class);
         if ($className === null) {

@@ -205,8 +205,7 @@ Specify the following parameters, which are required to launch tests:
 -  `MAGENTO_ADMIN_USERNAME` must contain the username required for authorization in the Admin area.
   Example: `MAGENTO_ADMIN_USERNAME=admin`
 
--  `MAGENTO_ADMIN_PASSWORD` must contain the user password required for authorization in the Admin area.
-  Example: `MAGENTO_ADMIN_PASSWORD=123123q`
+-  `MAGENTO_ADMIN_PASSWORD` must now be set up in the credentials file. See [Credentials Page][] for details.
 
 <div class="bs-callout bs-callout-info" markdown="1">
 If the `MAGENTO_BASE_URL` contains a subdirectory like `http://magento.test/magento2ce`, specify `MAGENTO_CLI_COMMAND_PATH`.
@@ -348,7 +347,7 @@ allure serve dev/tests/_output/allure-results/
 [`MAGENTO_BP`]: configuration.html#magento_bp
 [`mftf`]: commands/mftf.html
 [allure docs]: https://docs.qameta.io/allure/
-[Allure Framework]: http://allure.qatools.ru/
+[Allure Framework]: https://github.com/allure-framework
 [basic configuration]: configuration.html#basic-configuration
 [chrome driver]: https://sites.google.com/a/chromium.org/chromedriver/downloads
 [Codeception Test execution]: https://blog.jetbrains.com/phpstorm/2017/03/codeception-support-comes-to-phpstorm-2017-1/
@@ -356,7 +355,7 @@ allure serve dev/tests/_output/allure-results/
 [Configuration]: configuration.html
 [contributing]: https://github.com/magento/magento2-functional-testing-framework/blob/develop/.github/CONTRIBUTING.md
 [install Allure]: https://github.com/allure-framework/allure2#download
-[java]: http://www.oracle.com/technetwork/java/javase/downloads/index.html
+[java]: https://www.oracle.com/java/technologies/downloads/
 [mftf tests]: introduction.html#mftf-tests
 [php]: https://devdocs.magento.com/guides/v2.4/install-gde/system-requirements.html
 [PhpStorm]: https://www.jetbrains.com/phpstorm/
@@ -366,3 +365,4 @@ allure serve dev/tests/_output/allure-results/
 [Find your version]: introduction.html#find-your-mftf-version
 [Installation Guide docroot]: https://devdocs.magento.com/guides/v2.4/install-gde/tutorials/change-docroot-to-pub.html
 [Magento Two-Factor Authentication (2FA) extension]: https://devdocs.magento.com/guides/v2.4/security/two-factor-authentication.html
+[Credentials Page]: https://devdocs.magento.com/mftf/docs/credentials.html

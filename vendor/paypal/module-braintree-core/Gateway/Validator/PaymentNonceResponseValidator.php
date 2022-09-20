@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © 2013-2017 Magento, Inc. All rights reserved.
+ * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
 namespace PayPal\Braintree\Gateway\Validator;
@@ -8,6 +8,8 @@ namespace PayPal\Braintree\Gateway\Validator;
 class PaymentNonceResponseValidator extends GeneralResponseValidator
 {
     /**
+     * Get response validators for payment nonce
+     *
      * @return array
      */
     protected function getResponseValidators(): array

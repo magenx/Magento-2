@@ -38,6 +38,7 @@ use PHPUnit\Runner\BaseTestRunner;
 use PHPUnit\Runner\Filter\Factory;
 use PHPUnit\Runner\PhptTestCase;
 use PHPUnit\Util\FileLoader;
+use PHPUnit\Util\Reflection;
 use PHPUnit\Util\Test as TestUtil;
 use ReflectionClass;
 use ReflectionException;
@@ -219,15 +220,7 @@ class TestSuite implements IteratorAggregate, Reorderable, SelfDescribing, Test
             return;
         }
 
-        foreach ($theClass->getMethods() as $method) {
-            if ($method->getDeclaringClass()->getName() === Assert::class) {
-                continue;
-            }
-
-            if ($method->getDeclaringClass()->getName() === TestCase::class) {
-                continue;
-            }
-
+        foreach ((new Reflection)->publicMethodsInTestClass($theClass) as $method) {
             if (!TestUtil::isTestMethod($method)) {
                 continue;
             }
@@ -480,7 +473,9 @@ class TestSuite implements IteratorAggregate, Reorderable, SelfDescribing, Test
                         $this->addTest($method->invoke(null, $className));
                     }
                 } elseif ($class->implementsInterface(Test::class)) {
-                    $expectedClassName = $shortName;
+                    // Do we have modern namespacing ('Foo\Bar\WhizBangTest') or old-school namespacing ('Foo_Bar_WhizBangTest')?
+                    $isPsr0            = (!$class->inNamespace()) && (strpos($class->getName(), '_') !== false);
+                    $expectedClassName = $isPsr0 ? $className : $shortName;
 
                     if (($pos = strpos($expectedClassName, '.')) !== false) {
                         $expectedClassName = substr(

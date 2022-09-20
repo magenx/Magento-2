@@ -53,10 +53,6 @@ define(
                  * {Object}
                  */
                 clientConfig: {
-                    dataCollector: {
-                        kount: true
-                    },
-
                     onReady: function (context) {
                         context.setupHostedFields();
                     },
@@ -166,11 +162,6 @@ define(
              * Init config
              */
             initClientConfig: function () {
-                // Advanced fraud tools settings
-                if (this.hasFraudProtection()) {
-                    this.clientConfig = _.extend(this.clientConfig, this.kountConfig());
-                }
-
                 _.each(this.clientConfig, function (fn, name) {
                     if (typeof fn === 'function') {
                         this.clientConfig[name] = fn.bind(this);
@@ -199,35 +190,6 @@ define(
                 fullScreenLoader.startLoader();
                 braintree.setConfig(this.clientConfig);
                 braintree.setup();
-            },
-
-            /**
-             * @returns {Object}
-             */
-            kountConfig: function () {
-                var config = {
-                    dataCollector: {
-                        kount: {
-                            environment: this.getEnvironment()
-                        }
-                    },
-
-                    /**
-                     * Device data initialization
-                     *
-                     * @param {Object} checkout
-                     */
-                    onReady: function (context) {
-                        this.additionalData['device_data'] = context.deviceData;
-                        context.setupHostedFields();
-                    }
-                };
-
-                if (this.getKountMerchantId()) {
-                    config.dataCollector.kount.merchantId = this.getKountMerchantId();
-                }
-
-                return config;
             },
 
             /**
@@ -269,24 +231,10 @@ define(
             },
 
             /**
-             * @returns {Boolean}
-             */
-            hasFraudProtection: function () {
-                return window.checkoutConfig.payment[this.getCode()].hasFraudProtection;
-            },
-
-            /**
              * @returns {String}
              */
             getEnvironment: function () {
                 return window.checkoutConfig.payment[this.getCode()].environment;
-            },
-
-            /**
-             * @returns {String}
-             */
-            getKountMerchantId: function () {
-                return window.checkoutConfig.payment[this.getCode()].kountMerchantId;
             },
 
             /**

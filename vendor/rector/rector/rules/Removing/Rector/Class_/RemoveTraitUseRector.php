@@ -11,17 +11,12 @@ use Rector\Core\Rector\AbstractRector;
 use Rector\NodeTypeResolver\Node\AttributeKey;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
-use RectorPrefix20211221\Webmozart\Assert\Assert;
+use RectorPrefix202208\Webmozart\Assert\Assert;
 /**
  * @see \Rector\Tests\Removing\Rector\Class_\RemoveTraitUseRector\RemoveTraitUseRectorTest
  */
-final class RemoveTraitUseRector extends \Rector\Core\Rector\AbstractRector implements \Rector\Core\Contract\Rector\ConfigurableRectorInterface
+final class RemoveTraitUseRector extends AbstractRector implements ConfigurableRectorInterface
 {
-    /**
-     * @deprecated
-     * @var string
-     */
-    public const TRAITS_TO_REMOVE = 'traits_to_remove';
     /**
      * @var bool
      */
@@ -30,9 +25,9 @@ final class RemoveTraitUseRector extends \Rector\Core\Rector\AbstractRector impl
      * @var string[]
      */
     private $traitsToRemove = [];
-    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
+    public function getRuleDefinition() : RuleDefinition
     {
-        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Remove specific traits from code', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample(<<<'CODE_SAMPLE'
+        return new RuleDefinition('Remove specific traits from code', [new ConfiguredCodeSample(<<<'CODE_SAMPLE'
 class SomeClass
 {
     use SomeTrait;
@@ -50,12 +45,12 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [\PhpParser\Node\Stmt\Class_::class, \PhpParser\Node\Stmt\Trait_::class];
+        return [Class_::class, Trait_::class];
     }
     /**
      * @param Class_|Trait_ $node
      */
-    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
+    public function refactor(Node $node) : ?Node
     {
         $this->classHasChanged = \false;
         foreach ($node->getTraitUses() as $traitUse) {
@@ -69,7 +64,7 @@ CODE_SAMPLE
         }
         // invoke re-print
         if ($this->classHasChanged) {
-            $node->setAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::ORIGINAL_NODE, null);
+            $node->setAttribute(AttributeKey::ORIGINAL_NODE, null);
             return $node;
         }
         return null;
@@ -79,9 +74,7 @@ CODE_SAMPLE
      */
     public function configure(array $configuration) : void
     {
-        $traitsToRemove = $configuration[self::TRAITS_TO_REMOVE] ?? $configuration;
-        \RectorPrefix20211221\Webmozart\Assert\Assert::allString($traitsToRemove);
-        /** @var string[] $traitsToRemove */
-        $this->traitsToRemove = $traitsToRemove;
+        Assert::allString($configuration);
+        $this->traitsToRemove = $configuration;
     }
 }

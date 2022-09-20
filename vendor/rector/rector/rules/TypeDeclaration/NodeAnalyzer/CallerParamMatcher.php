@@ -31,27 +31,27 @@ final class CallerParamMatcher
      * @var \Rector\Core\PhpParser\AstResolver
      */
     private $astResolver;
-    public function __construct(\Rector\NodeNameResolver\NodeNameResolver $nodeNameResolver, \Rector\Core\PhpParser\AstResolver $astResolver)
+    public function __construct(NodeNameResolver $nodeNameResolver, AstResolver $astResolver)
     {
         $this->nodeNameResolver = $nodeNameResolver;
         $this->astResolver = $astResolver;
     }
     /**
-     * @param \PhpParser\Node\Expr\FuncCall|\PhpParser\Node\Expr\MethodCall|\PhpParser\Node\Expr\StaticCall $call
-     * @return \PhpParser\Node\ComplexType|\PhpParser\Node\Identifier|\PhpParser\Node\Name|\PhpParser\Node\NullableType|\PhpParser\Node\UnionType|null
+     * @param \PhpParser\Node\Expr\StaticCall|\PhpParser\Node\Expr\MethodCall|\PhpParser\Node\Expr\FuncCall $call
+     * @return null|\PhpParser\Node\Identifier|\PhpParser\Node\Name|\PhpParser\Node\NullableType|\PhpParser\Node\UnionType|\PhpParser\Node\ComplexType
      */
-    public function matchCallParamType($call, \PhpParser\Node\Param $param, \PHPStan\Analyser\Scope $scope)
+    public function matchCallParamType($call, Param $param, Scope $scope)
     {
         $callParam = $this->matchCallParam($call, $param, $scope);
-        if (!$callParam instanceof \PhpParser\Node\Param) {
+        if (!$callParam instanceof Param) {
             return null;
         }
         return $callParam->type;
     }
     /**
-     * @param \PhpParser\Node\Expr\FuncCall|\PhpParser\Node\Expr\MethodCall|\PhpParser\Node\Expr\StaticCall $call
+     * @param \PhpParser\Node\Expr\StaticCall|\PhpParser\Node\Expr\MethodCall|\PhpParser\Node\Expr\FuncCall $call
      */
-    public function matchCallParam($call, \PhpParser\Node\Param $param, \PHPStan\Analyser\Scope $scope) : ?\PhpParser\Node\Param
+    public function matchCallParam($call, Param $param, Scope $scope) : ?Param
     {
         $callArgPosition = $this->matchCallArgPosition($call, $param);
         if ($callArgPosition === null) {
@@ -63,7 +63,7 @@ final class CallerParamMatcher
         }
         return $classMethodOrFunction->params[$callArgPosition] ?? null;
     }
-    public function matchParentParam(\PhpParser\Node\Expr\StaticCall $parentStaticCall, \PhpParser\Node\Param $param, \PHPStan\Analyser\Scope $scope) : ?\PhpParser\Node\Param
+    public function matchParentParam(StaticCall $parentStaticCall, Param $param, Scope $scope) : ?Param
     {
         $methodName = $this->nodeNameResolver->getName($parentStaticCall->name);
         if ($methodName === null) {
@@ -77,17 +77,17 @@ final class CallerParamMatcher
         return $this->resolveParentMethodParam($scope, $methodName, $parentStaticCallArgPosition);
     }
     /**
-     * @param \PhpParser\Node\Expr\FuncCall|\PhpParser\Node\Expr\MethodCall|\PhpParser\Node\Expr\StaticCall $call
+     * @param \PhpParser\Node\Expr\StaticCall|\PhpParser\Node\Expr\MethodCall|\PhpParser\Node\Expr\FuncCall $call
      * @return int|null
      */
-    private function matchCallArgPosition($call, \PhpParser\Node\Param $param)
+    private function matchCallArgPosition($call, Param $param)
     {
         $paramName = $this->nodeNameResolver->getName($param);
         foreach ($call->args as $argPosition => $arg) {
-            if (!$arg instanceof \PhpParser\Node\Arg) {
+            if (!$arg instanceof Arg) {
                 continue;
             }
-            if (!$arg->value instanceof \PhpParser\Node\Expr\Variable) {
+            if (!$arg->value instanceof Variable) {
                 continue;
             }
             if (!$this->nodeNameResolver->isName($arg->value, $paramName)) {
@@ -97,10 +97,10 @@ final class CallerParamMatcher
         }
         return null;
     }
-    private function resolveParentMethodParam(\PHPStan\Analyser\Scope $scope, string $methodName, int $paramPosition) : ?\PhpParser\Node\Param
+    private function resolveParentMethodParam(Scope $scope, string $methodName, int $paramPosition) : ?Param
     {
         $classReflection = $scope->getClassReflection();
-        if (!$classReflection instanceof \PHPStan\Reflection\ClassReflection) {
+        if (!$classReflection instanceof ClassReflection) {
             return null;
         }
         foreach ($classReflection->getParents() as $parentClassReflection) {
@@ -108,7 +108,7 @@ final class CallerParamMatcher
                 continue;
             }
             $parentClassMethod = $this->astResolver->resolveClassMethod($parentClassReflection->getName(), $methodName);
-            if (!$parentClassMethod instanceof \PhpParser\Node\Stmt\ClassMethod) {
+            if (!$parentClassMethod instanceof ClassMethod) {
                 continue;
             }
             return $parentClassMethod->params[$paramPosition] ?? null;

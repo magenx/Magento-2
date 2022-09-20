@@ -100,27 +100,27 @@ class TransactionMapTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals($transaction['settlementBatchId'], $result[12]->getValue());
         $this->assertEquals($transaction['currencyIsoCode'], $result[13]->getValue());
 
-        $this->rendererMock->expects($this->at(0))
-            ->method('render')
+        $this->rendererMock->method('render')
             ->with([$transaction['paymentInstrumentType']])
             ->willReturn('Credit card');
         $this->assertEquals('Credit card', $result[3]->getValue()->render());
 
-        $this->rendererMock->expects($this->at(0))
-            ->method('render')
+        $this->rendererMock->method('render')
             ->with([$transaction['type']])
-            ->willReturn('Sale');
-        $this->assertEquals('Sale', $result[5]->getValue()->render());
+            ->willReturn('sale');
+        $this->assertEquals('sale', $result[5]->getValue()->render());
 
-        $this->rendererMock->expects($this->at(0))
-            ->method('render')
+        $this->rendererMock->method('render')
             ->with([$transaction['status']])
-            ->willReturn('Pending for settlement');
-        $this->assertEquals('Pending for settlement', $result[9]->getValue()->render());
+            ->willReturn('pending_for_settlement');
+        $this->assertEquals('pending_for_settlement', $result[9]->getValue()->render());
     }
 
     /**
+     * Config data provider
+     *
      * @return array
+     * @throws \Exception
      */
     public function getConfigDataProvider()
     {

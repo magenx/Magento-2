@@ -11,6 +11,7 @@ use PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocChildNode;
 use PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocNode;
 use PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagNode;
 use PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagValueNode;
+use PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTextNode;
 use PHPStan\PhpDocParser\Ast\PhpDoc\PropertyTagValueNode;
 use PHPStan\PhpDocParser\Ast\PhpDoc\ReturnTagValueNode;
 use PHPStan\PhpDocParser\Ast\PhpDoc\TemplateTagValueNode;
@@ -24,10 +25,11 @@ use Rector\BetterPhpDocParser\PhpDoc\SpacelessPhpDocTagNode;
 use Rector\BetterPhpDocParser\PhpDocNodeFinder\PhpDocNodeByTypeFinder;
 use Rector\BetterPhpDocParser\PhpDocNodeVisitor\ChangedPhpDocNodeVisitor;
 use Rector\BetterPhpDocParser\ValueObject\Parser\BetterTokenIterator;
+use Rector\BetterPhpDocParser\ValueObject\Type\ShortenedIdentifierTypeNode;
 use Rector\ChangesReporting\Collector\RectorChangeCollector;
 use Rector\Core\Configuration\CurrentNodeProvider;
 use Rector\StaticTypeMapper\StaticTypeMapper;
-use RectorPrefix20211221\Symplify\SimplePhpDocParser\PhpDocNodeTraverser;
+use RectorPrefix202208\Symplify\Astral\PhpDocParser\PhpDocNodeTraverser;
 /**
  * @template TNode as \PHPStan\PhpDocParser\Ast\Node
  * @see \Rector\Tests\BetterPhpDocParser\PhpDocInfo\PhpDocInfo\PhpDocInfoTest
@@ -37,7 +39,7 @@ final class PhpDocInfo
     /**
      * @var array<class-string<PhpDocTagValueNode>, string>
      */
-    private const TAGS_TYPES_TO_NAMES = [\PHPStan\PhpDocParser\Ast\PhpDoc\ReturnTagValueNode::class => '@return', \PHPStan\PhpDocParser\Ast\PhpDoc\ParamTagValueNode::class => '@param', \PHPStan\PhpDocParser\Ast\PhpDoc\VarTagValueNode::class => '@var', \PHPStan\PhpDocParser\Ast\PhpDoc\MethodTagValueNode::class => '@method', \PHPStan\PhpDocParser\Ast\PhpDoc\PropertyTagValueNode::class => '@property'];
+    private const TAGS_TYPES_TO_NAMES = [ReturnTagValueNode::class => '@return', ParamTagValueNode::class => '@param', VarTagValueNode::class => '@var', MethodTagValueNode::class => '@method', PropertyTagValueNode::class => '@property'];
     /**
      * @var bool
      */
@@ -91,7 +93,7 @@ final class PhpDocInfo
      * @var \Rector\BetterPhpDocParser\PhpDocNodeFinder\PhpDocNodeByTypeFinder
      */
     private $phpDocNodeByTypeFinder;
-    public function __construct(\PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocNode $phpDocNode, \Rector\BetterPhpDocParser\ValueObject\Parser\BetterTokenIterator $betterTokenIterator, \Rector\StaticTypeMapper\StaticTypeMapper $staticTypeMapper, \PhpParser\Node $node, \Rector\BetterPhpDocParser\Annotation\AnnotationNaming $annotationNaming, \Rector\Core\Configuration\CurrentNodeProvider $currentNodeProvider, \Rector\ChangesReporting\Collector\RectorChangeCollector $rectorChangeCollector, \Rector\BetterPhpDocParser\PhpDocNodeFinder\PhpDocNodeByTypeFinder $phpDocNodeByTypeFinder)
+    public function __construct(PhpDocNode $phpDocNode, BetterTokenIterator $betterTokenIterator, StaticTypeMapper $staticTypeMapper, \PhpParser\Node $node, AnnotationNaming $annotationNaming, CurrentNodeProvider $currentNodeProvider, RectorChangeCollector $rectorChangeCollector, PhpDocNodeByTypeFinder $phpDocNodeByTypeFinder)
     {
         $this->phpDocNode = $phpDocNode;
         $this->betterTokenIterator = $betterTokenIterator;
@@ -102,22 +104,25 @@ final class PhpDocInfo
         $this->rectorChangeCollector = $rectorChangeCollector;
         $this->phpDocNodeByTypeFinder = $phpDocNodeByTypeFinder;
         $this->originalPhpDocNode = clone $phpDocNode;
-        if (!$betterTokenIterator->containsTokenType(\PHPStan\PhpDocParser\Lexer\Lexer::TOKEN_PHPDOC_EOL)) {
+        if (!$betterTokenIterator->containsTokenType(Lexer::TOKEN_PHPDOC_EOL)) {
             $this->isSingleLine = \true;
         }
     }
-    public function addPhpDocTagNode(\PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocChildNode $phpDocChildNode) : void
+    /**
+     * @api
+     */
+    public function addPhpDocTagNode(PhpDocChildNode $phpDocChildNode) : void
     {
         $this->phpDocNode->children[] = $phpDocChildNode;
         // to give node more space
         $this->makeMultiLined();
         $this->markAsChanged();
     }
-    public function getPhpDocNode() : \PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocNode
+    public function getPhpDocNode() : PhpDocNode
     {
         return $this->phpDocNode;
     }
-    public function getOriginalPhpDocNode() : \PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocNode
+    public function getOriginalPhpDocNode() : PhpDocNode
     {
         return $this->originalPhpDocNode;
     }
@@ -132,7 +137,7 @@ final class PhpDocInfo
     {
         return $this->betterTokenIterator->count();
     }
-    public function getVarTagValueNode(string $tagName = '@var') : ?\PHPStan\PhpDocParser\Ast\PhpDoc\VarTagValueNode
+    public function getVarTagValueNode(string $tagName = '@var') : ?VarTagValueNode
     {
         return $this->phpDocNode->getVarTagValues($tagName)[0] ?? null;
     }
@@ -147,13 +152,13 @@ final class PhpDocInfo
         }
         $tags = $this->phpDocNode->getTags();
         $name = $this->annotationNaming->normalizeName($name);
-        $tags = \array_filter($tags, function (\PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagNode $tag) use($name) : bool {
+        $tags = \array_filter($tags, static function (PhpDocTagNode $tag) use($name) : bool {
             return $tag->name === $name;
         });
         $tags = \array_values($tags);
         return \array_values($tags);
     }
-    public function getParamType(string $name) : \PHPStan\Type\Type
+    public function getParamType(string $name) : Type
     {
         $paramTagValueNodes = $this->getParamTagValueByName($name);
         return $this->getTypeOrMixed($paramTagValueNodes);
@@ -165,21 +170,11 @@ final class PhpDocInfo
     {
         return $this->phpDocNode->getParamTagValues();
     }
-    public function getParamTagValueNodeByName(string $parameterName) : ?\PHPStan\PhpDocParser\Ast\PhpDoc\ParamTagValueNode
-    {
-        foreach ($this->phpDocNode->getParamTagValues() as $paramTagValueNode) {
-            if ($paramTagValueNode->parameterName !== '$' . $parameterName) {
-                continue;
-            }
-            return $paramTagValueNode;
-        }
-        return null;
-    }
-    public function getVarType(string $tagName = '@var') : \PHPStan\Type\Type
+    public function getVarType(string $tagName = '@var') : Type
     {
         return $this->getTypeOrMixed($this->getVarTagValueNode($tagName));
     }
-    public function getReturnType() : \PHPStan\Type\Type
+    public function getReturnType() : Type
     {
         return $this->getTypeOrMixed($this->getReturnTagValue());
     }
@@ -226,14 +221,14 @@ final class PhpDocInfo
     {
         return (bool) $this->getTagsByName($name);
     }
-    public function getByName(string $name) : ?\PHPStan\PhpDocParser\Ast\Node
+    public function getByName(string $name) : ?Node
     {
         return $this->getTagsByName($name)[0] ?? null;
     }
     /**
      * @param class-string[] $classes
      */
-    public function getByAnnotationClasses(array $classes) : ?\Rector\BetterPhpDocParser\PhpDoc\DoctrineAnnotationTagValueNode
+    public function getByAnnotationClasses(array $classes) : ?DoctrineAnnotationTagValueNode
     {
         $doctrineAnnotationTagValueNodes = $this->phpDocNodeByTypeFinder->findDoctrineAnnotationsByClasses($this->phpDocNode, $classes);
         return $doctrineAnnotationTagValueNodes[0] ?? null;
@@ -241,7 +236,7 @@ final class PhpDocInfo
     /**
      * @param class-string $class
      */
-    public function getByAnnotationClass(string $class) : ?\Rector\BetterPhpDocParser\PhpDoc\DoctrineAnnotationTagValueNode
+    public function getByAnnotationClass(string $class) : ?DoctrineAnnotationTagValueNode
     {
         $doctrineAnnotationTagValueNodes = $this->phpDocNodeByTypeFinder->findDoctrineAnnotationsByClass($this->phpDocNode, $class);
         return $doctrineAnnotationTagValueNodes[0] ?? null;
@@ -263,11 +258,11 @@ final class PhpDocInfo
     /**
      * @param string[] $desiredClasses
      */
-    public function findOneByAnnotationClasses(array $desiredClasses) : ?\Rector\BetterPhpDocParser\PhpDoc\DoctrineAnnotationTagValueNode
+    public function findOneByAnnotationClasses(array $desiredClasses) : ?DoctrineAnnotationTagValueNode
     {
         foreach ($desiredClasses as $desiredClass) {
             $doctrineAnnotationTagValueNode = $this->findOneByAnnotationClass($desiredClass);
-            if (!$doctrineAnnotationTagValueNode instanceof \Rector\BetterPhpDocParser\PhpDoc\DoctrineAnnotationTagValueNode) {
+            if (!$doctrineAnnotationTagValueNode instanceof DoctrineAnnotationTagValueNode) {
                 continue;
             }
             return $doctrineAnnotationTagValueNode;
@@ -277,7 +272,7 @@ final class PhpDocInfo
     /**
      * @param class-string $desiredClass
      */
-    public function findOneByAnnotationClass(string $desiredClass) : ?\Rector\BetterPhpDocParser\PhpDoc\DoctrineAnnotationTagValueNode
+    public function findOneByAnnotationClass(string $desiredClass) : ?DoctrineAnnotationTagValueNode
     {
         $foundTagValueNodes = $this->findByAnnotationClass($desiredClass);
         return $foundTagValueNodes[0] ?? null;
@@ -296,20 +291,24 @@ final class PhpDocInfo
      */
     public function removeByType(string $typeToRemove) : void
     {
-        $phpDocNodeTraverser = new \RectorPrefix20211221\Symplify\SimplePhpDocParser\PhpDocNodeTraverser();
-        $phpDocNodeTraverser->traverseWithCallable($this->phpDocNode, '', function (\PHPStan\PhpDocParser\Ast\Node $node) use($typeToRemove) : ?int {
-            if ($node instanceof \PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagNode && \is_a($node->value, $typeToRemove, \true)) {
-                if ($typeToRemove === \PHPStan\PhpDocParser\Ast\PhpDoc\VarTagValueNode::class && $node->name !== '@var') {
+        $phpDocNodeTraverser = new PhpDocNodeTraverser();
+        $phpDocNodeTraverser->traverseWithCallable($this->phpDocNode, '', function (Node $node) use($typeToRemove) : ?int {
+            if ($node instanceof PhpDocTagNode && \is_a($node->value, $typeToRemove, \true)) {
+                // keep special annotation for tools
+                if (\strncmp($node->name, '@psalm-', \strlen('@psalm-')) === 0) {
+                    return null;
+                }
+                if (\strncmp($node->name, '@phpstan-', \strlen('@phpstan-')) === 0) {
                     return null;
                 }
                 $this->markAsChanged();
-                return \RectorPrefix20211221\Symplify\SimplePhpDocParser\PhpDocNodeTraverser::NODE_REMOVE;
+                return PhpDocNodeTraverser::NODE_REMOVE;
             }
             if (!\is_a($node, $typeToRemove, \true)) {
                 return null;
             }
             $this->markAsChanged();
-            return \RectorPrefix20211221\Symplify\SimplePhpDocParser\PhpDocNodeTraverser::NODE_REMOVE;
+            return PhpDocNodeTraverser::NODE_REMOVE;
         });
     }
     /**
@@ -319,16 +318,20 @@ final class PhpDocInfo
     {
         $paramTypesByName = [];
         foreach ($this->phpDocNode->getParamTagValues() as $paramTagValueNode) {
-            $parameterName = $paramTagValueNode->parameterName;
             $parameterType = $this->staticTypeMapper->mapPHPStanPhpDocTypeToPHPStanType($paramTagValueNode, $this->node);
-            $paramTypesByName[$parameterName] = $parameterType;
+            $paramTypesByName[$paramTagValueNode->parameterName] = $parameterType;
         }
         return $paramTypesByName;
     }
-    public function addTagValueNode(\PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagValueNode $phpDocTagValueNode) : void
+    public function addTagValueNode(PhpDocTagValueNode $phpDocTagValueNode) : void
     {
-        if ($phpDocTagValueNode instanceof \Rector\BetterPhpDocParser\PhpDoc\DoctrineAnnotationTagValueNode) {
-            $spacelessPhpDocTagNode = new \Rector\BetterPhpDocParser\PhpDoc\SpacelessPhpDocTagNode('@\\' . $phpDocTagValueNode->identifierTypeNode, $phpDocTagValueNode);
+        if ($phpDocTagValueNode instanceof DoctrineAnnotationTagValueNode) {
+            if ($phpDocTagValueNode->identifierTypeNode instanceof ShortenedIdentifierTypeNode) {
+                $name = '@' . $phpDocTagValueNode->identifierTypeNode;
+            } else {
+                $name = '@\\' . $phpDocTagValueNode->identifierTypeNode;
+            }
+            $spacelessPhpDocTagNode = new SpacelessPhpDocTagNode($name, $phpDocTagValueNode);
             $this->addPhpDocTagNode($spacelessPhpDocTagNode);
             return;
         }
@@ -336,7 +339,7 @@ final class PhpDocInfo
         if (!\is_string($name)) {
             return;
         }
-        $phpDocTagNode = new \PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagNode($name, $phpDocTagValueNode);
+        $phpDocTagNode = new PhpDocTagNode($name, $phpDocTagValueNode);
         $this->addPhpDocTagNode($phpDocTagNode);
     }
     public function isNewNode() : bool
@@ -358,25 +361,25 @@ final class PhpDocInfo
     {
         // fallback for invalid tag value node
         foreach ($this->phpDocNode->children as $phpDocChildNode) {
-            if (!$phpDocChildNode instanceof \PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagNode) {
+            if (!$phpDocChildNode instanceof PhpDocTagNode) {
                 continue;
             }
             if ($phpDocChildNode->name !== $name) {
                 continue;
             }
-            if (!$phpDocChildNode->value instanceof \PHPStan\PhpDocParser\Ast\PhpDoc\InvalidTagValueNode) {
+            if (!$phpDocChildNode->value instanceof InvalidTagValueNode) {
                 continue;
             }
             return \true;
         }
         return \false;
     }
-    public function getReturnTagValue() : ?\PHPStan\PhpDocParser\Ast\PhpDoc\ReturnTagValueNode
+    public function getReturnTagValue() : ?ReturnTagValueNode
     {
         $returnTagValueNodes = $this->phpDocNode->getReturnTagValues();
         return $returnTagValueNodes[0] ?? null;
     }
-    public function getParamTagValueByName(string $name) : ?\PHPStan\PhpDocParser\Ast\PhpDoc\ParamTagValueNode
+    public function getParamTagValueByName(string $name) : ?ParamTagValueNode
     {
         $desiredParamNameWithDollar = '$' . \ltrim($name, '$');
         foreach ($this->getParamTagValueNodes() as $paramTagValueNode) {
@@ -396,7 +399,18 @@ final class PhpDocInfo
     }
     public function hasInheritDoc() : bool
     {
-        return $this->hasByNames(['inheritdoc', 'inheritDoc']);
+        if ($this->hasByNames(['inheritdoc', 'inheritDoc'])) {
+            return \true;
+        }
+        foreach ($this->phpDocNode->children as $children) {
+            if (!$children instanceof PhpDocTextNode) {
+                continue;
+            }
+            if (\in_array($children->text, ['{@inheritdoc}', '{@inheritDoc}'], \true)) {
+                return \true;
+            }
+        }
+        return \false;
     }
     /**
      * @deprecated
@@ -420,8 +434,8 @@ final class PhpDocInfo
             return \true;
         }
         // has a single node with missing start_end
-        $phpDocNodeTraverser = new \RectorPrefix20211221\Symplify\SimplePhpDocParser\PhpDocNodeTraverser();
-        $changedPhpDocNodeVisitor = new \Rector\BetterPhpDocParser\PhpDocNodeVisitor\ChangedPhpDocNodeVisitor();
+        $phpDocNodeTraverser = new PhpDocNodeTraverser();
+        $changedPhpDocNodeVisitor = new ChangedPhpDocNodeVisitor();
         $phpDocNodeTraverser->addPhpDocNodeVisitor($changedPhpDocNodeVisitor);
         $phpDocNodeTraverser->traverse($this->phpDocNode);
         return $changedPhpDocNodeVisitor->hasChanged();
@@ -445,7 +459,7 @@ final class PhpDocInfo
     {
         return $this->node;
     }
-    public function resolveNameForPhpDocTagValueNode(\PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagValueNode $phpDocTagValueNode) : ?string
+    public function resolveNameForPhpDocTagValueNode(PhpDocTagValueNode $phpDocTagValueNode) : ?string
     {
         foreach (self::TAGS_TYPES_TO_NAMES as $tagValueNodeType => $name) {
             /** @var class-string<PhpDocTagNode> $tagValueNodeType */
@@ -458,10 +472,10 @@ final class PhpDocInfo
     /**
      * @return \PHPStan\Type\MixedType|\PHPStan\Type\Type
      */
-    private function getTypeOrMixed(?\PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagValueNode $phpDocTagValueNode)
+    private function getTypeOrMixed(?PhpDocTagValueNode $phpDocTagValueNode)
     {
         if ($phpDocTagValueNode === null) {
-            return new \PHPStan\Type\MixedType();
+            return new MixedType();
         }
         return $this->staticTypeMapper->mapPHPStanPhpDocTypeToPHPStanType($phpDocTagValueNode, $this->node);
     }

@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © 2013-2017 Magento, Inc. All rights reserved.
+ * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
 namespace PayPal\Braintree\Observer;
@@ -18,7 +18,7 @@ class AddPaypalShortcuts implements ObserverInterface
     /**
      * Block class
      */
-    const PAYPAL_SHORTCUT_BLOCK = Button::class;
+    public const PAYPAL_SHORTCUT_BLOCK = Button::class;
 
     /**
      * @var Config

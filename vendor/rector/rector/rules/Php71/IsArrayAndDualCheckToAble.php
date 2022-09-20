@@ -25,52 +25,52 @@ final class IsArrayAndDualCheckToAble
      * @var \Rector\NodeNameResolver\NodeNameResolver
      */
     private $nodeNameResolver;
-    public function __construct(\Rector\Core\NodeManipulator\BinaryOpManipulator $binaryOpManipulator, \Rector\NodeNameResolver\NodeNameResolver $nodeNameResolver)
+    public function __construct(BinaryOpManipulator $binaryOpManipulator, NodeNameResolver $nodeNameResolver)
     {
         $this->binaryOpManipulator = $binaryOpManipulator;
         $this->nodeNameResolver = $nodeNameResolver;
     }
-    public function processBooleanOr(\PhpParser\Node\Expr\BinaryOp\BooleanOr $booleanOr, string $type, string $newMethodName) : ?\PhpParser\Node\Expr\FuncCall
+    public function processBooleanOr(BooleanOr $booleanOr, string $type, string $newMethodName) : ?FuncCall
     {
-        $twoNodeMatch = $this->binaryOpManipulator->matchFirstAndSecondConditionNode($booleanOr, \PhpParser\Node\Expr\Instanceof_::class, \PhpParser\Node\Expr\FuncCall::class);
-        if (!$twoNodeMatch instanceof \Rector\Php71\ValueObject\TwoNodeMatch) {
+        $twoNodeMatch = $this->binaryOpManipulator->matchFirstAndSecondConditionNode($booleanOr, Instanceof_::class, FuncCall::class);
+        if (!$twoNodeMatch instanceof TwoNodeMatch) {
             return null;
         }
-        /** @var Instanceof_ $instanceOf */
-        $instanceOf = $twoNodeMatch->getFirstExpr();
-        /** @var FuncCall $funcCall */
-        $funcCall = $twoNodeMatch->getSecondExpr();
-        $instanceOfClass = $instanceOf->class;
-        if ($instanceOfClass instanceof \PhpParser\Node\Expr) {
+        /** @var Instanceof_ $instanceofExpr */
+        $instanceofExpr = $twoNodeMatch->getFirstExpr();
+        /** @var FuncCall $funcCallExpr */
+        $funcCallExpr = $twoNodeMatch->getSecondExpr();
+        $instanceOfClass = $instanceofExpr->class;
+        if ($instanceOfClass instanceof Expr) {
             return null;
         }
         if ((string) $instanceOfClass !== $type) {
             return null;
         }
-        if (!$this->nodeNameResolver->isName($funcCall, 'is_array')) {
+        if (!$this->nodeNameResolver->isName($funcCallExpr, 'is_array')) {
             return null;
         }
-        if (!isset($funcCall->args[0])) {
+        if (!isset($funcCallExpr->args[0])) {
             return null;
         }
-        if (!$funcCall->args[0] instanceof \PhpParser\Node\Arg) {
+        if (!$funcCallExpr->args[0] instanceof Arg) {
             return null;
         }
         // both use same var
-        if (!$funcCall->args[0]->value instanceof \PhpParser\Node\Expr\Variable) {
+        if (!$funcCallExpr->args[0]->value instanceof Variable) {
             return null;
         }
         /** @var Variable $firstVarNode */
-        $firstVarNode = $funcCall->args[0]->value;
-        if (!$instanceOf->expr instanceof \PhpParser\Node\Expr\Variable) {
+        $firstVarNode = $funcCallExpr->args[0]->value;
+        if (!$instanceofExpr->expr instanceof Variable) {
             return null;
         }
         /** @var Variable $secondVarNode */
-        $secondVarNode = $instanceOf->expr;
+        $secondVarNode = $instanceofExpr->expr;
         // are they same variables
         if ($firstVarNode->name !== $secondVarNode->name) {
             return null;
         }
-        return new \PhpParser\Node\Expr\FuncCall(new \PhpParser\Node\Name($newMethodName), [new \PhpParser\Node\Arg($firstVarNode)]);
+        return new FuncCall(new Name($newMethodName), [new Arg($firstVarNode)]);
     }
 }

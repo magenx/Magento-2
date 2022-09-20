@@ -9,20 +9,18 @@ use Rector\Core\DependencyInjection\Collector\ConfigureCallValuesCollector;
 use Rector\Core\DependencyInjection\CompilerPass\MakeRectorsPublicCompilerPass;
 use Rector\Core\DependencyInjection\CompilerPass\MergeImportedRectorConfigureCallValuesCompilerPass;
 use Rector\Core\DependencyInjection\CompilerPass\RemoveSkippedRectorsCompilerPass;
-use Rector\Core\DependencyInjection\CompilerPass\VerifyRectorServiceExistsCompilerPass;
 use Rector\Core\Exception\ShouldNotHappenException;
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\ContainerInterface;
-use RectorPrefix20211221\Symplify\Astral\ValueObject\AstralConfig;
-use RectorPrefix20211221\Symplify\AutowireArrayParameter\DependencyInjection\CompilerPass\AutowireArrayParameterCompilerPass;
-use RectorPrefix20211221\Symplify\ComposerJsonManipulator\ValueObject\ComposerJsonManipulatorConfig;
-use RectorPrefix20211221\Symplify\ConsoleColorDiff\ValueObject\ConsoleColorDiffConfig;
-use RectorPrefix20211221\Symplify\PackageBuilder\DependencyInjection\CompilerPass\AutowireInterfacesCompilerPass;
-use RectorPrefix20211221\Symplify\SimplePhpDocParser\ValueObject\SimplePhpDocParserConfig;
-use RectorPrefix20211221\Symplify\Skipper\ValueObject\SkipperConfig;
-use RectorPrefix20211221\Symplify\SymplifyKernel\ContainerBuilderFactory;
-use RectorPrefix20211221\Symplify\SymplifyKernel\Contract\LightKernelInterface;
-final class RectorKernel implements \RectorPrefix20211221\Symplify\SymplifyKernel\Contract\LightKernelInterface
+use RectorPrefix202208\Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
+use RectorPrefix202208\Symfony\Component\DependencyInjection\ContainerInterface;
+use RectorPrefix202208\Symplify\Astral\ValueObject\AstralConfig;
+use RectorPrefix202208\Symplify\AutowireArrayParameter\DependencyInjection\CompilerPass\AutowireArrayParameterCompilerPass;
+use RectorPrefix202208\Symplify\ComposerJsonManipulator\ValueObject\ComposerJsonManipulatorConfig;
+use RectorPrefix202208\Symplify\PackageBuilder\DependencyInjection\CompilerPass\AutowireInterfacesCompilerPass;
+use RectorPrefix202208\Symplify\PackageBuilder\ValueObject\ConsoleColorDiffConfig;
+use RectorPrefix202208\Symplify\Skipper\ValueObject\SkipperConfig;
+use RectorPrefix202208\Symplify\SymplifyKernel\ContainerBuilderFactory;
+use RectorPrefix202208\Symplify\SymplifyKernel\Contract\LightKernelInterface;
+final class RectorKernel implements LightKernelInterface
 {
     /**
      * @readonly
@@ -35,19 +33,19 @@ final class RectorKernel implements \RectorPrefix20211221\Symplify\SymplifyKerne
     private $container = null;
     public function __construct()
     {
-        $this->configureCallValuesCollector = new \Rector\Core\DependencyInjection\Collector\ConfigureCallValuesCollector();
+        $this->configureCallValuesCollector = new ConfigureCallValuesCollector();
     }
     /**
      * @param string[] $configFiles
      */
-    public function createFromConfigs(array $configFiles) : \RectorPrefix20211221\Psr\Container\ContainerInterface
+    public function createFromConfigs(array $configFiles) : \RectorPrefix202208\Psr\Container\ContainerInterface
     {
         $defaultConfigFiles = $this->createDefaultConfigFiles();
         $configFiles = \array_merge($defaultConfigFiles, $configFiles);
         $compilerPasses = $this->createCompilerPasses();
-        $configureCallMergingLoaderFactory = new \Rector\Core\Config\Loader\ConfigureCallMergingLoaderFactory($this->configureCallValuesCollector);
-        $containerBuilderFactory = new \RectorPrefix20211221\Symplify\SymplifyKernel\ContainerBuilderFactory($configureCallMergingLoaderFactory);
-        $containerBuilder = $containerBuilderFactory->create([], $compilerPasses, $configFiles);
+        $configureCallMergingLoaderFactory = new ConfigureCallMergingLoaderFactory($this->configureCallValuesCollector);
+        $containerBuilderFactory = new ContainerBuilderFactory($configureCallMergingLoaderFactory);
+        $containerBuilder = $containerBuilderFactory->create($configFiles, $compilerPasses, []);
         // @see https://symfony.com/blog/new-in-symfony-4-4-dependency-injection-improvements-part-1
         $containerBuilder->setParameter('container.dumper.inline_factories', \true);
         // to fix reincluding files again
@@ -56,10 +54,10 @@ final class RectorKernel implements \RectorPrefix20211221\Symplify\SymplifyKerne
         $this->container = $containerBuilder;
         return $containerBuilder;
     }
-    public function getContainer() : \RectorPrefix20211221\Psr\Container\ContainerInterface
+    public function getContainer() : \RectorPrefix202208\Psr\Container\ContainerInterface
     {
         if ($this->container === null) {
-            throw new \Rector\Core\Exception\ShouldNotHappenException();
+            throw new ShouldNotHappenException();
         }
         return $this->container;
     }
@@ -68,30 +66,22 @@ final class RectorKernel implements \RectorPrefix20211221\Symplify\SymplifyKerne
      */
     private function createCompilerPasses() : array
     {
-        $compilerPasses = [];
-        // must run before AutowireArrayParameterCompilerPass, as the autowired array cannot contain removed services
-        $compilerPasses[] = new \Rector\Core\DependencyInjection\CompilerPass\RemoveSkippedRectorsCompilerPass();
-        // autowire Rectors by default (mainly for tests)
-        $compilerPasses[] = new \RectorPrefix20211221\Symplify\PackageBuilder\DependencyInjection\CompilerPass\AutowireInterfacesCompilerPass([\Rector\Core\Contract\Rector\RectorInterface::class]);
-        $compilerPasses[] = new \Rector\Core\DependencyInjection\CompilerPass\MakeRectorsPublicCompilerPass();
-        // add all merged arguments of Rector services
-        $compilerPasses[] = new \Rector\Core\DependencyInjection\CompilerPass\MergeImportedRectorConfigureCallValuesCompilerPass($this->configureCallValuesCollector);
-        $compilerPasses[] = new \Rector\Core\DependencyInjection\CompilerPass\VerifyRectorServiceExistsCompilerPass();
-        $compilerPasses[] = new \RectorPrefix20211221\Symplify\AutowireArrayParameter\DependencyInjection\CompilerPass\AutowireArrayParameterCompilerPass();
-        return $compilerPasses;
+        return [
+            // must run before AutowireArrayParameterCompilerPass, as the autowired array cannot contain removed services
+            new RemoveSkippedRectorsCompilerPass(),
+            // autowire Rectors by default (mainly for tests)
+            new AutowireInterfacesCompilerPass([RectorInterface::class]),
+            new MakeRectorsPublicCompilerPass(),
+            // add all merged arguments of Rector services
+            new MergeImportedRectorConfigureCallValuesCompilerPass($this->configureCallValuesCollector),
+            new AutowireArrayParameterCompilerPass(),
+        ];
     }
     /**
      * @return string[]
      */
     private function createDefaultConfigFiles() : array
     {
-        $configFiles = [];
-        $configFiles[] = __DIR__ . '/../../config/config.php';
-        $configFiles[] = \RectorPrefix20211221\Symplify\Astral\ValueObject\AstralConfig::FILE_PATH;
-        $configFiles[] = \RectorPrefix20211221\Symplify\ComposerJsonManipulator\ValueObject\ComposerJsonManipulatorConfig::FILE_PATH;
-        $configFiles[] = \RectorPrefix20211221\Symplify\ConsoleColorDiff\ValueObject\ConsoleColorDiffConfig::FILE_PATH;
-        $configFiles[] = \RectorPrefix20211221\Symplify\SimplePhpDocParser\ValueObject\SimplePhpDocParserConfig::FILE_PATH;
-        $configFiles[] = \RectorPrefix20211221\Symplify\Skipper\ValueObject\SkipperConfig::FILE_PATH;
-        return $configFiles;
+        return [__DIR__ . '/../../config/config.php', AstralConfig::FILE_PATH, ComposerJsonManipulatorConfig::FILE_PATH, SkipperConfig::FILE_PATH, ConsoleColorDiffConfig::FILE_PATH];
     }
 }

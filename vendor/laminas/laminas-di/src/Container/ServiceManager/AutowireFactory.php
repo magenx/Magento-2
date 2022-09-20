@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Laminas\Di\Container\ServiceManager;
 
-use Interop\Container\ContainerInterface;
 use Laminas\Di\Container\AutowireFactory as GenericAutowireFactory;
 use Laminas\ServiceManager\Factory\AbstractFactoryInterface;
+use Psr\Container\ContainerInterface;
 
 /**
  * Create instances with autowiring
@@ -15,8 +15,7 @@ use Laminas\ServiceManager\Factory\AbstractFactoryInterface;
  */
 class AutowireFactory implements AbstractFactoryInterface
 {
-    /** @var GenericAutowireFactory */
-    private $factory;
+    private GenericAutowireFactory $factory;
 
     public function __construct(?GenericAutowireFactory $factory = null)
     {

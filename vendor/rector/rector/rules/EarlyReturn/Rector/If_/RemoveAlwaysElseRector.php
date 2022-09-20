@@ -13,17 +13,16 @@ use PhpParser\Node\Stmt\If_;
 use PhpParser\Node\Stmt\Return_;
 use PhpParser\Node\Stmt\Throw_;
 use Rector\Core\Rector\AbstractRector;
-use Rector\NodeTypeResolver\Node\AttributeKey;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
  * @see \Rector\Tests\EarlyReturn\Rector\If_\RemoveAlwaysElseRector\RemoveAlwaysElseRectorTest
  */
-final class RemoveAlwaysElseRector extends \Rector\Core\Rector\AbstractRector
+final class RemoveAlwaysElseRector extends AbstractRector
 {
-    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
+    public function getRuleDefinition() : RuleDefinition
     {
-        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Split if statement, when if condition always break execution flow', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample(<<<'CODE_SAMPLE'
+        return new RuleDefinition('Split if statement, when if condition always break execution flow', [new CodeSample(<<<'CODE_SAMPLE'
 class SomeClass
 {
     public function run($value)
@@ -56,50 +55,45 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [\PhpParser\Node\Stmt\If_::class];
+        return [If_::class];
     }
     /**
      * @param If_ $node
+     * @return Node[]|null
      */
-    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
+    public function refactor(Node $node) : ?array
     {
         if ($this->doesLastStatementBreakFlow($node)) {
             return null;
         }
         if ($node->elseifs !== []) {
             $originalNode = clone $node;
-            $if = new \PhpParser\Node\Stmt\If_($node->cond);
+            $if = new If_($node->cond);
             $if->stmts = $node->stmts;
-            $node->setAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::CREATED_BY_RULE, self::class);
-            $this->nodesToAddCollector->addNodeBeforeNode($if, $node);
             $this->mirrorComments($if, $node);
             /** @var ElseIf_ $firstElseIf */
             $firstElseIf = \array_shift($node->elseifs);
             $node->cond = $firstElseIf->cond;
             $node->stmts = $firstElseIf->stmts;
             $this->mirrorComments($node, $firstElseIf);
-            $statements = $this->getStatementsElseIfs($node);
-            if ($statements !== []) {
-                $this->nodesToAddCollector->addNodesAfterNode($statements, $node);
-            }
-            if ($originalNode->else instanceof \PhpParser\Node\Stmt\Else_) {
+            $nodesToReturnAfterNode = $this->getStatementsElseIfs($node);
+            if ($originalNode->else instanceof Else_) {
                 $node->else = null;
-                $this->nodesToAddCollector->addNodeAfterNode($originalNode->else, $node);
+                $nodesToReturnAfterNode = \array_merge($nodesToReturnAfterNode, [$originalNode->else]);
             }
-            return $node;
+            return \array_merge([$if, $node], $nodesToReturnAfterNode);
         }
         if ($node->else !== null) {
-            $this->nodesToAddCollector->addNodesAfterNode($node->else->stmts, $node);
+            $stmts = $node->else->stmts;
             $node->else = null;
-            $node->setAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::CREATED_BY_RULE, self::class);
-            return $node;
+            return \array_merge([$node], $stmts);
         }
         return null;
     }
     /**
      * @return ElseIf_[]
      */
-    private function getStatementsElseIfs(\PhpParser\Node\Stmt\If_ $if) : array
+    private function getStatementsElseIfs(If_ $if) : array
     {
         $statements = [];
         foreach ($if->elseifs as $key => $elseif) {
@@ -112,11 +106,11 @@ CODE_SAMPLE
         return $statements;
     }
     /**
-     * @param \PhpParser\Node\Stmt\ElseIf_|\PhpParser\Node\Stmt\If_ $node
+     * @param \PhpParser\Node\Stmt\If_|\PhpParser\Node\Stmt\ElseIf_ $node
      */
     private function doesLastStatementBreakFlow($node) : bool
     {
         $lastStmt = \end($node->stmts);
-        return !($lastStmt instanceof \PhpParser\Node\Stmt\Return_ || $lastStmt instanceof \PhpParser\Node\Stmt\Throw_ || $lastStmt instanceof \PhpParser\Node\Stmt\Continue_ || $lastStmt instanceof \PhpParser\Node\Stmt\Expression && $lastStmt->expr instanceof \PhpParser\Node\Expr\Exit_);
+        return !($lastStmt instanceof Return_ || $lastStmt instanceof Throw_ || $lastStmt instanceof Continue_ || $lastStmt instanceof Expression && $lastStmt->expr instanceof Exit_);
     }
 }

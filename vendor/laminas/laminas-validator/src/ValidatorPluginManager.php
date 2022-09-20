@@ -2,11 +2,13 @@
 
 namespace Laminas\Validator;
 
-use Interop\Container\ContainerInterface;
 use Laminas\I18n\Validator as I18nValidator;
 use Laminas\ServiceManager\AbstractPluginManager;
+use Laminas\ServiceManager\ConfigInterface;
 use Laminas\ServiceManager\Exception\InvalidServiceException;
 use Laminas\ServiceManager\Factory\InvokableFactory;
+use Laminas\ServiceManager\ServiceManager;
+use Psr\Container\ContainerInterface;
 use Zend\I18n\Validator\Alnum;
 use Zend\I18n\Validator\Alpha;
 use Zend\I18n\Validator\DateTime;
@@ -46,12 +48,22 @@ use function is_object;
 use function method_exists;
 use function sprintf;
 
+/**
+ * @link ConfigInterface
+ * @link ServiceManager
+ *
+ * @psalm-import-type ServiceManagerConfiguration from ServiceManager
+ * @psalm-import-type FactoriesConfigurationType from ConfigInterface
+ * @template InstanceType of ValidatorInterface
+ * @extends AbstractPluginManager<InstanceType>
+ */
 class ValidatorPluginManager extends AbstractPluginManager
 {
     /**
      * Default set of aliases
      *
      * @var array<array-key, string>
+     * @psalm-suppress UndefinedClass
      */
     protected $aliases = [
         'alnum'                  => I18nValidator\Alnum::class,
@@ -358,7 +370,7 @@ class ValidatorPluginManager extends AbstractPluginManager
     /**
      * Default set of factories
      *
-     * @var array<array-key, callable|string>
+     * @var FactoriesConfigurationType
      */
     protected $factories = [
         I18nValidator\Alnum::class       => InvokableFactory::class,
@@ -534,7 +546,7 @@ class ValidatorPluginManager extends AbstractPluginManager
     /**
      * Default instance type
      *
-     * @var null|string
+     * @var string
      */
     protected $instanceOf = ValidatorInterface::class;
 
@@ -545,6 +557,8 @@ class ValidatorPluginManager extends AbstractPluginManager
      * attached translator, if any, to the currently requested helper.
      *
      * {@inheritDoc}
+     *
+     * @param ServiceManagerConfiguration $v3config
      */
     public function __construct($configOrContainerInstance = null, array $v3config = [])
     {

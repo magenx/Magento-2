@@ -1,8 +1,8 @@
 <?php
 
-namespace RectorPrefix20211221\React\Promise;
+namespace RectorPrefix202208\React\Promise;
 
-class Deferred implements \RectorPrefix20211221\React\Promise\PromisorInterface
+class Deferred implements PromisorInterface
 {
     private $promise;
     private $resolveCallback;
@@ -16,7 +16,7 @@ class Deferred implements \RectorPrefix20211221\React\Promise\PromisorInterface
     public function promise()
     {
         if (null === $this->promise) {
-            $this->promise = new \RectorPrefix20211221\React\Promise\Promise(function ($resolve, $reject, $notify) {
+            $this->promise = new Promise(function ($resolve, $reject, $notify) {
                 $this->resolveCallback = $resolve;
                 $this->rejectCallback = $reject;
                 $this->notifyCallback = $notify;

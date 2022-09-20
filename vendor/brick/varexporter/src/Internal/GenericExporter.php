@@ -51,7 +51,14 @@ final class GenericExporter
      *
      * @var bool
      */
-    public $inlineNumericScalarArray;
+    public $inlineArray;
+
+    /**
+     * @psalm-readonly
+     *
+     * @var bool
+     */
+    public $inlineScalarList;
 
     /**
      * @psalm-readonly
@@ -74,10 +81,6 @@ final class GenericExporter
      */
     public $indentLevel;
 
-    /**
-     * @param int $options
-     * @param int Indentation level
-     */
     public function __construct(int $options, int $indentLevel = 0)
     {
         $this->objectExporters[] = new ObjectExporter\StdClassExporter($this);
@@ -96,13 +99,18 @@ final class GenericExporter
             $this->objectExporters[] = new ObjectExporter\SerializeExporter($this);
         }
 
+        if (! ($options & VarExporter::NO_ENUMS)) {
+            $this->objectExporters[] = new ObjectExporter\EnumExporter($this);
+        }
+
         if (! ($options & VarExporter::NOT_ANY_OBJECT)) {
             $this->objectExporters[] = new ObjectExporter\AnyObjectExporter($this);
         }
 
         $this->addTypeHints             = (bool) ($options & VarExporter::ADD_TYPE_HINTS);
         $this->skipDynamicProperties    = (bool) ($options & VarExporter::SKIP_DYNAMIC_PROPERTIES);
-        $this->inlineNumericScalarArray = (bool) ($options & VarExporter::INLINE_NUMERIC_SCALAR_ARRAY);
+        $this->inlineArray              = (bool) ($options & VarExporter::INLINE_ARRAY);
+        $this->inlineScalarList         = (bool) ($options & VarExporter::INLINE_SCALAR_LIST);
         $this->closureSnapshotUses      = (bool) ($options & VarExporter::CLOSURE_SNAPSHOT_USES);
         $this->trailingCommaInArray     = (bool) ($options & VarExporter::TRAILING_COMMA_IN_ARRAY);
 
@@ -165,11 +173,11 @@ final class GenericExporter
         $result = [];
 
         $count = count($array);
-        $isNumeric = array_keys($array) === range(0, $count - 1);
+        $isList = array_keys($array) === range(0, $count - 1);
 
         $current = 0;
 
-        $inline = ($this->inlineNumericScalarArray && $isNumeric && $this->isScalarArray($array));
+        $inline = $this->inlineArray || ($this->inlineScalarList && $isList && $this->isScalarList($array));
 
         foreach ($array as $key => $value) {
             $isLast = (++$current === $count);
@@ -180,12 +188,16 @@ final class GenericExporter
             $exported = $this->export($value, $newPath, $parentIds);
 
             if ($inline) {
-                $result[] = $exported[0];
+                if ($isList) {
+                    $result[] = $exported[0];
+                } else {
+                    $result[] = var_export($key, true) . ' => ' . $exported[0];
+                }
             } else {
                 $prepend = '';
                 $append = '';
 
-                if (! $isNumeric) {
+                if (! $isList) {
                     $prepend = var_export($key, true) . ' => ';
                 }
 
@@ -220,7 +232,7 @@ final class GenericExporter
      *
      * @return bool
      */
-    private function isScalarArray(array $array) : bool
+    private function isScalarList(array $array) : bool
     {
         foreach ($array as $value) {
             if ($value !== null && ! is_scalar($value)) {

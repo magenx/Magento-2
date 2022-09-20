@@ -4,8 +4,12 @@ declare (strict_types=1);
 namespace Rector\Symfony\Set;
 
 use Rector\Set\Contract\SetListInterface;
-final class SymfonySetList implements \Rector\Set\Contract\SetListInterface
+final class SymfonySetList implements SetListInterface
 {
+    /**
+     * @var string
+     */
+    public const SYMFONY_STRICT = __DIR__ . '/../../config/sets/symfony/symfony-strict.php';
     /**
      * @var string
      */

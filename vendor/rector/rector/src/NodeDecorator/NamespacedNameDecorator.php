@@ -9,14 +9,14 @@ use PhpParser\NodeVisitor\NameResolver;
 final class NamespacedNameDecorator
 {
     /**
-     * @param mixed[]|\PhpParser\Node $node
+     * @param \PhpParser\Node|mixed[] $node
      */
     public function decorate($node) : void
     {
         $nodes = \is_array($node) ? $node : [$node];
         // traverse with node name resolver, to to comply with PHPStan default parser
-        $nameResolver = new \PhpParser\NodeVisitor\NameResolver(null, ['replaceNodes' => \false, 'preserveOriginalNames' => \true]);
-        $nodeTraverser = new \PhpParser\NodeTraverser();
+        $nameResolver = new NameResolver(null, ['replaceNodes' => \false, 'preserveOriginalNames' => \true]);
+        $nodeTraverser = new NodeTraverser();
         $nodeTraverser->addVisitor($nameResolver);
         $nodeTraverser->traverse($nodes);
     }

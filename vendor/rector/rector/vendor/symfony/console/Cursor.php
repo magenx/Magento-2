@@ -8,20 +8,23 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix20211221\Symfony\Component\Console;
+namespace RectorPrefix202208\Symfony\Component\Console;
 
-use RectorPrefix20211221\Symfony\Component\Console\Output\OutputInterface;
+use RectorPrefix202208\Symfony\Component\Console\Output\OutputInterface;
 /**
  * @author Pierre du Plessis <pdples@gmail.com>
  */
 final class Cursor
 {
+    /**
+     * @var \Symfony\Component\Console\Output\OutputInterface
+     */
     private $output;
     private $input;
     /**
      * @param resource|null $input
      */
-    public function __construct(\RectorPrefix20211221\Symfony\Component\Console\Output\OutputInterface $output, $input = null)
+    public function __construct(OutputInterface $output, $input = null)
     {
         $this->output = $output;
         $this->input = $input ?? (\defined('STDIN') ? \STDIN : \fopen('php://input', 'r+'));
@@ -31,7 +34,7 @@ final class Cursor
      */
     public function moveUp(int $lines = 1)
     {
-        $this->output->write(\sprintf("\33[%dA", $lines));
+        $this->output->write(\sprintf("\x1b[%dA", $lines));
         return $this;
     }
     /**
@@ -39,7 +42,7 @@ final class Cursor
      */
     public function moveDown(int $lines = 1)
     {
-        $this->output->write(\sprintf("\33[%dB", $lines));
+        $this->output->write(\sprintf("\x1b[%dB", $lines));
         return $this;
     }
     /**
@@ -47,7 +50,7 @@ final class Cursor
      */
     public function moveRight(int $columns = 1)
     {
-        $this->output->write(\sprintf("\33[%dC", $columns));
+        $this->output->write(\sprintf("\x1b[%dC", $columns));
         return $this;
     }
     /**
@@ -55,7 +58,7 @@ final class Cursor
      */
     public function moveLeft(int $columns = 1)
     {
-        $this->output->write(\sprintf("\33[%dD", $columns));
+        $this->output->write(\sprintf("\x1b[%dD", $columns));
         return $this;
     }
     /**
@@ -63,7 +66,7 @@ final class Cursor
      */
     public function moveToColumn(int $column)
     {
-        $this->output->write(\sprintf("\33[%dG", $column));
+        $this->output->write(\sprintf("\x1b[%dG", $column));
         return $this;
     }
     /**
@@ -71,7 +74,7 @@ final class Cursor
      */
     public function moveToPosition(int $column, int $row)
     {
-        $this->output->write(\sprintf("\33[%d;%dH", $row + 1, $column));
+        $this->output->write(\sprintf("\x1b[%d;%dH", $row + 1, $column));
         return $this;
     }
     /**
@@ -79,7 +82,7 @@ final class Cursor
      */
     public function savePosition()
     {
-        $this->output->write("\0337");
+        $this->output->write("\x1b7");
         return $this;
     }
     /**
@@ -87,7 +90,7 @@ final class Cursor
      */
     public function restorePosition()
     {
-        $this->output->write("\338");
+        $this->output->write("\x1b8");
         return $this;
     }
     /**
@@ -95,7 +98,7 @@ final class Cursor
      */
     public function hide()
     {
-        $this->output->write("\33[?25l");
+        $this->output->write("\x1b[?25l");
         return $this;
     }
     /**
@@ -103,7 +106,7 @@ final class Cursor
      */
     public function show()
     {
-        $this->output->write("\33[?25h\33[?0c");
+        $this->output->write("\x1b[?25h\x1b[?0c");
         return $this;
     }
     /**
@@ -113,7 +116,7 @@ final class Cursor
      */
     public function clearLine()
     {
-        $this->output->write("\33[2K");
+        $this->output->write("\x1b[2K");
         return $this;
     }
     /**
@@ -121,7 +124,7 @@ final class Cursor
      */
     public function clearLineAfter() : self
     {
-        $this->output->write("\33[K");
+        $this->output->write("\x1b[K");
         return $this;
     }
     /**
@@ -131,7 +134,7 @@ final class Cursor
      */
     public function clearOutput()
     {
-        $this->output->write("\33[0J");
+        $this->output->write("\x1b[0J");
         return $this;
     }
     /**
@@ -141,7 +144,7 @@ final class Cursor
      */
     public function clearScreen()
     {
-        $this->output->write("\33[2J");
+        $this->output->write("\x1b[2J");
         return $this;
     }
     /**
@@ -158,10 +161,10 @@ final class Cursor
         }
         $sttyMode = \shell_exec('stty -g');
         \shell_exec('stty -icanon -echo');
-        @\fwrite($this->input, "\33[6n");
+        @\fwrite($this->input, "\x1b[6n");
         $code = \trim(\fread($this->input, 1024));
         \shell_exec(\sprintf('stty %s', $sttyMode));
-        \sscanf($code, "\33[%d;%dR", $row, $col);
+        \sscanf($code, "\x1b[%d;%dR", $row, $col);
         return [$col, $row];
     }
 }

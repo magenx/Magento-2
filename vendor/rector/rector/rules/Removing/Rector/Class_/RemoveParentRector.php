@@ -12,18 +12,12 @@ use Rector\NodeCollector\ScopeResolver\ParentClassScopeResolver;
 use Rector\NodeTypeResolver\Node\AttributeKey;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
-use RectorPrefix20211221\Webmozart\Assert\Assert;
+use RectorPrefix202208\Webmozart\Assert\Assert;
 /**
  * @see \Rector\Tests\Removing\Rector\Class_\RemoveParentRector\RemoveParentRectorTest
  */
-final class RemoveParentRector extends \Rector\Core\Rector\AbstractRector implements \Rector\Core\Contract\Rector\ConfigurableRectorInterface
+final class RemoveParentRector extends AbstractRector implements ConfigurableRectorInterface
 {
-    /**
-     * @api
-     * @deprecated
-     * @var string
-     */
-    public const PARENT_TYPES_TO_REMOVE = 'parents_types_to_remove';
     /**
      * @var string[]
      */
@@ -33,13 +27,13 @@ final class RemoveParentRector extends \Rector\Core\Rector\AbstractRector implem
      * @var \Rector\NodeCollector\ScopeResolver\ParentClassScopeResolver
      */
     private $parentClassScopeResolver;
-    public function __construct(\Rector\NodeCollector\ScopeResolver\ParentClassScopeResolver $parentClassScopeResolver)
+    public function __construct(ParentClassScopeResolver $parentClassScopeResolver)
     {
         $this->parentClassScopeResolver = $parentClassScopeResolver;
     }
-    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
+    public function getRuleDefinition() : RuleDefinition
     {
-        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Removes extends class by name', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample(<<<'CODE_SAMPLE'
+        return new RuleDefinition('Removes extends class by name', [new ConfiguredCodeSample(<<<'CODE_SAMPLE'
 final class SomeClass extends SomeParentClass
 {
 }
@@ -56,16 +50,16 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [\PhpParser\Node\Stmt\Class_::class];
+        return [Class_::class];
     }
     /**
      * @param Class_ $node
      */
-    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
+    public function refactor(Node $node) : ?Node
     {
-        $scope = $node->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::SCOPE);
+        $scope = $node->getAttribute(AttributeKey::SCOPE);
         $parentClassReflection = $this->parentClassScopeResolver->resolveParentClassReflection($scope);
-        if (!$parentClassReflection instanceof \PHPStan\Reflection\ClassReflection) {
+        if (!$parentClassReflection instanceof ClassReflection) {
             return null;
         }
         foreach ($this->parentClassesToRemove as $parentClassToRemove) {
@@ -83,9 +77,7 @@ CODE_SAMPLE
      */
     public function configure(array $configuration) : void
     {
-        $parentTypesToRemove = $configuration[self::PARENT_TYPES_TO_REMOVE] ?? $configuration;
-        \RectorPrefix20211221\Webmozart\Assert\Assert::isArray($parentTypesToRemove);
-        \RectorPrefix20211221\Webmozart\Assert\Assert::allString($parentTypesToRemove);
-        $this->parentClassesToRemove = $parentTypesToRemove;
+        Assert::allString($configuration);
+        $this->parentClassesToRemove = $configuration;
     }
 }

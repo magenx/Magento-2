@@ -1,19 +1,20 @@
 <?php
-/**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
- */
+declare(strict_types=1);
+
 namespace PayPal\Braintree\Block\System\Config\Form\Field;
 
-class RequiresStatus extends \Magento\Config\Block\System\Config\Form\Field
+use Magento\Config\Block\System\Config\Form\Field;
+use Magento\Framework\Data\Form\Element\AbstractElement;
+
+class RequiresStatus extends Field
 {
     /**
      * Reset 'Requires' CSS Class
      *
-     * @param \Magento\Framework\Data\Form\Element\AbstractElement $element
+     * @param AbstractElement $element
      * @return string
      */
-    public function render(\Magento\Framework\Data\Form\Element\AbstractElement $element)
+    public function render(AbstractElement $element)
     {
         if (str_contains($element->getClass(), 'braintree_ach_direct_debit_')) {
             $requiresClass = str_replace('braintree_ach_direct_debit_', '', $element->getClass());
@@ -33,6 +34,10 @@ class RequiresStatus extends \Magento\Config\Block\System\Config\Form\Field
         }
         if (str_contains($element->getClass(), 'braintree_venmo_')) {
             $requiresClass = str_replace('braintree_venmo_', '', $element->getClass());
+            $element->setClass($requiresClass);
+        }
+        if (str_contains($element->getClass(), 'braintree_paypal_')) {
+            $requiresClass = str_replace('braintree_paypal_', '', $element->getClass());
             $element->setClass($requiresClass);
         }
 

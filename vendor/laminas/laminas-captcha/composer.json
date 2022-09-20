@@ -18,24 +18,27 @@
     "config": {
         "sort-packages": true,
         "platform": {
-            "php": "7.3.99"
+            "php": "7.4.99"
+        },
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true
         }
     },
     "extra": {},
     "require": {
-        "php": "^7.3 || ~8.0.0 || ~8.1.0",
-        "laminas/laminas-math": "^2.7 || ^3.0",
-        "laminas/laminas-recaptcha": "^3.0",
+        "php": "^7.4 || ~8.0.0 || ~8.1.0",
+        "laminas/laminas-recaptcha": "^3.4.0",
         "laminas/laminas-session": "^2.12",
-        "laminas/laminas-stdlib": "^3.6",
-        "laminas/laminas-text": "^2.8",
-        "laminas/laminas-validator": "^2.14"
+        "laminas/laminas-stdlib": "^3.10.1",
+        "laminas/laminas-text": "^2.9.0",
+        "laminas/laminas-validator": "^2.19.0"
     },
     "require-dev": {
-        "laminas/laminas-coding-standard": "~2.1.4",
-        "phpunit/phpunit": "^9.4.3",
-        "psalm/plugin-phpunit": "^0.15.1",
-        "vimeo/psalm": "^4.6"
+        "ext-gd": "*",
+        "laminas/laminas-coding-standard": "~2.3.0",
+        "phpunit/phpunit": "^9.5.21",
+        "psalm/plugin-phpunit": "^0.17.0",
+        "vimeo/psalm": "^4.24.0"
     },
     "suggest": {
         "laminas/laminas-i18n-resources": "Translations of captcha messages"

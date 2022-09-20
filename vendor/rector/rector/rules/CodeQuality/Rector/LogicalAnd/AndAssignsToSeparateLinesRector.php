@@ -8,18 +8,17 @@ use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\BinaryOp\LogicalAnd;
 use PhpParser\Node\Stmt\Expression;
 use Rector\Core\Rector\AbstractRector;
-use Rector\NodeTypeResolver\Node\AttributeKey;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
- * @see https://3v4l.org/ji8bX
+ * @changelog https://3v4l.org/ji8bX
  * @see \Rector\Tests\CodeQuality\Rector\LogicalAnd\AndAssignsToSeparateLinesRector\AndAssignsToSeparateLinesRectorTest
  */
-final class AndAssignsToSeparateLinesRector extends \Rector\Core\Rector\AbstractRector
+final class AndAssignsToSeparateLinesRector extends AbstractRector
 {
-    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
+    public function getRuleDefinition() : RuleDefinition
     {
-        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Split 2 assigns ands to separate line', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample(<<<'CODE_SAMPLE'
+        return new RuleDefinition('Split 2 assigns ands to separate line', [new CodeSample(<<<'CODE_SAMPLE'
 class SomeClass
 {
     public function run()
@@ -47,24 +46,26 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [\PhpParser\Node\Expr\BinaryOp\LogicalAnd::class];
+        return [Expression::class];
     }
     /**
-     * @param LogicalAnd $node
+     * @param Expression $node
+     * @return Expression[]|null
      */
-    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
+    public function refactor(Node $node) : ?array
     {
-        if (!$node->left instanceof \PhpParser\Node\Expr\Assign) {
+        if (!$node->expr instanceof LogicalAnd) {
             return null;
         }
-        if (!$node->right instanceof \PhpParser\Node\Expr\Assign) {
+        $logicalAnd = $node->expr;
+        if (!$logicalAnd->left instanceof Assign) {
             return null;
         }
-        $parentNode = $node->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::PARENT_NODE);
-        if (!$parentNode instanceof \PhpParser\Node\Stmt\Expression) {
+        if (!$logicalAnd->right instanceof Assign) {
             return null;
         }
-        $this->nodesToAddCollector->addNodeAfterNode($node->right, $node);
-        return $node->left;
+        $leftAssignExpression = new Expression($logicalAnd->left);
+        $rightAssignExpression = new Expression($logicalAnd->right);
+        return [$leftAssignExpression, $rightAssignExpression];
     }
 }

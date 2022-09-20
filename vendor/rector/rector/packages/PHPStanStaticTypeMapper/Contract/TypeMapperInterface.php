@@ -20,11 +20,13 @@ interface TypeMapperInterface
     public function getNodeClass() : string;
     /**
      * @param TType $type
+     * @param TypeKind::* $typeKind
      */
-    public function mapToPHPStanPhpDocTypeNode(\PHPStan\Type\Type $type, \Rector\PHPStanStaticTypeMapper\Enum\TypeKind $typeKind) : \PHPStan\PhpDocParser\Ast\Type\TypeNode;
+    public function mapToPHPStanPhpDocTypeNode(Type $type, string $typeKind) : TypeNode;
     /**
      * @param TType $type
+     * @param TypeKind::* $typeKind
      * @return Name|ComplexType|null
      */
-    public function mapToPhpParserNode(\PHPStan\Type\Type $type, \Rector\PHPStanStaticTypeMapper\Enum\TypeKind $typeKind) : ?\PhpParser\Node;
+    public function mapToPhpParserNode(Type $type, string $typeKind) : ?Node;
 }

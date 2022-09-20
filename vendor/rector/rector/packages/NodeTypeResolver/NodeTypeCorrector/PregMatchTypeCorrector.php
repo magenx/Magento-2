@@ -5,6 +5,7 @@ namespace Rector\NodeTypeResolver\NodeTypeCorrector;
 
 use PhpParser\Node;
 use PhpParser\Node\Arg;
+use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Expr\Variable;
 use PHPStan\Type\ArrayType;
@@ -43,7 +44,7 @@ final class PregMatchTypeCorrector
      * @var \Rector\Core\NodeAnalyzer\ArgsAnalyzer
      */
     private $argsAnalyzer;
-    public function __construct(\Rector\Core\PhpParser\Node\BetterNodeFinder $betterNodeFinder, \Rector\NodeNameResolver\NodeNameResolver $nodeNameResolver, \Rector\NodeNestingScope\ParentScopeFinder $parentScopeFinder, \Rector\Core\PhpParser\Comparing\NodeComparator $nodeComparator, \Rector\Core\NodeAnalyzer\ArgsAnalyzer $argsAnalyzer)
+    public function __construct(BetterNodeFinder $betterNodeFinder, NodeNameResolver $nodeNameResolver, ParentScopeFinder $parentScopeFinder, NodeComparator $nodeComparator, ArgsAnalyzer $argsAnalyzer)
     {
         $this->betterNodeFinder = $betterNodeFinder;
         $this->nodeNameResolver = $nodeNameResolver;
@@ -55,22 +56,22 @@ final class PregMatchTypeCorrector
      * Special case for "preg_match(), preg_match_all()" - with 3rd argument
      * @see https://github.com/rectorphp/rector/issues/786
      */
-    public function correct(\PhpParser\Node $node, \PHPStan\Type\Type $originalType) : \PHPStan\Type\Type
+    public function correct(Expr $expr, Type $originalType) : Type
     {
-        if (!$node instanceof \PhpParser\Node\Expr\Variable) {
+        if (!$expr instanceof Variable) {
             return $originalType;
         }
-        if ($originalType instanceof \PHPStan\Type\ArrayType) {
+        if ($originalType instanceof ArrayType) {
             return $originalType;
         }
-        $variableUsages = $this->getVariableUsages($node);
+        $variableUsages = $this->getVariableUsages($expr);
         foreach ($variableUsages as $variableUsage) {
-            $possiblyArg = $variableUsage->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::PARENT_NODE);
-            if (!$possiblyArg instanceof \PhpParser\Node\Arg) {
+            $possiblyArg = $variableUsage->getAttribute(AttributeKey::PARENT_NODE);
+            if (!$possiblyArg instanceof Arg) {
                 continue;
             }
-            $funcCallNode = $possiblyArg->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::PARENT_NODE);
-            if (!$funcCallNode instanceof \PhpParser\Node\Expr\FuncCall) {
+            $funcCallNode = $possiblyArg->getAttribute(AttributeKey::PARENT_NODE);
+            if (!$funcCallNode instanceof FuncCall) {
                 continue;
             }
             if (!$this->nodeNameResolver->isNames($funcCallNode, ['preg_match', 'preg_match_all'])) {
@@ -82,24 +83,24 @@ final class PregMatchTypeCorrector
             /** @var Arg $thirdArg */
             $thirdArg = $funcCallNode->args[2];
             // are the same variables
-            if (!$this->nodeComparator->areNodesEqual($thirdArg->value, $node)) {
+            if (!$this->nodeComparator->areNodesEqual($thirdArg->value, $expr)) {
                 continue;
             }
-            return new \PHPStan\Type\ArrayType(new \PHPStan\Type\MixedType(), new \PHPStan\Type\MixedType());
+            return new ArrayType(new MixedType(), new MixedType());
         }
         return $originalType;
     }
     /**
      * @return Node[]
      */
-    private function getVariableUsages(\PhpParser\Node\Expr\Variable $variable) : array
+    private function getVariableUsages(Variable $variable) : array
     {
         $scope = $this->parentScopeFinder->find($variable);
         if ($scope === null) {
             return [];
         }
-        return $this->betterNodeFinder->find((array) $scope->stmts, function (\PhpParser\Node $node) use($variable) : bool {
-            if (!$node instanceof \PhpParser\Node\Expr\Variable) {
+        return $this->betterNodeFinder->find((array) $scope->stmts, static function (Node $node) use($variable) : bool {
+            if (!$node instanceof Variable) {
                 return \false;
             }
             return $node->name === $variable->name;

@@ -28,14 +28,14 @@ final class PhpAttributeAnalyzer
      * @var \PHPStan\Reflection\ReflectionProvider
      */
     private $reflectionProvider;
-    public function __construct(\Rector\Core\PhpParser\AstResolver $astResolver, \Rector\NodeNameResolver\NodeNameResolver $nodeNameResolver, \PHPStan\Reflection\ReflectionProvider $reflectionProvider)
+    public function __construct(AstResolver $astResolver, NodeNameResolver $nodeNameResolver, ReflectionProvider $reflectionProvider)
     {
         $this->astResolver = $astResolver;
         $this->nodeNameResolver = $nodeNameResolver;
         $this->reflectionProvider = $reflectionProvider;
     }
     /**
-     * @param \PhpParser\Node\Param|\PhpParser\Node\Stmt\ClassLike|\PhpParser\Node\Stmt\ClassMethod|\PhpParser\Node\Stmt\Property $node
+     * @param \PhpParser\Node\Stmt\Property|\PhpParser\Node\Stmt\ClassLike|\PhpParser\Node\Stmt\ClassMethod|\PhpParser\Node\Param $node
      */
     public function hasPhpAttribute($node, string $attributeClass) : bool
     {
@@ -49,9 +49,9 @@ final class PhpAttributeAnalyzer
         }
         return \false;
     }
-    public function hasInheritedPhpAttribute(\PhpParser\Node\Stmt\ClassLike $classLike, string $attributeClass) : bool
+    public function hasInheritedPhpAttribute(Class_ $class, string $attributeClass) : bool
     {
-        $className = (string) $this->nodeNameResolver->getName($classLike);
+        $className = (string) $this->nodeNameResolver->getName($class);
         if (!$this->reflectionProvider->hasClass($className)) {
             return \false;
         }
@@ -59,11 +59,11 @@ final class PhpAttributeAnalyzer
         $ancestorClassReflections = \array_merge($classReflection->getParents(), $classReflection->getInterfaces());
         foreach ($ancestorClassReflections as $ancestorClassReflection) {
             $ancestorClassName = $ancestorClassReflection->getName();
-            $class = $this->astResolver->resolveClassFromName($ancestorClassName);
-            if (!$class instanceof \PhpParser\Node\Stmt\Class_) {
+            $resolvedClass = $this->astResolver->resolveClassFromName($ancestorClassName);
+            if (!$resolvedClass instanceof Class_) {
                 continue;
             }
-            if ($this->hasPhpAttribute($class, $attributeClass)) {
+            if ($this->hasPhpAttribute($resolvedClass, $attributeClass)) {
                 return \true;
             }
         }
@@ -71,7 +71,7 @@ final class PhpAttributeAnalyzer
     }
     /**
      * @param string[] $attributeClasses
-     * @param \PhpParser\Node\Param|\PhpParser\Node\Stmt\ClassLike|\PhpParser\Node\Stmt\ClassMethod|\PhpParser\Node\Stmt\Property $node
+     * @param \PhpParser\Node\Stmt\Property|\PhpParser\Node\Stmt\ClassLike|\PhpParser\Node\Stmt\ClassMethod|\PhpParser\Node\Param $node
      */
     public function hasPhpAttributes($node, array $attributeClasses) : bool
     {

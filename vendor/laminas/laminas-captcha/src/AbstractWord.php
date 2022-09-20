@@ -1,14 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Laminas\Captcha;
 
-use Laminas\Math\Rand;
 use Laminas\Session\Container;
 
 use function class_exists;
 use function count;
 use function is_array;
 use function md5;
+use function random_bytes;
+use function random_int;
 use function strlen;
 use function strtolower;
 use function substr;
@@ -24,9 +27,13 @@ abstract class AbstractWord extends AbstractAdapter
     /**#@+
      * @var array Character sets
      */
+    /** @var list<string> */
     public static $V  = ["a", "e", "i", "o", "u", "y"];
+    /** @var list<string> */
     public static $VN = ["a", "e", "i", "o", "u", "y", "2", "3", "4", "5", "6", "7", "8", "9"];
+    /** @var list<string> */
     public static $C  = ["b", "c", "d", "f", "g", "h", "j", "k", "m", "n", "p", "q", "r", "s", "t", "u", "v", "w", "x", "z"];
+    /** @var list<string> */
     public static $CN = ["b", "c", "d", "f", "g", "h", "j", "k", "m", "n", "p", "q", "r", "s", "t", "u", "v", "w", "x", "z", "2", "3", "4", "5", "6", "7", "8", "9"];
     /**#@-*/
     // @codingStandardsIgnoreEnd
@@ -34,28 +41,28 @@ abstract class AbstractWord extends AbstractAdapter
     /**
      * Random session ID
      *
-     * @var string
+     * @var string|null
      */
     protected $id;
 
     /**
      * Generated word
      *
-     * @var string
+     * @var string|null
      */
     protected $word;
 
     /**
      * Session
      *
-     * @var Container
+     * @var Container|null
      */
     protected $session;
 
     /**
      * Class name for sessions
      *
-     * @var string
+     * @var class-string<Container>
      */
     protected $sessionClass = Container::class;
 
@@ -98,7 +105,7 @@ abstract class AbstractWord extends AbstractAdapter
     /**
      * Error messages
      *
-     * @var array
+     * @var array<string, string>
      */
     protected $messageTemplates = [
         self::MISSING_VALUE => 'Empty captcha value',
@@ -126,7 +133,7 @@ abstract class AbstractWord extends AbstractAdapter
     /**
      * Set session class for persistence
      *
-     * @param  string $sessionClass
+     * @param  class-string $sessionClass
      * @return AbstractWord Provides a fluent interface
      */
     public function setSessionClass($sessionClass)
@@ -165,7 +172,7 @@ abstract class AbstractWord extends AbstractAdapter
     public function getId()
     {
         if (null === $this->id) {
-            $this->setId($this->generateRandomId());
+            $this->id = $this->generateRandomId();
         }
         return $this->id;
     }
@@ -246,7 +253,7 @@ abstract class AbstractWord extends AbstractAdapter
      */
     public function getSession()
     {
-        if (! isset($this->session) || (null === $this->session)) {
+        if (! isset($this->session)) {
             $id = $this->getId();
             if (! class_exists($this->sessionClass)) {
                 throw new Exception\InvalidArgumentException("Session class $this->sessionClass not found");
@@ -261,14 +268,13 @@ abstract class AbstractWord extends AbstractAdapter
     /**
      * Set session namespace object
      *
-     * @return AbstractWord Provides a fluent interface
+     * @return $this Provides a fluent interface
      */
     public function setSession(Container $session)
     {
-        $this->session = $session;
-        if ($session) {
-            $this->keepSession = true;
-        }
+        $this->session     = $session;
+        $this->keepSession = true;
+
         return $this;
     }
 
@@ -316,8 +322,9 @@ abstract class AbstractWord extends AbstractAdapter
         $totIndexVow = count($vowels) - 1;
         for ($i = 0; $i < $wordLen; $i += 2) {
             // generate word with mix of vowels and consonants
-            $consonant = $consonants[Rand::getInteger(0, $totIndexCon, true)];
-            $vowel     = $vowels[Rand::getInteger(0, $totIndexVow, true)];
+
+            $consonant = $consonants[random_int(0, $totIndexCon)];
+            $vowel     = $vowels[random_int(0, $totIndexVow)];
             $word     .= $consonant . $vowel;
         }
 
@@ -352,13 +359,13 @@ abstract class AbstractWord extends AbstractAdapter
      */
     protected function generateRandomId()
     {
-        return md5(Rand::getBytes(32));
+        return md5(random_bytes(32));
     }
 
     /**
      * Validate the word
      *
-     * @see    Laminas\Validator\ValidatorInterface::isValid()
+     * @see    \Laminas\Validator\ValidatorInterface::isValid()
      *
      * @param  mixed $value
      * @param  mixed $context

@@ -8,7 +8,7 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix20211221\Symfony\Component\Finder\Iterator;
+namespace RectorPrefix202208\Symfony\Component\Finder\Iterator;
 
 /**
  * @author Jérémy Derussé <jeremy@derusse.com>
@@ -23,7 +23,7 @@ class LazyIterator implements \IteratorAggregate
     private $iteratorFactory;
     public function __construct(callable $iteratorFactory)
     {
-        $this->iteratorFactory = $iteratorFactory instanceof \Closure ? $iteratorFactory : \Closure::fromCallable($iteratorFactory);
+        $this->iteratorFactory = \Closure::fromCallable($iteratorFactory);
     }
     public function getIterator() : \Traversable
     {

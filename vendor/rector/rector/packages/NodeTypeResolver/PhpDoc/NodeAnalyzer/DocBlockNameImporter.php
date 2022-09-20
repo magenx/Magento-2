@@ -5,8 +5,8 @@ namespace Rector\NodeTypeResolver\PhpDoc\NodeAnalyzer;
 
 use PhpParser\Node;
 use PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocNode;
-use Rector\NodeTypeResolver\PhpDoc\PhpDocNodeTraverser\ImportingPhpDocNodeTraverserFactory;
 use Rector\NodeTypeResolver\PhpDocNodeVisitor\NameImportingPhpDocNodeVisitor;
+use RectorPrefix202208\Symplify\Astral\PhpDocParser\PhpDocNodeTraverser;
 final class DocBlockNameImporter
 {
     /**
@@ -14,23 +14,18 @@ final class DocBlockNameImporter
      * @var \Rector\NodeTypeResolver\PhpDocNodeVisitor\NameImportingPhpDocNodeVisitor
      */
     private $nameImportingPhpDocNodeVisitor;
-    /**
-     * @readonly
-     * @var \Rector\NodeTypeResolver\PhpDoc\PhpDocNodeTraverser\ImportingPhpDocNodeTraverserFactory
-     */
-    private $importingPhpDocNodeTraverserFactory;
-    public function __construct(\Rector\NodeTypeResolver\PhpDocNodeVisitor\NameImportingPhpDocNodeVisitor $nameImportingPhpDocNodeVisitor, \Rector\NodeTypeResolver\PhpDoc\PhpDocNodeTraverser\ImportingPhpDocNodeTraverserFactory $importingPhpDocNodeTraverserFactory)
+    public function __construct(NameImportingPhpDocNodeVisitor $nameImportingPhpDocNodeVisitor)
     {
         $this->nameImportingPhpDocNodeVisitor = $nameImportingPhpDocNodeVisitor;
-        $this->importingPhpDocNodeTraverserFactory = $importingPhpDocNodeTraverserFactory;
     }
-    public function importNames(\PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocNode $phpDocNode, \PhpParser\Node $node) : void
+    public function importNames(PhpDocNode $phpDocNode, Node $node) : void
     {
         if ($phpDocNode->children === []) {
             return;
         }
         $this->nameImportingPhpDocNodeVisitor->setCurrentNode($node);
-        $phpDocNodeTraverser = $this->importingPhpDocNodeTraverserFactory->create();
+        $phpDocNodeTraverser = new PhpDocNodeTraverser();
+        $phpDocNodeTraverser->addPhpDocNodeVisitor($this->nameImportingPhpDocNodeVisitor);
         $phpDocNodeTraverser->traverse($phpDocNode);
     }
 }

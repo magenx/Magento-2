@@ -9,10 +9,10 @@ use PHPStan\BetterReflection\Reflection\Reflection;
 use PHPStan\BetterReflection\Reflector\Reflector;
 use PHPStan\BetterReflection\SourceLocator\Type\SourceLocator;
 use Rector\NodeTypeResolver\Contract\SourceLocatorProviderInterface;
-final class IntermediateSourceLocator implements \PHPStan\BetterReflection\SourceLocator\Type\SourceLocator
+final class IntermediateSourceLocator implements SourceLocator
 {
     /**
-     * @var \Rector\NodeTypeResolver\Contract\SourceLocatorProviderInterface[]
+     * @var SourceLocatorProviderInterface[]
      * @readonly
      */
     private $sourceLocatorProviders;
@@ -23,12 +23,12 @@ final class IntermediateSourceLocator implements \PHPStan\BetterReflection\Sourc
     {
         $this->sourceLocatorProviders = $sourceLocatorProviders;
     }
-    public function locateIdentifier(\PHPStan\BetterReflection\Reflector\Reflector $reflector, \PHPStan\BetterReflection\Identifier\Identifier $identifier) : ?\PHPStan\BetterReflection\Reflection\Reflection
+    public function locateIdentifier(Reflector $reflector, Identifier $identifier) : ?Reflection
     {
         foreach ($this->sourceLocatorProviders as $sourceLocatorProvider) {
             $sourceLocator = $sourceLocatorProvider->provide();
             $reflection = $sourceLocator->locateIdentifier($reflector, $identifier);
-            if ($reflection instanceof \PHPStan\BetterReflection\Reflection\Reflection) {
+            if ($reflection instanceof Reflection) {
                 return $reflection;
             }
         }
@@ -36,9 +36,9 @@ final class IntermediateSourceLocator implements \PHPStan\BetterReflection\Sourc
     }
     /**
      * Find all identifiers of a type
-     * @return Reflection[]
+     * @return array<int, Reflection>
      */
-    public function locateIdentifiersByType(\PHPStan\BetterReflection\Reflector\Reflector $reflector, \PHPStan\BetterReflection\Identifier\IdentifierType $identifierType) : array
+    public function locateIdentifiersByType(Reflector $reflector, IdentifierType $identifierType) : array
     {
         foreach ($this->sourceLocatorProviders as $sourceLocatorProvider) {
             $sourceLocator = $sourceLocatorProvider->provide();

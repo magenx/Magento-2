@@ -54,6 +54,16 @@ class OrderAdapter implements OrderAdapterInterface
     }
 
     /**
+     * Returns order increment id
+     *
+     * @return string
+     */
+    public function getOrderIncrementId()
+    {
+        return $this->order->getIncrementId();
+    }
+
+    /**
      * Check whether order is multi shipping
      *
      * @return bool
@@ -68,16 +78,6 @@ class OrderAdapter implements OrderAdapterInterface
         $quote = $this->quoteRepository->get($quoteId);
 
         return (bool)$quote->getIsMultiShipping();
-    }
-
-    /**
-     * Returns order increment id
-     *
-     * @return string
-     */
-    public function getOrderIncrementId()
-    {
-        return $this->order->getIncrementId();
     }
 
     /**
@@ -107,6 +107,16 @@ class OrderAdapter implements OrderAdapterInterface
     }
 
     /**
+     * Returns order store id
+     *
+     * @return int
+     */
+    public function getStoreId()
+    {
+        return $this->order->getStoreId();
+    }
+
+    /**
      * Returns shipping address
      *
      * @return AddressAdapterInterface|null
@@ -120,16 +130,6 @@ class OrderAdapter implements OrderAdapterInterface
         }
 
         return null;
-    }
-
-    /**
-     * Returns order store id
-     *
-     * @return int
-     */
-    public function getStoreId()
-    {
-        return $this->order->getStoreId();
     }
 
     /**
@@ -153,13 +153,13 @@ class OrderAdapter implements OrderAdapterInterface
     }
 
     /**
-     * Returns list of line items in the cart
+     * Get base discount amount
      *
-     * @return \Magento\Sales\Api\Data\OrderItemInterface[]
+     * @return float|null
      */
-    public function getItems()
+    public function getBaseDiscountAmount()
     {
-        return $this->order->getItems();
+        return $this->order->getBaseDiscountAmount();
     }
 
     /**
@@ -173,18 +173,22 @@ class OrderAdapter implements OrderAdapterInterface
     }
 
     /**
-     * @return float|null
-     */
-    public function getBaseDiscountAmount()
-    {
-        return $this->order->getBaseDiscountAmount();
-    }
-
-    /**
+     * Get base tax amount
+     *
      * @return float|null
      */
     public function getBaseTaxAmount()
     {
         return $this->order->getBaseTaxAmount();
+    }
+
+    /**
+     * Returns list of line items in the cart
+     *
+     * @return \Magento\Sales\Api\Data\OrderItemInterface[]
+     */
+    public function getItems()
+    {
+        return $this->order->getItems();
     }
 }

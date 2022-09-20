@@ -3,12 +3,12 @@
 declare (strict_types=1);
 namespace PHPStan\PhpDocParser\Ast;
 
+use function array_key_exists;
 trait NodeAttributes
 {
     /** @var array<string, mixed> */
     private $attributes = [];
     /**
-     * @param string $key
      * @param mixed $value
      */
     public function setAttribute(string $key, $value) : void
@@ -17,10 +17,9 @@ trait NodeAttributes
     }
     public function hasAttribute(string $key) : bool
     {
-        return \array_key_exists($key, $this->attributes);
+        return array_key_exists($key, $this->attributes);
     }
     /**
-     * @param string $key
      * @return mixed
      */
     public function getAttribute(string $key)

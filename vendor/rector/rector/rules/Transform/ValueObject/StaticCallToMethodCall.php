@@ -7,11 +7,12 @@ use PhpParser\Node\Expr\StaticCall;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
 use PHPStan\Type\ObjectType;
+use Rector\Core\Validation\RectorAssert;
 final class StaticCallToMethodCall
 {
     /**
+     * @var class-string
      * @readonly
-     * @var string
      */
     private $staticClass;
     /**
@@ -29,16 +30,28 @@ final class StaticCallToMethodCall
      * @var string
      */
     private $methodName;
+    /**
+     * @param class-string $staticClass
+     */
     public function __construct(string $staticClass, string $staticMethod, string $classType, string $methodName)
     {
         $this->staticClass = $staticClass;
         $this->staticMethod = $staticMethod;
         $this->classType = $classType;
         $this->methodName = $methodName;
+        RectorAssert::className($staticClass);
+        // special char to match all method names
+        if ($staticMethod !== '*') {
+            RectorAssert::methodName($staticMethod);
+        }
+        RectorAssert::className($classType);
+        if ($methodName !== '*') {
+            RectorAssert::methodName($methodName);
+        }
     }
-    public function getClassObjectType() : \PHPStan\Type\ObjectType
+    public function getClassObjectType() : ObjectType
     {
-        return new \PHPStan\Type\ObjectType($this->classType);
+        return new ObjectType($this->classType);
     }
     public function getClassType() : string
     {
@@ -48,16 +61,16 @@ final class StaticCallToMethodCall
     {
         return $this->methodName;
     }
-    public function isStaticCallMatch(\PhpParser\Node\Expr\StaticCall $staticCall) : bool
+    public function isStaticCallMatch(StaticCall $staticCall) : bool
     {
-        if (!$staticCall->class instanceof \PhpParser\Node\Name) {
+        if (!$staticCall->class instanceof Name) {
             return \false;
         }
         $staticCallClassName = $staticCall->class->toString();
         if ($staticCallClassName !== $this->staticClass) {
             return \false;
         }
-        if (!$staticCall->name instanceof \PhpParser\Node\Identifier) {
+        if (!$staticCall->name instanceof Identifier) {
             return \false;
         }
         // all methods

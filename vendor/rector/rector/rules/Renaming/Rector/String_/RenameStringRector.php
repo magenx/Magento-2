@@ -9,26 +9,21 @@ use Rector\Core\Contract\Rector\ConfigurableRectorInterface;
 use Rector\Core\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
-use RectorPrefix20211221\Webmozart\Assert\Assert;
+use RectorPrefix202208\Webmozart\Assert\Assert;
 /**
  * @changelog https://github.com/symfony/symfony/pull/35858
  *
  * @see \Rector\Tests\Renaming\Rector\String_\RenameStringRector\RenameStringRectorTest
  */
-final class RenameStringRector extends \Rector\Core\Rector\AbstractRector implements \Rector\Core\Contract\Rector\ConfigurableRectorInterface
+final class RenameStringRector extends AbstractRector implements ConfigurableRectorInterface
 {
-    /**
-     * @deprecated
-     * @var string
-     */
-    public const STRING_CHANGES = 'string_changes';
     /**
      * @var array<string, string>
      */
     private $stringChanges = [];
-    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
+    public function getRuleDefinition() : RuleDefinition
     {
-        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Change string value', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample(<<<'CODE_SAMPLE'
+        return new RuleDefinition('Change string value', [new ConfiguredCodeSample(<<<'CODE_SAMPLE'
 class SomeClass
 {
     public function run()
@@ -53,18 +48,18 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [\PhpParser\Node\Scalar\String_::class];
+        return [String_::class];
     }
     /**
      * @param String_ $node
      */
-    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
+    public function refactor(Node $node) : ?Node
     {
         foreach ($this->stringChanges as $oldValue => $newValue) {
             if (!$this->valueResolver->isValue($node, $oldValue)) {
                 continue;
             }
-            return new \PhpParser\Node\Scalar\String_($newValue);
+            return new String_($newValue);
         }
         return null;
     }
@@ -73,10 +68,8 @@ CODE_SAMPLE
      */
     public function configure(array $configuration) : void
     {
-        $stringChanges = $configuration[self::STRING_CHANGES] ?? $configuration;
-        \RectorPrefix20211221\Webmozart\Assert\Assert::isArray($stringChanges);
-        \RectorPrefix20211221\Webmozart\Assert\Assert::allString(\array_keys($stringChanges));
-        \RectorPrefix20211221\Webmozart\Assert\Assert::allString($stringChanges);
-        $this->stringChanges = $stringChanges;
+        Assert::allString(\array_keys($configuration));
+        Assert::allString($configuration);
+        $this->stringChanges = $configuration;
     }
 }

@@ -3,13 +3,13 @@
 declare (strict_types=1);
 namespace Rector\BetterPhpDocParser\ValueObject\PhpDoc\DoctrineAnnotation;
 
-use RectorPrefix20211221\Nette\Utils\Strings;
+use RectorPrefix202208\Nette\Utils\Strings;
 use PHPStan\PhpDocParser\Ast\Node;
 use PHPStan\PhpDocParser\Ast\NodeAttributes;
 use PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagValueNode;
 use Rector\BetterPhpDocParser\ValueObject\PhpDocAttributeKey;
 use Rector\Core\Util\StringUtils;
-abstract class AbstractValuesAwareNode implements \PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagValueNode
+abstract class AbstractValuesAwareNode implements PhpDocTagValueNode
 {
     use NodeAttributes;
     /**
@@ -26,7 +26,7 @@ abstract class AbstractValuesAwareNode implements \PHPStan\PhpDocParser\Ast\PhpD
      */
     private $originalValues = [];
     /**
-     * @var mixed[]
+     * @var array<(string | int), mixed>
      */
     public $values = [];
     /**
@@ -38,7 +38,7 @@ abstract class AbstractValuesAwareNode implements \PHPStan\PhpDocParser\Ast\PhpD
      */
     protected $silentKey;
     /**
-     * @param mixed[] $values Must be public so node traverser can go through them
+     * @param array<string|int, mixed> $values Must be public so node traverser can go through them
      */
     public function __construct(array $values = [], ?string $originalContent = null, ?string $silentKey = null)
     {
@@ -57,7 +57,7 @@ abstract class AbstractValuesAwareNode implements \PHPStan\PhpDocParser\Ast\PhpD
         unset($this->values[$key]);
         unset($this->values[$quotedKey]);
         // invoke reprint
-        $this->setAttribute(\Rector\BetterPhpDocParser\ValueObject\PhpDocAttributeKey::ORIG_NODE, null);
+        $this->setAttribute(PhpDocAttributeKey::ORIG_NODE, null);
     }
     /**
      * @return mixed[]
@@ -68,7 +68,7 @@ abstract class AbstractValuesAwareNode implements \PHPStan\PhpDocParser\Ast\PhpD
     }
     /**
      * @return mixed|Node|null
-     * @param int|string $key
+     * @param string|int $key
      */
     public function getValue($key)
     {
@@ -84,16 +84,16 @@ abstract class AbstractValuesAwareNode implements \PHPStan\PhpDocParser\Ast\PhpD
     public function changeValue(string $key, $value) : void
     {
         // is quoted?
-        if (isset($this->values[$key]) && \is_string($this->values[$key]) && \Rector\Core\Util\StringUtils::isMatch($this->values[$key], self::UNQUOTED_VALUE_REGEX)) {
+        if (isset($this->values[$key]) && \is_string($this->values[$key]) && StringUtils::isMatch($this->values[$key], self::UNQUOTED_VALUE_REGEX)) {
             $value = '"' . $value . '"';
         }
         $this->values[$key] = $value;
         // invoke reprint
-        $this->setAttribute(\Rector\BetterPhpDocParser\ValueObject\PhpDocAttributeKey::ORIG_NODE, null);
+        $this->setAttribute(PhpDocAttributeKey::ORIG_NODE, null);
     }
     /**
      * @return mixed|null
-     * @param int|string $key
+     * @param string|int $key
      */
     public function getValueWithoutQuotes($key)
     {
@@ -109,13 +109,13 @@ abstract class AbstractValuesAwareNode implements \PHPStan\PhpDocParser\Ast\PhpD
     public function changeSilentValue($value) : void
     {
         // is quoted?
-        if (\Rector\Core\Util\StringUtils::isMatch($this->values[0], self::UNQUOTED_VALUE_REGEX)) {
+        if (StringUtils::isMatch($this->values[0], self::UNQUOTED_VALUE_REGEX)) {
             $value = '"' . $value . '"';
         }
         $this->values[0] = $value;
         $this->hasChanged = \true;
         // invoke reprint
-        $this->setAttribute(\Rector\BetterPhpDocParser\ValueObject\PhpDocAttributeKey::ORIG_NODE, null);
+        $this->setAttribute(PhpDocAttributeKey::ORIG_NODE, null);
     }
     /**
      * @return mixed|null
@@ -168,7 +168,7 @@ abstract class AbstractValuesAwareNode implements \PHPStan\PhpDocParser\Ast\PhpD
         if (!\is_string($value)) {
             return $value;
         }
-        $matches = \RectorPrefix20211221\Nette\Utils\Strings::match($value, self::UNQUOTED_VALUE_REGEX);
+        $matches = Strings::match($value, self::UNQUOTED_VALUE_REGEX);
         if ($matches === null) {
             return $value;
         }

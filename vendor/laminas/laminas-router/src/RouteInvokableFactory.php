@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Laminas\Router;
 
-use Interop\Container\ContainerInterface;
 use Laminas\ServiceManager\AbstractFactoryInterface;
 use Laminas\ServiceManager\Exception\ServiceNotCreatedException;
 use Laminas\ServiceManager\FactoryInterface;
 use Laminas\ServiceManager\ServiceLocatorInterface;
+use Psr\Container\ContainerInterface;
 
 use function class_exists;
 use function is_subclass_of;
@@ -56,6 +56,8 @@ class RouteInvokableFactory implements
      * Can we create a route instance with the given name? (v2)
      *
      * Proxies to canCreate().
+     *
+     * @deprecated Since 3.6.0 - This component is no longer compatible with Service Manager v2
      *
      * @param string $normalizedName
      * @param string $routeName
@@ -108,6 +110,8 @@ class RouteInvokableFactory implements
      *
      * Proxies to __invoke().
      *
+     * @deprecated Since 3.6.0 - This component is no longer compatible with Service Manager v2
+     *
      * @param string $normalizedName
      * @param string $routeName
      * @return RouteInterface
@@ -122,6 +126,8 @@ class RouteInvokableFactory implements
      *
      * For use with laminas-servicemanager v2; proxies to __invoke().
      *
+     * @deprecated Since 3.6.0 - This component is no longer compatible with Service Manager v2
+     *
      * @param null|string $normalizedName Not used
      * @param null|string $routeName
      * @return RouteInterface
@@ -134,6 +140,8 @@ class RouteInvokableFactory implements
 
     /**
      * Set options to use when creating a service (v2)
+     *
+     * @deprecated Since 3.6.0 - This component is no longer compatible with Service Manager v2
      *
      * @param array $creationOptions
      */

@@ -8,8 +8,8 @@ use Rector\Core\Validation\RectorAssert;
 final class ArgumentRemover
 {
     /**
+     * @var class-string
      * @readonly
-     * @var string
      */
     private $class;
     /**
@@ -22,8 +22,13 @@ final class ArgumentRemover
      * @var int
      */
     private $position;
+    /**
+     * @readonly
+     * @var mixed
+     */
     private $value;
     /**
+     * @param class-string $class
      * @param mixed $value
      */
     public function __construct(string $class, string $method, int $position, $value)
@@ -32,11 +37,11 @@ final class ArgumentRemover
         $this->method = $method;
         $this->position = $position;
         $this->value = $value;
-        \Rector\Core\Validation\RectorAssert::className($class);
+        RectorAssert::className($class);
     }
-    public function getObjectType() : \PHPStan\Type\ObjectType
+    public function getObjectType() : ObjectType
     {
-        return new \PHPStan\Type\ObjectType($this->class);
+        return new ObjectType($this->class);
     }
     public function getMethod() : string
     {

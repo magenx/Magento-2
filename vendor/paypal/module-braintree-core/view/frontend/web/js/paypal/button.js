@@ -1,5 +1,5 @@
 /**
- * Copyright © 2013-2017 Magento, Inc. All rights reserved.
+ * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
 define(
@@ -133,7 +133,14 @@ define(
                         amount: $(this).data('pp-amount'),
                         pageType: $(this).data('pp-type'),
                         style: {
-                            layout: 'text',
+                            layout: $(this).data('messaging-layout'),
+                            text: {
+                              color:   $(this).data('messaging-text-color')
+                            },
+                            logo: {
+                                type: $(this).data('messaging-logo'),
+                                position: $(this).data('messaging-logo-position')
+                            }
                         }
                     }).render('#' + $(this).attr('id'));
 
@@ -151,6 +158,9 @@ define(
                     color: data.data('color'),
                     shape: data.data('shape'),
                     size: data.data('size'),
+                    layout: data.data('layout'),
+                    tagline: data.data('tagline'),
+                    label: data.data('label')
                 };
 
                 if (data.data('fundingicons')) {

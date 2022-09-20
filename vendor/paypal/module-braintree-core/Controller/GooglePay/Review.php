@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © 2013-2017 Magento, Inc. All rights reserved.
+ * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
 namespace PayPal\Braintree\Controller\GooglePay;
@@ -8,14 +8,16 @@ namespace PayPal\Braintree\Controller\GooglePay;
 use Exception;
 use Magento\Checkout\Model\Session;
 use Magento\Framework\App\Action\Context;
+use Magento\Framework\App\Action\HttpPostActionInterface;
 use Magento\Framework\Controller\Result\Redirect;
 use Magento\Framework\Controller\ResultFactory;
+use Magento\Framework\Serialize\Serializer\Json;
 use PayPal\Braintree\Model\GooglePay\Config;
 use PayPal\Braintree\Model\GooglePay\Helper\QuoteUpdater;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\View\Result\Page;
 
-class Review extends AbstractAction
+class Review extends AbstractAction implements HttpPostActionInterface
 {
     /**
      * @var QuoteUpdater
@@ -28,21 +30,28 @@ class Review extends AbstractAction
     private static $paymentMethodNonce = 'payment_method_nonce';
 
     /**
+     * @var Json
+     */
+    protected $json;
+
+    /**
      * Constructor
      *
      * @param Context $context
      * @param Config $config
      * @param Session $checkoutSession
      * @param QuoteUpdater $quoteUpdater
+     * @param Json $json
      */
     public function __construct(
         Context $context,
         Config $config,
         Session $checkoutSession,
-        QuoteUpdater $quoteUpdater
+        QuoteUpdater $quoteUpdater,
+        Json $json
     ) {
         parent::__construct($context, $config, $checkoutSession);
-
+        $this->json = $json;
         $this->quoteUpdater = $quoteUpdater;
     }
 
@@ -51,9 +60,8 @@ class Review extends AbstractAction
      */
     public function execute()
     {
-        $requestData = json_decode(
-            $this->getRequest()->getPostValue('result', '{}'),
-            true
+        $requestData = $this->json->unserialize(
+            $this->getRequest()->getPostValue('result', '{}')
         );
         $quote = $this->checkoutSession->getQuote();
 
@@ -92,6 +100,8 @@ class Review extends AbstractAction
     }
 
     /**
+     * Validate request data
+     *
      * @param array $requestData
      * @return boolean
      */

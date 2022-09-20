@@ -8,29 +8,31 @@ use PhpParser\Node\Expr\ArrowFunction;
 use PhpParser\Node\Expr\Closure;
 use PhpParser\Node\Expr\New_;
 use PhpParser\Node\Name;
+use PhpParser\Node\Name\FullyQualified;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Function_;
 use PhpParser\Node\Stmt\Return_;
-use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\ClassReflection;
 use PHPStan\Reflection\ReflectionProvider;
 use PHPStan\Type\ObjectType;
 use PHPStan\Type\StaticType;
+use PHPStan\Type\Type;
 use Rector\Core\Enum\ObjectReference;
 use Rector\Core\Exception\ShouldNotHappenException;
 use Rector\Core\Rector\AbstractRector;
+use Rector\Core\Reflection\ReflectionResolver;
 use Rector\Core\ValueObject\PhpVersionFeature;
-use Rector\NodeTypeResolver\Node\AttributeKey;
 use Rector\NodeTypeResolver\PHPStan\Type\TypeFactory;
 use Rector\PHPStanStaticTypeMapper\Enum\TypeKind;
 use Rector\StaticTypeMapper\ValueObject\Type\SelfStaticType;
+use Rector\TypeDeclaration\NodeAnalyzer\ReturnTypeAnalyzer\StrictReturnNewAnalyzer;
 use Rector\VersionBonding\Contract\MinPhpVersionInterface;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
  * @see \Rector\Tests\TypeDeclaration\Rector\ClassMethod\ReturnTypeFromReturnNewRector\ReturnTypeFromReturnNewRectorTest
  */
-final class ReturnTypeFromReturnNewRector extends \Rector\Core\Rector\AbstractRector implements \Rector\VersionBonding\Contract\MinPhpVersionInterface
+final class ReturnTypeFromReturnNewRector extends AbstractRector implements MinPhpVersionInterface
 {
     /**
      * @readonly
@@ -42,14 +44,26 @@ final class ReturnTypeFromReturnNewRector extends \Rector\Core\Rector\AbstractRe
      * @var \PHPStan\Reflection\ReflectionProvider
      */
     private $reflectionProvider;
-    public function __construct(\Rector\NodeTypeResolver\PHPStan\Type\TypeFactory $typeFactory, \PHPStan\Reflection\ReflectionProvider $reflectionProvider)
+    /**
+     * @readonly
+     * @var \Rector\Core\Reflection\ReflectionResolver
+     */
+    private $reflectionResolver;
+    /**
+     * @readonly
+     * @var \Rector\TypeDeclaration\NodeAnalyzer\ReturnTypeAnalyzer\StrictReturnNewAnalyzer
+     */
+    private $strictReturnNewAnalyzer;
+    public function __construct(TypeFactory $typeFactory, ReflectionProvider $reflectionProvider, ReflectionResolver $reflectionResolver, StrictReturnNewAnalyzer $strictReturnNewAnalyzer)
     {
         $this->typeFactory = $typeFactory;
         $this->reflectionProvider = $reflectionProvider;
+        $this->reflectionResolver = $reflectionResolver;
+        $this->strictReturnNewAnalyzer = $strictReturnNewAnalyzer;
     }
-    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
+    public function getRuleDefinition() : RuleDefinition
     {
-        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Add return type to function like with return new', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample(<<<'CODE_SAMPLE'
+        return new RuleDefinition('Add return type to function like with return new', [new CodeSample(<<<'CODE_SAMPLE'
 final class SomeClass
 {
     public function action()
@@ -74,69 +88,95 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [\PhpParser\Node\Stmt\ClassMethod::class, \PhpParser\Node\Stmt\Function_::class, \PhpParser\Node\Expr\Closure::class, \PhpParser\Node\Expr\ArrowFunction::class];
+        return [ClassMethod::class, Function_::class, Closure::class, ArrowFunction::class];
     }
     /**
      * @param ClassMethod|Function_|ArrowFunction $node
      */
-    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
+    public function refactor(Node $node) : ?Node
     {
         if ($node->returnType !== null) {
             return null;
         }
-        if ($node instanceof \PhpParser\Node\Expr\ArrowFunction) {
-            $returns = [new \PhpParser\Node\Stmt\Return_($node->expr)];
-        } else {
-            /** @var Return_[] $returns */
-            $returns = $this->betterNodeFinder->findInstancesOfInFunctionLikeScoped($node, \PhpParser\Node\Stmt\Return_::class);
-        }
-        if ($returns === []) {
-            return null;
-        }
-        $newTypes = [];
-        foreach ($returns as $return) {
-            if (!$return->expr instanceof \PhpParser\Node\Expr\New_) {
-                return null;
+        if (!$node instanceof ArrowFunction) {
+            $returnedNewClassName = $this->strictReturnNewAnalyzer->matchAlwaysReturnVariableNew($node);
+            if (\is_string($returnedNewClassName)) {
+                $node->returnType = new FullyQualified($returnedNewClassName);
+                return $node;
             }
-            $new = $return->expr;
-            if (!$new->class instanceof \PhpParser\Node\Name) {
-                return null;
-            }
-            $newTypes[] = $this->createObjectTypeFromNew($new);
         }
-        $returnType = $this->typeFactory->createMixedPassedOrUnionType($newTypes);
-        $returnTypeNode = $this->staticTypeMapper->mapPHPStanTypeToPhpParserNode($returnType, \Rector\PHPStanStaticTypeMapper\Enum\TypeKind::RETURN());
-        $node->returnType = $returnTypeNode;
-        return $node;
+        return $this->refactorDirectReturnNew($node);
     }
     public function provideMinPhpVersion() : int
     {
-        return \Rector\Core\ValueObject\PhpVersionFeature::SCALAR_TYPES;
+        return PhpVersionFeature::SCALAR_TYPES;
     }
     /**
      * @return \PHPStan\Type\ObjectType|\PHPStan\Type\StaticType
      */
-    private function createObjectTypeFromNew(\PhpParser\Node\Expr\New_ $new)
+    private function createObjectTypeFromNew(New_ $new)
     {
         $className = $this->getName($new->class);
         if ($className === null) {
-            throw new \Rector\Core\Exception\ShouldNotHappenException();
+            throw new ShouldNotHappenException();
         }
-        if ($className === \Rector\Core\Enum\ObjectReference::STATIC()->getValue() || $className === \Rector\Core\Enum\ObjectReference::SELF()->getValue()) {
-            $scope = $new->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::SCOPE);
-            if (!$scope instanceof \PHPStan\Analyser\Scope) {
-                throw new \Rector\Core\Exception\ShouldNotHappenException();
+        if ($className === ObjectReference::STATIC || $className === ObjectReference::SELF) {
+            $classReflection = $this->reflectionResolver->resolveClassReflection($new);
+            if (!$classReflection instanceof ClassReflection) {
+                throw new ShouldNotHappenException();
             }
-            $classReflection = $scope->getClassReflection();
-            if (!$classReflection instanceof \PHPStan\Reflection\ClassReflection) {
-                throw new \Rector\Core\Exception\ShouldNotHappenException();
+            if ($className === ObjectReference::SELF) {
+                return new SelfStaticType($classReflection);
             }
-            if ($className === \Rector\Core\Enum\ObjectReference::SELF()->getValue()) {
-                return new \Rector\StaticTypeMapper\ValueObject\Type\SelfStaticType($classReflection);
-            }
-            return new \PHPStan\Type\StaticType($classReflection);
+            return new StaticType($classReflection);
         }
         $classReflection = $this->reflectionProvider->getClass($className);
-        return new \PHPStan\Type\ObjectType($className, null, $classReflection);
+        return new ObjectType($className, null, $classReflection);
+    }
+    /**
+     * @param \PhpParser\Node\Stmt\ClassMethod|\PhpParser\Node\Stmt\Function_|\PhpParser\Node\Expr\ArrowFunction|\PhpParser\Node\Expr\Closure $node
+     * @return null|\PhpParser\Node\Expr\ArrowFunction|\PhpParser\Node\Stmt\Function_|\PhpParser\Node\Stmt\ClassMethod|\PhpParser\Node\Expr\Closure
+     */
+    private function refactorDirectReturnNew($node)
+    {
+        if ($node instanceof ArrowFunction) {
+            $returns = [new Return_($node->expr)];
+        } else {
+            /** @var Return_[] $returns */
+            $returns = $this->betterNodeFinder->findInstancesOfInFunctionLikeScoped($node, Return_::class);
+        }
+        if ($returns === []) {
+            return null;
+        }
+        $newTypes = $this->resolveReturnNewType($returns);
+        if ($newTypes === null) {
+            return null;
+        }
+        $returnType = $this->typeFactory->createMixedPassedOrUnionType($newTypes);
+        $returnTypeNode = $this->staticTypeMapper->mapPHPStanTypeToPhpParserNode($returnType, TypeKind::RETURN);
+        if (!$returnTypeNode instanceof Node) {
+            return null;
+        }
+        $node->returnType = $returnTypeNode;
+        return $node;
+    }
+    /**
+     * @param Return_[] $returns
+     * @return Type[]|null
+     */
+    private function resolveReturnNewType(array $returns) : ?array
+    {
+        $newTypes = [];
+        foreach ($returns as $return) {
+            if (!$return->expr instanceof New_) {
+                return null;
+            }
+            $new = $return->expr;
+            if (!$new->class instanceof Name) {
+                return null;
+            }
+            $newTypes[] = $this->createObjectTypeFromNew($new);
+        }
+        return $newTypes;
     }
 }

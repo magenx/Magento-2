@@ -8,21 +8,20 @@ use Rector\ChangesReporting\ValueObjectFactory\ErrorFactory;
 use Rector\Core\Application\FileDecorator\FileDiffFileDecorator;
 use Rector\Core\Application\FileProcessor;
 use Rector\Core\Application\FileSystem\RemovedAndAddedFilesCollector;
+use Rector\Core\Contract\Console\OutputStyleInterface;
 use Rector\Core\Contract\Processor\FileProcessorInterface;
-use Rector\Core\Enum\ApplicationPhase;
 use Rector\Core\Exception\ShouldNotHappenException;
 use Rector\Core\PhpParser\Printer\FormatPerservingPrinter;
 use Rector\Core\Provider\CurrentFileProvider;
 use Rector\Core\ValueObject\Application\File;
-use Rector\Core\ValueObject\Application\SystemError;
 use Rector\Core\ValueObject\Configuration;
+use Rector\Core\ValueObject\Error\SystemError;
 use Rector\Core\ValueObject\Reporting\FileDiff;
 use Rector\Parallel\ValueObject\Bridge;
 use Rector\PostRector\Application\PostFileProcessor;
 use Rector\Testing\PHPUnit\StaticPHPUnitEnvironment;
-use RectorPrefix20211221\Symfony\Component\Console\Style\SymfonyStyle;
 use Throwable;
-final class PhpFileProcessor implements \Rector\Core\Contract\Processor\FileProcessorInterface
+final class PhpFileProcessor implements FileProcessorInterface
 {
     /**
      * @readonly
@@ -41,9 +40,9 @@ final class PhpFileProcessor implements \Rector\Core\Contract\Processor\FileProc
     private $removedAndAddedFilesCollector;
     /**
      * @readonly
-     * @var \Symfony\Component\Console\Style\SymfonyStyle
+     * @var \Rector\Core\Contract\Console\OutputStyleInterface
      */
-    private $symfonyStyle;
+    private $rectorOutputStyle;
     /**
      * @readonly
      * @var \Rector\Core\Application\FileDecorator\FileDiffFileDecorator
@@ -64,12 +63,12 @@ final class PhpFileProcessor implements \Rector\Core\Contract\Processor\FileProc
      * @var \Rector\ChangesReporting\ValueObjectFactory\ErrorFactory
      */
     private $errorFactory;
-    public function __construct(\Rector\Core\PhpParser\Printer\FormatPerservingPrinter $formatPerservingPrinter, \Rector\Core\Application\FileProcessor $fileProcessor, \Rector\Core\Application\FileSystem\RemovedAndAddedFilesCollector $removedAndAddedFilesCollector, \RectorPrefix20211221\Symfony\Component\Console\Style\SymfonyStyle $symfonyStyle, \Rector\Core\Application\FileDecorator\FileDiffFileDecorator $fileDiffFileDecorator, \Rector\Core\Provider\CurrentFileProvider $currentFileProvider, \Rector\PostRector\Application\PostFileProcessor $postFileProcessor, \Rector\ChangesReporting\ValueObjectFactory\ErrorFactory $errorFactory)
+    public function __construct(FormatPerservingPrinter $formatPerservingPrinter, FileProcessor $fileProcessor, RemovedAndAddedFilesCollector $removedAndAddedFilesCollector, OutputStyleInterface $rectorOutputStyle, FileDiffFileDecorator $fileDiffFileDecorator, CurrentFileProvider $currentFileProvider, PostFileProcessor $postFileProcessor, ErrorFactory $errorFactory)
     {
         $this->formatPerservingPrinter = $formatPerservingPrinter;
         $this->fileProcessor = $fileProcessor;
         $this->removedAndAddedFilesCollector = $removedAndAddedFilesCollector;
-        $this->symfonyStyle = $symfonyStyle;
+        $this->rectorOutputStyle = $rectorOutputStyle;
         $this->fileDiffFileDecorator = $fileDiffFileDecorator;
         $this->currentFileProvider = $currentFileProvider;
         $this->postFileProcessor = $postFileProcessor;
@@ -78,47 +77,38 @@ final class PhpFileProcessor implements \Rector\Core\Contract\Processor\FileProc
     /**
      * @return array{system_errors: SystemError[], file_diffs: FileDiff[]}
      */
-    public function process(\Rector\Core\ValueObject\Application\File $file, \Rector\Core\ValueObject\Configuration $configuration) : array
+    public function process(File $file, Configuration $configuration) : array
     {
-        $systemErrorsAndFileDiffs = [\Rector\Parallel\ValueObject\Bridge::SYSTEM_ERRORS => [], \Rector\Parallel\ValueObject\Bridge::FILE_DIFFS => []];
+        $systemErrorsAndFileDiffs = [Bridge::SYSTEM_ERRORS => [], Bridge::FILE_DIFFS => []];
         // 1. parse files to nodes
         $parsingSystemErrors = $this->parseFileAndDecorateNodes($file);
         if ($parsingSystemErrors !== []) {
             // we cannot process this file as the parsing and type resolving itself went wrong
-            $systemErrorsAndFileDiffs[\Rector\Parallel\ValueObject\Bridge::SYSTEM_ERRORS] = $parsingSystemErrors;
-            $this->notifyPhase($file, \Rector\Core\Enum\ApplicationPhase::PRINT_SKIP());
+            $systemErrorsAndFileDiffs[Bridge::SYSTEM_ERRORS] = $parsingSystemErrors;
             return $systemErrorsAndFileDiffs;
         }
         // 2. change nodes with Rectors
-        $loopCounter = 0;
         do {
-            ++$loopCounter;
-            if ($loopCounter === 10) {
-                // ensure no infinite loop
-                break;
-            }
             $file->changeHasChanged(\false);
             $this->refactorNodesWithRectors($file, $configuration);
             // 3. apply post rectors
-            $this->notifyPhase($file, \Rector\Core\Enum\ApplicationPhase::POST_RECTORS());
             $newStmts = $this->postFileProcessor->traverse($file->getNewStmts());
             // this is needed for new tokens added in "afterTraverse()"
             $file->changeNewStmts($newStmts);
             // 4. print to file or string
             $this->currentFileProvider->setFile($file);
             // important to detect if file has changed
-            $this->notifyPhase($file, \Rector\Core\Enum\ApplicationPhase::PRINT());
             $this->printFile($file, $configuration);
         } while ($file->hasChanged());
         // return json here
         $fileDiff = $file->getFileDiff();
-        if (!$fileDiff instanceof \Rector\Core\ValueObject\Reporting\FileDiff) {
+        if (!$fileDiff instanceof FileDiff) {
             return $systemErrorsAndFileDiffs;
         }
-        $systemErrorsAndFileDiffs[\Rector\Parallel\ValueObject\Bridge::FILE_DIFFS] = [$fileDiff];
+        $systemErrorsAndFileDiffs[Bridge::FILE_DIFFS] = [$fileDiff];
         return $systemErrorsAndFileDiffs;
     }
-    public function supports(\Rector\Core\ValueObject\Application\File $file, \Rector\Core\ValueObject\Configuration $configuration) : bool
+    public function supports(File $file, Configuration $configuration) : bool
     {
         $smartFileInfo = $file->getSmartFileInfo();
         return $smartFileInfo->hasSuffixes($configuration->getFileExtensions());
@@ -130,40 +120,39 @@ final class PhpFileProcessor implements \Rector\Core\Contract\Processor\FileProc
     {
         return ['php'];
     }
-    private function refactorNodesWithRectors(\Rector\Core\ValueObject\Application\File $file, \Rector\Core\ValueObject\Configuration $configuration) : void
+    private function refactorNodesWithRectors(File $file, Configuration $configuration) : void
     {
         $this->currentFileProvider->setFile($file);
-        $this->notifyPhase($file, \Rector\Core\Enum\ApplicationPhase::REFACTORING());
         $this->fileProcessor->refactor($file, $configuration);
     }
     /**
      * @return SystemError[]
      */
-    private function parseFileAndDecorateNodes(\Rector\Core\ValueObject\Application\File $file) : array
+    private function parseFileAndDecorateNodes(File $file) : array
     {
         $this->currentFileProvider->setFile($file);
-        $this->notifyPhase($file, \Rector\Core\Enum\ApplicationPhase::PARSING());
+        $this->notifyFile($file);
         try {
             $this->fileProcessor->parseFileInfoToLocalCache($file);
-        } catch (\Rector\Core\Exception\ShouldNotHappenException $shouldNotHappenException) {
+        } catch (ShouldNotHappenException $shouldNotHappenException) {
             throw $shouldNotHappenException;
-        } catch (\PHPStan\AnalysedCodeException $analysedCodeException) {
+        } catch (AnalysedCodeException $analysedCodeException) {
             // inform about missing classes in tests
-            if (\Rector\Testing\PHPUnit\StaticPHPUnitEnvironment::isPHPUnitRun()) {
+            if (StaticPHPUnitEnvironment::isPHPUnitRun()) {
                 throw $analysedCodeException;
             }
             $autoloadSystemError = $this->errorFactory->createAutoloadError($analysedCodeException, $file->getSmartFileInfo());
             return [$autoloadSystemError];
-        } catch (\Throwable $throwable) {
-            if ($this->symfonyStyle->isVerbose() || \Rector\Testing\PHPUnit\StaticPHPUnitEnvironment::isPHPUnitRun()) {
+        } catch (Throwable $throwable) {
+            if ($this->rectorOutputStyle->isVerbose() || StaticPHPUnitEnvironment::isPHPUnitRun()) {
                 throw $throwable;
             }
-            $systemError = new \Rector\Core\ValueObject\Application\SystemError($throwable->getMessage(), $file->getRelativeFilePath(), $throwable->getLine());
+            $systemError = new SystemError($throwable->getMessage(), $file->getRelativeFilePath(), $throwable->getLine());
             return [$systemError];
         }
         return [];
     }
-    private function printFile(\Rector\Core\ValueObject\Application\File $file, \Rector\Core\ValueObject\Configuration $configuration) : void
+    private function printFile(File $file, Configuration $configuration) : void
     {
         $smartFileInfo = $file->getSmartFileInfo();
         if ($this->removedAndAddedFilesCollector->isFileRemoved($smartFileInfo)) {
@@ -174,14 +163,13 @@ final class PhpFileProcessor implements \Rector\Core\Contract\Processor\FileProc
         $file->changeFileContent($newContent);
         $this->fileDiffFileDecorator->decorate([$file]);
     }
-    private function notifyPhase(\Rector\Core\ValueObject\Application\File $file, \Rector\Core\Enum\ApplicationPhase $applicationPhase) : void
+    private function notifyFile(File $file) : void
     {
-        if (!$this->symfonyStyle->isVerbose()) {
+        if (!$this->rectorOutputStyle->isVerbose()) {
             return;
         }
         $smartFileInfo = $file->getSmartFileInfo();
-        $relativeFilePath = $smartFileInfo->getRelativeFilePathFromDirectory(\getcwd());
-        $message = \sprintf('[%s] %s', $applicationPhase, $relativeFilePath);
-        $this->symfonyStyle->writeln($message);
+        $message = $smartFileInfo->getRelativeFilePathFromDirectory(\getcwd());
+        $this->rectorOutputStyle->writeln($message);
     }
 }

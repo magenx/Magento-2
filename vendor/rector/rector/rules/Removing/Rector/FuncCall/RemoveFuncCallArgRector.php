@@ -11,46 +11,42 @@ use Rector\Core\Rector\AbstractRector;
 use Rector\Removing\ValueObject\RemoveFuncCallArg;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
-use RectorPrefix20211221\Webmozart\Assert\Assert;
+use RectorPrefix202208\Webmozart\Assert\Assert;
 /**
  * @see \Rector\Tests\Removing\Rector\FuncCall\RemoveFuncCallArgRector\RemoveFuncCallArgRectorTest
  */
-final class RemoveFuncCallArgRector extends \Rector\Core\Rector\AbstractRector implements \Rector\Core\Contract\Rector\ConfigurableRectorInterface
+final class RemoveFuncCallArgRector extends AbstractRector implements ConfigurableRectorInterface
 {
-    /**
-     * @deprecated
-     * @var string
-     */
-    public const REMOVED_FUNCTION_ARGUMENTS = 'removed_function_arguments';
     /**
      * @var RemoveFuncCallArg[]
      */
     private $removedFunctionArguments = [];
-    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
+    public function getRuleDefinition() : RuleDefinition
     {
-        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Remove argument by position by function name', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample(<<<'CODE_SAMPLE'
+        return new RuleDefinition('Remove argument by position by function name', [new ConfiguredCodeSample(<<<'CODE_SAMPLE'
 remove_last_arg(1, 2);
 CODE_SAMPLE
 , <<<'CODE_SAMPLE'
 remove_last_arg(1);
 CODE_SAMPLE
-, [new \Rector\Removing\ValueObject\RemoveFuncCallArg('remove_last_arg', 1)])]);
+, [new RemoveFuncCallArg('remove_last_arg', 1)])]);
     }
     /**
      * @return array<class-string<Node>>
      */
     public function getNodeTypes() : array
     {
-        return [\PhpParser\Node\Expr\FuncCall::class];
+        return [FuncCall::class];
     }
     /**
      * @param FuncCall $node
      */
-    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
+    public function refactor(Node $node) : ?Node
     {
-        if ($node->name instanceof \PhpParser\Node\Expr) {
+        if ($node->name instanceof Expr) {
             return null;
         }
+        $hasChanged = \false;
         foreach ($this->removedFunctionArguments as $removedFunctionArgument) {
             if (!$this->isName($node->name, $removedFunctionArgument->getFunction())) {
                 continue;
@@ -60,7 +56,11 @@ CODE_SAMPLE
                     continue;
                 }
                 $this->nodeRemover->removeArg($node, $position);
+                $hasChanged = \true;
             }
+        }
+        if (!$hasChanged) {
+            return null;
         }
         return $node;
     }
@@ -69,8 +69,7 @@ CODE_SAMPLE
      */
     public function configure(array $configuration) : void
     {
-        $removedFunctionArguments = $configuration[self::REMOVED_FUNCTION_ARGUMENTS] ?? $configuration;
-        \RectorPrefix20211221\Webmozart\Assert\Assert::allIsAOf($removedFunctionArguments, \Rector\Removing\ValueObject\RemoveFuncCallArg::class);
-        $this->removedFunctionArguments = $removedFunctionArguments;
+        Assert::allIsAOf($configuration, RemoveFuncCallArg::class);
+        $this->removedFunctionArguments = $configuration;
     }
 }

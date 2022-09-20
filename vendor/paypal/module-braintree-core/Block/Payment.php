@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © 2013-2017 Magento, Inc. All rights reserved.
+ * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
 namespace PayPal\Braintree\Block;
@@ -22,7 +22,7 @@ class Payment extends Template
     private $config;
 
     /**
-     * Constructor
+     * Payment constructor
      *
      * @param Context $context
      * @param ConfigProviderInterface $config
@@ -38,6 +38,8 @@ class Payment extends Template
     }
 
     /**
+     * Get Payment Config
+     *
      * @return string
      */
     public function getPaymentConfig(): string
@@ -53,6 +55,8 @@ class Payment extends Template
     }
 
     /**
+     * Get code
+     *
      * @return string
      */
     public function getCode(): string

@@ -6,6 +6,7 @@ namespace PHPStan\PhpDocParser\Ast\Type;
 use PHPStan\PhpDocParser\Ast\ConstExpr\ConstExprIntegerNode;
 use PHPStan\PhpDocParser\Ast\ConstExpr\ConstExprStringNode;
 use PHPStan\PhpDocParser\Ast\NodeAttributes;
+use function sprintf;
 class ArrayShapeItemNode implements \PHPStan\PhpDocParser\Ast\Type\TypeNode
 {
     use NodeAttributes;
@@ -27,7 +28,7 @@ class ArrayShapeItemNode implements \PHPStan\PhpDocParser\Ast\Type\TypeNode
     public function __toString() : string
     {
         if ($this->keyName !== null) {
-            return \sprintf('%s%s: %s', (string) $this->keyName, $this->optional ? '?' : '', (string) $this->valueType);
+            return sprintf('%s%s: %s', (string) $this->keyName, $this->optional ? '?' : '', (string) $this->valueType);
         }
         return (string) $this->valueType;
     }

@@ -1,4 +1,8 @@
 <?php
+/**
+ * Copyright © Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
 
 namespace PayPal\Braintree\Model\ApplePay\Auth;
 
@@ -50,6 +54,14 @@ class Data implements AuthDataInterface
     /**
      * @inheritdoc
      */
+    public function isLoggedIn(): bool
+    {
+        return $this->isLoggedIn;
+    }
+
+    /**
+     * @inheritdoc
+     */
     public function getActionSuccess(): string
     {
         return $this->actionSuccess;
@@ -58,9 +70,9 @@ class Data implements AuthDataInterface
     /**
      * @inheritdoc
      */
-    public function isLoggedIn(): bool
+    public function setClientToken($value)
     {
-        return $this->isLoggedIn;
+        return $this->clientToken = $value;
     }
 
     /**
@@ -74,25 +86,9 @@ class Data implements AuthDataInterface
     /**
      * @inheritdoc
      */
-    public function setClientToken($value)
-    {
-        $this->clientToken = $value;
-    }
-
-    /**
-     * @inheritdoc
-     */
     public function setDisplayName($value)
     {
-        $this->displayName = $value;
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function setActionSuccess($value)
-    {
-        $this->actionSuccess = $value;
+        return $this->displayName = $value;
     }
 
     /**
@@ -100,7 +96,7 @@ class Data implements AuthDataInterface
      */
     public function setIsLoggedIn($value)
     {
-        $this->isLoggedIn = $value;
+        return $this->isLoggedIn = $value;
     }
 
     /**
@@ -108,6 +104,14 @@ class Data implements AuthDataInterface
      */
     public function setStoreCode($value)
     {
-        $this->storeCode = $value;
+        return $this->storeCode = $value;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function setActionSuccess($value)
+    {
+        return $this->actionSuccess = $value;
     }
 }

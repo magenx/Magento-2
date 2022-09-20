@@ -26,8 +26,7 @@ class AutoloadGenerator
     private const CLASS_TEMPLATE = __DIR__ . '/../../templates/autoloader-class.template';
     private const FILE_TEMPLATE  = __DIR__ . '/../../templates/autoloader-file.template';
 
-    /** @var string */
-    private $namespace;
+    private string $namespace;
 
     public function __construct(string $namespace)
     {
@@ -62,13 +61,11 @@ class AutoloadGenerator
     private function generateClassmapCode(array &$classmap): string
     {
         $lines = array_map(
-            function (string $class, string $file): string {
-                return sprintf(
-                    '%s => %s,',
-                    var_export($class, true),
-                    var_export($file, true)
-                );
-            },
+            fn(string $class, string $file): string => sprintf(
+                '%s => %s,',
+                var_export($class, true),
+                var_export($file, true)
+            ),
             array_keys($classmap),
             $classmap
         );

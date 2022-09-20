@@ -13,6 +13,7 @@ use function array_pop;
 use function class_exists;
 use function interface_exists;
 use function is_array;
+use function is_iterable;
 use function strpos;
 use function trigger_error;
 
@@ -90,7 +91,7 @@ class LegacyConfig extends Config
                     $config     = new Parameters($data);
                     $parameters = $config->get('parameters', $config->get('parameter'));
 
-                    if (is_array($parameters) || $parameters instanceof Traversable) {
+                    if (is_iterable($parameters)) {
                         $parameters = $this->prepareParametersArray($parameters, $target);
                         $this->setParameters($target, $parameters);
                     }

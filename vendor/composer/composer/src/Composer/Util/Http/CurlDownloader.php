@@ -356,7 +356,7 @@ class CurlDownloader
                     if (
                         (!isset($job['options']['http']['method']) || $job['options']['http']['method'] === 'GET')
                         && (
-                            in_array($errno, array(7 /* CURLE_COULDNT_CONNECT */, 16 /* CURLE_HTTP2 */, 92 /* CURLE_HTTP2_STREAM */), true)
+                            in_array($errno, array(7 /* CURLE_COULDNT_CONNECT */, 16 /* CURLE_HTTP2 */, 92 /* CURLE_HTTP2_STREAM */, 6 /* CURLE_COULDNT_RESOLVE_HOST */), true)
                             || ($errno === 35 /* CURLE_SSL_CONNECT_ERROR */ && false !== strpos($error, 'Connection reset by peer'))
                         ) && $job['attributes']['retries'] < $this->maxRetries
                     ) {
@@ -528,7 +528,7 @@ class CurlDownloader
     private function isAuthenticatedRetryNeeded(array $job, Response $response)
     {
         if (in_array($response->getStatusCode(), array(401, 403)) && $job['attributes']['retryAuthFailure']) {
-            $result = $this->authHelper->promptAuthIfNeeded($job['url'], $job['origin'], $response->getStatusCode(), $response->getStatusMessage(), $response->getHeaders());
+            $result = $this->authHelper->promptAuthIfNeeded($job['url'], $job['origin'], $response->getStatusCode(), $response->getStatusMessage(), $response->getHeaders(), $job['attributes']['retries']);
 
             if ($result['retry']) {
                 return $result;
@@ -560,7 +560,7 @@ class CurlDownloader
 
         if ($needsAuthRetry) {
             if ($job['attributes']['retryAuthFailure']) {
-                $result = $this->authHelper->promptAuthIfNeeded($job['url'], $job['origin'], 401);
+                $result = $this->authHelper->promptAuthIfNeeded($job['url'], $job['origin'], 401, null, array(), $job['attributes']['retries']);
                 if ($result['retry']) {
                     return $result;
                 }

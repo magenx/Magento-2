@@ -7,8 +7,8 @@ use Rector\Core\Validation\RectorAssert;
 final class ChangeMethodVisibility
 {
     /**
+     * @var class-string
      * @readonly
-     * @var string
      */
     private $class;
     /**
@@ -21,12 +21,15 @@ final class ChangeMethodVisibility
      * @var int
      */
     private $visibility;
+    /**
+     * @param class-string $class
+     */
     public function __construct(string $class, string $method, int $visibility)
     {
         $this->class = $class;
         $this->method = $method;
         $this->visibility = $visibility;
-        \Rector\Core\Validation\RectorAssert::className($class);
+        RectorAssert::className($class);
     }
     public function getClass() : string
     {

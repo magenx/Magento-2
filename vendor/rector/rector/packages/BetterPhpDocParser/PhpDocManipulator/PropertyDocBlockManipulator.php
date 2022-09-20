@@ -6,7 +6,6 @@ namespace Rector\BetterPhpDocParser\PhpDocManipulator;
 use PHPStan\PhpDocParser\Ast\PhpDoc\ParamTagValueNode;
 use Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfoFactory;
 use Rector\BetterPhpDocParser\ValueObject\PhpDocAttributeKey;
-use Rector\Naming\Contract\RenameValueObjectInterface;
 use Rector\Naming\ValueObject\ParamRename;
 final class PropertyDocBlockManipulator
 {
@@ -15,22 +14,19 @@ final class PropertyDocBlockManipulator
      * @var \Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfoFactory
      */
     private $phpDocInfoFactory;
-    public function __construct(\Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfoFactory $phpDocInfoFactory)
+    public function __construct(PhpDocInfoFactory $phpDocInfoFactory)
     {
         $this->phpDocInfoFactory = $phpDocInfoFactory;
     }
-    /**
-     * @param ParamRename $renameValueObject
-     */
-    public function renameParameterNameInDocBlock(\Rector\Naming\Contract\RenameValueObjectInterface $renameValueObject) : void
+    public function renameParameterNameInDocBlock(ParamRename $paramRename) : void
     {
-        $functionLike = $renameValueObject->getFunctionLike();
+        $functionLike = $paramRename->getFunctionLike();
         $phpDocInfo = $this->phpDocInfoFactory->createFromNodeOrEmpty($functionLike);
-        $paramTagValueNode = $phpDocInfo->getParamTagValueNodeByName($renameValueObject->getCurrentName());
-        if (!$paramTagValueNode instanceof \PHPStan\PhpDocParser\Ast\PhpDoc\ParamTagValueNode) {
+        $paramTagValueNode = $phpDocInfo->getParamTagValueByName($paramRename->getCurrentName());
+        if (!$paramTagValueNode instanceof ParamTagValueNode) {
             return;
         }
-        $paramTagValueNode->parameterName = '$' . $renameValueObject->getExpectedName();
-        $paramTagValueNode->setAttribute(\Rector\BetterPhpDocParser\ValueObject\PhpDocAttributeKey::ORIG_NODE, null);
+        $paramTagValueNode->parameterName = '$' . $paramRename->getExpectedName();
+        $paramTagValueNode->setAttribute(PhpDocAttributeKey::ORIG_NODE, null);
     }
 }

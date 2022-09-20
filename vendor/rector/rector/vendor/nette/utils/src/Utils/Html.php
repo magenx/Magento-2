@@ -5,10 +5,10 @@
  * Copyright (c) 2004 David Grudl (https://davidgrudl.com)
  */
 declare (strict_types=1);
-namespace RectorPrefix20211221\Nette\Utils;
+namespace RectorPrefix202208\Nette\Utils;
 
-use RectorPrefix20211221\Nette;
-use RectorPrefix20211221\Nette\HtmlStringable;
+use RectorPrefix202208\Nette;
+use RectorPrefix202208\Nette\HtmlStringable;
 use function is_array, is_float, is_object, is_string;
 /**
  * HTML helper.
@@ -227,7 +227,7 @@ use function is_array, is_float, is_object, is_string;
  * @method self width(?int $val)
  * @method self wrap(?string $val)
  */
-class Html implements \ArrayAccess, \Countable, \IteratorAggregate, \RectorPrefix20211221\Nette\HtmlStringable
+class Html implements \ArrayAccess, \Countable, \IteratorAggregate, HtmlStringable
 {
     use Nette\SmartObject;
     /** @var array<string, mixed>  element's attributes */
@@ -247,18 +247,18 @@ class Html implements \ArrayAccess, \Countable, \IteratorAggregate, \RectorPrefi
      * @param  array|string $attrs element's attributes or plain text content
      * @return static
      */
-    public static function el(string $name = null, $attrs = null)
+    public static function el(?string $name = null, $attrs = null)
     {
         $el = new static();
         $parts = \explode(' ', (string) $name, 2);
         $el->setName($parts[0]);
-        if (\is_array($attrs)) {
+        if (is_array($attrs)) {
             $el->attrs = $attrs;
         } elseif ($attrs !== null) {
             $el->setText($attrs);
         }
         if (isset($parts[1])) {
-            foreach (\RectorPrefix20211221\Nette\Utils\Strings::matchAll($parts[1] . ' ', '#([a-z0-9:-]+)(?:=(["\'])?(.*?)(?(2)\\2|\\s))?#i') as $m) {
+            foreach (Strings::matchAll($parts[1] . ' ', '#([a-z0-9:-]+)(?:=(["\'])?(.*?)(?(2)\\2|\\s))?#i') as $m) {
                 $el->attrs[$m[1]] = $m[3] ?? \true;
             }
         }
@@ -303,7 +303,7 @@ class Html implements \ArrayAccess, \Countable, \IteratorAggregate, \RectorPrefi
      * Changes element's name.
      * @return static
      */
-    public final function setName(string $name, bool $isEmpty = null)
+    public final function setName(string $name, ?bool $isEmpty = null)
     {
         $this->name = $name;
         $this->isEmpty = $isEmpty ?? isset(static::$emptyElements[$name]);
@@ -340,13 +340,13 @@ class Html implements \ArrayAccess, \Countable, \IteratorAggregate, \RectorPrefi
      */
     public function appendAttribute(string $name, $value, $option = \true)
     {
-        if (\is_array($value)) {
+        if (is_array($value)) {
             $prev = isset($this->attrs[$name]) ? (array) $this->attrs[$name] : [];
             $this->attrs[$name] = $value + $prev;
         } elseif ((string) $value === '') {
             $tmp =& $this->attrs[$name];
             // appending empty value? -> ignore, but ensure it exists
-        } elseif (!isset($this->attrs[$name]) || \is_array($this->attrs[$name])) {
+        } elseif (!isset($this->attrs[$name]) || is_array($this->attrs[$name])) {
             // needs array
             $this->attrs[$name][$value] = $option;
         } else {
@@ -453,7 +453,7 @@ class Html implements \ArrayAccess, \Countable, \IteratorAggregate, \RectorPrefi
      * Special setter for element's attribute.
      * @return static
      */
-    public final function href(string $path, array $query = null)
+    public final function href(string $path, ?array $query = null)
     {
         if ($query) {
             $query = \http_build_query($query, '', '&');
@@ -502,7 +502,7 @@ class Html implements \ArrayAccess, \Countable, \IteratorAggregate, \RectorPrefi
      */
     public final function setText($text)
     {
-        if (!$text instanceof \RectorPrefix20211221\Nette\HtmlStringable) {
+        if (!$text instanceof HtmlStringable) {
             $text = \htmlspecialchars((string) $text, \ENT_NOQUOTES, 'UTF-8');
         }
         $this->children = [(string) $text];
@@ -531,7 +531,7 @@ class Html implements \ArrayAccess, \Countable, \IteratorAggregate, \RectorPrefi
      */
     public function addText($text)
     {
-        if (!$text instanceof \RectorPrefix20211221\Nette\HtmlStringable) {
+        if (!$text instanceof HtmlStringable) {
             $text = \htmlspecialchars((string) $text, \ENT_NOQUOTES, 'UTF-8');
         }
         return $this->insert(null, $text);
@@ -632,7 +632,7 @@ class Html implements \ArrayAccess, \Countable, \IteratorAggregate, \RectorPrefi
     /**
      * Renders element's start tag, content and end tag.
      */
-    public final function render(int $indent = null) : string
+    public final function render(?int $indent = null) : string
     {
         $s = $this->startTag();
         if (!$this->isEmpty) {
@@ -687,7 +687,7 @@ class Html implements \ArrayAccess, \Countable, \IteratorAggregate, \RectorPrefi
      */
     public final function attributes() : string
     {
-        if (!\is_array($this->attrs)) {
+        if (!is_array($this->attrs)) {
             return '';
         }
         $s = '';
@@ -702,16 +702,16 @@ class Html implements \ArrayAccess, \Countable, \IteratorAggregate, \RectorPrefi
                     $s .= ' ' . $key;
                 }
                 continue;
-            } elseif (\is_array($value)) {
+            } elseif (is_array($value)) {
                 if (\strncmp($key, 'data-', 5) === 0) {
-                    $value = \RectorPrefix20211221\Nette\Utils\Json::encode($value);
+                    $value = Json::encode($value);
                 } else {
                     $tmp = null;
                     foreach ($value as $k => $v) {
                         if ($v != null) {
                             // intentionally ==, skip nulls & empty string
                             // composite 'style' vs. 'others'
-                            $tmp[] = $v === \true ? $k : (\is_string($k) ? $k . ':' . $v : $v);
+                            $tmp[] = $v === \true ? $k : (is_string($k) ? $k . ':' . $v : $v);
                         }
                     }
                     if ($tmp === null) {
@@ -719,7 +719,7 @@ class Html implements \ArrayAccess, \Countable, \IteratorAggregate, \RectorPrefi
                     }
                     $value = \implode($key === 'style' || !\strncmp($key, 'on', 2) ? ';' : ' ', $tmp);
                 }
-            } elseif (\is_float($value)) {
+            } elseif (is_float($value)) {
                 $value = \rtrim(\rtrim(\number_format($value, 10, '.', ''), '0'), '.');
             } else {
                 $value = (string) $value;
@@ -736,7 +736,7 @@ class Html implements \ArrayAccess, \Countable, \IteratorAggregate, \RectorPrefi
     public function __clone()
     {
         foreach ($this->children as $key => $value) {
-            if (\is_object($value)) {
+            if (is_object($value)) {
                 $this->children[$key] = clone $value;
             }
         }

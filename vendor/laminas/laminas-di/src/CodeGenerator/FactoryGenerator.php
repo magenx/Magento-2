@@ -46,17 +46,13 @@ class FactoryGenerator
 
 __CODE__;
 
-    /** @var string */
-    private $namespace;
+    private string $namespace;
 
-    /** @var DependencyResolverInterface */
-    private $resolver;
+    private DependencyResolverInterface $resolver;
 
-    /** @var ConfigInterface */
-    private $config;
+    private ConfigInterface $config;
 
-    /** @var array */
-    private $classmap = [];
+    private array $classmap = [];
 
     public function __construct(
         ConfigInterface $config,

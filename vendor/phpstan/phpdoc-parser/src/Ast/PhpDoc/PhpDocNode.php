@@ -77,6 +77,20 @@ class PhpDocNode implements Node
 
 
 	/**
+	 * @return TypelessParamTagValueNode[]
+	 */
+	public function getTypelessParamTagValues(string $tagName = '@param'): array
+	{
+		return array_filter(
+			array_column($this->getTagsByName($tagName), 'value'),
+			static function (PhpDocTagValueNode $value): bool {
+				return $value instanceof TypelessParamTagValueNode;
+			}
+		);
+	}
+
+
+	/**
 	 * @return TemplateTagValueNode[]
 	 */
 	public function getTemplateTagValues(string $tagName = '@template'): array
@@ -267,6 +281,48 @@ class PhpDocNode implements Node
 			array_column($this->getTagsByName($tagName), 'value'),
 			static function (PhpDocTagValueNode $value): bool {
 				return $value instanceof TypeAliasImportTagValueNode;
+			}
+		);
+	}
+
+
+	/**
+	 * @return AssertTagValueNode[]
+	 */
+	public function getAssertTagValues(string $tagName = '@phpstan-assert'): array
+	{
+		return array_filter(
+			array_column($this->getTagsByName($tagName), 'value'),
+			static function (PhpDocTagValueNode $value): bool {
+				return $value instanceof AssertTagValueNode;
+			}
+		);
+	}
+
+
+	/**
+	 * @return AssertTagPropertyValueNode[]
+	 */
+	public function getAssertPropertyTagValues(string $tagName = '@phpstan-assert'): array
+	{
+		return array_filter(
+			array_column($this->getTagsByName($tagName), 'value'),
+			static function (PhpDocTagValueNode $value): bool {
+				return $value instanceof AssertTagPropertyValueNode;
+			}
+		);
+	}
+
+
+	/**
+	 * @return AssertTagMethodValueNode[]
+	 */
+	public function getAssertMethodTagValues(string $tagName = '@phpstan-assert'): array
+	{
+		return array_filter(
+			array_column($this->getTagsByName($tagName), 'value'),
+			static function (PhpDocTagValueNode $value): bool {
+				return $value instanceof AssertTagMethodValueNode;
 			}
 		);
 	}

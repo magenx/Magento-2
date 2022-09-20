@@ -1,11 +1,10 @@
 <?php
 
 declare (strict_types=1);
-namespace RectorPrefix20211221;
+namespace RectorPrefix202208;
 
+use Rector\Config\RectorConfig;
 use Rector\Nette\Rector\Property\NetteInjectToConstructorInjectionRector;
-use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
-return static function (\Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator $containerConfigurator) : void {
-    $services = $containerConfigurator->services();
-    $services->set(\Rector\Nette\Rector\Property\NetteInjectToConstructorInjectionRector::class);
+return static function (RectorConfig $rectorConfig) : void {
+    $rectorConfig->rule(NetteInjectToConstructorInjectionRector::class);
 };

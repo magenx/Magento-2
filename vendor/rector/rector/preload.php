@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/vendor/nikic/php-parser/lib/PhpParser/Node.php';
+require_once __DIR__ . '/src/Contract/PhpParser/Node/StmtsAwareInterface.php';
 require_once __DIR__ . '/vendor/nikic/php-parser/lib/PhpParser/NodeAbstract.php';
 require_once __DIR__ . '/vendor/nikic/php-parser/lib/PhpParser/Node/Expr.php';
 require_once __DIR__ . '/vendor/nikic/php-parser/lib/PhpParser/NodeVisitor.php';
@@ -251,8 +252,3 @@ require_once __DIR__ . '/vendor/nikic/php-parser/lib/PhpParser/Parser/Php7.php';
 require_once __DIR__ . '/vendor/nikic/php-parser/lib/PhpParser/Parser/Tokens.php';
 require_once __DIR__ . '/vendor/nikic/php-parser/lib/PhpParser/ParserFactory.php';
 require_once __DIR__ . '/vendor/nikic/php-parser/lib/PhpParser/PrettyPrinter/Standard.php';
-require_once __DIR__ . '/vendor/symplify/symfony-php-config/src/Reflection/ArgumentAndParameterFactory.php';
-require_once __DIR__ . '/vendor/symplify/symfony-php-config/src/ValueObjectInliner.php';
-require_once __DIR__ . '/vendor/symfony/dependency-injection/Loader/Configurator/AbstractConfigurator.php';
-require_once __DIR__ . '/vendor/symfony/dependency-injection/Loader/Configurator/ContainerConfigurator.php';
-require_once __DIR__ . '/vendor/symfony/contracts/Deprecation/function.php';

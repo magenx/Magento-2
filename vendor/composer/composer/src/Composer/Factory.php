@@ -293,7 +293,7 @@ class Factory
      * @param  IOInterface                       $io             IO instance
      * @param  array<string, mixed>|string|null  $localConfig    either a configuration array or a filename to read from, if null it will
      *                                                           read from the default filename
-     * @param  bool                              $disablePlugins Whether plugins should not be loaded
+     * @param  bool|'local'|'global'             $disablePlugins Whether plugins should not be loaded, can be set to local or global to only disable local/global plugins
      * @param  bool                              $disableScripts Whether scripts should not be run
      * @param  string|null                       $cwd
      * @param  bool                              $fullLoad       Whether to initialize everything or only main project stuff (used when loading the global composer)
@@ -303,6 +303,11 @@ class Factory
      */
     public function createComposer(IOInterface $io, $localConfig = null, $disablePlugins = false, $cwd = null, $fullLoad = true, $disableScripts = false)
     {
+        // if a custom composer.json path is given, we change the default cwd to be that file's directory
+        if (is_string($localConfig) && is_file($localConfig) && null === $cwd) {
+            $cwd = dirname($localConfig);
+        }
+
         $cwd = $cwd ?: (string) getcwd();
 
         // load Composer configuration
@@ -427,6 +432,17 @@ class Factory
         // add installers to the manager (must happen after download manager is created since they read it out of $composer)
         $this->createDefaultInstallers($im, $composer, $io, $process);
 
+        // init locker if possible
+        if ($fullLoad && isset($composerFile)) {
+            $lockFile = self::getLockFile($composerFile);
+            if (!$config->get('lock') && file_exists($lockFile)) {
+                $io->writeError('<warning>'.$lockFile.' is present but ignored as the "lock" config option is disabled.</warning>');
+            }
+
+            $locker = new Package\Locker($io, new JsonFile($config->get('lock') ? $lockFile : Platform::getDevNull(), null, $io), $im, file_get_contents($composerFile), $process);
+            $composer->setLocker($locker);
+        }
+
         if ($fullLoad) {
             $globalComposer = null;
             if (realpath($config->get('home')) !== $cwd) {
@@ -437,14 +453,6 @@ class Factory
             $composer->setPluginManager($pm);
 
             $pm->loadInstalledPlugins();
-        }
-
-        // init locker if possible
-        if ($fullLoad && isset($composerFile)) {
-            $lockFile = self::getLockFile($composerFile);
-
-            $locker = new Package\Locker($io, new JsonFile($lockFile, null, $io), $im, file_get_contents($composerFile), $process);
-            $composer->setLocker($locker);
         }
 
         if ($fullLoad) {
@@ -489,7 +497,7 @@ class Factory
     }
 
     /**
-     * @param bool $disablePlugins
+     * @param bool|'local'|'global' $disablePlugins Whether plugins should not be loaded, can be set to local or global to only disable local/global plugins
      * @param bool $disableScripts
      * @param bool $fullLoad
      *
@@ -497,6 +505,9 @@ class Factory
      */
     protected function createGlobalComposer(IOInterface $io, Config $config, $disablePlugins, $disableScripts, $fullLoad = false)
     {
+        // make sure if disable plugins was 'local' it is now turned off
+        $disablePlugins = $disablePlugins === 'global' || $disablePlugins === true;
+
         $composer = null;
         try {
             $composer = $this->createComposer($io, $config->get('home') . '/composer.json', $disablePlugins, $config->get('home'), $fullLoad, $disableScripts);
@@ -576,7 +587,7 @@ class Factory
      * @param  IOInterface          $io
      * @param  Composer             $composer
      * @param  Composer             $globalComposer
-     * @param  bool                 $disablePlugins
+     * @param  bool|'local'|'global' $disablePlugins Whether plugins should not be loaded, can be set to local or global to only disable local/global plugins
      * @return Plugin\PluginManager
      */
     protected function createPluginManager(IOInterface $io, Composer $composer, Composer $globalComposer = null, $disablePlugins = false)
@@ -632,13 +643,21 @@ class Factory
      * @param  IOInterface $io             IO instance
      * @param  mixed       $config         either a configuration array or a filename to read from, if null it will read from
      *                                     the default filename
-     * @param  bool        $disablePlugins Whether plugins should not be loaded
+     * @param  bool|'local'|'global' $disablePlugins Whether plugins should not be loaded, can be set to local or global to only disable local/global plugins
      * @param  bool        $disableScripts Whether scripts should not be run
      * @return Composer
      */
     public static function create(IOInterface $io, $config = null, $disablePlugins = false, $disableScripts = false)
     {
         $factory = new static();
+
+        // for BC reasons, if a config is passed in either as array or a path that is not the default composer.json path
+        // we disable local plugins as they really should not be loaded from CWD
+        // If you want to avoid this behavior, you should be calling createComposer directly with a $cwd arg set correctly
+        // to the path where the composer.json being loaded resides
+        if ($config !== null && $config !== self::getComposerFile() && $disablePlugins === false) {
+            $disablePlugins = 'local';
+        }
 
         return $factory->createComposer($io, $config, $disablePlugins, null, true, $disableScripts);
     }

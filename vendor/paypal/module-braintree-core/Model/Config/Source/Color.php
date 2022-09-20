@@ -1,4 +1,8 @@
 <?php
+/**
+ * Copyright © Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
 
 namespace PayPal\Braintree\Model\Config\Source;
 
@@ -14,10 +18,10 @@ class Color implements ArrayInterface
     public function toOptionArray(): array
     {
         return [
-            ['value' => 0, 'label' => __('Blue')],
-            ['value' => 1, 'label' => __('Black')],
-            ['value' => 2, 'label' => __('Gold')],
-            ['value' => 3, 'label' => __('Silver')]
+            ['value' => 'blue', 'label' => __('Blue')],
+            ['value' => 'black', 'label' => __('Black')],
+            ['value' => 'gold', 'label' => __('Gold')],
+            ['value' => 'silver', 'label' => __('Silver')]
         ];
     }
 
@@ -29,10 +33,10 @@ class Color implements ArrayInterface
     public function toArray(): array
     {
         return [
-            0 => __('Blue'),
-            1 => __('Black'),
-            2 => __('Gold'),
-            3 => __('Silver')
+            'blue' => __('Blue'),
+            'black' => __('Black'),
+            'gold' => __('Gold'),
+            'silver' => __('Silver')
         ];
     }
 
@@ -44,10 +48,10 @@ class Color implements ArrayInterface
     public function toRawValues(): array
     {
         return [
-            0 => 'blue',
-            1 => 'black',
-            2 => 'gold',
-            3 => 'silver'
+            'blue' => 'blue',
+            'black' => 'black',
+            'gold' => 'gold',
+            'silver' => 'silver'
         ];
     }
 }

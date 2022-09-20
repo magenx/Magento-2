@@ -27,8 +27,7 @@ trigger_error(
  */
 abstract class AbstractInjection
 {
-    /** @var string */
-    private $parameterName;
+    private string $parameterName;
 
     public function setParameterName(string $name): self
     {

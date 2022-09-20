@@ -1,6 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Laminas\View;
+
+use function file_get_contents;
+use function preg_replace;
+use function stat;
+use function str_replace;
+use function strlen;
+use function substr;
+
+use const SEEK_CUR;
+use const SEEK_END;
+use const SEEK_SET;
 
 /**
  * Stream wrapper to convert markup of mostly-PHP templates into PHP prior to
@@ -14,6 +27,8 @@ namespace Laminas\View;
  * written by
  *     Mike Naberezny (@link http://mikenaberezny.com)
  *     Paul M. Jones  (@link http://paul-m-jones.com)
+ *
+ * @deprecated will be removed in version 3, only the normal PHP tags (<?php ?> and <?= ?>) should be used
  */
 class Stream
 {
@@ -52,7 +67,7 @@ class Stream
     {
         // @codingStandardsIgnoreEnd
         // get the view script source
-        $path        = str_replace('laminas.view://', '', $path);
+        $path       = str_replace('laminas.view://', '', $path);
         $this->data = file_get_contents($path);
 
         /**
@@ -66,7 +81,6 @@ class Stream
 
         /**
          * Convert <?= ?> to long-form <?php echo ?> and <?php ?> to <?php ?>
-         *
          */
         $this->data = preg_replace('/\<\?\=/', "<?php echo ", $this->data);
         $this->data = preg_replace('/<\?(?!xml|php)/s', '<?php ', $this->data);
@@ -103,7 +117,7 @@ class Stream
     public function stream_read($count)
     {
         // @codingStandardsIgnoreEnd
-        $ret = substr($this->data, $this->pos, $count);
+        $ret        = substr($this->data, $this->pos, $count);
         $this->pos += strlen($ret);
         return $ret;
     }

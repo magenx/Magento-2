@@ -3,8 +3,8 @@
 declare (strict_types=1);
 namespace Rector\Core\Differ;
 
-use RectorPrefix20211221\SebastianBergmann\Diff\Differ;
-use RectorPrefix20211221\SebastianBergmann\Diff\Output\StrictUnifiedDiffOutputBuilder;
+use RectorPrefix202208\SebastianBergmann\Diff\Differ;
+use RectorPrefix202208\SebastianBergmann\Diff\Output\StrictUnifiedDiffOutputBuilder;
 final class DefaultDiffer
 {
     /**
@@ -14,8 +14,8 @@ final class DefaultDiffer
     private $differ;
     public function __construct()
     {
-        $strictUnifiedDiffOutputBuilder = new \RectorPrefix20211221\SebastianBergmann\Diff\Output\StrictUnifiedDiffOutputBuilder(['fromFile' => 'Original', 'toFile' => 'New']);
-        $this->differ = new \RectorPrefix20211221\SebastianBergmann\Diff\Differ($strictUnifiedDiffOutputBuilder);
+        $strictUnifiedDiffOutputBuilder = new StrictUnifiedDiffOutputBuilder(['fromFile' => 'Original', 'toFile' => 'New']);
+        $this->differ = new Differ($strictUnifiedDiffOutputBuilder);
     }
     public function diff(string $old, string $new) : string
     {

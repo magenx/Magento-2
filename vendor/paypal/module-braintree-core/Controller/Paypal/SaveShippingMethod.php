@@ -1,19 +1,21 @@
 <?php
 /**
- * Copyright © 2013-2017 Magento, Inc. All rights reserved.
+ * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
 namespace PayPal\Braintree\Controller\Paypal;
 
 use Exception;
 use Magento\Checkout\Model\Session;
+use Magento\Framework\App\Action\HttpGetActionInterface;
+use Magento\Framework\App\Action\HttpPostActionInterface;
 use Magento\Framework\View\Result\Page;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\Controller\ResultFactory;
 use PayPal\Braintree\Gateway\Config\PayPal\Config;
 use PayPal\Braintree\Model\Paypal\Helper\ShippingMethodUpdater;
 
-class SaveShippingMethod extends AbstractAction
+class SaveShippingMethod extends AbstractAction implements HttpGetActionInterface, HttpPostActionInterface
 {
     /**
      * @var ShippingMethodUpdater
@@ -76,6 +78,6 @@ class SaveShippingMethod extends AbstractAction
             return;
         }
 
-        $this->_redirect($path);
+        return $this->_redirect($path);
     }
 }

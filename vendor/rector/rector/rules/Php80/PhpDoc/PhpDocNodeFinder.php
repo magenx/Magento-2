@@ -4,19 +4,21 @@ declare (strict_types=1);
 namespace Rector\Php80\PhpDoc;
 
 use PHPStan\PhpDocParser\Ast\Node;
-use RectorPrefix20211221\Symplify\SimplePhpDocParser\PhpDocNodeTraverser;
+use RectorPrefix202208\Symplify\Astral\PhpDocParser\PhpDocNodeTraverser;
 final class PhpDocNodeFinder
 {
     /**
+     * @api
+     *
      * @template TNode as Node
      * @param class-string<TNode> $nodeType
      * @return TNode[]
      */
-    public function findByType(\PHPStan\PhpDocParser\Ast\Node $node, string $nodeType) : array
+    public function findByType(Node $node, string $nodeType) : array
     {
         $foundNodes = [];
-        $phpDocNodeTraverser = new \RectorPrefix20211221\Symplify\SimplePhpDocParser\PhpDocNodeTraverser();
-        $phpDocNodeTraverser->traverseWithCallable($node, '', function (\PHPStan\PhpDocParser\Ast\Node $node) use(&$foundNodes, $nodeType) {
+        $phpDocNodeTraverser = new PhpDocNodeTraverser();
+        $phpDocNodeTraverser->traverseWithCallable($node, '', static function (Node $node) use(&$foundNodes, $nodeType) {
             if (!\is_a($node, $nodeType, \true)) {
                 return null;
             }

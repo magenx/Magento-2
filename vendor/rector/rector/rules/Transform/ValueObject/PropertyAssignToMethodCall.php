@@ -8,8 +8,8 @@ use Rector\Core\Validation\RectorAssert;
 final class PropertyAssignToMethodCall
 {
     /**
+     * @var class-string
      * @readonly
-     * @var string
      */
     private $class;
     /**
@@ -22,16 +22,21 @@ final class PropertyAssignToMethodCall
      * @var string
      */
     private $newMethodName;
+    /**
+     * @param class-string $class
+     */
     public function __construct(string $class, string $oldPropertyName, string $newMethodName)
     {
         $this->class = $class;
         $this->oldPropertyName = $oldPropertyName;
         $this->newMethodName = $newMethodName;
-        \Rector\Core\Validation\RectorAssert::className($class);
+        RectorAssert::className($class);
+        RectorAssert::propertyName($oldPropertyName);
+        RectorAssert::methodName($newMethodName);
     }
-    public function getObjectType() : \PHPStan\Type\ObjectType
+    public function getObjectType() : ObjectType
     {
-        return new \PHPStan\Type\ObjectType($this->class);
+        return new ObjectType($this->class);
     }
     public function getOldPropertyName() : string
     {

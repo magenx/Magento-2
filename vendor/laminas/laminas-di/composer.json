@@ -35,20 +35,21 @@
         "php": ">=7.4, <8.2",
         "laminas/laminas-stdlib": "^3.6",
         "psr/container": "^1.1.1",
-        "psr/log": "^1.1.4"
+        "psr/log": "^1.1.4 || ^3.0.0"
     },
     "require-dev": {
-        "container-interop/container-interop": "^1.2.0",
         "laminas/laminas-coding-standard": "~2.3.0",
-        "laminas/laminas-servicemanager": "^3.7",
+        "laminas/laminas-servicemanager": "^3.12",
         "mikey179/vfsstream": "^1.6.10@alpha",
-        "phpstan/phpstan": "^0.12.64",
+        "phpbench/phpbench": "^1.2",
         "phpspec/prophecy-phpunit": "^2.0",
-        "phpunit/phpunit": "^9.5.5"
+        "phpunit/phpunit": "^9.5.5",
+        "squizlabs/php_codesniffer": "^3.6"
     },
     "conflict": {
         "zendframework/zend-di": "*",
         "laminas/laminas-servicemanager-di": "*",
+        "laminas/laminas-servicemanager": "<3.13.0",
         "phpspec/prophecy": "<1.9.0"
     },
     "suggest": {
@@ -61,10 +62,12 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "LaminasTest\\Di\\": "test/"
+            "LaminasTest\\Di\\": "test/",
+            "LaminasBench\\Di\\": "benchmarks/"
         }
     },
     "scripts": {
+        "benchmark": "phpbench run --revs=2 --iterations=2 --report=aggregate",
         "check": [
             "@cs-check",
             "@analyse",
@@ -72,7 +75,6 @@
         ],
         "cs-check": "phpcs",
         "cs-fix": "phpcbf",
-        "analyse": "phpstan analyse --no-progress -c phpstan.neon",
         "test": "phpunit --colors=always",
         "test-coverage": "phpunit --colors=always --coverage-clover clover.xml"
     }

@@ -21,18 +21,21 @@ final class ListeningClassMethodArgumentManipulator
      */
     private const EVENT_PARAMETER_REPLACED = 'event_parameter_replaced';
     /**
+     * @readonly
      * @var \Rector\CodingStyle\Naming\ClassNaming
      */
     private $classNaming;
     /**
+     * @readonly
      * @var \Rector\Nette\Kdyby\ContributeEventClassResolver
      */
     private $contributeEventClassResolver;
     /**
+     * @readonly
      * @var \Rector\Core\NodeAnalyzer\ParamAnalyzer
      */
     private $paramAnalyzer;
-    public function __construct(\Rector\CodingStyle\Naming\ClassNaming $classNaming, \Rector\Nette\Kdyby\ContributeEventClassResolver $contributeEventClassResolver, \Rector\Core\NodeAnalyzer\ParamAnalyzer $paramAnalyzer)
+    public function __construct(ClassNaming $classNaming, ContributeEventClassResolver $contributeEventClassResolver, ParamAnalyzer $paramAnalyzer)
     {
         $this->classNaming = $classNaming;
         $this->contributeEventClassResolver = $contributeEventClassResolver;
@@ -59,25 +62,25 @@ final class ListeningClassMethodArgumentManipulator
                     continue;
                 }
                 $eventGetterToVariableAssign = $this->createEventGetterToVariableMethodCall($eventClass, $oldParam);
-                $expression = new \PhpParser\Node\Stmt\Expression($eventGetterToVariableAssign);
+                $expression = new Expression($eventGetterToVariableAssign);
                 $classMethod->stmts = \array_merge([$expression], (array) $classMethod->stmts);
             }
             $classMethod->setAttribute(self::EVENT_PARAMETER_REPLACED, \true);
         }
     }
-    private function changeClassParamToEventClass(string $eventClass, \PhpParser\Node\Stmt\ClassMethod $classMethod) : void
+    private function changeClassParamToEventClass(string $eventClass, ClassMethod $classMethod) : void
     {
         $paramName = $this->classNaming->getVariableName($eventClass);
-        $eventVariable = new \PhpParser\Node\Expr\Variable($paramName);
-        $param = new \PhpParser\Node\Param($eventVariable, null, new \PhpParser\Node\Name\FullyQualified($eventClass));
+        $eventVariable = new Variable($paramName);
+        $param = new Param($eventVariable, null, new FullyQualified($eventClass));
         $classMethod->params = [$param];
     }
-    private function createEventGetterToVariableMethodCall(string $eventClass, \PhpParser\Node\Param $param) : \PhpParser\Node\Expr\Assign
+    private function createEventGetterToVariableMethodCall(string $eventClass, Param $param) : Assign
     {
         $paramName = $this->classNaming->getVariableName($eventClass);
-        $eventVariable = new \PhpParser\Node\Expr\Variable($paramName);
+        $eventVariable = new Variable($paramName);
         $getterMethod = $this->contributeEventClassResolver->resolveGetterMethodByEventClassAndParam($eventClass, $param);
-        $methodCall = new \PhpParser\Node\Expr\MethodCall($eventVariable, $getterMethod);
-        return new \PhpParser\Node\Expr\Assign($param->var, $methodCall);
+        $methodCall = new MethodCall($eventVariable, $getterMethod);
+        return new Assign($param->var, $methodCall);
     }
 }

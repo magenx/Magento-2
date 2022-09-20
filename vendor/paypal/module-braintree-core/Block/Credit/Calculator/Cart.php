@@ -5,6 +5,10 @@ namespace PayPal\Braintree\Block\Credit\Calculator;
 use Magento\Framework\View\Element\Template;
 use PayPal\Braintree\Gateway\Config\PayPalCredit\Config as PayPalCreditConfig;
 
+/**
+ * @api
+ * @since 100.0.2
+ */
 class Cart extends Template
 {
     /**

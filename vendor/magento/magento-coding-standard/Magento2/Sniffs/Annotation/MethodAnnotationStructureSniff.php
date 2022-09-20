@@ -7,6 +7,7 @@ declare(strict_types=1);
 
 namespace Magento2\Sniffs\Annotation;
 
+use Magento2\Helpers\Commenting\PHPDocFormattingValidator;
 use PHP_CodeSniffer\Files\File;
 use PHP_CodeSniffer\Sniffs\Sniff;
 
@@ -21,11 +22,17 @@ class MethodAnnotationStructureSniff implements Sniff
     private $annotationFormatValidator;
 
     /**
+     * @var PHPDocFormattingValidator
+     */
+    private $PHPDocFormattingValidator;
+
+    /**
      * AnnotationStructureSniff constructor.
      */
     public function __construct()
     {
         $this->annotationFormatValidator = new AnnotationFormatValidator();
+        $this->PHPDocFormattingValidator = new PHPDocFormattingValidator();
     }
 
     /**
@@ -50,6 +57,17 @@ class MethodAnnotationStructureSniff implements Sniff
             $phpcsFile->addError('Comment block is missing', $stackPtr, 'MethodArguments');
             return;
         }
+
+        if ($this->PHPDocFormattingValidator->hasDeprecatedWellFormatted($commentStartPtr, $tokens) !== true) {
+            $phpcsFile->addWarning(
+                'Motivation behind the added @deprecated tag MUST be explained. '
+                . '@see tag MUST be used with reference to new implementation when code is deprecated '
+                . 'and there is a new alternative.',
+                $stackPtr,
+                'InvalidDeprecatedTagUsage'
+            );
+        }
+
         $commentCloserPtr = $tokens[$commentStartPtr]['comment_closer'];
         $functionPtrContent = $tokens[$stackPtr + 2]['content'];
         if (preg_match('/(?i)__construct/', $functionPtrContent)) {

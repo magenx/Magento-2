@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © 2013-2017 Magento, Inc. All rights reserved.
+ * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
 namespace PayPal\Braintree\Gateway\Config;
@@ -15,30 +15,29 @@ use PayPal\Braintree\Model\StoreConfigResolver;
 
 class Config extends \Magento\Payment\Gateway\Config\Config
 {
-    const KEY_ENVIRONMENT = 'environment';
-    const KEY_ACTIVE = 'active';
-    const KEY_MERCHANT_ID = 'merchant_id';
-    const KEY_MERCHANT_ACCOUNT_ID = 'merchant_account_id';
-    const KEY_PUBLIC_KEY = 'public_key';
-    const KEY_PRIVATE_KEY = 'private_key';
-    const KEY_SANDBOX_MERCHANT_ID = 'sandbox_merchant_id';
-    const KEY_SANDBOX_PUBLIC_KEY = 'sandbox_public_key';
-    const KEY_SANDBOX_PRIVATE_KEY = 'sandbox_private_key';
-    const KEY_COUNTRY_CREDIT_CARD = 'countrycreditcard';
-    const KEY_CC_TYPES = 'cctypes';
-    const KEY_CC_TYPES_BRAINTREE_MAPPER = 'cctypes_braintree_mapper';
-    const KEY_USE_CVV = 'useccv';
-    const KEY_USE_CVV_VAULT = 'useccv_vault';
-    const KEY_VERIFY_3DSECURE = 'verify_3dsecure';
-    const KEY_THRESHOLD_AMOUNT = 'threshold_amount';
-    const KEY_VERIFY_ALLOW_SPECIFIC = 'verify_all_countries';
-    const KEY_VERIFY_SPECIFIC = 'verify_specific_countries';
-    const VALUE_3DSECURE_ALL = 0;
-    const CODE_3DSECURE = 'three_d_secure';
-    const KEY_KOUNT_MERCHANT_ID = 'kount_id';
-    const KEY_KOUNT_SKIP_ADMIN = 'kount_skip_admin';
-    const FRAUD_PROTECTION = 'fraudprotection';
-    const FRAUD_PROTECTION_THRESHOLD = 'fraudprotection_threshold';
+    public const KEY_ENVIRONMENT = 'environment';
+    public const KEY_ACTIVE = 'active';
+    public const KEY_MERCHANT_ID = 'merchant_id';
+    public const KEY_MERCHANT_ACCOUNT_ID = 'merchant_account_id';
+    public const KEY_PUBLIC_KEY = 'public_key';
+    public const KEY_PRIVATE_KEY = 'private_key';
+    public const KEY_SANDBOX_MERCHANT_ID = 'sandbox_merchant_id';
+    public const KEY_SANDBOX_PUBLIC_KEY = 'sandbox_public_key';
+    public const KEY_SANDBOX_PRIVATE_KEY = 'sandbox_private_key';
+    public const KEY_COUNTRY_CREDIT_CARD = 'countrycreditcard';
+    public const KEY_CC_TYPES = 'cctypes';
+    public const KEY_CC_TYPES_BRAINTREE_MAPPER = 'cctypes_braintree_mapper';
+    public const KEY_USE_CVV = 'useccv';
+    public const KEY_USE_CVV_VAULT = 'useccv_vault';
+    public const KEY_VERIFY_3DSECURE = 'verify_3dsecure';
+    public const KEY_ALWAYS_REQUEST_3DS = 'always_request_3ds';
+    public const KEY_THRESHOLD_AMOUNT = 'threshold_amount';
+    public const KEY_VERIFY_ALLOW_SPECIFIC = 'verify_all_countries';
+    public const KEY_VERIFY_SPECIFIC = 'verify_specific_countries';
+    public const VALUE_3DSECURE_ALL = 0;
+    public const CODE_3DSECURE = 'three_d_secure';
+    public const KEY_SKIP_ADMIN = 'skip_admin';
+    public const FRAUD_PROTECTION_THRESHOLD = 'fraudprotection_threshold';
 
     /**
      * Get list of available dynamic descriptors keys
@@ -60,17 +59,17 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 
     /**
      * Config constructor.
-     * @param StoreConfigResolver $storeConfigResolver
      * @param ScopeConfigInterface $scopeConfig
-     * @param null $methodCode
+     * @param StoreConfigResolver $storeConfigResolver
+     * @param string|null $methodCode
      * @param string $pathPattern
      * @param Json|null $serializer
      */
     public function __construct(
-        StoreConfigResolver $storeConfigResolver,
         ScopeConfigInterface $scopeConfig,
-        $methodCode = null,
-        $pathPattern = self::DEFAULT_PATH_PATTERN,
+        StoreConfigResolver $storeConfigResolver,
+        string $methodCode = null,
+        string $pathPattern = self::DEFAULT_PATH_PATTERN,
         Json $serializer = null
     ) {
         parent::__construct($scopeConfig, $methodCode, $pathPattern);
@@ -138,12 +137,13 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 
     /**
      * Get list of card types available for country
+     *
      * @param string $country
      * @return array
      * @throws InputException
      * @throws NoSuchEntityException
      */
-    public function getCountryAvailableCardTypes($country): array
+    public function getCountryAvailableCardTypes(string $country): array
     {
         $types = $this->getCountrySpecificCardTypeConfig();
 
@@ -186,6 +186,21 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     {
         return (bool) $this->getValue(
             self::KEY_VERIFY_3DSECURE,
+            $this->storeConfigResolver->getStoreId()
+        );
+    }
+
+    /**
+     * Check if 3DS challenge requested for always
+     *
+     * @return bool
+     * @throws InputException
+     * @throws NoSuchEntityException
+     */
+    public function is3DSAlwaysRequested(): bool
+    {
+        return (bool) $this->getValue(
+            self::KEY_ALWAYS_REQUEST_3DS,
             $this->storeConfigResolver->getStoreId()
         );
     }
@@ -247,28 +262,15 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     }
 
     /**
-     * Get Kount Merchant Id
+     * Can skip admin fraud protection
      *
-     * @return string|null
-     * @throws InputException
-     * @throws NoSuchEntityException
-     */
-    public function getKountMerchantId()
-    {
-        return $this->getValue(
-            self::KEY_KOUNT_MERCHANT_ID,
-            $this->storeConfigResolver->getStoreId()
-        );
-    }
-
-    /**
      * @return bool
      * @throws InputException
      * @throws NoSuchEntityException
      */
     public function canSkipAdminFraudProtection(): bool
     {
-        return (bool) $this->getValue(self::KEY_KOUNT_SKIP_ADMIN, $this->storeConfigResolver->getStoreId());
+        return (bool) $this->getValue(self::KEY_SKIP_ADMIN, $this->storeConfigResolver->getStoreId());
     }
 
     /**
@@ -288,21 +290,6 @@ class Config extends \Magento\Payment\Gateway\Config\Config
         }
         return $this->getValue(
             self::KEY_MERCHANT_ID,
-            $this->storeConfigResolver->getStoreId()
-        );
-    }
-
-    /**
-     * Check for fraud protection
-     *
-     * @return bool
-     * @throws InputException
-     * @throws NoSuchEntityException
-     */
-    public function hasFraudProtection(): bool
-    {
-        return (bool) $this->getValue(
-            self::FRAUD_PROTECTION,
             $this->storeConfigResolver->getStoreId()
         );
     }

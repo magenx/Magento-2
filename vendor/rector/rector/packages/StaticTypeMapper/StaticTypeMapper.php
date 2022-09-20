@@ -8,6 +8,7 @@ use PhpParser\Node\ComplexType;
 use PhpParser\Node\Name;
 use PhpParser\Node\Param;
 use PhpParser\Node\Stmt\ClassMethod;
+use PhpParser\Node\UnionType;
 use PHPStan\PhpDocParser\Ast\PhpDoc\ParamTagValueNode;
 use PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagValueNode;
 use PHPStan\PhpDocParser\Ast\PhpDoc\ReturnTagValueNode;
@@ -18,6 +19,7 @@ use PHPStan\PhpDocParser\Ast\Type\TypeNode;
 use PHPStan\Type\MixedType;
 use PHPStan\Type\Type;
 use Rector\Core\Exception\NotImplementedYetException;
+use Rector\NodeNameResolver\NodeNameResolver;
 use Rector\NodeTypeResolver\Node\AttributeKey;
 use Rector\PHPStanStaticTypeMapper\Enum\TypeKind;
 use Rector\PHPStanStaticTypeMapper\PHPStanStaticTypeMapper;
@@ -30,6 +32,10 @@ use Rector\StaticTypeMapper\PhpDoc\PhpDocTypeMapper;
  */
 final class StaticTypeMapper
 {
+    /**
+     * @var array<string, string>
+     */
+    private const STANDALONE_MAPS = ['false' => 'bool'];
     /**
      * @readonly
      * @var \Rector\StaticTypeMapper\Naming\NameScopeFactory
@@ -50,48 +56,74 @@ final class StaticTypeMapper
      * @var \Rector\StaticTypeMapper\Mapper\PhpParserNodeMapper
      */
     private $phpParserNodeMapper;
-    public function __construct(\Rector\StaticTypeMapper\Naming\NameScopeFactory $nameScopeFactory, \Rector\PHPStanStaticTypeMapper\PHPStanStaticTypeMapper $phpStanStaticTypeMapper, \Rector\StaticTypeMapper\PhpDoc\PhpDocTypeMapper $phpDocTypeMapper, \Rector\StaticTypeMapper\Mapper\PhpParserNodeMapper $phpParserNodeMapper)
+    /**
+     * @readonly
+     * @var \Rector\NodeNameResolver\NodeNameResolver
+     */
+    private $nodeNameResolver;
+    public function __construct(NameScopeFactory $nameScopeFactory, PHPStanStaticTypeMapper $phpStanStaticTypeMapper, PhpDocTypeMapper $phpDocTypeMapper, PhpParserNodeMapper $phpParserNodeMapper, NodeNameResolver $nodeNameResolver)
     {
         $this->nameScopeFactory = $nameScopeFactory;
         $this->phpStanStaticTypeMapper = $phpStanStaticTypeMapper;
         $this->phpDocTypeMapper = $phpDocTypeMapper;
         $this->phpParserNodeMapper = $phpParserNodeMapper;
+        $this->nodeNameResolver = $nodeNameResolver;
     }
-    public function mapPHPStanTypeToPHPStanPhpDocTypeNode(\PHPStan\Type\Type $phpStanType, \Rector\PHPStanStaticTypeMapper\Enum\TypeKind $typeKind) : \PHPStan\PhpDocParser\Ast\Type\TypeNode
+    /**
+     * @param TypeKind::* $typeKind
+     */
+    public function mapPHPStanTypeToPHPStanPhpDocTypeNode(Type $phpStanType, string $typeKind) : TypeNode
     {
         return $this->phpStanStaticTypeMapper->mapToPHPStanPhpDocTypeNode($phpStanType, $typeKind);
     }
     /**
+     * @param TypeKind::* $typeKind
      * @return Name|ComplexType|null
      */
-    public function mapPHPStanTypeToPhpParserNode(\PHPStan\Type\Type $phpStanType, \Rector\PHPStanStaticTypeMapper\Enum\TypeKind $typeKind) : ?\PhpParser\Node
+    public function mapPHPStanTypeToPhpParserNode(Type $phpStanType, string $typeKind) : ?Node
     {
-        return $this->phpStanStaticTypeMapper->mapToPhpParserNode($phpStanType, $typeKind);
+        $node = $this->phpStanStaticTypeMapper->mapToPhpParserNode($phpStanType, $typeKind);
+        if (!$node instanceof Node) {
+            return null;
+        }
+        if ($node instanceof UnionType) {
+            return $node;
+        }
+        if (!$node instanceof Name) {
+            return $node;
+        }
+        $nodeName = $this->nodeNameResolver->getName($node);
+        foreach (self::STANDALONE_MAPS as $key => $type) {
+            if ($nodeName === $key) {
+                return new Name($type);
+            }
+        }
+        return $node;
     }
-    public function mapPhpParserNodePHPStanType(\PhpParser\Node $node) : \PHPStan\Type\Type
+    public function mapPhpParserNodePHPStanType(Node $node) : Type
     {
         return $this->phpParserNodeMapper->mapToPHPStanType($node);
     }
-    public function mapPHPStanPhpDocTypeToPHPStanType(\PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagValueNode $phpDocTagValueNode, \PhpParser\Node $node) : \PHPStan\Type\Type
+    public function mapPHPStanPhpDocTypeToPHPStanType(PhpDocTagValueNode $phpDocTagValueNode, Node $node) : Type
     {
-        if ($phpDocTagValueNode instanceof \PHPStan\PhpDocParser\Ast\PhpDoc\TemplateTagValueNode) {
+        if ($phpDocTagValueNode instanceof TemplateTagValueNode) {
             // special case
             $nameScope = $this->nameScopeFactory->createNameScopeFromNodeWithoutTemplateTypes($node);
             if ($phpDocTagValueNode->bound === null) {
-                return new \PHPStan\Type\MixedType();
+                return new MixedType();
             }
             return $this->phpDocTypeMapper->mapToPHPStanType($phpDocTagValueNode->bound, $node, $nameScope);
         }
-        if ($phpDocTagValueNode instanceof \PHPStan\PhpDocParser\Ast\PhpDoc\ReturnTagValueNode || $phpDocTagValueNode instanceof \PHPStan\PhpDocParser\Ast\PhpDoc\ParamTagValueNode || $phpDocTagValueNode instanceof \PHPStan\PhpDocParser\Ast\PhpDoc\VarTagValueNode || $phpDocTagValueNode instanceof \PHPStan\PhpDocParser\Ast\PhpDoc\ThrowsTagValueNode) {
+        if ($phpDocTagValueNode instanceof ReturnTagValueNode || $phpDocTagValueNode instanceof ParamTagValueNode || $phpDocTagValueNode instanceof VarTagValueNode || $phpDocTagValueNode instanceof ThrowsTagValueNode) {
             return $this->mapPHPStanPhpDocTypeNodeToPHPStanType($phpDocTagValueNode->type, $node);
         }
-        throw new \Rector\Core\Exception\NotImplementedYetException(__METHOD__ . ' for ' . \get_class($phpDocTagValueNode));
+        throw new NotImplementedYetException(__METHOD__ . ' for ' . \get_class($phpDocTagValueNode));
     }
-    public function mapPHPStanPhpDocTypeNodeToPHPStanType(\PHPStan\PhpDocParser\Ast\Type\TypeNode $typeNode, \PhpParser\Node $node) : \PHPStan\Type\Type
+    public function mapPHPStanPhpDocTypeNodeToPHPStanType(TypeNode $typeNode, Node $node) : Type
     {
-        if ($node instanceof \PhpParser\Node\Param) {
-            $classMethod = $node->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::PARENT_NODE);
-            if ($classMethod instanceof \PhpParser\Node\Stmt\ClassMethod) {
+        if ($node instanceof Param) {
+            $classMethod = $node->getAttribute(AttributeKey::PARENT_NODE);
+            if ($classMethod instanceof ClassMethod) {
                 // param does not hany any clue about template map, but class method has
                 $node = $classMethod;
             }

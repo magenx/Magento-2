@@ -5,6 +5,7 @@ namespace Rector\TypeDeclaration\Rector\FunctionLike;
 
 use PhpParser\Node;
 use PhpParser\Node\FunctionLike;
+use PhpParser\Node\IntersectionType;
 use PhpParser\Node\Name;
 use PhpParser\Node\NullableType;
 use PhpParser\Node\Stmt\Class_;
@@ -14,10 +15,12 @@ use PhpParser\Node\UnionType as PhpParserUnionType;
 use PHPStan\Type\MixedType;
 use PHPStan\Type\Type;
 use PHPStan\Type\UnionType;
+use Rector\Core\Php\PhpVersionProvider;
 use Rector\Core\Rector\AbstractRector;
 use Rector\Core\ValueObject\PhpVersionFeature;
 use Rector\NodeTypeResolver\Node\AttributeKey;
 use Rector\PHPStanStaticTypeMapper\Enum\TypeKind;
+use Rector\StaticTypeMapper\ValueObject\Type\NonExistingObjectType;
 use Rector\TypeDeclaration\PhpDocParser\NonInformativeReturnTagRemover;
 use Rector\TypeDeclaration\PhpParserTypeAnalyzer;
 use Rector\TypeDeclaration\TypeAlreadyAddedChecker\ReturnTypeAlreadyAddedChecker;
@@ -34,7 +37,7 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
  *
  * @see \Rector\Tests\TypeDeclaration\Rector\FunctionLike\ReturnTypeDeclarationRector\ReturnTypeDeclarationRectorTest
  */
-final class ReturnTypeDeclarationRector extends \Rector\Core\Rector\AbstractRector implements \Rector\VersionBonding\Contract\MinPhpVersionInterface
+final class ReturnTypeDeclarationRector extends AbstractRector implements MinPhpVersionInterface
 {
     /**
      * @readonly
@@ -71,7 +74,12 @@ final class ReturnTypeDeclarationRector extends \Rector\Core\Rector\AbstractRect
      * @var \Rector\TypeDeclaration\TypeAnalyzer\ObjectTypeComparator
      */
     private $objectTypeComparator;
-    public function __construct(\Rector\TypeDeclaration\TypeInferer\ReturnTypeInferer $returnTypeInferer, \Rector\TypeDeclaration\TypeAlreadyAddedChecker\ReturnTypeAlreadyAddedChecker $returnTypeAlreadyAddedChecker, \Rector\TypeDeclaration\PhpDocParser\NonInformativeReturnTagRemover $nonInformativeReturnTagRemover, \Rector\VendorLocker\NodeVendorLocker\ClassMethodReturnTypeOverrideGuard $classMethodReturnTypeOverrideGuard, \Rector\VendorLocker\VendorLockResolver $vendorLockResolver, \Rector\TypeDeclaration\PhpParserTypeAnalyzer $phpParserTypeAnalyzer, \Rector\TypeDeclaration\TypeAnalyzer\ObjectTypeComparator $objectTypeComparator)
+    /**
+     * @readonly
+     * @var \Rector\Core\Php\PhpVersionProvider
+     */
+    private $phpVersionProvider;
+    public function __construct(ReturnTypeInferer $returnTypeInferer, ReturnTypeAlreadyAddedChecker $returnTypeAlreadyAddedChecker, NonInformativeReturnTagRemover $nonInformativeReturnTagRemover, ClassMethodReturnTypeOverrideGuard $classMethodReturnTypeOverrideGuard, VendorLockResolver $vendorLockResolver, PhpParserTypeAnalyzer $phpParserTypeAnalyzer, ObjectTypeComparator $objectTypeComparator, PhpVersionProvider $phpVersionProvider)
     {
         $this->returnTypeInferer = $returnTypeInferer;
         $this->returnTypeAlreadyAddedChecker = $returnTypeAlreadyAddedChecker;
@@ -80,17 +88,18 @@ final class ReturnTypeDeclarationRector extends \Rector\Core\Rector\AbstractRect
         $this->vendorLockResolver = $vendorLockResolver;
         $this->phpParserTypeAnalyzer = $phpParserTypeAnalyzer;
         $this->objectTypeComparator = $objectTypeComparator;
+        $this->phpVersionProvider = $phpVersionProvider;
     }
     /**
      * @return array<class-string<Node>>
      */
     public function getNodeTypes() : array
     {
-        return [\PhpParser\Node\Stmt\Function_::class, \PhpParser\Node\Stmt\ClassMethod::class];
+        return [Function_::class, ClassMethod::class];
     }
-    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
+    public function getRuleDefinition() : RuleDefinition
     {
-        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Change @return types and type from static analysis to type declarations if not a BC-break', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample(<<<'CODE_SAMPLE'
+        return new RuleDefinition('Change @return types and type from static analysis to type declarations if not a BC-break', [new CodeSample(<<<'CODE_SAMPLE'
 class SomeClass
 {
     /**
@@ -114,41 +123,44 @@ CODE_SAMPLE
     /**
      * @param ClassMethod|Function_ $node
      */
-    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
+    public function refactor(Node $node) : ?Node
     {
         if ($this->shouldSkipClassLike($node)) {
             return null;
         }
-        if ($node instanceof \PhpParser\Node\Stmt\ClassMethod && $this->shouldSkipClassMethod($node)) {
+        if ($node instanceof ClassMethod && $this->shouldSkipClassMethod($node)) {
             return null;
         }
-        $inferedReturnType = $this->returnTypeInferer->inferFunctionLikeWithExcludedInferers($node, [\Rector\TypeDeclaration\TypeInferer\ReturnTypeInferer\ReturnTypeDeclarationReturnTypeInfererTypeInferer::class]);
-        if ($inferedReturnType instanceof \PHPStan\Type\MixedType) {
+        $inferedReturnType = $this->returnTypeInferer->inferFunctionLikeWithExcludedInferers($node, [ReturnTypeDeclarationReturnTypeInfererTypeInferer::class]);
+        if ($inferedReturnType instanceof MixedType || $inferedReturnType instanceof NonExistingObjectType) {
             return null;
         }
         if ($this->returnTypeAlreadyAddedChecker->isSameOrBetterReturnTypeAlreadyAdded($node, $inferedReturnType)) {
             return null;
         }
-        if (!$inferedReturnType instanceof \PHPStan\Type\UnionType) {
+        if (!$inferedReturnType instanceof UnionType) {
             return $this->processType($node, $inferedReturnType);
         }
-        if (!$inferedReturnType->isSuperTypeOf(new \PHPStan\Type\MixedType())->yes()) {
-            return $this->processType($node, $inferedReturnType);
+        foreach ($inferedReturnType->getTypes() as $unionedType) {
+            // mixed type cannot be joined with another types
+            if ($unionedType instanceof MixedType) {
+                return null;
+            }
         }
-        return null;
+        return $this->processType($node, $inferedReturnType);
     }
     public function provideMinPhpVersion() : int
     {
-        return \Rector\Core\ValueObject\PhpVersionFeature::SCALAR_TYPES;
+        return PhpVersionFeature::SCALAR_TYPES;
     }
     /**
      * @param \PhpParser\Node\Stmt\ClassMethod|\PhpParser\Node\Stmt\Function_ $node
      */
-    private function processType($node, \PHPStan\Type\Type $inferedType) : ?\PhpParser\Node
+    private function processType($node, Type $inferedType) : ?Node
     {
-        $inferredReturnNode = $this->staticTypeMapper->mapPHPStanTypeToPhpParserNode($inferedType, \Rector\PHPStanStaticTypeMapper\Enum\TypeKind::RETURN());
+        $inferredReturnNode = $this->staticTypeMapper->mapPHPStanTypeToPhpParserNode($inferedType, TypeKind::RETURN);
         // nothing to change in PHP code
-        if (!$inferredReturnNode instanceof \PhpParser\Node) {
+        if (!$inferredReturnNode instanceof Node) {
             return null;
         }
         if ($this->shouldSkipInferredReturnNode($node)) {
@@ -163,7 +175,7 @@ CODE_SAMPLE
         $this->nonInformativeReturnTagRemover->removeReturnTagIfNotUseful($node);
         return $node;
     }
-    private function shouldSkipClassMethod(\PhpParser\Node\Stmt\ClassMethod $classMethod) : bool
+    private function shouldSkipClassMethod(ClassMethod $classMethod) : bool
     {
         if ($this->classMethodReturnTypeOverrideGuard->shouldSkipClassMethod($classMethod)) {
             return \true;
@@ -179,17 +191,17 @@ CODE_SAMPLE
         if ($functionLike->returnType === null) {
             return \false;
         }
-        return (bool) $functionLike->returnType->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::DO_NOT_CHANGE);
+        return (bool) $functionLike->returnType->getAttribute(AttributeKey::DO_NOT_CHANGE);
     }
     /**
      * @param \PhpParser\Node\Stmt\ClassMethod|\PhpParser\Node\Stmt\Function_ $functionLike
      */
-    private function shouldSkipExistingReturnType($functionLike, \PHPStan\Type\Type $inferedType) : bool
+    private function shouldSkipExistingReturnType($functionLike, Type $inferedType) : bool
     {
         if ($functionLike->returnType === null) {
             return \false;
         }
-        if ($functionLike instanceof \PhpParser\Node\Stmt\ClassMethod && $this->vendorLockResolver->isReturnChangeVendorLockedIn($functionLike)) {
+        if ($functionLike instanceof ClassMethod && $this->vendorLockResolver->isReturnChangeVendorLockedIn($functionLike)) {
             return \true;
         }
         $currentType = $this->staticTypeMapper->mapPhpParserNodePHPStanType($functionLike->returnType);
@@ -200,7 +212,7 @@ CODE_SAMPLE
     }
     /**
      * @param \PhpParser\Node\Stmt\ClassMethod|\PhpParser\Node\Stmt\Function_ $functionLike
-     * @param \PhpParser\Node\Name|\PhpParser\Node\NullableType|\PhpParser\Node\UnionType $inferredReturnNode
+     * @param \PhpParser\Node\Name|\PhpParser\Node\NullableType|\PhpParser\Node\UnionType|\PhpParser\Node\IntersectionType $inferredReturnNode
      */
     private function addReturnType($functionLike, $inferredReturnNode) : void
     {
@@ -209,7 +221,7 @@ CODE_SAMPLE
             return;
         }
         $isSubtype = $this->phpParserTypeAnalyzer->isCovariantSubtypeOf($inferredReturnNode, $functionLike->returnType);
-        if ($this->phpVersionProvider->isAtLeastPhpVersion(\Rector\Core\ValueObject\PhpVersionFeature::COVARIANT_RETURN) && $isSubtype) {
+        if ($this->phpVersionProvider->isAtLeastPhpVersion(PhpVersionFeature::COVARIANT_RETURN) && $isSubtype) {
             $functionLike->returnType = $inferredReturnNode;
             return;
         }
@@ -218,12 +230,12 @@ CODE_SAMPLE
             $functionLike->returnType = $inferredReturnNode;
         }
     }
-    private function isNullableTypeSubType(\PHPStan\Type\Type $currentType, \PHPStan\Type\Type $inferedType) : bool
+    private function isNullableTypeSubType(Type $currentType, Type $inferedType) : bool
     {
-        if (!$currentType instanceof \PHPStan\Type\UnionType) {
+        if (!$currentType instanceof UnionType) {
             return \false;
         }
-        if (!$inferedType instanceof \PHPStan\Type\UnionType) {
+        if (!$inferedType instanceof UnionType) {
             return \false;
         }
         // probably more/less strict union type on purpose
@@ -232,12 +244,12 @@ CODE_SAMPLE
         }
         return $inferedType->isSubTypeOf($currentType)->yes();
     }
-    private function shouldSkipClassLike(\PhpParser\Node\FunctionLike $functionLike) : bool
+    private function shouldSkipClassLike(FunctionLike $functionLike) : bool
     {
-        if (!$functionLike instanceof \PhpParser\Node\Stmt\ClassMethod) {
+        if (!$functionLike instanceof ClassMethod) {
             return \false;
         }
-        $classLike = $this->betterNodeFinder->findParentType($functionLike, \PhpParser\Node\Stmt\Class_::class);
-        return !$classLike instanceof \PhpParser\Node\Stmt\Class_;
+        $classLike = $this->betterNodeFinder->findParentType($functionLike, Class_::class);
+        return !$classLike instanceof Class_;
     }
 }

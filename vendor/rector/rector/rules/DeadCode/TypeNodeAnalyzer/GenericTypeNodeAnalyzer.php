@@ -4,17 +4,14 @@ declare (strict_types=1);
 namespace Rector\DeadCode\TypeNodeAnalyzer;
 
 use PHPStan\PhpDocParser\Ast\Type\GenericTypeNode;
-use PHPStan\PhpDocParser\Ast\Type\UnionTypeNode;
+use Rector\BetterPhpDocParser\ValueObject\Type\BracketsAwareUnionTypeNode;
 final class GenericTypeNodeAnalyzer
 {
-    public function hasGenericType(\PHPStan\PhpDocParser\Ast\Type\UnionTypeNode $unionTypeNode) : bool
+    public function hasGenericType(BracketsAwareUnionTypeNode $bracketsAwareUnionTypeNode) : bool
     {
-        $types = $unionTypeNode->types;
+        $types = $bracketsAwareUnionTypeNode->types;
         foreach ($types as $type) {
-            if ($type instanceof \PHPStan\PhpDocParser\Ast\Type\GenericTypeNode) {
-                if ($type->type->name === 'array') {
-                    continue;
-                }
+            if ($type instanceof GenericTypeNode) {
                 return \true;
             }
         }

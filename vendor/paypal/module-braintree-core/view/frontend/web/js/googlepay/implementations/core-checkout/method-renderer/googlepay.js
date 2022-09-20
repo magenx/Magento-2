@@ -102,9 +102,9 @@ define([
                emailRequired: false,
             };
 
-           if (this.getEnvironment() !== "TEST") {
-               result['merchantId'] = this.getMerchantId();
-           }
+            if (this.getEnvironment() !== "TEST") {
+                result.merchantInfo = { merchantId: this.getMerchantId() };
+            }
 
            return result;
         },

@@ -2,10 +2,6 @@
 
 namespace Laminas\Captcha;
 
-use Laminas\Captcha\Dumb;
-use Laminas\Captcha\Figlet;
-use Laminas\Captcha\Image;
-use Laminas\Captcha\ReCaptcha;
 use Laminas\Stdlib\ArrayUtils;
 use Traversable;
 
@@ -30,7 +26,7 @@ abstract class Factory
     /**
      * Create a captcha adapter instance
      *
-     * @param  array|Traversable $options
+     * @param  iterable<string, mixed> $options
      * @return AdapterInterface
      * @throws Exception\InvalidArgumentException For a non-array, non-Traversable $options.
      * @throws Exception\DomainException If class is missing or invalid.

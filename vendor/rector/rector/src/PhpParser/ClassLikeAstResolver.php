@@ -11,14 +11,14 @@ use PhpParser\Node\Stmt\Trait_;
 use PHPStan\Reflection\ClassReflection;
 use Rector\Core\PhpParser\Node\BetterNodeFinder;
 use Rector\Core\ValueObject\Application\File;
-use RectorPrefix20211221\Symplify\Astral\PhpParser\SmartPhpParser;
+use RectorPrefix202208\Symplify\Astral\PhpParser\SmartPhpParser;
 final class ClassLikeAstResolver
 {
     /**
      * Parsing files is very heavy performance, so this will help to leverage it
      * The value can be also null, as the method might not exist in the class.
      *
-     * @var array<class-string, Class_|Trait_|Interface_|null>
+     * @var array<class-string, Class_|Trait_|Interface_|Enum_|null>
      */
     private $classLikesByName = [];
     /**
@@ -31,15 +31,15 @@ final class ClassLikeAstResolver
      * @var \Rector\Core\PhpParser\Node\BetterNodeFinder
      */
     private $betterNodeFinder;
-    public function __construct(\RectorPrefix20211221\Symplify\Astral\PhpParser\SmartPhpParser $smartPhpParser, \Rector\Core\PhpParser\Node\BetterNodeFinder $betterNodeFinder)
+    public function __construct(SmartPhpParser $smartPhpParser, BetterNodeFinder $betterNodeFinder)
     {
         $this->smartPhpParser = $smartPhpParser;
         $this->betterNodeFinder = $betterNodeFinder;
     }
     /**
-     * @return \PhpParser\Node\Stmt\Class_|\PhpParser\Node\Stmt\Enum_|\PhpParser\Node\Stmt\Interface_|\PhpParser\Node\Stmt\Trait_|null
+     * @return \PhpParser\Node\Stmt\Trait_|\PhpParser\Node\Stmt\Class_|\PhpParser\Node\Stmt\Interface_|\PhpParser\Node\Stmt\Enum_|null
      */
-    public function resolveClassFromClassReflection(\PHPStan\Reflection\ClassReflection $classReflection, string $className)
+    public function resolveClassFromClassReflection(ClassReflection $classReflection, string $desiredClassName)
     {
         if ($classReflection->isBuiltin()) {
             return null;
@@ -60,11 +60,11 @@ final class ClassLikeAstResolver
             $this->classLikesByName[$classReflection->getName()] = null;
             return null;
         }
-        /** @var array<Class_|Trait_|Interface_> $classLikes */
-        $classLikes = $this->betterNodeFinder->findInstanceOf($stmts, \PhpParser\Node\Stmt\ClassLike::class);
+        /** @var array<Class_|Trait_|Interface_|Enum_> $classLikes */
+        $classLikes = $this->betterNodeFinder->findInstanceOf($stmts, ClassLike::class);
         $reflectionClassName = $classReflection->getName();
         foreach ($classLikes as $classLike) {
-            if ($reflectionClassName !== $className) {
+            if ($reflectionClassName !== $desiredClassName) {
                 continue;
             }
             $this->classLikesByName[$classReflection->getName()] = $classLike;

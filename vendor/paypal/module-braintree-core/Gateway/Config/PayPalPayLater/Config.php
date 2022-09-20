@@ -1,4 +1,10 @@
 <?php
+/**
+ * Copyright © Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+
+declare(strict_types=1);
 
 namespace PayPal\Braintree\Gateway\Config\PayPalPayLater;
 
@@ -9,8 +15,8 @@ use \Magento\Paypal\Model\Config as PPConfig;
 
 class Config implements ConfigInterface
 {
-    const KEY_ACTIVE = 'active';
-    const DEFAULT_PATH_PATTERN = 'payment/%s/%s';
+    public const KEY_ACTIVE = 'active';
+    public const DEFAULT_PATH_PATTERN = 'payment/%s/%s';
 
     /**
      * @var ScopeConfigInterface
@@ -43,21 +49,7 @@ class Config implements ConfigInterface
     }
 
     /**
-     * Sets method code
-     *
-     * @param string $methodCode
-     * @return void
-     */
-    public function setMethodCode($methodCode)
-    {
-        $this->methodCode = $methodCode;
-    }
-
-    /**
-     * Sets path pattern
-     *
-     * @param string $pathPattern
-     * @return void
+     * @inheritdoc
      */
     public function setPathPattern($pathPattern)
     {
@@ -65,12 +57,29 @@ class Config implements ConfigInterface
     }
 
     /**
-     * Retrieve information from payment configuration
+     * @inheritdoc
+     */
+    public function setMethodCode($methodCode)
+    {
+        $this->methodCode = $methodCode;
+    }
+
+    /**
+     * Get configuration field value
      *
      * @param string $field
-     * @param int|null $storeId
-     *
      * @return mixed
+     */
+    public function getConfigValue(string $field)
+    {
+        return $this->scopeConfig->getValue(
+            $field,
+            ScopeInterface::SCOPE_STORE
+        );
+    }
+
+    /**
+     * @inheritdoc
      */
     public function getValue($field, $storeId = null)
     {
@@ -82,18 +91,6 @@ class Config implements ConfigInterface
             sprintf($this->pathPattern, $this->methodCode, $field),
             ScopeInterface::SCOPE_STORE,
             $storeId
-        );
-    }
-
-    /**
-     * @param $field
-     * @return mixed
-     */
-    public function getConfigValue($field)
-    {
-        return $this->scopeConfig->getValue(
-            $field,
-            ScopeInterface::SCOPE_STORE
         );
     }
 
@@ -116,19 +113,19 @@ class Config implements ConfigInterface
     }
 
     /**
-     * Get Paypal pay later message configuration status
-     * @param string $type
+     * Get PayPal pay later message configuration status
      *
+     * @param string $buttonType
      * @return bool
      */
-    public function isMessageActive($type): bool
+    public function isMessageActive(string $buttonType): bool
     {
         $paypalActive = $this->getConfigValue("payment/braintree_paypal/active");
-        $paypalPayLaterActive = $this->getConfigValue("payment/braintree_paypal_paylater/active");
-        $paypalPayLaterMessageActive = $this->getConfigValue("payment/braintree_paypal/message_" . $type . "_enable");
-
+        $paypalPayLaterMessageActive = $this->getConfigValue(
+            "payment/braintree_paypal/button_location_" . $buttonType . "_type_messaging_show"
+        );
         // If PayPal or PayPal Pay Later is disabled in the admin
-        if (!$paypalActive || !$paypalPayLaterMessageActive || $this->IsPayPalVaultActive()) {
+        if (!$paypalActive || !$paypalPayLaterMessageActive || $this->isPayPalVaultActive()) {
             return false;
         }
 
@@ -140,27 +137,31 @@ class Config implements ConfigInterface
     }
 
     /**
-     * Get Paypal pay later button configuration status
-     * @param string $type
+     * Get PayPal pay later button configuration status
      *
+     * @param string $buttonType
      * @return bool
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
-    public function isButtonActive($type): bool
+    public function isButtonActive(string $buttonType): bool
     {
         $paypalActive = $this->getConfigValue("payment/braintree_paypal/active");
         $paypalPayLaterActive = $this->getConfigValue("payment/braintree_paypal_paylater/active");
-        $paypalPayLaterButtonActive = $this->getConfigValue("payment/braintree_paypal/button_paylater_" . $type . "_enable");
+        $paypalPayLaterButtonShow = $this->getConfigValue(
+            "payment/braintree_paypal/button_location_checkout_type_paylater_show"
+        );
 
         // If PayPal or PayPal Pay Later is disabled in the admin
-        if (!$paypalActive || !$paypalPayLaterActive || !$paypalPayLaterButtonActive) {
+        if (!$paypalActive || !$paypalPayLaterActive || !$paypalPayLaterButtonShow) {
             return false;
         }
 
-        return (bool) $paypalPayLaterButtonActive;
+        return (bool) $paypalPayLaterButtonShow;
     }
 
     /**
      * Merchant Country set to US
+     *
      * @return bool
      */
     public function isUS(): bool
@@ -183,8 +184,8 @@ class Config implements ConfigInterface
      *
      * @return bool
      */
-    public function IsPayPalVaultActive(): bool
+    public function isPayPalVaultActive(): bool
     {
-        return $this->getConfigValue('payment/braintree_paypal_vault/active');
+        return (bool) $this->getConfigValue('payment/braintree_paypal_vault/active');
     }
 }

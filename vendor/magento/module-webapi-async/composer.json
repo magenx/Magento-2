@@ -9,13 +9,13 @@
     "config": {
         "sort-packages": true
     },
-    "version": "100.4.2",
+    "version": "100.4.3",
     "require": {
         "php": "~7.4.0||~8.1.0",
         "magento/framework": "103.0.*",
-        "magento/framework-message-queue": "100.4.*",
         "magento/module-webapi": "100.4.*",
-        "magento/module-asynchronous-operations": "100.4.*"
+        "magento/module-asynchronous-operations": "100.4.*",
+        "magento/module-store": "101.1.*"
     },
     "suggest": {
         "magento/module-user": "101.2.*",

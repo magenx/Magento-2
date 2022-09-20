@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace PayPal\Braintree\Gateway\Config\PayPalCredit;
 
@@ -111,9 +112,11 @@ class Config implements ConfigInterface
     {
         $paypalActive = $this->getConfigValue("payment/braintree_paypal/active");
         $paypalCreditActive = $this->getConfigValue("payment/braintree_paypal_credit/active");
+        $paypalCreditShow =
+            $this->getConfigValue("payment/braintree_paypal/button_location_checkout_type_credit_show");
 
         // If PayPal or PayPal Credit is disabled in the admin
-        if (!$paypalActive || !$paypalCreditActive) {
+        if (!$paypalActive || !$paypalCreditActive || !$paypalCreditShow) {
             return false;
         }
 
@@ -166,7 +169,7 @@ class Config implements ConfigInterface
      *
      * @return bool
      */
-    public function getSandbox(): bool
+    public function isSandbox(): bool
     {
         return 'sandbox' === $this->getConfigValue('payment/braintree/environment');
     }

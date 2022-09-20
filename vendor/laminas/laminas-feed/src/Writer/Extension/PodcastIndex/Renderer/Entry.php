@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Laminas\Feed\Writer\Extension\PodcastIndex\Renderer;
 
 use DOMDocument;
@@ -101,7 +103,7 @@ class Entry extends Extension\AbstractRenderer
             /** @psalm-var array<string, string> $soundbite */
             $el = $dom->createElement('podcast:soundbite');
             if (array_key_exists('title', $soundbite)) {
-                $text = $dom->createTextNode($soundbite['title']);
+                $text = $dom->createTextNode((string) $soundbite['title']);
                 $el->appendChild($text);
             }
             $el->setAttribute('startTime', $soundbite['startTime']);

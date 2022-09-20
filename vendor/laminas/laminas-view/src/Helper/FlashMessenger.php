@@ -1,10 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Laminas\View\Helper;
 
-use Laminas\Mvc\Controller\Plugin\FlashMessenger as V2PluginFlashMessenger;
 use Laminas\Mvc\Plugin\FlashMessenger\FlashMessenger as PluginFlashMessenger;
 use Laminas\View\Exception\InvalidArgumentException;
+
+use function array_walk_recursive;
+use function call_user_func_array;
+use function get_class;
+use function gettype;
+use function implode;
+use function is_object;
+use function method_exists;
+use function sprintf;
 
 /**
  * Helper to proxy the plugin flash messenger
@@ -38,8 +48,10 @@ class FlashMessenger extends AbstractHelper
      *
      * @var string
      */
-    protected $messageCloseString     = '</li></ul>';
-    protected $messageOpenFormat      = '<ul%s><li>';
+    protected $messageCloseString = '</li></ul>';
+    /** @var string */
+    protected $messageOpenFormat = '<ul%s><li>';
+    /** @var string */
     protected $messageSeparatorString = '</li><li>';
 
     /**
@@ -59,7 +71,7 @@ class FlashMessenger extends AbstractHelper
     /**
      * Flash messenger plugin
      *
-     * @var V2PluginFlashMessenger|PluginFlashMessenger
+     * @var PluginFlashMessenger
      */
     protected $pluginFlashMessenger;
 
@@ -103,7 +115,7 @@ class FlashMessenger extends AbstractHelper
     public function render($namespace = 'default', array $classes = [], $autoEscape = null)
     {
         $flashMessenger = $this->getPluginFlashMessenger();
-        $messages = $flashMessenger->getMessagesFromNamespace($namespace);
+        $messages       = $flashMessenger->getMessagesFromNamespace($namespace);
         return $this->renderMessages($namespace, $messages, $classes, $autoEscape);
     }
 
@@ -118,7 +130,7 @@ class FlashMessenger extends AbstractHelper
     public function renderCurrent($namespace = 'default', array $classes = [], $autoEscape = null)
     {
         $flashMessenger = $this->getPluginFlashMessenger();
-        $messages = $flashMessenger->getCurrentMessagesFromNamespace($namespace);
+        $messages       = $flashMessenger->getCurrentMessagesFromNamespace($namespace);
         return $this->renderMessages($namespace, $messages, $classes, $autoEscape);
     }
 
@@ -162,7 +174,7 @@ class FlashMessenger extends AbstractHelper
         $translatorTextDomain = $this->getTranslatorTextDomain();
         array_walk_recursive(
             $messages,
-            function ($item) use (& $messagesToPrint, $escapeHtml, $autoEscape, $translator, $translatorTextDomain) {
+            function ($item) use (&$messagesToPrint, $escapeHtml, $autoEscape, $translator, $translatorTextDomain) {
                 if ($translator !== null) {
                     $item = $translator->translate(
                         $item,
@@ -284,21 +296,19 @@ class FlashMessenger extends AbstractHelper
     /**
      * Set the flash messenger plugin
      *
-     * @param  V2PluginFlashMessenger|PluginFlashMessenger $pluginFlashMessenger
+     * @param  PluginFlashMessenger $pluginFlashMessenger
      * @return FlashMessenger
-     * @throws InvalidArgumentException for an invalid $pluginFlashMessenger
+     * @throws InvalidArgumentException For an invalid $pluginFlashMessenger.
+     * @psalm-suppress RedundantConditionGivenDocblockType, DocblockTypeContradiction
      */
     public function setPluginFlashMessenger($pluginFlashMessenger)
     {
-        if (! $pluginFlashMessenger instanceof V2PluginFlashMessenger
-            && ! $pluginFlashMessenger instanceof PluginFlashMessenger
-        ) {
+        if (! $pluginFlashMessenger instanceof PluginFlashMessenger) {
             throw new InvalidArgumentException(sprintf(
-                '%s expects either a %s or %s instance; received %s',
+                '%s expects a %s instance; received %s',
                 __METHOD__,
-                V2PluginFlashMessenger::class,
                 PluginFlashMessenger::class,
-                (is_object($pluginFlashMessenger) ? get_class($pluginFlashMessenger) : gettype($pluginFlashMessenger))
+                is_object($pluginFlashMessenger) ? get_class($pluginFlashMessenger) : gettype($pluginFlashMessenger)
             ));
         }
 
@@ -309,16 +319,12 @@ class FlashMessenger extends AbstractHelper
     /**
      * Get the flash messenger plugin
      *
-     * @return V2PluginFlashMessenger|PluginFlashMessenger
+     * @return PluginFlashMessenger
      */
     public function getPluginFlashMessenger()
     {
         if (null === $this->pluginFlashMessenger) {
-            $this->setPluginFlashMessenger(
-                class_exists(PluginFlashMessenger::class)
-                ? new PluginFlashMessenger()
-                : new V2PluginFlashMessenger()
-            );
+            $this->setPluginFlashMessenger(new PluginFlashMessenger());
         }
 
         return $this->pluginFlashMessenger;

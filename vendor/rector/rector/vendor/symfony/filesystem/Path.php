@@ -8,10 +8,10 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix20211221\Symfony\Component\Filesystem;
+namespace RectorPrefix202208\Symfony\Component\Filesystem;
 
-use RectorPrefix20211221\Symfony\Component\Filesystem\Exception\InvalidArgumentException;
-use RectorPrefix20211221\Symfony\Component\Filesystem\Exception\RuntimeException;
+use RectorPrefix202208\Symfony\Component\Filesystem\Exception\InvalidArgumentException;
+use RectorPrefix202208\Symfony\Component\Filesystem\Exception\RuntimeException;
 /**
  * Contains utility methods for handling path strings.
  *
@@ -160,11 +160,11 @@ final class Path
      *  - UNIX
      *  - Windows8 and upper
      *
-     * If your operation system or environment isn't supported, an exception is thrown.
+     * If your operating system or environment isn't supported, an exception is thrown.
      *
      * The result is a canonical path.
      *
-     * @throws RuntimeException If your operation system or environment isn't supported
+     * @throws RuntimeException If your operating system or environment isn't supported
      */
     public static function getHomeDirectory() : string
     {
@@ -176,7 +176,7 @@ final class Path
         if (\getenv('HOMEDRIVE') && \getenv('HOMEPATH')) {
             return self::canonicalize(\getenv('HOMEDRIVE') . \getenv('HOMEPATH'));
         }
-        throw new \RectorPrefix20211221\Symfony\Component\Filesystem\Exception\RuntimeException("Cannot find the home directory path: Your environment or operation system isn't supported.");
+        throw new RuntimeException("Cannot find the home directory path: Your environment or operating system isn't supported.");
     }
     /**
      * Returns the root directory of a path.
@@ -223,7 +223,7 @@ final class Path
      * @param string|null $extension if specified, only that extension is cut
      *                               off (may contain leading dot)
      */
-    public static function getFilenameWithoutExtension(string $path, string $extension = null)
+    public static function getFilenameWithoutExtension(string $path, string $extension = null) : string
     {
         if ('' === $path) {
             return '';
@@ -379,10 +379,10 @@ final class Path
     public static function makeAbsolute(string $path, string $basePath) : string
     {
         if ('' === $basePath) {
-            throw new \RectorPrefix20211221\Symfony\Component\Filesystem\Exception\InvalidArgumentException(\sprintf('The base path must be a non-empty string. Got: "%s".', $basePath));
+            throw new InvalidArgumentException(\sprintf('The base path must be a non-empty string. Got: "%s".', $basePath));
         }
         if (!self::isAbsolute($basePath)) {
-            throw new \RectorPrefix20211221\Symfony\Component\Filesystem\Exception\InvalidArgumentException(\sprintf('The base path "%s" is not an absolute path.', $basePath));
+            throw new InvalidArgumentException(\sprintf('The base path "%s" is not an absolute path.', $basePath));
         }
         if (self::isAbsolute($path)) {
             return self::canonicalize($path);
@@ -464,11 +464,11 @@ final class Path
         // If the passed path is absolute, but the base path is not, we
         // cannot generate a relative path
         if ('' !== $root && '' === $baseRoot) {
-            throw new \RectorPrefix20211221\Symfony\Component\Filesystem\Exception\InvalidArgumentException(\sprintf('The absolute path "%s" cannot be made relative to the relative path "%s". You should provide an absolute base path instead.', $path, $basePath));
+            throw new InvalidArgumentException(\sprintf('The absolute path "%s" cannot be made relative to the relative path "%s". You should provide an absolute base path instead.', $path, $basePath));
         }
         // Fail if the roots of the two paths are different
         if ($baseRoot && $root !== $baseRoot) {
-            throw new \RectorPrefix20211221\Symfony\Component\Filesystem\Exception\InvalidArgumentException(\sprintf('The path "%s" cannot be made relative to "%s", because they have different roots ("%s" and "%s").', $path, $basePath, $root, $baseRoot));
+            throw new InvalidArgumentException(\sprintf('The path "%s" cannot be made relative to "%s", because they have different roots ("%s" and "%s").', $path, $basePath, $root, $baseRoot));
         }
         if ('' === $relativeBasePath) {
             return $relativePath;
@@ -495,7 +495,7 @@ final class Path
      */
     public static function isLocal(string $path) : bool
     {
-        return '' !== $path && \false === \mb_strpos($path, '://');
+        return '' !== $path && \strpos($path, '://') === \false;
     }
     /**
      * Returns the longest common base path in canonical form of a set of paths or
@@ -505,20 +505,20 @@ final class Path
      * into forward slashes.
      *
      * ```php
-     * $basePath = Path::getLongestCommonBasePath([
+     * $basePath = Path::getLongestCommonBasePath(
      *     '/symfony/css/style.css',
      *     '/symfony/css/..'
-     * ]);
+     * );
      * // => /symfony
      * ```
      *
      * The root is returned if no common base path can be found:
      *
      * ```php
-     * $basePath = Path::getLongestCommonBasePath([
+     * $basePath = Path::getLongestCommonBasePath(
      *     '/symfony/css/style.css',
      *     '/puli/css/..'
-     * ]);
+     * );
      * // => /
      * ```
      *
@@ -526,10 +526,10 @@ final class Path
      * returned.
      *
      * ```php
-     * $basePath = Path::getLongestCommonBasePath([
+     * $basePath = Path::getLongestCommonBasePath(
      *     'C:/symfony/css/style.css',
      *     'D:/symfony/css/..'
-     * ]);
+     * );
      * // => null
      * ```
      */
@@ -553,7 +553,7 @@ final class Path
                 }
                 // Prevent false positives for common prefixes
                 // see isBasePath()
-                if (0 === \mb_strpos($path . '/', $basePath . '/')) {
+                if (\strncmp($path . '/', $basePath . '/', \strlen($basePath . '/')) === 0) {
                     // next path
                     continue 2;
                 }
@@ -576,7 +576,7 @@ final class Path
             if (null === $finalPath) {
                 // For first part we keep slashes, like '/top', 'C:\' or 'phar://'
                 $finalPath = $path;
-                $wasScheme = \false !== \mb_strpos($path, '://');
+                $wasScheme = \strpos($path, '://') !== \false;
                 continue;
             }
             // Only add slash if previous part didn't end with '/' or '\'
@@ -621,7 +621,7 @@ final class Path
         // Don't append a slash for the root "/", because then that root
         // won't be discovered as common prefix ("//" is not a prefix of
         // "/foobar/").
-        return 0 === \mb_strpos($ofPath . '/', \rtrim($basePath, '/') . '/');
+        return \strncmp($ofPath . '/', \rtrim($basePath, '/') . '/', \strlen(\rtrim($basePath, '/') . '/')) === 0;
     }
     /**
      * @return non-empty-string[]
@@ -679,7 +679,7 @@ final class Path
         }
         $length = \mb_strlen($path);
         // Remove and remember root directory
-        if (0 === \mb_strpos($path, '/')) {
+        if (\strncmp($path, '/', \strlen('/')) === 0) {
             $root .= '/';
             $path = $length > 1 ? \mb_substr($path, 1) : '';
         } elseif ($length > 1 && \ctype_alpha($path[0]) && ':' === $path[1]) {

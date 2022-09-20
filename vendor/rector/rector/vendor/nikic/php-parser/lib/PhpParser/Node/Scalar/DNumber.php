@@ -4,7 +4,7 @@ declare (strict_types=1);
 namespace PhpParser\Node\Scalar;
 
 use PhpParser\Node\Scalar;
-class DNumber extends \PhpParser\Node\Scalar
+class DNumber extends Scalar
 {
     /** @var float Number value */
     public $value;
@@ -22,6 +22,15 @@ class DNumber extends \PhpParser\Node\Scalar
     public function getSubNodeNames() : array
     {
         return ['value'];
+    }
+    /**
+     * @param mixed[] $attributes
+     */
+    public static function fromString(string $str, array $attributes = []) : \PhpParser\Node\Scalar\DNumber
+    {
+        $attributes['rawValue'] = $str;
+        $float = self::parse($str);
+        return new \PhpParser\Node\Scalar\DNumber($float, $attributes);
     }
     /**
      * @internal

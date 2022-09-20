@@ -9,16 +9,22 @@ use Rector\Core\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
- * @see https://github.com/lmc-eu/steward/pull/187/files#diff-c7e8c65e59b8b4ff8b54325814d4ba55L80
+ * @changelog https://github.com/lmc-eu/steward/pull/187/files#diff-c7e8c65e59b8b4ff8b54325814d4ba55L80
  *
  * @see \Rector\PHPUnit\Tests\Rector\MethodCall\GetMockBuilderGetMockToCreateMockRector\GetMockBuilderGetMockToCreateMockRectorTest
  */
-final class GetMockBuilderGetMockToCreateMockRector extends \Rector\Core\Rector\AbstractRector
+final class GetMockBuilderGetMockToCreateMockRector extends AbstractRector
 {
-    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
+    /**
+     * @var string[]
+     */
+    private const USELESS_METHOD_NAMES = ['disableOriginalConstructor', 'onlyMethods', 'setMethods', 'setMethodsExcept'];
+    public function getRuleDefinition() : RuleDefinition
     {
-        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Remove getMockBuilder() to createMock()', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample(<<<'CODE_SAMPLE'
-class SomeTest extends \PHPUnit\Framework\TestCase
+        return new RuleDefinition('Remove getMockBuilder() to createMock()', [new CodeSample(<<<'CODE_SAMPLE'
+use PHPUnit\Framework\TestCase;
+
+final class SomeTest extends TestCase
 {
     public function test()
     {
@@ -29,7 +35,9 @@ class SomeTest extends \PHPUnit\Framework\TestCase
 }
 CODE_SAMPLE
 , <<<'CODE_SAMPLE'
-class SomeTest extends \PHPUnit\Framework\TestCase
+use PHPUnit\Framework\TestCase;
+
+final class SomeTest extends TestCase
 {
     public function test()
     {
@@ -44,28 +52,32 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [\PhpParser\Node\Expr\MethodCall::class];
+        return [MethodCall::class];
     }
     /**
      * @param MethodCall $node
      */
-    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
+    public function refactor(Node $node) : ?Node
     {
         if (!$this->isName($node->name, 'getMock')) {
             return null;
         }
-        if (!$node->var instanceof \PhpParser\Node\Expr\MethodCall) {
+        if (!$node->var instanceof MethodCall) {
             return null;
         }
-        $getMockBuilderMethodCall = $this->isName($node->var->name, 'disableOriginalConstructor') ? $node->var->var : $node->var;
-        if (!$getMockBuilderMethodCall instanceof \PhpParser\Node\Expr\MethodCall) {
+        // traverse up over useless methods until we reach the top one
+        $currentMethodCall = $node->var;
+        while ($currentMethodCall instanceof MethodCall && $this->isNames($currentMethodCall->name, self::USELESS_METHOD_NAMES)) {
+            $currentMethodCall = $currentMethodCall->var;
+        }
+        if (!$currentMethodCall instanceof MethodCall) {
             return null;
         }
-        if (!$this->isName($getMockBuilderMethodCall->name, 'getMockBuilder')) {
+        if (!$this->isName($currentMethodCall->name, 'getMockBuilder')) {
             return null;
         }
-        $args = $getMockBuilderMethodCall->args;
-        $thisVariable = $getMockBuilderMethodCall->var;
-        return new \PhpParser\Node\Expr\MethodCall($thisVariable, 'createMock', $args);
+        $args = $currentMethodCall->args;
+        $thisVariable = $currentMethodCall->var;
+        return new MethodCall($thisVariable, 'createMock', $args);
     }
 }

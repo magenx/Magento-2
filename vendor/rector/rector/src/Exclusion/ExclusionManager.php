@@ -30,37 +30,42 @@ final class ExclusionManager
      * @var \Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfoFactory
      */
     private $phpDocInfoFactory;
-    public function __construct(\Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfoFactory $phpDocInfoFactory)
+    public function __construct(PhpDocInfoFactory $phpDocInfoFactory)
     {
         $this->phpDocInfoFactory = $phpDocInfoFactory;
     }
-    public function isNodeSkippedByRector(\PhpParser\Node $node, \Rector\Core\Contract\Rector\PhpRectorInterface $phpRector) : bool
+    /**
+     * @param class-string<PhpRectorInterface> $rectorClass
+     */
+    public function isNodeSkippedByRector(Node $node, string $rectorClass) : bool
     {
-        if ($node instanceof \PhpParser\Node\Stmt\PropertyProperty || $node instanceof \PhpParser\Node\Const_) {
-            $node = $node->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::PARENT_NODE);
-            if (!$node instanceof \PhpParser\Node) {
+        if ($node instanceof PropertyProperty || $node instanceof Const_) {
+            $node = $node->getAttribute(AttributeKey::PARENT_NODE);
+            if (!$node instanceof Node) {
                 return \false;
             }
         }
-        if ($this->hasNoRectorPhpDocTagMatch($node, $phpRector)) {
+        if ($this->hasNoRectorPhpDocTagMatch($node, $rectorClass)) {
             return \true;
         }
-        if ($node instanceof \PhpParser\Node\Stmt) {
+        if ($node instanceof Stmt) {
             return \false;
         }
         // recurse up until a Stmt node is found since it might contain a noRector
-        $parentNode = $node->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::PARENT_NODE);
+        $parentNode = $node->getAttribute(AttributeKey::PARENT_NODE);
         if ($parentNode === null) {
             return \false;
         }
-        return $this->isNodeSkippedByRector($parentNode, $phpRector);
+        return $this->isNodeSkippedByRector($parentNode, $rectorClass);
     }
-    private function hasNoRectorPhpDocTagMatch(\PhpParser\Node $node, \Rector\Core\Contract\Rector\PhpRectorInterface $phpRector) : bool
+    /**
+     * @param class-string<PhpRectorInterface> $rectorClass
+     */
+    private function hasNoRectorPhpDocTagMatch(Node $node, string $rectorClass) : bool
     {
         $phpDocInfo = $this->phpDocInfoFactory->createFromNodeOrEmpty($node);
         /** @var PhpDocTagNode[] $noRectorTags */
         $noRectorTags = \array_merge($phpDocInfo->getTagsByName('noRector'), $phpDocInfo->getTagsByName('norector'));
-        $rectorClass = \get_class($phpRector);
         if ($this->matchesNoRectorTag($noRectorTags, $rectorClass)) {
             return \true;
         }
@@ -73,8 +78,8 @@ final class ExclusionManager
     private function matchesNoRectorTag(array $noRectorPhpDocTagNodes, string $rectorClass) : bool
     {
         foreach ($noRectorPhpDocTagNodes as $noRectorPhpDocTagNode) {
-            if (!$noRectorPhpDocTagNode->value instanceof \PHPStan\PhpDocParser\Ast\PhpDoc\GenericTagValueNode) {
-                throw new \Rector\Core\Exception\ShouldNotHappenException();
+            if (!$noRectorPhpDocTagNode->value instanceof GenericTagValueNode) {
+                throw new ShouldNotHappenException();
             }
             $description = $noRectorPhpDocTagNode->value->value;
             if ($description === '') {
@@ -84,7 +89,7 @@ final class ExclusionManager
             if ($description === $rectorClass) {
                 return \true;
             }
-            if (!\is_a($description, \Rector\Core\Contract\Rector\RectorInterface::class, \true)) {
+            if (!\is_a($description, RectorInterface::class, \true)) {
                 return \true;
             }
         }
@@ -93,14 +98,14 @@ final class ExclusionManager
     /**
      * @param class-string<RectorInterface> $rectorClass
      */
-    private function matchesNoRectorComment(\PhpParser\Node $node, string $rectorClass) : bool
+    private function matchesNoRectorComment(Node $node, string $rectorClass) : bool
     {
         foreach ($node->getComments() as $comment) {
-            if (\Rector\Core\Util\StringUtils::isMatch($comment->getText(), self::NO_RECTOR_START_REGEX)) {
+            if (StringUtils::isMatch($comment->getText(), self::NO_RECTOR_START_REGEX)) {
                 return \true;
             }
             $noRectorWithRule = '#@noRector \\\\?' . \preg_quote($rectorClass, '#') . '$#';
-            if (\Rector\Core\Util\StringUtils::isMatch($comment->getText(), $noRectorWithRule)) {
+            if (StringUtils::isMatch($comment->getText(), $noRectorWithRule)) {
                 return \true;
             }
         }

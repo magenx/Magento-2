@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © 2013-2017 Magento, Inc. All rights reserved.
+ * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
 namespace PayPal\Braintree\Gateway\Request;
@@ -13,33 +13,33 @@ class CustomerDataBuilder implements BuilderInterface
     /**
      * Customer block name
      */
-    const CUSTOMER = 'customer';
+    public const CUSTOMER = 'customer';
 
     /**
      * The first name value must be less than or equal to 255 characters.
      */
-    const FIRST_NAME = 'firstName';
+    public const FIRST_NAME = 'firstName';
 
     /**
      * The last name value must be less than or equal to 255 characters.
      */
-    const LAST_NAME = 'lastName';
+    public const LAST_NAME = 'lastName';
 
     /**
      * The customer’s company. 255 character maximum.
      */
-    const COMPANY = 'company';
+    public const COMPANY = 'company';
 
     /**
      * The customer’s email address, comprised of ASCII characters.
      */
-    const EMAIL = 'email';
+    public const EMAIL = 'email';
 
     /**
      * Phone number. Phone must be 10-14 characters and can
      * only contain numbers, dashes, parentheses and periods.
      */
-    const PHONE = 'phone';
+    public const PHONE = 'phone';
 
     /**
      * @var SubjectReader

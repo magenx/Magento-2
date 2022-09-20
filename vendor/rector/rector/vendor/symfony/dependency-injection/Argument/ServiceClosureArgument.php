@@ -8,26 +8,31 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix20211221\Symfony\Component\DependencyInjection\Argument;
+namespace RectorPrefix202208\Symfony\Component\DependencyInjection\Argument;
 
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\InvalidArgumentException;
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\Reference;
+use RectorPrefix202208\Symfony\Component\DependencyInjection\Exception\InvalidArgumentException;
 /**
  * Represents a service wrapped in a memoizing closure.
  *
  * @author Nicolas Grekas <p@tchwork.com>
  */
-class ServiceClosureArgument implements \RectorPrefix20211221\Symfony\Component\DependencyInjection\Argument\ArgumentInterface
+class ServiceClosureArgument implements ArgumentInterface
 {
+    /**
+     * @var mixed[]
+     */
     private $values;
-    public function __construct(\RectorPrefix20211221\Symfony\Component\DependencyInjection\Reference $reference)
+    /**
+     * @param mixed $value
+     */
+    public function __construct($value)
     {
-        $this->values = [$reference];
+        $this->values = [$value];
     }
     /**
      * {@inheritdoc}
      */
-    public function getValues()
+    public function getValues() : array
     {
         return $this->values;
     }
@@ -36,8 +41,8 @@ class ServiceClosureArgument implements \RectorPrefix20211221\Symfony\Component\
      */
     public function setValues(array $values)
     {
-        if ([0] !== \array_keys($values) || !($values[0] instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Reference || null === $values[0])) {
-            throw new \RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\InvalidArgumentException('A ServiceClosureArgument must hold one and only one Reference.');
+        if ([0] !== \array_keys($values)) {
+            throw new InvalidArgumentException('A ServiceClosureArgument must hold one and only one value.');
         }
         $this->values = $values;
     }

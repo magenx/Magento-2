@@ -5,7 +5,6 @@ namespace Rector\CodingStyle\NodeAnalyzer;
 
 use PhpParser\Node\Param;
 use PhpParser\Node\Stmt\ClassMethod;
-use PHPStan\Reflection\FunctionReflection;
 use PHPStan\Reflection\MethodReflection;
 use PHPStan\Reflection\ParameterReflection;
 use PHPStan\Reflection\ParametersAcceptorSelector;
@@ -14,12 +13,11 @@ final class SpreadVariablesCollector
 {
     /**
      * @return array<int, ParameterReflection>
-     * @param \PHPStan\Reflection\FunctionReflection|\PHPStan\Reflection\MethodReflection $functionLikeReflection
      */
-    public function resolveFromMethodReflection($functionLikeReflection) : array
+    public function resolveFromMethodReflection(MethodReflection $methodReflection) : array
     {
         $spreadParameterReflections = [];
-        $parametersAcceptor = \PHPStan\Reflection\ParametersAcceptorSelector::selectSingle($functionLikeReflection->getVariants());
+        $parametersAcceptor = ParametersAcceptorSelector::selectSingle($methodReflection->getVariants());
         foreach ($parametersAcceptor->getParameters() as $key => $parameterReflection) {
             if (!$parameterReflection->isVariadic()) {
                 continue;
@@ -31,13 +29,14 @@ final class SpreadVariablesCollector
     /**
      * @return array<int, Param>
      */
-    public function resolveFromClassMethod(\PhpParser\Node\Stmt\ClassMethod $classMethod) : array
+    public function resolveFromClassMethod(ClassMethod $classMethod) : array
     {
+        /** @var array<int, Param> $spreadParams */
         $spreadParams = [];
         foreach ($classMethod->params as $key => $param) {
             // prevent race-condition removal on class method
-            $originalParam = $param->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::ORIGINAL_NODE);
-            if (!$originalParam instanceof \PhpParser\Node\Param) {
+            $originalParam = $param->getAttribute(AttributeKey::ORIGINAL_NODE);
+            if (!$originalParam instanceof Param) {
                 continue;
             }
             if (!$originalParam->variadic) {

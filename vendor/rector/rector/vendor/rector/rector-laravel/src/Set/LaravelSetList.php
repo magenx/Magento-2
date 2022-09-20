@@ -4,7 +4,7 @@ declare (strict_types=1);
 namespace Rector\Laravel\Set;
 
 use Rector\Set\Contract\SetListInterface;
-final class LaravelSetList implements \Rector\Set\Contract\SetListInterface
+final class LaravelSetList implements SetListInterface
 {
     /**
      * @var string
@@ -58,6 +58,10 @@ final class LaravelSetList implements \Rector\Set\Contract\SetListInterface
      * @var string
      */
     public const LARAVEL_80 = __DIR__ . '/../../config/sets/laravel80.php';
+    /**
+     * @var string
+     */
+    public const LARAVEL_90 = __DIR__ . '/../../config/sets/laravel90.php';
     /**
      * @var string
      */

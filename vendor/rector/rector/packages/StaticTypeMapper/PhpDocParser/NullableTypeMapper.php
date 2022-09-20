@@ -16,7 +16,7 @@ use Rector\StaticTypeMapper\Contract\PhpDocParser\PhpDocTypeMapperInterface;
 /**
  * @implements PhpDocTypeMapperInterface<NullableTypeNode>
  */
-final class NullableTypeMapper implements \Rector\StaticTypeMapper\Contract\PhpDocParser\PhpDocTypeMapperInterface
+final class NullableTypeMapper implements PhpDocTypeMapperInterface
 {
     /**
      * @readonly
@@ -28,21 +28,23 @@ final class NullableTypeMapper implements \Rector\StaticTypeMapper\Contract\PhpD
      * @var \PHPStan\PhpDoc\TypeNodeResolver
      */
     private $typeNodeResolver;
-    public function __construct(\Rector\StaticTypeMapper\PhpDocParser\IdentifierTypeMapper $identifierTypeMapper, \PHPStan\PhpDoc\TypeNodeResolver $typeNodeResolver)
+    public function __construct(\Rector\StaticTypeMapper\PhpDocParser\IdentifierTypeMapper $identifierTypeMapper, TypeNodeResolver $typeNodeResolver)
     {
         $this->identifierTypeMapper = $identifierTypeMapper;
         $this->typeNodeResolver = $typeNodeResolver;
     }
     public function getNodeType() : string
     {
-        return \PHPStan\PhpDocParser\Ast\Type\NullableTypeNode::class;
+        return NullableTypeNode::class;
     }
-    public function mapToPHPStanType(\PHPStan\PhpDocParser\Ast\Type\TypeNode $typeNode, \PhpParser\Node $node, \PHPStan\Analyser\NameScope $nameScope) : \PHPStan\Type\Type
+    /**
+     * @param NullableTypeNode $typeNode
+     */
+    public function mapToPHPStanType(TypeNode $typeNode, Node $node, NameScope $nameScope) : Type
     {
-        $type = $typeNode->type;
-        if ($type instanceof \PHPStan\PhpDocParser\Ast\Type\IdentifierTypeNode) {
-            $type = $this->identifierTypeMapper->mapToPHPStanType($type, $node, $nameScope);
-            return new \PHPStan\Type\UnionType([new \PHPStan\Type\NullType(), $type]);
+        if ($typeNode->type instanceof IdentifierTypeNode) {
+            $type = $this->identifierTypeMapper->mapToPHPStanType($typeNode->type, $node, $nameScope);
+            return new UnionType([new NullType(), $type]);
         }
         // fallback to PHPStan resolver
         return $this->typeNodeResolver->resolve($typeNode, $nameScope);

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Laminas\Router;
 
-use Zend\Router\Http\TreeRouteStack;
+use Laminas\ServiceManager\ConfigInterface;
 
 /**
  * Provide base configuration for using the component.
@@ -13,13 +13,17 @@ use Zend\Router\Http\TreeRouteStack;
  *
  * - seed and configure the default routers and route plugin manager.
  * - provide routes to the given routers.
+ *
+ * @see ConfigInterface
+ *
+ * @psalm-import-type ServiceManagerConfigurationType from ConfigInterface
  */
 class ConfigProvider
 {
     /**
      * Provide default configuration.
      *
-     * @return array
+     * @return array<string, array>
      */
     public function __invoke()
     {
@@ -32,7 +36,7 @@ class ConfigProvider
     /**
      * Provide default container dependency configuration.
      *
-     * @return array
+     * @return ServiceManagerConfigurationType
      */
     public function getDependencyConfig()
     {
@@ -44,9 +48,9 @@ class ConfigProvider
                 'RoutePluginManager' => RoutePluginManager::class,
 
                 // Legacy Zend Framework aliases
-                TreeRouteStack::class                   => Http\TreeRouteStack::class,
-                \Zend\Router\RoutePluginManager::class  => RoutePluginManager::class,
-                \Zend\Router\RouteStackInterface::class => RouteStackInterface::class,
+                'Zend\Router\Http\TreeRouteStack' => Http\TreeRouteStack::class,
+                'Zend\Router\RoutePluginManager'  => RoutePluginManager::class,
+                'Zend\Router\RouteStackInterface' => RouteStackInterface::class,
             ],
             'factories' => [
                 Http\TreeRouteStack::class => Http\HttpRouterFactory::class,

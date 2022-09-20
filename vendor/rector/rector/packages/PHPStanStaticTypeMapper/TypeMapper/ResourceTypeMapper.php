@@ -9,30 +9,29 @@ use PHPStan\PhpDocParser\Ast\Type\TypeNode;
 use PHPStan\Type\ResourceType;
 use PHPStan\Type\Type;
 use Rector\PHPStanStaticTypeMapper\Contract\TypeMapperInterface;
-use Rector\PHPStanStaticTypeMapper\Enum\TypeKind;
 /**
  * @implements TypeMapperInterface<ResourceType>
  */
-final class ResourceTypeMapper implements \Rector\PHPStanStaticTypeMapper\Contract\TypeMapperInterface
+final class ResourceTypeMapper implements TypeMapperInterface
 {
     /**
      * @return class-string<Type>
      */
     public function getNodeClass() : string
     {
-        return \PHPStan\Type\ResourceType::class;
+        return ResourceType::class;
     }
     /**
      * @param ResourceType $type
      */
-    public function mapToPHPStanPhpDocTypeNode(\PHPStan\Type\Type $type, \Rector\PHPStanStaticTypeMapper\Enum\TypeKind $typeKind) : \PHPStan\PhpDocParser\Ast\Type\TypeNode
+    public function mapToPHPStanPhpDocTypeNode(Type $type, string $typeKind) : TypeNode
     {
-        return new \PHPStan\PhpDocParser\Ast\Type\IdentifierTypeNode('resource');
+        return new IdentifierTypeNode('resource');
     }
     /**
      * @param ResourceType $type
      */
-    public function mapToPhpParserNode(\PHPStan\Type\Type $type, \Rector\PHPStanStaticTypeMapper\Enum\TypeKind $typeKind) : ?\PhpParser\Node
+    public function mapToPhpParserNode(Type $type, string $typeKind) : ?Node
     {
         return null;
     }

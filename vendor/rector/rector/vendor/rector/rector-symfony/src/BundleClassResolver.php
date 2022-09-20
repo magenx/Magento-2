@@ -11,26 +11,30 @@ use PHPStan\Reflection\ReflectionProvider;
 use Rector\Core\PhpParser\Node\BetterNodeFinder;
 use Rector\Core\PhpParser\Parser\RectorParser;
 use Rector\NodeNameResolver\NodeNameResolver;
-use Symplify\SmartFileSystem\SmartFileInfo;
+use RectorPrefix202208\Symplify\SmartFileSystem\SmartFileInfo;
 final class BundleClassResolver
 {
     /**
+     * @readonly
      * @var \Rector\Core\PhpParser\Node\BetterNodeFinder
      */
     private $betterNodeFinder;
     /**
+     * @readonly
      * @var \Rector\NodeNameResolver\NodeNameResolver
      */
     private $nodeNameResolver;
     /**
+     * @readonly
      * @var \Rector\Core\PhpParser\Parser\RectorParser
      */
     private $rectorParser;
     /**
+     * @readonly
      * @var \PHPStan\Reflection\ReflectionProvider
      */
     private $reflectionProvider;
-    public function __construct(\Rector\Core\PhpParser\Node\BetterNodeFinder $betterNodeFinder, \Rector\NodeNameResolver\NodeNameResolver $nodeNameResolver, \Rector\Core\PhpParser\Parser\RectorParser $rectorParser, \PHPStan\Reflection\ReflectionProvider $reflectionProvider)
+    public function __construct(BetterNodeFinder $betterNodeFinder, NodeNameResolver $nodeNameResolver, RectorParser $rectorParser, ReflectionProvider $reflectionProvider)
     {
         $this->betterNodeFinder = $betterNodeFinder;
         $this->nodeNameResolver = $nodeNameResolver;
@@ -53,10 +57,10 @@ final class BundleClassResolver
             $bundleFiles = (array) \glob($controllerDirectory . '/**Bundle.php');
             $controllerDirectory = \dirname($controllerDirectory);
         }
+        /** @var string[] $bundleFiles */
         if ($bundleFiles === []) {
             return null;
         }
-        /** @var string $bundleFile */
         $bundleFile = $bundleFiles[0];
         $bundleClassName = $this->resolveClassNameFromFilePath($bundleFile);
         if ($bundleClassName !== null) {
@@ -66,11 +70,11 @@ final class BundleClassResolver
     }
     private function resolveClassNameFromFilePath(string $filePath) : ?string
     {
-        $fileInfo = new \Symplify\SmartFileSystem\SmartFileInfo($filePath);
+        $fileInfo = new SmartFileInfo($filePath);
         $nodes = $this->rectorParser->parseFile($fileInfo);
         $this->addFullyQualifiedNamesToNodes($nodes);
         $classLike = $this->betterNodeFinder->findFirstNonAnonymousClass($nodes);
-        if (!$classLike instanceof \PhpParser\Node\Stmt\ClassLike) {
+        if (!$classLike instanceof ClassLike) {
             return null;
         }
         return $this->nodeNameResolver->getName($classLike);
@@ -80,8 +84,8 @@ final class BundleClassResolver
      */
     private function addFullyQualifiedNamesToNodes(array $nodes) : void
     {
-        $nodeTraverser = new \PhpParser\NodeTraverser();
-        $nameResolver = new \PhpParser\NodeVisitor\NameResolver();
+        $nodeTraverser = new NodeTraverser();
+        $nameResolver = new NameResolver();
         $nodeTraverser->addVisitor($nameResolver);
         $nodeTraverser->traverse($nodes);
     }

@@ -10,24 +10,19 @@ use Rector\Core\Rector\AbstractRector;
 use Rector\Transform\ValueObject\ReplaceParentCallByPropertyCall;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
-use RectorPrefix20211221\Webmozart\Assert\Assert;
+use RectorPrefix202208\Webmozart\Assert\Assert;
 /**
  * @see \Rector\Tests\Transform\Rector\MethodCall\ReplaceParentCallByPropertyCallRector\ReplaceParentCallByPropertyCallRectorTest
  */
-final class ReplaceParentCallByPropertyCallRector extends \Rector\Core\Rector\AbstractRector implements \Rector\Core\Contract\Rector\ConfigurableRectorInterface
+final class ReplaceParentCallByPropertyCallRector extends AbstractRector implements ConfigurableRectorInterface
 {
-    /**
-     * @deprecated
-     * @var string
-     */
-    public const PARENT_CALLS_TO_PROPERTIES = 'parent_calls_to_properties';
     /**
      * @var ReplaceParentCallByPropertyCall[]
      */
     private $parentCallToProperties = [];
-    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
+    public function getRuleDefinition() : RuleDefinition
     {
-        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Changes method calls in child of specific types to defined property method call', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample(<<<'CODE_SAMPLE'
+        return new RuleDefinition('Changes method calls in child of specific types to defined property method call', [new ConfiguredCodeSample(<<<'CODE_SAMPLE'
 final class SomeClass
 {
     public function run(SomeTypeToReplace $someTypeToReplace)
@@ -45,19 +40,19 @@ final class SomeClass
     }
 }
 CODE_SAMPLE
-, [new \Rector\Transform\ValueObject\ReplaceParentCallByPropertyCall('SomeTypeToReplace', 'someMethodCall', 'someProperty')])]);
+, [new ReplaceParentCallByPropertyCall('SomeTypeToReplace', 'someMethodCall', 'someProperty')])]);
     }
     /**
      * @return array<class-string<Node>>
      */
     public function getNodeTypes() : array
     {
-        return [\PhpParser\Node\Expr\MethodCall::class];
+        return [MethodCall::class];
     }
     /**
      * @param MethodCall $node
      */
-    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
+    public function refactor(Node $node) : ?Node
     {
         foreach ($this->parentCallToProperties as $parentCallToProperty) {
             if (!$this->isObjectType($node->var, $parentCallToProperty->getObjectType())) {
@@ -76,8 +71,7 @@ CODE_SAMPLE
      */
     public function configure(array $configuration) : void
     {
-        $parentCallToProperties = $configuration[self::PARENT_CALLS_TO_PROPERTIES] ?? $configuration;
-        \RectorPrefix20211221\Webmozart\Assert\Assert::allIsAOf($parentCallToProperties, \Rector\Transform\ValueObject\ReplaceParentCallByPropertyCall::class);
-        $this->parentCallToProperties = $parentCallToProperties;
+        Assert::allIsAOf($configuration, ReplaceParentCallByPropertyCall::class);
+        $this->parentCallToProperties = $configuration;
     }
 }

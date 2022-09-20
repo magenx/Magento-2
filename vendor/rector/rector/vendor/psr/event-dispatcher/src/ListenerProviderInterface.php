@@ -1,7 +1,7 @@
 <?php
 
 declare (strict_types=1);
-namespace RectorPrefix20211221\Psr\EventDispatcher;
+namespace RectorPrefix202208\Psr\EventDispatcher;
 
 /**
  * Mapper from an event to the listeners that are applicable to that event.
@@ -15,5 +15,5 @@ interface ListenerProviderInterface
      *   An iterable (array, iterator, or generator) of callables.  Each
      *   callable MUST be type-compatible with $event.
      */
-    public function getListenersForEvent($event) : iterable;
+    public function getListenersForEvent(object $event) : iterable;
 }

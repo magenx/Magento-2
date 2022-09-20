@@ -8,27 +8,27 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix20211221\Symfony\Component\String;
+namespace RectorPrefix202208\Symfony\Component\String;
 
-if (!\function_exists(\RectorPrefix20211221\Symfony\Component\String\u::class)) {
-    function u(?string $string = '') : \RectorPrefix20211221\Symfony\Component\String\UnicodeString
+if (!\function_exists(u::class)) {
+    function u(?string $string = '') : UnicodeString
     {
-        return new \RectorPrefix20211221\Symfony\Component\String\UnicodeString($string ?? '');
+        return new UnicodeString($string ?? '');
     }
 }
-if (!\function_exists(\RectorPrefix20211221\Symfony\Component\String\b::class)) {
-    function b(?string $string = '') : \RectorPrefix20211221\Symfony\Component\String\ByteString
+if (!\function_exists(b::class)) {
+    function b(?string $string = '') : ByteString
     {
-        return new \RectorPrefix20211221\Symfony\Component\String\ByteString($string ?? '');
+        return new ByteString($string ?? '');
     }
 }
-if (!\function_exists(\RectorPrefix20211221\Symfony\Component\String\s::class)) {
+if (!\function_exists(s::class)) {
     /**
      * @return UnicodeString|ByteString
      */
-    function s(?string $string = '') : \RectorPrefix20211221\Symfony\Component\String\AbstractString
+    function s(?string $string = '') : AbstractString
     {
         $string = $string ?? '';
-        return \preg_match('//u', $string) ? new \RectorPrefix20211221\Symfony\Component\String\UnicodeString($string) : new \RectorPrefix20211221\Symfony\Component\String\ByteString($string);
+        return \preg_match('//u', $string) ? new UnicodeString($string) : new ByteString($string);
     }
 }

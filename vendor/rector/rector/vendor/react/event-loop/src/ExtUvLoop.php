@@ -1,9 +1,9 @@
 <?php
 
-namespace RectorPrefix20211221\React\EventLoop;
+namespace RectorPrefix202208\React\EventLoop;
 
-use RectorPrefix20211221\React\EventLoop\Tick\FutureTickQueue;
-use RectorPrefix20211221\React\EventLoop\Timer\Timer;
+use RectorPrefix202208\React\EventLoop\Tick\FutureTickQueue;
+use RectorPrefix202208\React\EventLoop\Timer\Timer;
 use SplObjectStorage;
 /**
  * An `ext-uv` based event loop.
@@ -12,11 +12,11 @@ use SplObjectStorage;
  * that provides an interface to `libuv` library.
  * `libuv` itself supports a number of system-specific backends (epoll, kqueue).
  *
- * This loop is known to work with PHP 7+.
+ * This loop is known to work with PHP 7.x.
  *
  * @see https://github.com/bwoebi/php-uv
  */
-final class ExtUvLoop implements \RectorPrefix20211221\React\EventLoop\LoopInterface
+final class ExtUvLoop implements LoopInterface
 {
     private $uv;
     private $futureTickQueue;
@@ -34,10 +34,10 @@ final class ExtUvLoop implements \RectorPrefix20211221\React\EventLoop\LoopInter
             throw new \BadMethodCallException('Cannot create LibUvLoop, ext-uv extension missing');
         }
         $this->uv = \uv_loop_new();
-        $this->futureTickQueue = new \RectorPrefix20211221\React\EventLoop\Tick\FutureTickQueue();
-        $this->timers = new \SplObjectStorage();
+        $this->futureTickQueue = new FutureTickQueue();
+        $this->timers = new SplObjectStorage();
         $this->streamListener = $this->createStreamListener();
-        $this->signals = new \RectorPrefix20211221\React\EventLoop\SignalsHandler();
+        $this->signals = new SignalsHandler();
     }
     /**
      * Returns the underlying ext-uv event loop. (Internal ReactPHP use only.)
@@ -99,7 +99,7 @@ final class ExtUvLoop implements \RectorPrefix20211221\React\EventLoop\LoopInter
      */
     public function addTimer($interval, $callback)
     {
-        $timer = new \RectorPrefix20211221\React\EventLoop\Timer\Timer($interval, $callback, \false);
+        $timer = new Timer($interval, $callback, \false);
         $that = $this;
         $timers = $this->timers;
         $callback = function () use($timer, $timers, $that) {
@@ -118,7 +118,7 @@ final class ExtUvLoop implements \RectorPrefix20211221\React\EventLoop\LoopInter
      */
     public function addPeriodicTimer($interval, $callback)
     {
-        $timer = new \RectorPrefix20211221\React\EventLoop\Timer\Timer($interval, $callback, \true);
+        $timer = new Timer($interval, $callback, \true);
         $callback = function () use($timer) {
             \call_user_func($timer->getCallback(), $timer);
         };
@@ -131,7 +131,7 @@ final class ExtUvLoop implements \RectorPrefix20211221\React\EventLoop\LoopInter
     /**
      * {@inheritdoc}
      */
-    public function cancelTimer(\RectorPrefix20211221\React\EventLoop\TimerInterface $timer)
+    public function cancelTimer(TimerInterface $timer)
     {
         if (isset($this->timers[$timer])) {
             @\uv_timer_stop($this->timers[$timer]);
@@ -150,8 +150,8 @@ final class ExtUvLoop implements \RectorPrefix20211221\React\EventLoop\LoopInter
         $this->signals->add($signal, $listener);
         if (!isset($this->signalEvents[$signal])) {
             $signals = $this->signals;
-            $this->signalEvents[$signal] = \RectorPrefix20211221\uv_signal_init($this->uv);
-            \RectorPrefix20211221\uv_signal_start($this->signalEvents[$signal], function () use($signals, $signal) {
+            $this->signalEvents[$signal] = \RectorPrefix202208\uv_signal_init($this->uv);
+            \RectorPrefix202208\uv_signal_start($this->signalEvents[$signal], function () use($signals, $signal) {
                 $signals->call($signal);
             }, $signal);
         }
@@ -197,7 +197,7 @@ final class ExtUvLoop implements \RectorPrefix20211221\React\EventLoop\LoopInter
     private function addStream($stream)
     {
         if (!isset($this->streamEvents[(int) $stream])) {
-            $this->streamEvents[(int) $stream] = \RectorPrefix20211221\uv_poll_init_socket($this->uv, $stream);
+            $this->streamEvents[(int) $stream] = \RectorPrefix202208\uv_poll_init_socket($this->uv, $stream);
         }
         if ($this->streamEvents[(int) $stream] !== \false) {
             $this->pollStream($stream);

@@ -9,7 +9,7 @@
     "config": {
         "sort-packages": true
     },
-    "version": "103.0.4",
+    "version": "103.0.5",
     "require": {
         "php": "~7.4.0||~8.1.0",
         "magento/framework": "103.0.*",

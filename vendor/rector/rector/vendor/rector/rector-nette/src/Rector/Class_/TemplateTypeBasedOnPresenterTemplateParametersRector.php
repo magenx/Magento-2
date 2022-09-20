@@ -3,7 +3,7 @@
 declare (strict_types=1);
 namespace Rector\Nette\Rector\Class_;
 
-use RectorPrefix20211221\Nette\Utils\Strings;
+use RectorPrefix202208\Nette\Utils\Strings;
 use PhpParser\Node;
 use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\PropertyFetch;
@@ -12,6 +12,8 @@ use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Expression;
 use PHPStan\Type\ObjectType;
 use PHPStan\Type\VerbosityLevel;
+use Rector\Core\Application\FileSystem\RemovedAndAddedFilesCollector;
+use Rector\Core\Contract\PhpParser\NodePrinterInterface;
 use Rector\Core\Contract\Rector\ConfigurableRectorInterface;
 use Rector\Core\Rector\AbstractRector;
 use Rector\FileSystemRector\ValueObject\AddedFileWithContent;
@@ -19,11 +21,11 @@ use Rector\Nette\NodeFactory\ClassWithPublicPropertiesFactory;
 use Rector\Nette\ValueObject\LatteVariableType;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
-use RectorPrefix20211221\Webmozart\Assert\Assert;
+use RectorPrefix202208\Webmozart\Assert\Assert;
 /**
  * @see \Rector\Nette\Tests\Rector\Class_\TemplateTypeBasedOnPresenterTemplateParametersRector\TemplateTypeBasedOnPresenterTemplateParametersRectorTest
  */
-final class TemplateTypeBasedOnPresenterTemplateParametersRector extends \Rector\Core\Rector\AbstractRector implements \Rector\Core\Contract\Rector\ConfigurableRectorInterface
+final class TemplateTypeBasedOnPresenterTemplateParametersRector extends AbstractRector implements ConfigurableRectorInterface
 {
     public const TEMPLATE_CLASS_PARENT = 'template_class_parent';
     public const TEMPLATE_CLASS_TRAITS = 'template_class_traits';
@@ -36,16 +38,29 @@ final class TemplateTypeBasedOnPresenterTemplateParametersRector extends \Rector
      */
     private $templateClassTraits = [];
     /**
+     * @readonly
      * @var \Rector\Nette\NodeFactory\ClassWithPublicPropertiesFactory
      */
     private $classWithPublicPropertiesFactory;
-    public function __construct(\Rector\Nette\NodeFactory\ClassWithPublicPropertiesFactory $classWithPublicPropertiesFactory)
+    /**
+     * @readonly
+     * @var \Rector\Core\Contract\PhpParser\NodePrinterInterface
+     */
+    private $nodePrinter;
+    /**
+     * @readonly
+     * @var \Rector\Core\Application\FileSystem\RemovedAndAddedFilesCollector
+     */
+    private $removedAndAddedFilesCollector;
+    public function __construct(ClassWithPublicPropertiesFactory $classWithPublicPropertiesFactory, NodePrinterInterface $nodePrinter, RemovedAndAddedFilesCollector $removedAndAddedFilesCollector)
     {
         $this->classWithPublicPropertiesFactory = $classWithPublicPropertiesFactory;
+        $this->nodePrinter = $nodePrinter;
+        $this->removedAndAddedFilesCollector = $removedAndAddedFilesCollector;
     }
-    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
+    public function getRuleDefinition() : RuleDefinition
     {
-        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Creates Template class and adds latte {templateType} based on presenter $this->template parameters', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample(<<<'CODE_SAMPLE'
+        return new RuleDefinition('Creates Template class and adds latte {templateType} based on presenter $this->template parameters', [new ConfiguredCodeSample(<<<'CODE_SAMPLE'
 // presenters/SomePresenter.php
 <?php
 
@@ -100,7 +115,7 @@ CODE_SAMPLE
     }
     public function getNodeTypes() : array
     {
-        return [\PhpParser\Node\Stmt\Class_::class];
+        return [Class_::class];
     }
     /**
      * @param mixed[] $configuration
@@ -109,21 +124,21 @@ CODE_SAMPLE
     {
         if (isset($configuration[self::TEMPLATE_CLASS_PARENT])) {
             $templateClassParent = $configuration[self::TEMPLATE_CLASS_PARENT];
-            \RectorPrefix20211221\Webmozart\Assert\Assert::string($templateClassParent);
+            Assert::string($templateClassParent);
             $this->templateClassParent = $templateClassParent;
         }
         if (isset($configuration[self::TEMPLATE_CLASS_TRAITS])) {
             $templateClassTraits = $configuration[self::TEMPLATE_CLASS_TRAITS];
-            \RectorPrefix20211221\Webmozart\Assert\Assert::isArray($templateClassTraits);
+            Assert::isArray($templateClassTraits);
             $this->templateClassTraits = $templateClassTraits;
         }
     }
     /**
      * @param Class_ $node
      */
-    public function refactor(\PhpParser\Node $node)
+    public function refactor(Node $node)
     {
-        if (!$this->nodeTypeResolver->isObjectType($node, new \PHPStan\Type\ObjectType('Nette\\Application\\UI\\Presenter'))) {
+        if (!$this->nodeTypeResolver->isObjectType($node, new ObjectType('Nette\\Application\\UI\\Presenter'))) {
             return null;
         }
         if ($node->name === null) {
@@ -154,7 +169,7 @@ CODE_SAMPLE
     /**
      * @return LatteVariableType[]
      */
-    private function findVarTypesForAction(\PhpParser\Node\Stmt\ClassMethod $method) : array
+    private function findVarTypesForAction(ClassMethod $method) : array
     {
         $varTypes = [];
         $stmts = $method->getStmts();
@@ -162,13 +177,13 @@ CODE_SAMPLE
             return [];
         }
         foreach ($stmts as $stmt) {
-            if (!$stmt instanceof \PhpParser\Node\Stmt\Expression) {
+            if (!$stmt instanceof Expression) {
                 continue;
             }
-            if (!$stmt->expr instanceof \PhpParser\Node\Expr\Assign) {
+            if (!$stmt->expr instanceof Assign) {
                 continue;
             }
-            if (!$stmt->expr->var instanceof \PhpParser\Node\Expr\PropertyFetch) {
+            if (!$stmt->expr->var instanceof PropertyFetch) {
                 continue;
             }
             /** @var PropertyFetch $propertyFetch */
@@ -177,7 +192,7 @@ CODE_SAMPLE
                 continue;
             }
             $staticType = $this->getType($stmt->expr->expr);
-            $varTypes[] = new \Rector\Nette\ValueObject\LatteVariableType((string) $this->getName($propertyFetch->name), $staticType->describe(\PHPStan\Type\VerbosityLevel::typeOnly()));
+            $varTypes[] = new LatteVariableType((string) $this->getName($propertyFetch->name), $staticType->describe(VerbosityLevel::typeOnly()));
         }
         return $varTypes;
     }
@@ -197,7 +212,7 @@ CODE_SAMPLE
             $templateClassName = $this->createTemplateClass($presenterName, $fullPresenterName, $actionName, $varTypes);
             $content = \file_get_contents($templateFilePath);
             $content = '{templateType ' . \ltrim($templateClassName, '\\') . "}\n\n" . $content;
-            $addedFileWithContent = new \Rector\FileSystemRector\ValueObject\AddedFileWithContent($templateFilePath, $content);
+            $addedFileWithContent = new AddedFileWithContent($templateFilePath, $content);
             $this->removedAndAddedFilesCollector->addAddedFile($addedFileWithContent);
         }
     }
@@ -213,12 +228,12 @@ CODE_SAMPLE
         $upperCasedActionName = \ucfirst($actionName);
         $templateClassName = $presenterName . $upperCasedActionName . 'Template';
         $presenterPattern = '#Presenter$#';
-        $fullTemplateClassName = '\\' . \RectorPrefix20211221\Nette\Utils\Strings::replace($fullPresenterName, $presenterPattern, $upperCasedActionName . 'Template');
+        $fullTemplateClassName = '\\' . Strings::replace($fullPresenterName, $presenterPattern, $upperCasedActionName . 'Template');
         $templateClass = $this->classWithPublicPropertiesFactory->createNode($fullTemplateClassName, $properties, $this->templateClassParent, $this->templateClassTraits);
-        $printedClassContent = "<?php\n\n" . $this->betterStandardPrinter->print($templateClass) . "\n";
+        $printedClassContent = "<?php\n\n" . $this->nodePrinter->print($templateClass) . "\n";
         $smartFileInfo = $this->file->getSmartFileInfo();
         $targetFilePath = $smartFileInfo->getRealPathDirectory() . '/' . $templateClassName . '.php';
-        $addedFileWithContent = new \Rector\FileSystemRector\ValueObject\AddedFileWithContent($targetFilePath, $printedClassContent);
+        $addedFileWithContent = new AddedFileWithContent($targetFilePath, $printedClassContent);
         $this->removedAndAddedFilesCollector->addAddedFile($addedFileWithContent);
         return $fullTemplateClassName;
     }

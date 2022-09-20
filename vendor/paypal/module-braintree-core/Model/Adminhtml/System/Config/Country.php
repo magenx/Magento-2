@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © 2013-2017 Magento, Inc. All rights reserved.
+ * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
 namespace PayPal\Braintree\Model\Adminhtml\System\Config;
@@ -58,6 +58,8 @@ class Country implements ArrayInterface
     }
 
     /**
+     * Get countries option array
+     *
      * @param bool $isMultiSelect
      * @return array
      */

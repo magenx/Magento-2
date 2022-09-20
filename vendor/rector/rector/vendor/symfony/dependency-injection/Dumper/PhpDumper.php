@@ -8,47 +8,47 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix20211221\Symfony\Component\DependencyInjection\Dumper;
+namespace RectorPrefix202208\Symfony\Component\DependencyInjection\Dumper;
 
-use RectorPrefix20211221\Composer\Autoload\ClassLoader;
-use RectorPrefix20211221\Symfony\Component\Debug\DebugClassLoader as LegacyDebugClassLoader;
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\Argument\AbstractArgument;
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\Argument\ArgumentInterface;
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\Argument\IteratorArgument;
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\Argument\ServiceClosureArgument;
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\Argument\ServiceLocator;
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\Argument\ServiceLocatorArgument;
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\Compiler\AnalyzeServiceReferencesPass;
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\Compiler\CheckCircularReferencesPass;
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\Compiler\ServiceReferenceGraphNode;
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\Container;
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\ContainerBuilder;
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\ContainerInterface;
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\Definition;
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\EnvParameterException;
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\InvalidArgumentException;
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\LogicException;
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\RuntimeException;
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\ServiceCircularReferenceException;
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\ExpressionLanguage;
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\LazyProxy\PhpDumper\DumperInterface as ProxyDumper;
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\LazyProxy\PhpDumper\NullDumper;
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\Loader\FileLoader;
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\Parameter;
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\Reference;
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\ServiceLocator as BaseServiceLocator;
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\TypedReference;
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\Variable;
-use RectorPrefix20211221\Symfony\Component\ErrorHandler\DebugClassLoader;
-use RectorPrefix20211221\Symfony\Component\ExpressionLanguage\Expression;
-use RectorPrefix20211221\Symfony\Component\HttpKernel\Kernel;
+use RectorPrefix202208\Composer\Autoload\ClassLoader;
+use RectorPrefix202208\Symfony\Component\Debug\DebugClassLoader as LegacyDebugClassLoader;
+use RectorPrefix202208\Symfony\Component\DependencyInjection\Argument\AbstractArgument;
+use RectorPrefix202208\Symfony\Component\DependencyInjection\Argument\ArgumentInterface;
+use RectorPrefix202208\Symfony\Component\DependencyInjection\Argument\IteratorArgument;
+use RectorPrefix202208\Symfony\Component\DependencyInjection\Argument\ServiceClosureArgument;
+use RectorPrefix202208\Symfony\Component\DependencyInjection\Argument\ServiceLocator;
+use RectorPrefix202208\Symfony\Component\DependencyInjection\Argument\ServiceLocatorArgument;
+use RectorPrefix202208\Symfony\Component\DependencyInjection\Compiler\AnalyzeServiceReferencesPass;
+use RectorPrefix202208\Symfony\Component\DependencyInjection\Compiler\CheckCircularReferencesPass;
+use RectorPrefix202208\Symfony\Component\DependencyInjection\Compiler\ServiceReferenceGraphNode;
+use RectorPrefix202208\Symfony\Component\DependencyInjection\Container;
+use RectorPrefix202208\Symfony\Component\DependencyInjection\ContainerBuilder;
+use RectorPrefix202208\Symfony\Component\DependencyInjection\ContainerInterface;
+use RectorPrefix202208\Symfony\Component\DependencyInjection\Definition;
+use RectorPrefix202208\Symfony\Component\DependencyInjection\Exception\EnvParameterException;
+use RectorPrefix202208\Symfony\Component\DependencyInjection\Exception\InvalidArgumentException;
+use RectorPrefix202208\Symfony\Component\DependencyInjection\Exception\LogicException;
+use RectorPrefix202208\Symfony\Component\DependencyInjection\Exception\RuntimeException;
+use RectorPrefix202208\Symfony\Component\DependencyInjection\Exception\ServiceCircularReferenceException;
+use RectorPrefix202208\Symfony\Component\DependencyInjection\ExpressionLanguage;
+use RectorPrefix202208\Symfony\Component\DependencyInjection\LazyProxy\PhpDumper\DumperInterface as ProxyDumper;
+use RectorPrefix202208\Symfony\Component\DependencyInjection\LazyProxy\PhpDumper\NullDumper;
+use RectorPrefix202208\Symfony\Component\DependencyInjection\Loader\FileLoader;
+use RectorPrefix202208\Symfony\Component\DependencyInjection\Parameter;
+use RectorPrefix202208\Symfony\Component\DependencyInjection\Reference;
+use RectorPrefix202208\Symfony\Component\DependencyInjection\ServiceLocator as BaseServiceLocator;
+use RectorPrefix202208\Symfony\Component\DependencyInjection\TypedReference;
+use RectorPrefix202208\Symfony\Component\DependencyInjection\Variable;
+use RectorPrefix202208\Symfony\Component\ErrorHandler\DebugClassLoader;
+use RectorPrefix202208\Symfony\Component\ExpressionLanguage\Expression;
+use RectorPrefix202208\Symfony\Component\HttpKernel\Kernel;
 /**
  * PhpDumper dumps a service container as a PHP class.
  *
  * @author Fabien Potencier <fabien@symfony.com>
  * @author Johannes M. Schmitt <schmittjoh@gmail.com>
  */
-class PhpDumper extends \RectorPrefix20211221\Symfony\Component\DependencyInjection\Dumper\Dumper
+class PhpDumper extends Dumper
 {
     /**
      * Characters that might appear in the generated variable name as first character.
@@ -58,36 +58,111 @@ class PhpDumper extends \RectorPrefix20211221\Symfony\Component\DependencyInject
      * Characters that might appear in the generated variable name as any but the first character.
      */
     public const NON_FIRST_CHARS = 'abcdefghijklmnopqrstuvwxyz0123456789_';
-    /**
-     * @var \SplObjectStorage<Definition, Variable>|null
-     */
+    /** @var \SplObjectStorage<Definition, Variable>|null */
     private $definitionVariables;
+    /**
+     * @var mixed[]|null
+     */
     private $referenceVariables;
+    /**
+     * @var int
+     */
     private $variableCount;
+    /**
+     * @var \SplObjectStorage|null
+     */
     private $inlinedDefinitions;
+    /**
+     * @var mixed[]|null
+     */
     private $serviceCalls;
+    /**
+     * @var mixed[]
+     */
     private $reservedVariables = ['instance', 'class', 'this', 'container'];
+    /**
+     * @var \Symfony\Component\DependencyInjection\ExpressionLanguage
+     */
     private $expressionLanguage;
+    /**
+     * @var string|null
+     */
     private $targetDirRegex;
+    /**
+     * @var int
+     */
     private $targetDirMaxMatches;
+    /**
+     * @var string
+     */
     private $docStar;
+    /**
+     * @var mixed[]
+     */
     private $serviceIdToMethodNameMap;
+    /**
+     * @var mixed[]
+     */
     private $usedMethodNames;
+    /**
+     * @var string
+     */
     private $namespace;
+    /**
+     * @var bool
+     */
     private $asFiles;
+    /**
+     * @var string
+     */
     private $hotPathTag;
+    /**
+     * @var mixed[]
+     */
     private $preloadTags;
+    /**
+     * @var bool
+     */
     private $inlineFactories;
+    /**
+     * @var bool
+     */
     private $inlineRequires;
+    /**
+     * @var mixed[]
+     */
     private $inlinedRequires = [];
+    /**
+     * @var mixed[]
+     */
     private $circularReferences = [];
+    /**
+     * @var mixed[]
+     */
     private $singleUsePrivateIds = [];
+    /**
+     * @var mixed[]
+     */
     private $preload = [];
-    private $addThrow = \false;
+    /**
+     * @var bool
+     */
     private $addGetService = \false;
+    /**
+     * @var mixed[]
+     */
     private $locatedIds = [];
+    /**
+     * @var string
+     */
     private $serviceLocatorTag;
+    /**
+     * @var mixed[]
+     */
     private $exportedVariables = [];
+    /**
+     * @var string
+     */
     private $baseClass;
     /**
      * @var ProxyDumper
@@ -96,17 +171,17 @@ class PhpDumper extends \RectorPrefix20211221\Symfony\Component\DependencyInject
     /**
      * {@inheritdoc}
      */
-    public function __construct(\RectorPrefix20211221\Symfony\Component\DependencyInjection\ContainerBuilder $container)
+    public function __construct(ContainerBuilder $container)
     {
         if (!$container->isCompiled()) {
-            throw new \RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\LogicException('Cannot dump an uncompiled container.');
+            throw new LogicException('Cannot dump an uncompiled container.');
         }
         parent::__construct($container);
     }
     /**
      * Sets the dumper to be used when dumping proxies in the generated container.
      */
-    public function setProxyDumper(\RectorPrefix20211221\Symfony\Component\DependencyInjection\LazyProxy\PhpDumper\DumperInterface $proxyDumper)
+    public function setProxyDumper(ProxyDumper $proxyDumper)
     {
         $this->proxyDumper = $proxyDumper;
     }
@@ -131,32 +206,32 @@ class PhpDumper extends \RectorPrefix20211221\Symfony\Component\DependencyInject
         $this->inlinedRequires = [];
         $this->exportedVariables = [];
         $options = \array_merge(['class' => 'ProjectServiceContainer', 'base_class' => 'Container', 'namespace' => '', 'as_files' => \false, 'debug' => \true, 'hot_path_tag' => 'container.hot_path', 'preload_tags' => ['container.preload', 'container.no_preload'], 'inline_factories_parameter' => 'container.dumper.inline_factories', 'inline_class_loader_parameter' => 'container.dumper.inline_class_loader', 'preload_classes' => [], 'service_locator_tag' => 'container.service_locator', 'build_time' => \time()], $options);
-        $this->addThrow = $this->addGetService = \false;
+        $this->addGetService = \false;
         $this->namespace = $options['namespace'];
         $this->asFiles = $options['as_files'];
         $this->hotPathTag = $options['hot_path_tag'];
         $this->preloadTags = $options['preload_tags'];
         $this->inlineFactories = $this->asFiles && $options['inline_factories_parameter'] && $this->container->hasParameter($options['inline_factories_parameter']) && $this->container->getParameter($options['inline_factories_parameter']);
-        $this->inlineRequires = $options['inline_class_loader_parameter'] && ($this->container->hasParameter($options['inline_class_loader_parameter']) ? $this->container->getParameter($options['inline_class_loader_parameter']) : \PHP_VERSION_ID < 70400 || $options['debug']);
+        $this->inlineRequires = $options['inline_class_loader_parameter'] && ($this->container->hasParameter($options['inline_class_loader_parameter']) ? $this->container->getParameter($options['inline_class_loader_parameter']) : $options['debug']);
         $this->serviceLocatorTag = $options['service_locator_tag'];
         if (\strncmp($baseClass = $options['base_class'], '\\', \strlen('\\')) !== 0 && 'Container' !== $baseClass) {
             $baseClass = \sprintf('%s\\%s', $options['namespace'] ? '\\' . $options['namespace'] : '', $baseClass);
             $this->baseClass = $baseClass;
         } elseif ('Container' === $baseClass) {
-            $this->baseClass = \RectorPrefix20211221\Symfony\Component\DependencyInjection\Container::class;
+            $this->baseClass = Container::class;
         } else {
             $this->baseClass = $baseClass;
         }
-        $this->initializeMethodNamesMap('Container' === $baseClass ? \RectorPrefix20211221\Symfony\Component\DependencyInjection\Container::class : $baseClass);
-        if ($this->getProxyDumper() instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\LazyProxy\PhpDumper\NullDumper) {
-            (new \RectorPrefix20211221\Symfony\Component\DependencyInjection\Compiler\AnalyzeServiceReferencesPass(\true, \false))->process($this->container);
+        $this->initializeMethodNamesMap('Container' === $baseClass ? Container::class : $baseClass);
+        if ($this->getProxyDumper() instanceof NullDumper) {
+            (new AnalyzeServiceReferencesPass(\true, \false))->process($this->container);
             try {
-                (new \RectorPrefix20211221\Symfony\Component\DependencyInjection\Compiler\CheckCircularReferencesPass())->process($this->container);
-            } catch (\RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\ServiceCircularReferenceException $e) {
+                (new CheckCircularReferencesPass())->process($this->container);
+            } catch (ServiceCircularReferenceException $e) {
                 $path = $e->getPath();
                 \end($path);
                 $path[\key($path)] .= '". Try running "composer require symfony/proxy-manager-bridge';
-                throw new \RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\ServiceCircularReferenceException($e->getServiceId(), $path);
+                throw new ServiceCircularReferenceException($e->getServiceId(), $path);
             }
         }
         $this->analyzeReferences();
@@ -187,14 +262,14 @@ class PhpDumper extends \RectorPrefix20211221\Symfony\Component\DependencyInject
         $code = $this->startClass($options['class'], $baseClass, $this->inlineFactories && $proxyClasses) . $this->addServices($services) . $this->addDeprecatedAliases() . $this->addDefaultParametersMethod();
         $proxyClasses = $proxyClasses ?? $this->generateProxyClasses();
         if ($this->addGetService) {
-            $code = \preg_replace("/(\r?\n\r?\n    public function __construct.+?\\{\r?\n)/s", "\n    protected \$getService;\$1        \$this->getService = \\Closure::fromCallable([\$this, 'getService']);\n", $code, 1);
+            $code = \preg_replace("/(\r?\n\r?\n    public function __construct.+?\\{\r?\n)/s", "\n    protected \\Closure \$getService;\$1        \$this->getService = \$this->getService(...);\n", $code, 1);
         }
         if ($this->asFiles) {
             $fileTemplate = <<<EOF
 <?php
 
-use RectorPrefix20211221\\Symfony\\Component\\DependencyInjection\\Argument\\RewindableGenerator;
-use RectorPrefix20211221\\Symfony\\Component\\DependencyInjection\\Exception\\RuntimeException;
+use RectorPrefix202208\\Symfony\\Component\\DependencyInjection\\Argument\\RewindableGenerator;
+use RectorPrefix202208\\Symfony\\Component\\DependencyInjection\\Exception\\RuntimeException;
 
 /*{$this->docStar}
  * @internal This class has been auto-generated by the Symfony Dependency Injection Component.
@@ -239,7 +314,7 @@ EOF;
                 }
             }
             $files[$options['class'] . '.php'] = $code;
-            $hash = \ucfirst(\strtr(\RectorPrefix20211221\Symfony\Component\DependencyInjection\ContainerBuilder::hash($files), '._', 'xx'));
+            $hash = \ucfirst(\strtr(ContainerBuilder::hash($files), '._', 'xx'));
             $code = [];
             foreach ($files as $file => $c) {
                 $code["Container{$hash}/{$file}"] = \substr_replace($c, "<?php\n\nnamespace Container{$hash};\n", 0, 6);
@@ -263,7 +338,7 @@ EOF;
 // This file has been auto-generated by the Symfony Dependency Injection Component
 // You can reference it in the "opcache.preload" php.ini setting on PHP >= 7.4 when preloading is desired
 
-use RectorPrefix20211221\\Symfony\\Component\\DependencyInjection\\Dumper\\Preloader;
+use RectorPrefix202208\\Symfony\\Component\\DependencyInjection\\Dumper\\Preloader;
 
 if (in_array(PHP_SAPI, ['cli', 'phpdbg'], true)) {
     return;
@@ -332,28 +407,25 @@ EOF;
             }
         }
         if ($unusedEnvs) {
-            throw new \RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\EnvParameterException($unusedEnvs, null, 'Environment variables "%s" are never used. Please, check your container\'s configuration.');
+            throw new EnvParameterException($unusedEnvs, null, 'Environment variables "%s" are never used. Please, check your container\'s configuration.');
         }
         return $code;
     }
     /**
      * Retrieves the currently set proxy dumper or instantiates one.
      */
-    private function getProxyDumper() : \RectorPrefix20211221\Symfony\Component\DependencyInjection\LazyProxy\PhpDumper\DumperInterface
+    private function getProxyDumper() : ProxyDumper
     {
-        if (!$this->proxyDumper) {
-            $this->proxyDumper = new \RectorPrefix20211221\Symfony\Component\DependencyInjection\LazyProxy\PhpDumper\NullDumper();
-        }
-        return $this->proxyDumper;
+        return $this->proxyDumper = $this->proxyDumper ?? new NullDumper();
     }
     private function analyzeReferences()
     {
-        (new \RectorPrefix20211221\Symfony\Component\DependencyInjection\Compiler\AnalyzeServiceReferencesPass(\false, !$this->getProxyDumper() instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\LazyProxy\PhpDumper\NullDumper))->process($this->container);
+        (new AnalyzeServiceReferencesPass(\false, !$this->getProxyDumper() instanceof NullDumper))->process($this->container);
         $checkedNodes = [];
         $this->circularReferences = [];
         $this->singleUsePrivateIds = [];
         foreach ($this->container->getCompiler()->getServiceReferenceGraph()->getNodes() as $id => $node) {
-            if (!$node->getValue() instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Definition) {
+            if (!$node->getValue() instanceof Definition) {
                 continue;
             }
             if ($this->isSingleUsePrivateNode($node)) {
@@ -371,7 +443,7 @@ EOF;
         foreach ($edges as $edge) {
             $node = $edge->getDestNode();
             $id = $node->getId();
-            if ($sourceId === $id || !$node->getValue() instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Definition || $edge->isLazy() || $edge->isWeak()) {
+            if ($sourceId === $id || !$node->getValue() instanceof Definition || $edge->isLazy() || $edge->isWeak()) {
                 continue;
             }
             if (isset($path[$id])) {
@@ -474,7 +546,7 @@ EOF;
         $proxyClasses = [];
         $alreadyGenerated = [];
         $definitions = $this->container->getDefinitions();
-        $strip = '' === $this->docStar && \method_exists(\RectorPrefix20211221\Symfony\Component\HttpKernel\Kernel::class, 'stripComments');
+        $strip = '' === $this->docStar && \method_exists(Kernel::class, 'stripComments');
         $proxyDumper = $this->getProxyDumper();
         \ksort($definitions);
         foreach ($definitions as $definition) {
@@ -504,7 +576,7 @@ EOF;
             }
             if ($strip) {
                 $proxyCode = "<?php\n" . $proxyCode;
-                $proxyCode = \substr(\RectorPrefix20211221\Symfony\Component\HttpKernel\Kernel::stripComments($proxyCode), 5);
+                $proxyCode = \substr(Kernel::stripComments($proxyCode), 5);
             }
             $proxyClass = \explode(' ', $this->inlineRequires ? \substr($proxyCode, \strlen($code)) : $proxyCode, 3)[1];
             if ($this->asFiles || $this->namespace) {
@@ -514,7 +586,7 @@ EOF;
         }
         return $proxyClasses;
     }
-    private function addServiceInclude(string $cId, \RectorPrefix20211221\Symfony\Component\DependencyInjection\Definition $definition) : string
+    private function addServiceInclude(string $cId, Definition $definition) : string
     {
         $code = '';
         if ($this->inlineRequires && (!$this->isHotPath($definition) || $this->getProxyDumper()->isProxyCandidate($definition))) {
@@ -527,7 +599,7 @@ EOF;
                 }
             }
             foreach ($this->serviceCalls as $id => [$callCount, $behavior]) {
-                if ('service_container' !== $id && $id !== $cId && \RectorPrefix20211221\Symfony\Component\DependencyInjection\ContainerInterface::IGNORE_ON_UNINITIALIZED_REFERENCE !== $behavior && $this->container->has($id) && $this->isTrivialInstance($def = $this->container->findDefinition($id))) {
+                if ('service_container' !== $id && $id !== $cId && ContainerInterface::IGNORE_ON_UNINITIALIZED_REFERENCE !== $behavior && $this->container->has($id) && $this->isTrivialInstance($def = $this->container->findDefinition($id))) {
                     foreach ($this->getClasses($def, $cId) as $class) {
                         $this->collectLineage($class, $lineage);
                     }
@@ -553,11 +625,11 @@ EOF;
      * @throws InvalidArgumentException
      * @throws RuntimeException
      */
-    private function addServiceInstance(string $id, \RectorPrefix20211221\Symfony\Component\DependencyInjection\Definition $definition, bool $isSimpleInstance) : string
+    private function addServiceInstance(string $id, Definition $definition, bool $isSimpleInstance) : string
     {
         $class = $this->dumpValue($definition->getClass());
         if (\strncmp($class, "'", \strlen("'")) === 0 && \strpos($class, '$') === \false && !\preg_match('/^\'(?:\\\\{2})?[a-zA-Z_\\x7f-\\xff][a-zA-Z0-9_\\x7f-\\xff]*(?:\\\\{2}[a-zA-Z_\\x7f-\\xff][a-zA-Z0-9_\\x7f-\\xff]*)*\'$/', $class)) {
-            throw new \RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\InvalidArgumentException(\sprintf('"%s" is not a valid class name for the "%s" service.', $class, $id));
+            throw new InvalidArgumentException(\sprintf('"%s" is not a valid class name for the "%s" service.', $class, $id));
         }
         $isProxyCandidate = $this->getProxyDumper()->isProxyCandidate($definition);
         $instantiation = '';
@@ -580,7 +652,7 @@ EOF;
         }
         return $this->addNewInstance($definition, '        ' . $return . $instantiation, $id);
     }
-    private function isTrivialInstance(\RectorPrefix20211221\Symfony\Component\DependencyInjection\Definition $definition) : bool
+    private function isTrivialInstance(Definition $definition) : bool
     {
         if ($definition->hasErrors()) {
             return \true;
@@ -592,7 +664,7 @@ EOF;
             return \false;
         }
         foreach ($definition->getArguments() as $arg) {
-            if (!$arg || $arg instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Parameter) {
+            if (!$arg || $arg instanceof Parameter) {
                 continue;
             }
             if (\is_array($arg) && 3 >= \count($arg)) {
@@ -600,17 +672,17 @@ EOF;
                     if ($this->dumpValue($k) !== $this->dumpValue($k, \false)) {
                         return \false;
                     }
-                    if (!$v || $v instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Parameter) {
+                    if (!$v || $v instanceof Parameter) {
                         continue;
                     }
-                    if ($v instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Reference && $this->container->has($id = (string) $v) && $this->container->findDefinition($id)->isSynthetic()) {
+                    if ($v instanceof Reference && $this->container->has($id = (string) $v) && $this->container->findDefinition($id)->isSynthetic()) {
                         continue;
                     }
                     if (!\is_scalar($v) || $this->dumpValue($v) !== $this->dumpValue($v, \false)) {
                         return \false;
                     }
                 }
-            } elseif ($arg instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Reference && $this->container->has($id = (string) $arg) && $this->container->findDefinition($id)->isSynthetic()) {
+            } elseif ($arg instanceof Reference && $this->container->has($id = (string) $arg) && $this->container->findDefinition($id)->isSynthetic()) {
                 continue;
             } elseif (!\is_scalar($arg) || $this->dumpValue($arg) !== $this->dumpValue($arg, \false)) {
                 return \false;
@@ -618,7 +690,7 @@ EOF;
         }
         return \true;
     }
-    private function addServiceMethodCalls(\RectorPrefix20211221\Symfony\Component\DependencyInjection\Definition $definition, string $variableName, ?string $sharedNonLazyId) : string
+    private function addServiceMethodCalls(Definition $definition, string $variableName, ?string $sharedNonLazyId) : string
     {
         $lastWitherIndex = null;
         foreach ($definition->getMethodCalls() as $k => $call) {
@@ -643,7 +715,7 @@ EOF;
         }
         return $calls;
     }
-    private function addServiceProperties(\RectorPrefix20211221\Symfony\Component\DependencyInjection\Definition $definition, string $variableName = 'instance') : string
+    private function addServiceProperties(Definition $definition, string $variableName = 'instance') : string
     {
         $code = '';
         foreach ($definition->getProperties() as $name => $value) {
@@ -651,13 +723,13 @@ EOF;
         }
         return $code;
     }
-    private function addServiceConfigurator(\RectorPrefix20211221\Symfony\Component\DependencyInjection\Definition $definition, string $variableName = 'instance') : string
+    private function addServiceConfigurator(Definition $definition, string $variableName = 'instance') : string
     {
         if (!($callable = $definition->getConfigurator())) {
             return '';
         }
         if (\is_array($callable)) {
-            if ($callable[0] instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Reference || $callable[0] instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Definition && $this->definitionVariables->contains($callable[0])) {
+            if ($callable[0] instanceof Reference || $callable[0] instanceof Definition && $this->definitionVariables->contains($callable[0])) {
                 return \sprintf("        %s->%s(\$%s);\n", $this->dumpValue($callable[0]), $callable[1], $variableName);
             }
             $class = $this->dumpValue($callable[0]);
@@ -672,23 +744,23 @@ EOF;
         }
         return \sprintf("        %s(\$%s);\n", $callable, $variableName);
     }
-    private function addService(string $id, \RectorPrefix20211221\Symfony\Component\DependencyInjection\Definition $definition) : array
+    private function addService(string $id, Definition $definition) : array
     {
         $this->definitionVariables = new \SplObjectStorage();
         $this->referenceVariables = [];
         $this->variableCount = 0;
-        $this->referenceVariables[$id] = new \RectorPrefix20211221\Symfony\Component\DependencyInjection\Variable('instance');
+        $this->referenceVariables[$id] = new Variable('instance');
         $return = [];
         if ($class = $definition->getClass()) {
-            $class = $class instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Parameter ? '%' . $class . '%' : $this->container->resolveEnvPlaceholders($class);
+            $class = $class instanceof Parameter ? '%' . $class . '%' : $this->container->resolveEnvPlaceholders($class);
             $return[] = \sprintf(\strncmp($class, '%', \strlen('%')) === 0 ? '@return object A %1$s instance' : '@return \\%s', \ltrim($class, '\\'));
         } elseif ($definition->getFactory()) {
             $factory = $definition->getFactory();
-            if (\is_string($factory)) {
+            if (\is_string($factory) && \strncmp($factory, '@=', \strlen('@=')) !== 0) {
                 $return[] = \sprintf('@return object An instance returned by %s()', $factory);
-            } elseif (\is_array($factory) && (\is_string($factory[0]) || $factory[0] instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Definition || $factory[0] instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Reference)) {
-                $class = $factory[0] instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Definition ? $factory[0]->getClass() : (string) $factory[0];
-                $class = $class instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Parameter ? '%' . $class . '%' : $this->container->resolveEnvPlaceholders($class);
+            } elseif (\is_array($factory) && (\is_string($factory[0]) || $factory[0] instanceof Definition || $factory[0] instanceof Reference)) {
+                $class = $factory[0] instanceof Definition ? $factory[0]->getClass() : (string) $factory[0];
+                $class = $class instanceof Parameter ? '%' . $class . '%' : $this->container->resolveEnvPlaceholders($class);
                 $return[] = \sprintf('@return object An instance returned by %s::%s()', $class, $factory[1]);
             }
         }
@@ -732,8 +804,7 @@ EOF;
             $file = null;
         }
         if ($definition->hasErrors() && ($e = $definition->getErrors())) {
-            $this->addThrow = \true;
-            $code .= \sprintf("        \$this->throw(%s);\n", $this->export(\reset($e)));
+            $code .= \sprintf("        throw new RuntimeException(%s);\n", $this->export(\reset($e)));
         } else {
             $this->serviceCalls = [];
             $this->inlinedDefinitions = $this->getDefinitionsFromArguments([$definition], null, $this->serviceCalls);
@@ -758,7 +829,7 @@ EOF;
                         $code .= "            return self::do(\$container);\n";
                         $code .= "        };\n\n";
                     } else {
-                        $code .= \sprintf("\\Closure::fromCallable([\$this, '%s']);\n\n", $methodName);
+                        $code .= \sprintf("\$this->%s(...);\n\n", $methodName);
                     }
                 }
                 $factoryCode = $asFile ? 'self::do($container, false)' : \sprintf('$this->%s(false)', $methodName);
@@ -797,21 +868,21 @@ EOF;
         $this->referenceVariables = $this->serviceCalls = null;
         return [$file, $code];
     }
-    private function addInlineVariables(string $id, \RectorPrefix20211221\Symfony\Component\DependencyInjection\Definition $definition, array $arguments, bool $forConstructor) : string
+    private function addInlineVariables(string $id, Definition $definition, array $arguments, bool $forConstructor) : string
     {
         $code = '';
         foreach ($arguments as $argument) {
             if (\is_array($argument)) {
                 $code .= $this->addInlineVariables($id, $definition, $argument, $forConstructor);
-            } elseif ($argument instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Reference) {
+            } elseif ($argument instanceof Reference) {
                 $code .= $this->addInlineReference($id, $definition, $argument, $forConstructor);
-            } elseif ($argument instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Definition) {
+            } elseif ($argument instanceof Definition) {
                 $code .= $this->addInlineService($id, $definition, $argument, $forConstructor);
             }
         }
         return $code;
     }
-    private function addInlineReference(string $id, \RectorPrefix20211221\Symfony\Component\DependencyInjection\Definition $definition, string $targetId, bool $forConstructor) : string
+    private function addInlineReference(string $id, Definition $definition, string $targetId, bool $forConstructor) : string
     {
         while ($this->container->hasAlias($targetId)) {
             $targetId = (string) $this->container->getAlias($targetId);
@@ -836,8 +907,8 @@ EOF;
             return $code;
         }
         $name = $this->getNextVariableName();
-        $this->referenceVariables[$targetId] = new \RectorPrefix20211221\Symfony\Component\DependencyInjection\Variable($name);
-        $reference = \RectorPrefix20211221\Symfony\Component\DependencyInjection\ContainerInterface::EXCEPTION_ON_INVALID_REFERENCE >= $behavior ? new \RectorPrefix20211221\Symfony\Component\DependencyInjection\Reference($targetId, $behavior) : null;
+        $this->referenceVariables[$targetId] = new Variable($name);
+        $reference = ContainerInterface::EXCEPTION_ON_INVALID_REFERENCE >= $behavior ? new Reference($targetId, $behavior) : null;
         $code .= \sprintf("        \$%s = %s;\n", $name, $this->getServiceCall($targetId, $reference));
         if (!$hasSelfRef || !$forConstructor) {
             return $code;
@@ -852,7 +923,7 @@ EOTXT
 , $this->container->getDefinition($id)->isPublic() ? 'services' : 'privates', $this->doExport($id));
         return $code;
     }
-    private function addInlineService(string $id, \RectorPrefix20211221\Symfony\Component\DependencyInjection\Definition $definition, \RectorPrefix20211221\Symfony\Component\DependencyInjection\Definition $inlineDef = null, bool $forConstructor = \true) : string
+    private function addInlineService(string $id, Definition $definition, Definition $inlineDef = null, bool $forConstructor = \true) : string
     {
         $code = '';
         if ($isSimpleInstance = $isRootInstance = null === $inlineDef) {
@@ -876,7 +947,7 @@ EOTXT
             $isSimpleInstance = \false;
         } else {
             $name = $definition === $inlineDef ? 'instance' : $this->getNextVariableName();
-            $this->definitionVariables[$inlineDef] = new \RectorPrefix20211221\Symfony\Component\DependencyInjection\Variable($name);
+            $this->definitionVariables[$inlineDef] = new Variable($name);
             $code .= '' !== $code ? "\n" : '';
             if ('instance' === $name) {
                 $code .= $this->addServiceInstance($id, $definition, $isSimpleInstance);
@@ -934,15 +1005,15 @@ EOTXT
             }
         }
     }
-    private function addNewInstance(\RectorPrefix20211221\Symfony\Component\DependencyInjection\Definition $definition, string $return = '', string $id = null) : string
+    private function addNewInstance(Definition $definition, string $return = '', string $id = null) : string
     {
         $tail = $return ? ";\n" : '';
-        if (\RectorPrefix20211221\Symfony\Component\DependencyInjection\ServiceLocator::class === $definition->getClass() && $definition->hasTag($this->serviceLocatorTag)) {
+        if (BaseServiceLocator::class === $definition->getClass() && $definition->hasTag($this->serviceLocatorTag)) {
             $arguments = [];
             foreach ($definition->getArgument(0) as $k => $argument) {
                 $arguments[$k] = $argument->getValues()[0];
             }
-            return $return . $this->dumpValue(new \RectorPrefix20211221\Symfony\Component\DependencyInjection\Argument\ServiceLocatorArgument($arguments)) . $tail;
+            return $return . $this->dumpValue(new ServiceLocatorArgument($arguments)) . $tail;
         }
         $arguments = [];
         foreach ($definition->getArguments() as $i => $value) {
@@ -950,18 +1021,25 @@ EOTXT
         }
         if (null !== $definition->getFactory()) {
             $callable = $definition->getFactory();
+            if (['Closure', 'fromCallable'] === $callable && [0] === \array_keys($definition->getArguments())) {
+                $callable = $definition->getArgument(0);
+                $arguments = ['...'];
+                if ($callable instanceof Reference || $callable instanceof Definition) {
+                    $callable = [$callable, '__invoke'];
+                }
+            }
             if (\is_array($callable)) {
                 if (!\preg_match('/^[a-zA-Z_\\x7f-\\xff][a-zA-Z0-9_\\x7f-\\xff]*$/', $callable[1])) {
-                    throw new \RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\RuntimeException(\sprintf('Cannot dump definition because of invalid factory method (%s).', $callable[1] ?: 'n/a'));
+                    throw new RuntimeException(\sprintf('Cannot dump definition because of invalid factory method (%s).', $callable[1] ?: 'n/a'));
                 }
-                if ($callable[0] instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Reference || $callable[0] instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Definition && $this->definitionVariables->contains($callable[0])) {
+                if ($callable[0] instanceof Reference || $callable[0] instanceof Definition && $this->definitionVariables->contains($callable[0])) {
                     return $return . \sprintf('%s->%s(%s)', $this->dumpValue($callable[0]), $callable[1], $arguments ? \implode(', ', $arguments) : '') . $tail;
                 }
                 $class = $this->dumpValue($callable[0]);
                 // If the class is a string we can optimize away
                 if (\strncmp($class, "'", \strlen("'")) === 0 && \strpos($class, '$') === \false) {
                     if ("''" === $class) {
-                        throw new \RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\RuntimeException(\sprintf('Cannot dump definition: "%s" service is defined to be created by a factory but is missing the service reference, did you forget to define the factory service id or class?', $id ? 'The "' . $id . '"' : 'inline'));
+                        throw new RuntimeException(\sprintf('Cannot dump definition: "%s" service is defined to be created by a factory but is missing the service reference, did you forget to define the factory service id or class?', $id ? 'The "' . $id . '"' : 'inline'));
                     }
                     return $return . \sprintf('%s::%s(%s)', $this->dumpLiteralClass($class), $callable[1], $arguments ? \implode(', ', $arguments) : '') . $tail;
                 }
@@ -970,10 +1048,13 @@ EOTXT
                 }
                 return $return . \sprintf("[%s, '%s'](%s)", $class, $callable[1], $arguments ? \implode(', ', $arguments) : '') . $tail;
             }
+            if (\is_string($callable) && \strncmp($callable, '@=', \strlen('@=')) === 0) {
+                return $return . \sprintf('(($args = %s) ? (%s) : null)', $this->dumpValue(new ServiceLocatorArgument($definition->getArguments())), $this->getExpressionLanguage()->compile(\substr($callable, 2), ['this' => 'container', 'args' => 'args'])) . $tail;
+            }
             return $return . \sprintf('%s(%s)', $this->dumpLiteralClass($this->dumpValue($callable)), $arguments ? \implode(', ', $arguments) : '') . $tail;
         }
         if (null === ($class = $definition->getClass())) {
-            throw new \RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\RuntimeException('Cannot dump definitions which have no class nor factory.');
+            throw new RuntimeException('Cannot dump definitions which have no class nor factory.');
         }
         return $return . \sprintf('new %s(%s)', $this->dumpLiteralClass($this->dumpValue($class)), \implode(', ', $arguments)) . $tail;
     }
@@ -983,14 +1064,14 @@ EOTXT
         $code = <<<EOF
 <?php
 {$namespaceLine}
-use RectorPrefix20211221\\Symfony\\Component\\DependencyInjection\\Argument\\RewindableGenerator;
-use RectorPrefix20211221\\Symfony\\Component\\DependencyInjection\\ContainerInterface;
-use RectorPrefix20211221\\Symfony\\Component\\DependencyInjection\\Container;
-use RectorPrefix20211221\\Symfony\\Component\\DependencyInjection\\Exception\\InvalidArgumentException;
-use RectorPrefix20211221\\Symfony\\Component\\DependencyInjection\\Exception\\LogicException;
-use RectorPrefix20211221\\Symfony\\Component\\DependencyInjection\\Exception\\RuntimeException;
-use RectorPrefix20211221\\Symfony\\Component\\DependencyInjection\\ParameterBag\\FrozenParameterBag;
-use RectorPrefix20211221\\Symfony\\Component\\DependencyInjection\\ParameterBag\\ParameterBagInterface;
+use RectorPrefix202208\\Symfony\\Component\\DependencyInjection\\Argument\\RewindableGenerator;
+use RectorPrefix202208\\Symfony\\Component\\DependencyInjection\\ContainerInterface;
+use RectorPrefix202208\\Symfony\\Component\\DependencyInjection\\Container;
+use RectorPrefix202208\\Symfony\\Component\\DependencyInjection\\Exception\\InvalidArgumentException;
+use RectorPrefix202208\\Symfony\\Component\\DependencyInjection\\Exception\\LogicException;
+use RectorPrefix202208\\Symfony\\Component\\DependencyInjection\\Exception\\RuntimeException;
+use RectorPrefix202208\\Symfony\\Component\\DependencyInjection\\ParameterBag\\FrozenParameterBag;
+use RectorPrefix202208\\Symfony\\Component\\DependencyInjection\\ParameterBag\\ParameterBagInterface;
 
 /*{$this->docStar}
  * @internal This class has been auto-generated by the Symfony Dependency Injection Component.
@@ -1013,9 +1094,9 @@ EOF;
                 $code .= '        $this->targetDir = \\dirname($containerDir);' . "\n";
             }
         }
-        if (\RectorPrefix20211221\Symfony\Component\DependencyInjection\Container::class !== $this->baseClass) {
+        if (Container::class !== $this->baseClass) {
             $r = $this->container->getReflectionClass($this->baseClass, \false);
-            if (null !== $r && null !== ($constructor = $r->getConstructor()) && 0 === $constructor->getNumberOfRequiredParameters() && \RectorPrefix20211221\Symfony\Component\DependencyInjection\Container::class !== $constructor->getDeclaringClass()->name) {
+            if (null !== $r && null !== ($constructor = $r->getConstructor()) && 0 === $constructor->getNumberOfRequiredParameters() && Container::class !== $constructor->getDeclaringClass()->name) {
                 $code .= "        parent::__construct();\n";
                 $code .= "        \$this->parameterBag = null;\n\n";
             }
@@ -1118,7 +1199,7 @@ EOF;
             $ids = \array_keys($ids);
             \sort($ids);
             foreach ($ids as $id) {
-                if (\preg_match(\RectorPrefix20211221\Symfony\Component\DependencyInjection\Loader\FileLoader::ANONYMOUS_ID_REGEXP, $id)) {
+                if (\preg_match(FileLoader::ANONYMOUS_ID_REGEXP, $id)) {
                     continue;
                 }
                 $code .= '            ' . $this->doExport($id) . " => true,\n";
@@ -1255,12 +1336,13 @@ EOF;
         $dynamicPhp = [];
         foreach ($this->container->getParameterBag()->all() as $key => $value) {
             if ($key !== ($resolvedKey = $this->container->resolveEnvPlaceholders($key))) {
-                throw new \RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\InvalidArgumentException(\sprintf('Parameter name cannot use env parameters: "%s".', $resolvedKey));
+                throw new InvalidArgumentException(\sprintf('Parameter name cannot use env parameters: "%s".', $resolvedKey));
             }
-            $export = $this->exportParameters([$value]);
+            $hasEnum = \false;
+            $export = $this->exportParameters([$value], '', 12, $hasEnum);
             $export = \explode('0 => ', \substr(\rtrim($export, " ]\n"), 2, -1), 2);
-            if (\preg_match("/\\\$this->(?:getEnv\\('(?:[-.\\w]*+:)*+\\w++'\\)|targetDir\\.'')/", $export[1])) {
-                $dynamicPhp[$key] = \sprintf('%scase %s: $value = %s; break;', $export[0], $this->export($key), $export[1]);
+            if ($hasEnum || \preg_match("/\\\$this->(?:getEnv\\('(?:[-.\\w]*+:)*+\\w++'\\)|targetDir\\.'')/", $export[1])) {
+                $dynamicPhp[$key] = \sprintf('%s%s => %s,', $export[0], $this->export($key), $export[1]);
             } else {
                 $php[] = \sprintf('%s%s => %s,', $export[0], $this->export($key), $export[1]);
             }
@@ -1268,10 +1350,7 @@ EOF;
         $parameters = \sprintf("[\n%s\n%s]", \implode("\n", $php), \str_repeat(' ', 8));
         $code = <<<'EOF'
 
-    /**
-     * @return array|bool|float|int|string|null
-     */
-    public function getParameter(string $name)
+    public function getParameter(string $name): array|bool|string|int|float|\UnitEnum|null
     {
         if (isset($this->buildParameters[$name])) {
             return $this->buildParameters[$name];
@@ -1324,10 +1403,10 @@ EOF;
         if ($dynamicPhp) {
             $loadedDynamicParameters = $this->exportParameters(\array_combine(\array_keys($dynamicPhp), \array_fill(0, \count($dynamicPhp), \false)), '', 8);
             $getDynamicParameter = <<<'EOF'
-        switch ($name) {
+        $value = match ($name) {
 %s
-            default: throw new InvalidArgumentException(sprintf('The dynamic parameter "%%s" must be defined.', $name));
-        }
+            default => throw new InvalidArgumentException(sprintf('The dynamic parameter "%%s" must be defined.', $name)),
+        };
         $this->loadedDynamicParameters[$name] = true;
 
         return $this->dynamicParameters[$name] = $value;
@@ -1358,22 +1437,25 @@ EOF;
     /**
      * @throws InvalidArgumentException
      */
-    private function exportParameters(array $parameters, string $path = '', int $indent = 12) : string
+    private function exportParameters(array $parameters, string $path = '', int $indent = 12, bool &$hasEnum = \false) : string
     {
         $php = [];
         foreach ($parameters as $key => $value) {
             if (\is_array($value)) {
-                $value = $this->exportParameters($value, $path . '/' . $key, $indent + 4);
-            } elseif ($value instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Argument\ArgumentInterface) {
-                throw new \RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\InvalidArgumentException(\sprintf('You cannot dump a container with parameters that contain special arguments. "%s" found in "%s".', \get_debug_type($value), $path . '/' . $key));
-            } elseif ($value instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Variable) {
-                throw new \RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\InvalidArgumentException(\sprintf('You cannot dump a container with parameters that contain variable references. Variable "%s" found in "%s".', $value, $path . '/' . $key));
-            } elseif ($value instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Definition) {
-                throw new \RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\InvalidArgumentException(\sprintf('You cannot dump a container with parameters that contain service definitions. Definition for "%s" found in "%s".', $value->getClass(), $path . '/' . $key));
-            } elseif ($value instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Reference) {
-                throw new \RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\InvalidArgumentException(\sprintf('You cannot dump a container with parameters that contain references to other services (reference to service "%s" found in "%s").', $value, $path . '/' . $key));
-            } elseif ($value instanceof \RectorPrefix20211221\Symfony\Component\ExpressionLanguage\Expression) {
-                throw new \RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\InvalidArgumentException(\sprintf('You cannot dump a container with parameters that contain expressions. Expression "%s" found in "%s".', $value, $path . '/' . $key));
+                $value = $this->exportParameters($value, $path . '/' . $key, $indent + 4, $hasEnum);
+            } elseif ($value instanceof ArgumentInterface) {
+                throw new InvalidArgumentException(\sprintf('You cannot dump a container with parameters that contain special arguments. "%s" found in "%s".', \get_debug_type($value), $path . '/' . $key));
+            } elseif ($value instanceof Variable) {
+                throw new InvalidArgumentException(\sprintf('You cannot dump a container with parameters that contain variable references. Variable "%s" found in "%s".', $value, $path . '/' . $key));
+            } elseif ($value instanceof Definition) {
+                throw new InvalidArgumentException(\sprintf('You cannot dump a container with parameters that contain service definitions. Definition for "%s" found in "%s".', $value->getClass(), $path . '/' . $key));
+            } elseif ($value instanceof Reference) {
+                throw new InvalidArgumentException(\sprintf('You cannot dump a container with parameters that contain references to other services (reference to service "%s" found in "%s").', $value, $path . '/' . $key));
+            } elseif ($value instanceof Expression) {
+                throw new InvalidArgumentException(\sprintf('You cannot dump a container with parameters that contain expressions. Expression "%s" found in "%s".', $value, $path . '/' . $key));
+            } elseif ($value instanceof \UnitEnum) {
+                $hasEnum = \true;
+                $value = \sprintf('\\%s::%s', \get_class($value), $value->name);
             } else {
                 $value = $this->export($value);
             }
@@ -1383,22 +1465,14 @@ EOF;
     }
     private function endClass() : string
     {
-        if ($this->addThrow) {
-            return <<<'EOF'
-
-    protected function throw($message)
-    {
-        throw new RuntimeException($message);
-    }
-}
-
-EOF;
-        }
         return <<<'EOF'
 }
 
 EOF;
     }
+    /**
+     * @param mixed $value
+     */
     private function wrapServiceConditionals($value, string $code) : string
     {
         if (!($condition = $this->getServiceConditionals($value))) {
@@ -1410,16 +1484,19 @@ EOF;
         }, \explode("\n", $code)));
         return \sprintf("        if (%s) {\n%s        }\n", $condition, $code);
     }
+    /**
+     * @param mixed $value
+     */
     private function getServiceConditionals($value) : string
     {
         $conditions = [];
-        foreach (\RectorPrefix20211221\Symfony\Component\DependencyInjection\ContainerBuilder::getInitializedConditionals($value) as $service) {
+        foreach (ContainerBuilder::getInitializedConditionals($value) as $service) {
             if (!$this->container->hasDefinition($service)) {
                 return 'false';
             }
             $conditions[] = \sprintf('isset($this->%s[%s])', $this->container->getDefinition($service)->isPublic() ? 'services' : 'privates', $this->doExport($service));
         }
-        foreach (\RectorPrefix20211221\Symfony\Component\DependencyInjection\ContainerBuilder::getServiceConditionals($value) as $service) {
+        foreach (ContainerBuilder::getServiceConditionals($value) as $service) {
             if ($this->container->hasDefinition($service) && !$this->container->getDefinition($service)->isPublic()) {
                 continue;
             }
@@ -1438,7 +1515,7 @@ EOF;
         foreach ($arguments as $argument) {
             if (\is_array($argument)) {
                 $this->getDefinitionsFromArguments($argument, $definitions, $calls, $byConstructor);
-            } elseif ($argument instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Reference) {
+            } elseif ($argument instanceof Reference) {
                 $id = (string) $argument;
                 while ($this->container->hasAlias($id)) {
                     $id = (string) $this->container->getAlias($id);
@@ -1449,7 +1526,7 @@ EOF;
                     $calls[$id][1] = \min($calls[$id][1], $argument->getInvalidBehavior());
                 }
                 ++$calls[$id][0];
-            } elseif (!$argument instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Definition) {
+            } elseif (!$argument instanceof Definition) {
                 // no-op
             } elseif (isset($definitions[$argument])) {
                 $definitions[$argument] = 1 + $definitions[$argument];
@@ -1465,6 +1542,7 @@ EOF;
     }
     /**
      * @throws RuntimeException
+     * @param mixed $value
      */
     private function dumpValue($value, bool $interpolate = \true) : string
     {
@@ -1477,21 +1555,29 @@ EOF;
                 $code[] = \sprintf('%s => %s', $this->dumpValue($k, $interpolate), $this->dumpValue($v, $interpolate));
             }
             return \sprintf('[%s]', \implode(', ', $code));
-        } elseif ($value instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Argument\ArgumentInterface) {
+        } elseif ($value instanceof ArgumentInterface) {
             $scope = [$this->definitionVariables, $this->referenceVariables];
             $this->definitionVariables = $this->referenceVariables = null;
             try {
-                if ($value instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Argument\ServiceClosureArgument) {
+                if ($value instanceof ServiceClosureArgument) {
                     $value = $value->getValues()[0];
                     $code = $this->dumpValue($value, $interpolate);
                     $returnedType = '';
-                    if ($value instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\TypedReference) {
-                        $returnedType = \sprintf(': %s\\%s', \RectorPrefix20211221\Symfony\Component\DependencyInjection\ContainerInterface::EXCEPTION_ON_INVALID_REFERENCE >= $value->getInvalidBehavior() ? '' : '?', \str_replace(['|', '&'], ['|\\', '&\\'], $value->getType()));
+                    if ($value instanceof TypedReference) {
+                        $returnedType = \sprintf(': %s\\%s', ContainerInterface::EXCEPTION_ON_INVALID_REFERENCE >= $value->getInvalidBehavior() ? '' : '?', \str_replace(['|', '&'], ['|\\', '&\\'], $value->getType()));
                     }
                     $code = \sprintf('return %s;', $code);
-                    return \sprintf("function ()%s {\n            %s\n        }", $returnedType, $code);
+                    $attribute = '';
+                    if ($value instanceof Reference) {
+                        $attribute = 'name: ' . $this->dumpValue((string) $value, $interpolate);
+                        if ($this->container->hasDefinition($value) && ($class = $this->container->findDefinition($value)->getClass()) && $class !== (string) $value) {
+                            $attribute .= ', class: ' . $this->dumpValue($class, $interpolate);
+                        }
+                        $attribute = \sprintf('#[\\Closure(%s)] ', $attribute);
+                    }
+                    return \sprintf("%sfunction ()%s {\n            %s\n        }", $attribute, $returnedType, $code);
                 }
-                if ($value instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Argument\IteratorArgument) {
+                if ($value instanceof IteratorArgument) {
                     $operands = [0];
                     $code = [];
                     $code[] = 'new RewindableGenerator(function () {';
@@ -1515,11 +1601,13 @@ EOF;
                     $code[] = \sprintf('        }, %s)', \count($operands) > 1 ? \implode("\n", $countCode) : $operands[0]);
                     return \implode("\n", $code);
                 }
-                if ($value instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Argument\ServiceLocatorArgument) {
+                if ($value instanceof ServiceLocatorArgument) {
                     $serviceMap = '';
                     $serviceTypes = '';
                     foreach ($value->getValues() as $k => $v) {
-                        if (!$v) {
+                        if (!$v instanceof Reference) {
+                            $serviceMap .= \sprintf("\n            %s => [%s],", $this->export($k), $this->dumpValue($v));
+                            $serviceTypes .= \sprintf("\n            %s => '?',", $this->export($k));
                             continue;
                         }
                         $id = (string) $v;
@@ -1528,37 +1616,36 @@ EOF;
                         }
                         $definition = $this->container->getDefinition($id);
                         $load = !($definition->hasErrors() && ($e = $definition->getErrors())) ? $this->asFiles && !$this->inlineFactories && !$this->isHotPath($definition) : \reset($e);
-                        $serviceMap .= \sprintf("\n            %s => [%s, %s, %s, %s],", $this->export($k), $this->export($definition->isShared() ? $definition->isPublic() ? 'services' : 'privates' : \false), $this->doExport($id), $this->export(\RectorPrefix20211221\Symfony\Component\DependencyInjection\ContainerInterface::IGNORE_ON_UNINITIALIZED_REFERENCE !== $v->getInvalidBehavior() && !\is_string($load) ? $this->generateMethodName($id) : null), $this->export($load));
-                        $serviceTypes .= \sprintf("\n            %s => %s,", $this->export($k), $this->export($v instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\TypedReference ? $v->getType() : '?'));
+                        $serviceMap .= \sprintf("\n            %s => [%s, %s, %s, %s],", $this->export($k), $this->export($definition->isShared() ? $definition->isPublic() ? 'services' : 'privates' : \false), $this->doExport($id), $this->export(ContainerInterface::IGNORE_ON_UNINITIALIZED_REFERENCE !== $v->getInvalidBehavior() && !\is_string($load) ? $this->generateMethodName($id) : null), $this->export($load));
+                        $serviceTypes .= \sprintf("\n            %s => %s,", $this->export($k), $this->export($v instanceof TypedReference ? $v->getType() : '?'));
                         $this->locatedIds[$id] = \true;
                     }
                     $this->addGetService = \true;
-                    return \sprintf('new \\%s($this->getService, [%s%s], [%s%s])', \RectorPrefix20211221\Symfony\Component\DependencyInjection\Argument\ServiceLocator::class, $serviceMap, $serviceMap ? "\n        " : '', $serviceTypes, $serviceTypes ? "\n        " : '');
+                    return \sprintf('new \\%s($this->getService, [%s%s], [%s%s])', ServiceLocator::class, $serviceMap, $serviceMap ? "\n        " : '', $serviceTypes, $serviceTypes ? "\n        " : '');
                 }
             } finally {
                 [$this->definitionVariables, $this->referenceVariables] = $scope;
             }
-        } elseif ($value instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Definition) {
+        } elseif ($value instanceof Definition) {
             if ($value->hasErrors() && ($e = $value->getErrors())) {
-                $this->addThrow = \true;
-                return \sprintf('$this->throw(%s)', $this->export(\reset($e)));
+                return \sprintf('throw new RuntimeException(%s)', $this->export(\reset($e)));
             }
-            if (null !== $this->definitionVariables && $this->definitionVariables->contains($value)) {
+            if (($definitionVariables = $this->definitionVariables) ? $definitionVariables->contains($value) : null) {
                 return $this->dumpValue($this->definitionVariables[$value], $interpolate);
             }
             if ($value->getMethodCalls()) {
-                throw new \RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\RuntimeException('Cannot dump definitions which have method calls.');
+                throw new RuntimeException('Cannot dump definitions which have method calls.');
             }
             if ($value->getProperties()) {
-                throw new \RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\RuntimeException('Cannot dump definitions which have properties.');
+                throw new RuntimeException('Cannot dump definitions which have properties.');
             }
             if (null !== $value->getConfigurator()) {
-                throw new \RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\RuntimeException('Cannot dump definitions which have a configurator.');
+                throw new RuntimeException('Cannot dump definitions which have a configurator.');
             }
             return $this->addNewInstance($value);
-        } elseif ($value instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Variable) {
+        } elseif ($value instanceof Variable) {
             return '$' . $value;
-        } elseif ($value instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Reference) {
+        } elseif ($value instanceof Reference) {
             $id = (string) $value;
             while ($this->container->hasAlias($id)) {
                 $id = (string) $this->container->getAlias($id);
@@ -1567,9 +1654,9 @@ EOF;
                 return $this->dumpValue($this->referenceVariables[$id], $interpolate);
             }
             return $this->getServiceCall($id, $value);
-        } elseif ($value instanceof \RectorPrefix20211221\Symfony\Component\ExpressionLanguage\Expression) {
+        } elseif ($value instanceof Expression) {
             return $this->getExpressionLanguage()->compile((string) $value, ['this' => 'container']);
-        } elseif ($value instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Parameter) {
+        } elseif ($value instanceof Parameter) {
             return $this->dumpParameter($value);
         } elseif (\true === $interpolate && \is_string($value)) {
             if (\preg_match('/^%([^%]+)%$/', $value, $match)) {
@@ -1583,12 +1670,12 @@ EOF;
                 $code = \str_replace('%%', '%', \preg_replace_callback('/(?<!%)(%)([^%]+)\\1/', $replaceParameters, $this->export($value)));
                 return $code;
             }
-        } elseif ($value instanceof \RectorPrefix20211221\UnitEnum) {
+        } elseif ($value instanceof \UnitEnum) {
             return \sprintf('\\%s::%s', \get_class($value), $value->name);
-        } elseif ($value instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Argument\AbstractArgument) {
-            throw new \RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\RuntimeException($value->getTextWithContext());
+        } elseif ($value instanceof AbstractArgument) {
+            throw new RuntimeException($value->getTextWithContext());
         } elseif (\is_object($value) || \is_resource($value)) {
-            throw new \RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\RuntimeException('Unable to dump a service container if a parameter is an object or a resource.');
+            throw new RuntimeException('Unable to dump a service container if a parameter is an object or a resource.');
         }
         return $this->export($value);
     }
@@ -1603,7 +1690,7 @@ EOF;
             return \sprintf('${($_ = %s) && false ?: "_"}', $class);
         }
         if (\strncmp($class, "'", \strlen("'")) !== 0 || !\preg_match('/^\'(?:\\\\{2})?[a-zA-Z_\\x7f-\\xff][a-zA-Z0-9_\\x7f-\\xff]*(?:\\\\{2}[a-zA-Z_\\x7f-\\xff][a-zA-Z0-9_\\x7f-\\xff]*)*\'$/', $class)) {
-            throw new \RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\RuntimeException(\sprintf('Cannot dump definition because of invalid class name (%s).', $class ?: 'n/a'));
+            throw new RuntimeException(\sprintf('Cannot dump definition because of invalid class name (%s).', $class ?: 'n/a'));
         }
         $class = \substr(\str_replace('\\\\', '\\', $class), 1, -1);
         return \strncmp($class, '\\', \strlen('\\')) === 0 ? $class : '\\' . $class;
@@ -1622,7 +1709,7 @@ EOF;
         }
         return \sprintf('$this->getParameter(%s)', $this->doExport($name));
     }
-    private function getServiceCall(string $id, \RectorPrefix20211221\Symfony\Component\DependencyInjection\Reference $reference = null) : string
+    private function getServiceCall(string $id, Reference $reference = null) : string
     {
         while ($this->container->hasAlias($id)) {
             $id = (string) $this->container->getAlias($id);
@@ -1633,15 +1720,14 @@ EOF;
         if ($this->container->hasDefinition($id) && ($definition = $this->container->getDefinition($id))) {
             if ($definition->isSynthetic()) {
                 $code = \sprintf('$this->get(%s%s)', $this->doExport($id), null !== $reference ? ', ' . $reference->getInvalidBehavior() : '');
-            } elseif (null !== $reference && \RectorPrefix20211221\Symfony\Component\DependencyInjection\ContainerInterface::IGNORE_ON_UNINITIALIZED_REFERENCE === $reference->getInvalidBehavior()) {
+            } elseif (null !== $reference && ContainerInterface::IGNORE_ON_UNINITIALIZED_REFERENCE === $reference->getInvalidBehavior()) {
                 $code = 'null';
                 if (!$definition->isShared()) {
                     return $code;
                 }
             } elseif ($this->isTrivialInstance($definition)) {
                 if ($definition->hasErrors() && ($e = $definition->getErrors())) {
-                    $this->addThrow = \true;
-                    return \sprintf('$this->throw(%s)', $this->export(\reset($e)));
+                    return \sprintf('throw new RuntimeException(%s)', $this->export(\reset($e)));
                 }
                 $code = $this->addNewInstance($definition, '', $id);
                 if ($definition->isShared() && !isset($this->singleUsePrivateIds[$id])) {
@@ -1661,11 +1747,11 @@ EOF;
             }
             return $code;
         }
-        if (null !== $reference && \RectorPrefix20211221\Symfony\Component\DependencyInjection\ContainerInterface::IGNORE_ON_UNINITIALIZED_REFERENCE === $reference->getInvalidBehavior()) {
+        if (null !== $reference && ContainerInterface::IGNORE_ON_UNINITIALIZED_REFERENCE === $reference->getInvalidBehavior()) {
             return 'null';
         }
-        if (null !== $reference && \RectorPrefix20211221\Symfony\Component\DependencyInjection\ContainerInterface::EXCEPTION_ON_INVALID_REFERENCE < $reference->getInvalidBehavior()) {
-            $code = \sprintf('$this->get(%s, /* ContainerInterface::NULL_ON_INVALID_REFERENCE */ %d)', $this->doExport($id), \RectorPrefix20211221\Symfony\Component\DependencyInjection\ContainerInterface::NULL_ON_INVALID_REFERENCE);
+        if (null !== $reference && ContainerInterface::EXCEPTION_ON_INVALID_REFERENCE < $reference->getInvalidBehavior()) {
+            $code = \sprintf('$this->get(%s, ContainerInterface::NULL_ON_INVALID_REFERENCE)', $this->doExport($id));
         } else {
             $code = \sprintf('$this->get(%s)', $this->doExport($id));
         }
@@ -1693,7 +1779,7 @@ EOF;
             return $this->serviceIdToMethodNameMap[$id];
         }
         $i = \strrpos($id, '\\');
-        $name = \RectorPrefix20211221\Symfony\Component\DependencyInjection\Container::camelize(\false !== $i && isset($id[1 + $i]) ? \substr($id, 1 + $i) : $id);
+        $name = Container::camelize(\false !== $i && isset($id[1 + $i]) ? \substr($id, 1 + $i) : $id);
         $name = \preg_replace('/[^a-zA-Z0-9_\\x7f-\\xff]/', '', $name);
         $methodName = 'get' . $name . 'Service';
         $suffix = 1;
@@ -1731,14 +1817,14 @@ EOF;
             return $name;
         }
     }
-    private function getExpressionLanguage() : \RectorPrefix20211221\Symfony\Component\DependencyInjection\ExpressionLanguage
+    private function getExpressionLanguage() : ExpressionLanguage
     {
-        if (null === $this->expressionLanguage) {
-            if (!\class_exists(\RectorPrefix20211221\Symfony\Component\ExpressionLanguage\ExpressionLanguage::class)) {
-                throw new \RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\LogicException('Unable to use expressions as the Symfony ExpressionLanguage component is not installed.');
+        if (!isset($this->expressionLanguage)) {
+            if (!\class_exists(\RectorPrefix202208\Symfony\Component\ExpressionLanguage\ExpressionLanguage::class)) {
+                throw new LogicException('Unable to use expressions as the Symfony ExpressionLanguage component is not installed.');
             }
             $providers = $this->container->getExpressionLanguageProviders();
-            $this->expressionLanguage = new \RectorPrefix20211221\Symfony\Component\DependencyInjection\ExpressionLanguage(null, $providers, function ($arg) {
+            $this->expressionLanguage = new ExpressionLanguage(null, $providers, function ($arg) {
                 $id = '""' === \substr_replace($arg, '', 1, -1) ? \stripcslashes(\substr($arg, 1, -1)) : null;
                 if (null !== $id && ($this->container->hasAlias($id) || $this->container->hasDefinition($id))) {
                     return $this->getServiceCall($id);
@@ -1753,11 +1839,11 @@ EOF;
         }
         return $this->expressionLanguage;
     }
-    private function isHotPath(\RectorPrefix20211221\Symfony\Component\DependencyInjection\Definition $definition) : bool
+    private function isHotPath(Definition $definition) : bool
     {
         return $this->hotPathTag && $definition->hasTag($this->hotPathTag) && !$definition->isDeprecated();
     }
-    private function isSingleUsePrivateNode(\RectorPrefix20211221\Symfony\Component\DependencyInjection\Compiler\ServiceReferenceGraphNode $node) : bool
+    private function isSingleUsePrivateNode(ServiceReferenceGraphNode $node) : bool
     {
         if ($node->getValue()->isPublic()) {
             return \false;
@@ -1767,7 +1853,7 @@ EOF;
             if (!($value = $edge->getSourceNode()->getValue())) {
                 continue;
             }
-            if ($edge->isLazy() || !$value instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Definition || !$value->isShared()) {
+            if ($edge->isLazy() || !$value instanceof Definition || !$value->isShared()) {
                 return \false;
             }
             $ids[$edge->getSourceNode()->getId()] = \true;
@@ -1775,6 +1861,7 @@ EOF;
         return 1 === \count($ids);
     }
     /**
+     * @param mixed $value
      * @return mixed
      */
     private function export($value)
@@ -1806,6 +1893,7 @@ EOF;
         return $this->doExport($value, \true);
     }
     /**
+     * @param mixed $value
      * @return mixed
      */
     private function doExport($value, bool $resolveEnv = \false)
@@ -1824,10 +1912,10 @@ EOF;
             $export = \var_export($value, \true);
         }
         if ($this->asFiles) {
-            if (\false !== \strpos($export, '$this')) {
+            if (\strpos($export, '$this') !== \false) {
                 $export = \str_replace('$this', "\$'.'this", $export);
             }
-            if (\false !== \strpos($export, 'function () {')) {
+            if (\strpos($export, 'function () {') !== \false) {
                 $export = \str_replace('function () {', "function ('.') {", $export);
             }
         }
@@ -1855,10 +1943,10 @@ EOF;
             if (!\is_array($autoloader)) {
                 continue;
             }
-            if ($autoloader[0] instanceof \RectorPrefix20211221\Symfony\Component\ErrorHandler\DebugClassLoader || $autoloader[0] instanceof \RectorPrefix20211221\Symfony\Component\Debug\DebugClassLoader) {
+            if ($autoloader[0] instanceof DebugClassLoader || $autoloader[0] instanceof LegacyDebugClassLoader) {
                 $autoloader = $autoloader[0]->getClassLoader();
             }
-            if (!\is_array($autoloader) || !$autoloader[0] instanceof \RectorPrefix20211221\Composer\Autoload\ClassLoader || !$autoloader[0]->findFile(__CLASS__)) {
+            if (!\is_array($autoloader) || !$autoloader[0] instanceof ClassLoader || !$autoloader[0]->findFile(__CLASS__)) {
                 continue;
             }
             foreach (\get_declared_classes() as $class) {
@@ -1872,13 +1960,13 @@ EOF;
         }
         return $file;
     }
-    private function getClasses(\RectorPrefix20211221\Symfony\Component\DependencyInjection\Definition $definition, string $id) : array
+    private function getClasses(Definition $definition, string $id) : array
     {
         $classes = [];
-        while ($definition instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Definition) {
+        while ($definition instanceof Definition) {
             foreach ($definition->getTag($this->preloadTags[0]) as $tag) {
                 if (!isset($tag['class'])) {
-                    throw new \RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\InvalidArgumentException(\sprintf('Missing attribute "class" on tag "%s" for service "%s".', $this->preloadTags[0], $id));
+                    throw new InvalidArgumentException(\sprintf('Missing attribute "class" on tag "%s" for service "%s".', $this->preloadTags[0], $id));
                 }
                 $classes[] = \trim($tag['class'], '\\');
             }

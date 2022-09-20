@@ -39,6 +39,7 @@ class TestObject
         'deleteData' =>  200,
         'updateData' =>  200,
         'getOTP' => 1000,
+        'startMessageQueue' => 700,
     ];
 
     const WEBAPI_AUTH_TEST_ACTIONS = [
@@ -258,6 +259,29 @@ class TestObject
         }
     }
 
+    /**
+     * Function to return credentials
+     * @return array
+     */
+    public function getCredentials()
+    {
+        $requiredCredentials = [];
+        foreach ($this->hooks as $hookObject) {
+            foreach ($hookObject->getActions() as $action) {
+                if (isset($action->getCustomActionAttributes()['requiredCredentials'])
+                    && !empty($action->getCustomActionAttributes()['requiredCredentials'])) {
+                    $requiredCredentials[] = $action->getCustomActionAttributes()['requiredCredentials'];
+                }
+            }
+        }
+        foreach ($this->getOrderedActions() as $action) {
+            if (isset($action->getCustomActionAttributes()['requiredCredentials'])
+                && !empty($action->getCustomActionAttributes()['requiredCredentials'])) {
+                $requiredCredentials[] = $action->getCustomActionAttributes()['requiredCredentials'];
+            }
+        }
+        return array_unique($requiredCredentials);
+    }
     /**
      * Function which takes a set of actions and estimates time for completion based on action type.
      *

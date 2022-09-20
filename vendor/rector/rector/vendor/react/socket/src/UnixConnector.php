@@ -1,10 +1,10 @@
 <?php
 
-namespace RectorPrefix20211221\React\Socket;
+namespace RectorPrefix202208\React\Socket;
 
-use RectorPrefix20211221\React\EventLoop\Loop;
-use RectorPrefix20211221\React\EventLoop\LoopInterface;
-use RectorPrefix20211221\React\Promise;
+use RectorPrefix202208\React\EventLoop\Loop;
+use RectorPrefix202208\React\EventLoop\LoopInterface;
+use RectorPrefix202208\React\Promise;
 use InvalidArgumentException;
 use RuntimeException;
 /**
@@ -13,26 +13,26 @@ use RuntimeException;
  * Unix domain sockets use atomic operations, so we can as well emulate
  * async behavior.
  */
-final class UnixConnector implements \RectorPrefix20211221\React\Socket\ConnectorInterface
+final class UnixConnector implements ConnectorInterface
 {
     private $loop;
-    public function __construct(\RectorPrefix20211221\React\EventLoop\LoopInterface $loop = null)
+    public function __construct(LoopInterface $loop = null)
     {
-        $this->loop = $loop ?: \RectorPrefix20211221\React\EventLoop\Loop::get();
+        $this->loop = $loop ?: Loop::get();
     }
     public function connect($path)
     {
         if (\strpos($path, '://') === \false) {
             $path = 'unix://' . $path;
         } elseif (\substr($path, 0, 7) !== 'unix://') {
-            return \RectorPrefix20211221\React\Promise\reject(new \InvalidArgumentException('Given URI "' . $path . '" is invalid (EINVAL)', \defined('SOCKET_EINVAL') ? \SOCKET_EINVAL : 22));
+            return Promise\reject(new \InvalidArgumentException('Given URI "' . $path . '" is invalid (EINVAL)', \defined('SOCKET_EINVAL') ? \SOCKET_EINVAL : 22));
         }
         $resource = @\stream_socket_client($path, $errno, $errstr, 1.0);
         if (!$resource) {
-            return \RectorPrefix20211221\React\Promise\reject(new \RuntimeException('Unable to connect to unix domain socket "' . $path . '": ' . $errstr . \RectorPrefix20211221\React\Socket\SocketServer::errconst($errno), $errno));
+            return Promise\reject(new \RuntimeException('Unable to connect to unix domain socket "' . $path . '": ' . $errstr . SocketServer::errconst($errno), $errno));
         }
-        $connection = new \RectorPrefix20211221\React\Socket\Connection($resource, $this->loop);
+        $connection = new Connection($resource, $this->loop);
         $connection->unix = \true;
-        return \RectorPrefix20211221\React\Promise\resolve($connection);
+        return Promise\resolve($connection);
     }
 }

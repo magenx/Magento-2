@@ -8,14 +8,15 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix20211221\Symfony\Component\Finder\Iterator;
+namespace RectorPrefix202208\Symfony\Component\Finder\Iterator;
 
-use RectorPrefix20211221\Symfony\Component\Finder\Exception\AccessDeniedException;
-use RectorPrefix20211221\Symfony\Component\Finder\SplFileInfo;
+use RectorPrefix202208\Symfony\Component\Finder\Exception\AccessDeniedException;
+use RectorPrefix202208\Symfony\Component\Finder\SplFileInfo;
 /**
  * Extends the \RecursiveDirectoryIterator to support relative paths.
  *
  * @author Victor Berchet <victor@suumit.com>
+ * @extends \RecursiveDirectoryIterator<string, SplFileInfo>
  */
 class RecursiveDirectoryIterator extends \RecursiveDirectoryIterator
 {
@@ -58,7 +59,7 @@ class RecursiveDirectoryIterator extends \RecursiveDirectoryIterator
     /**
      * Return an instance of SplFileInfo with support for relative paths.
      */
-    public function current() : \RectorPrefix20211221\Symfony\Component\Finder\SplFileInfo
+    public function current() : SplFileInfo
     {
         // the logic here avoids redoing the same work in all iterations
         if (!isset($this->subPath)) {
@@ -72,7 +73,7 @@ class RecursiveDirectoryIterator extends \RecursiveDirectoryIterator
         if ('/' !== ($basePath = $this->rootPath)) {
             $basePath .= $this->directorySeparator;
         }
-        return new \RectorPrefix20211221\Symfony\Component\Finder\SplFileInfo($basePath . $subPathname, $this->subPath, $subPathname);
+        return new SplFileInfo($basePath . $subPathname, $this->subPath, $subPathname);
     }
     public function hasChildren($allowLinks = \false) : bool
     {
@@ -83,7 +84,7 @@ class RecursiveDirectoryIterator extends \RecursiveDirectoryIterator
         try {
             parent::getChildren();
             return \true;
-        } catch (\UnexpectedValueException $e) {
+        } catch (\UnexpectedValueException $exception) {
             // If directory is unreadable and finder is set to ignore it, skip children
             return \false;
         }
@@ -104,7 +105,7 @@ class RecursiveDirectoryIterator extends \RecursiveDirectoryIterator
             }
             return $children;
         } catch (\UnexpectedValueException $e) {
-            throw new \RectorPrefix20211221\Symfony\Component\Finder\Exception\AccessDeniedException($e->getMessage(), $e->getCode(), $e);
+            throw new AccessDeniedException($e->getMessage(), $e->getCode(), $e);
         }
     }
     /**

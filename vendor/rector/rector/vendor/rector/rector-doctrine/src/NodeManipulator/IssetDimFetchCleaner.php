@@ -20,22 +20,26 @@ use Rector\NodeTypeResolver\Node\AttributeKey;
 final class IssetDimFetchCleaner
 {
     /**
+     * @readonly
      * @var \Rector\Core\PhpParser\Node\BetterNodeFinder
      */
     private $betterNodeFinder;
     /**
+     * @readonly
      * @var \Rector\Core\PhpParser\Node\Value\ValueResolver
      */
     private $valueResolver;
     /**
+     * @readonly
      * @var \Rector\Core\PhpParser\Comparing\NodeComparator
      */
     private $nodeComparator;
     /**
+     * @readonly
      * @var \Rector\NodeRemoval\NodeRemover
      */
     private $nodeRemover;
-    public function __construct(\Rector\Core\PhpParser\Node\BetterNodeFinder $betterNodeFinder, \Rector\Core\PhpParser\Node\Value\ValueResolver $valueResolver, \Rector\Core\PhpParser\Comparing\NodeComparator $nodeComparator, \Rector\NodeRemoval\NodeRemover $nodeRemover)
+    public function __construct(BetterNodeFinder $betterNodeFinder, ValueResolver $valueResolver, NodeComparator $nodeComparator, NodeRemover $nodeRemover)
     {
         $this->betterNodeFinder = $betterNodeFinder;
         $this->valueResolver = $valueResolver;
@@ -45,18 +49,18 @@ final class IssetDimFetchCleaner
     /**
      * @return string[]
      */
-    public function resolveOptionalParamNames(\PhpParser\Node\Stmt\ClassMethod $classMethod, \PhpParser\Node\Expr\Variable $paramVariable) : array
+    public function resolveOptionalParamNames(ClassMethod $classMethod, Variable $paramVariable) : array
     {
         $optionalParamNames = [];
         foreach ((array) $classMethod->stmts as $stmt) {
-            if (!$stmt instanceof \PhpParser\Node\Stmt\If_) {
+            if (!$stmt instanceof If_) {
                 continue;
             }
             /** @var If_ $if */
             $if = $stmt;
             /** @var Isset_|null $isset */
-            $isset = $this->betterNodeFinder->findFirstInstanceOf($if->cond, \PhpParser\Node\Expr\Isset_::class);
-            if (!$isset instanceof \PhpParser\Node\Expr\Isset_) {
+            $isset = $this->betterNodeFinder->findFirstInstanceOf($if->cond, Isset_::class);
+            if (!$isset instanceof Isset_) {
                 continue;
             }
             foreach ($isset->vars as $var) {
@@ -75,17 +79,17 @@ final class IssetDimFetchCleaner
         }
         return $optionalParamNames;
     }
-    public function removeArrayDimFetchIssets(\PhpParser\Node\Stmt\ClassMethod $classMethod, \PhpParser\Node\Expr\Variable $paramVariable) : void
+    public function removeArrayDimFetchIssets(ClassMethod $classMethod, Variable $paramVariable) : void
     {
         foreach ((array) $classMethod->stmts as $stmt) {
-            if (!$stmt instanceof \PhpParser\Node\Stmt\If_) {
+            if (!$stmt instanceof If_) {
                 continue;
             }
             /** @var If_ $if */
             $if = $stmt;
             /** @var Isset_|null $isset */
-            $isset = $this->betterNodeFinder->findFirstInstanceOf($if->cond, \PhpParser\Node\Expr\Isset_::class);
-            if (!$isset instanceof \PhpParser\Node\Expr\Isset_) {
+            $isset = $this->betterNodeFinder->findFirstInstanceOf($if->cond, Isset_::class);
+            if (!$isset instanceof Isset_) {
                 continue;
             }
             foreach ($isset->vars as $var) {
@@ -97,19 +101,19 @@ final class IssetDimFetchCleaner
             }
         }
     }
-    private function isArrayDimFetchOnVariable(\PhpParser\Node\Expr $var, \PhpParser\Node\Expr\Variable $desiredVariable) : bool
+    private function isArrayDimFetchOnVariable(Expr $expr, Variable $desiredVariable) : bool
     {
-        if (!$var instanceof \PhpParser\Node\Expr\ArrayDimFetch) {
+        if (!$expr instanceof ArrayDimFetch) {
             return \false;
         }
-        return $this->nodeComparator->areNodesEqual($desiredVariable, $var->var);
+        return $this->nodeComparator->areNodesEqual($desiredVariable, $expr->var);
     }
     /**
      * @return mixed|mixed[]|string|null
      */
-    private function matchArrayDimFetchValue(\PhpParser\Node\Expr $expr, \PhpParser\Node\Expr\Variable $variable)
+    private function matchArrayDimFetchValue(Expr $expr, Variable $variable)
     {
-        if (!$expr instanceof \PhpParser\Node\Expr\ArrayDimFetch) {
+        if (!$expr instanceof ArrayDimFetch) {
             return null;
         }
         if ($expr->dim === null) {
@@ -120,12 +124,12 @@ final class IssetDimFetchCleaner
         }
         return $this->valueResolver->getValue($expr->dim);
     }
-    private function isRequiredIsset(\PhpParser\Node\Expr\Isset_ $isset, \PhpParser\Node\Stmt\If_ $if) : bool
+    private function isRequiredIsset(Isset_ $isset, If_ $if) : bool
     {
-        $issetParent = $isset->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::PARENT_NODE);
-        if (!$issetParent instanceof \PhpParser\Node\Expr\BooleanNot) {
+        $issetParent = $isset->getAttribute(AttributeKey::PARENT_NODE);
+        if (!$issetParent instanceof BooleanNot) {
             return \false;
         }
-        return $this->betterNodeFinder->hasInstancesOf($if->stmts, [\PhpParser\Node\Expr\Throw_::class, \PhpParser\Node\Stmt\Throw_::class]);
+        return $this->betterNodeFinder->hasInstancesOf($if->stmts, [Throw_::class, ThrowStmt::class]);
     }
 }

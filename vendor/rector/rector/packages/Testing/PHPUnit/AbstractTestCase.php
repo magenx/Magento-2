@@ -4,11 +4,11 @@ declare (strict_types=1);
 namespace Rector\Testing\PHPUnit;
 
 use PHPUnit\Framework\TestCase;
-use RectorPrefix20211221\Psr\Container\ContainerInterface;
+use RectorPrefix202208\Psr\Container\ContainerInterface;
 use Rector\Core\Exception\ShouldNotHappenException;
 use Rector\Core\Kernel\RectorKernel;
-use RectorPrefix20211221\Webmozart\Assert\Assert;
-abstract class AbstractTestCase extends \PHPUnit\Framework\TestCase
+use RectorPrefix202208\Webmozart\Assert\Assert;
+abstract class AbstractTestCase extends TestCase
 {
     /**
      * @var array<string, RectorKernel>
@@ -32,7 +32,7 @@ abstract class AbstractTestCase extends \PHPUnit\Framework\TestCase
             $rectorKernel = self::$kernelsByHash[$configsHash];
             self::$currentContainer = $rectorKernel->getContainer();
         } else {
-            $rectorKernel = new \Rector\Core\Kernel\RectorKernel();
+            $rectorKernel = new RectorKernel();
             $container = $rectorKernel->createFromConfigs($configFiles);
             self::$kernelsByHash[$configsHash] = $rectorKernel;
             self::$currentContainer = $container;
@@ -43,17 +43,17 @@ abstract class AbstractTestCase extends \PHPUnit\Framework\TestCase
      *
      * @template T of object
      * @param class-string<T> $type
-     * @return object
+     * @return T
      */
-    protected function getService(string $type)
+    protected function getService(string $type) : object
     {
         if (self::$currentContainer === null) {
-            throw new \Rector\Core\Exception\ShouldNotHappenException('First, create container with "bootWithConfigFileInfos([...])"');
+            throw new ShouldNotHappenException('First, create container with "bootWithConfigFileInfos([...])"');
         }
         $object = self::$currentContainer->get($type);
         if ($object === null) {
             $message = \sprintf('Service "%s" was not found', $type);
-            throw new \Rector\Core\Exception\ShouldNotHappenException($message);
+            throw new ShouldNotHappenException($message);
         }
         return $object;
     }
@@ -62,8 +62,8 @@ abstract class AbstractTestCase extends \PHPUnit\Framework\TestCase
      */
     private function createConfigsHash(array $configFiles) : string
     {
-        \RectorPrefix20211221\Webmozart\Assert\Assert::allFile($configFiles);
-        \RectorPrefix20211221\Webmozart\Assert\Assert::allString($configFiles);
+        Assert::allFile($configFiles);
+        Assert::allString($configFiles);
         $configHash = '';
         foreach ($configFiles as $configFile) {
             $configHash .= \md5_file($configFile);

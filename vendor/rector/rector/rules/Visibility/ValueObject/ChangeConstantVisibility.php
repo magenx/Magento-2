@@ -8,8 +8,8 @@ use Rector\Core\Validation\RectorAssert;
 final class ChangeConstantVisibility
 {
     /**
+     * @var class-string
      * @readonly
-     * @var string
      */
     private $class;
     /**
@@ -22,16 +22,19 @@ final class ChangeConstantVisibility
      * @var int
      */
     private $visibility;
+    /**
+     * @param class-string $class
+     */
     public function __construct(string $class, string $constant, int $visibility)
     {
         $this->class = $class;
         $this->constant = $constant;
         $this->visibility = $visibility;
-        \Rector\Core\Validation\RectorAssert::className($class);
+        RectorAssert::className($class);
     }
-    public function getObjectType() : \PHPStan\Type\ObjectType
+    public function getObjectType() : ObjectType
     {
-        return new \PHPStan\Type\ObjectType($this->class);
+        return new ObjectType($this->class);
     }
     public function getConstant() : string
     {

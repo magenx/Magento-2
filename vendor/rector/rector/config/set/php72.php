@@ -1,8 +1,9 @@
 <?php
 
 declare (strict_types=1);
-namespace RectorPrefix20211221;
+namespace RectorPrefix202208;
 
+use Rector\Config\RectorConfig;
 use Rector\Php72\Rector\Assign\ListEachRector;
 use Rector\Php72\Rector\Assign\ReplaceEachAssignmentWithKeyCurrentRector;
 use Rector\Php72\Rector\FuncCall\CreateFunctionToAnonymousFunctionRector;
@@ -14,14 +15,12 @@ use Rector\Php72\Rector\FuncCall\StringsAssertNakedRector;
 use Rector\Php72\Rector\Unset_\UnsetCastRector;
 use Rector\Php72\Rector\While_\WhileEachToForeachRector;
 use Rector\Renaming\Rector\FuncCall\RenameFunctionRector;
-use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
-return static function (\Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator $containerConfigurator) : void {
-    $services = $containerConfigurator->services();
-    $services->set(\Rector\Php72\Rector\While_\WhileEachToForeachRector::class);
-    $services->set(\Rector\Php72\Rector\Assign\ListEachRector::class);
-    $services->set(\Rector\Php72\Rector\Assign\ReplaceEachAssignmentWithKeyCurrentRector::class);
-    $services->set(\Rector\Php72\Rector\Unset_\UnsetCastRector::class);
-    $services->set(\Rector\Renaming\Rector\FuncCall\RenameFunctionRector::class)->configure([
+return static function (RectorConfig $rectorConfig) : void {
+    $rectorConfig->rule(WhileEachToForeachRector::class);
+    $rectorConfig->rule(ListEachRector::class);
+    $rectorConfig->rule(ReplaceEachAssignmentWithKeyCurrentRector::class);
+    $rectorConfig->rule(UnsetCastRector::class);
+    $rectorConfig->ruleWithConfiguration(RenameFunctionRector::class, [
         # and imagewbmp
         'jpeg2wbmp' => 'imagecreatefromjpeg',
         # or imagewbmp
@@ -32,10 +31,10 @@ return static function (\Symfony\Component\DependencyInjection\Loader\Configurat
         'gmp_random' => 'gmp_random_bits',
         'read_exif_data' => 'exif_read_data',
     ]);
-    $services->set(\Rector\Php72\Rector\FuncCall\GetClassOnNullRector::class);
-    $services->set(\Rector\Php72\Rector\FuncCall\IsObjectOnIncompleteClassRector::class);
-    $services->set(\Rector\Php72\Rector\FuncCall\ParseStrWithResultArgumentRector::class);
-    $services->set(\Rector\Php72\Rector\FuncCall\StringsAssertNakedRector::class);
-    $services->set(\Rector\Php72\Rector\FuncCall\CreateFunctionToAnonymousFunctionRector::class);
-    $services->set(\Rector\Php72\Rector\FuncCall\StringifyDefineRector::class);
+    $rectorConfig->rule(GetClassOnNullRector::class);
+    $rectorConfig->rule(IsObjectOnIncompleteClassRector::class);
+    $rectorConfig->rule(ParseStrWithResultArgumentRector::class);
+    $rectorConfig->rule(StringsAssertNakedRector::class);
+    $rectorConfig->rule(CreateFunctionToAnonymousFunctionRector::class);
+    $rectorConfig->rule(StringifyDefineRector::class);
 };

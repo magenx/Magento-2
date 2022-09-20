@@ -4,11 +4,12 @@ declare (strict_types=1);
 namespace Rector\Transform\ValueObject;
 
 use PHPStan\Type\ObjectType;
+use Rector\Core\Validation\RectorAssert;
 final class MethodCallToStaticCall
 {
     /**
+     * @var class-string
      * @readonly
-     * @var string
      */
     private $oldClass;
     /**
@@ -17,8 +18,8 @@ final class MethodCallToStaticCall
      */
     private $oldMethod;
     /**
+     * @var class-string
      * @readonly
-     * @var string
      */
     private $newClass;
     /**
@@ -26,16 +27,24 @@ final class MethodCallToStaticCall
      * @var string
      */
     private $newMethod;
+    /**
+     * @param class-string $oldClass
+     * @param class-string $newClass
+     */
     public function __construct(string $oldClass, string $oldMethod, string $newClass, string $newMethod)
     {
         $this->oldClass = $oldClass;
         $this->oldMethod = $oldMethod;
         $this->newClass = $newClass;
         $this->newMethod = $newMethod;
+        RectorAssert::className($oldClass);
+        RectorAssert::className($oldMethod);
+        RectorAssert::className($newClass);
+        RectorAssert::className($newMethod);
     }
-    public function getOldObjectType() : \PHPStan\Type\ObjectType
+    public function getOldObjectType() : ObjectType
     {
-        return new \PHPStan\Type\ObjectType($this->oldClass);
+        return new ObjectType($this->oldClass);
     }
     public function getOldMethod() : string
     {

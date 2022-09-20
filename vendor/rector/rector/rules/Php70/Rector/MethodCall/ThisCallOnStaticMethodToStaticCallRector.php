@@ -9,6 +9,7 @@ use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassLike;
 use PHPStan\Reflection\Php\PhpMethodReflection;
+use PHPStan\Reflection\ReflectionProvider;
 use PHPStan\Type\ObjectType;
 use Rector\Core\Enum\ObjectReference;
 use Rector\Core\Rector\AbstractRector;
@@ -19,10 +20,10 @@ use Rector\VersionBonding\Contract\MinPhpVersionInterface;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
- * @see https://3v4l.org/rkiSC
+ * @changelog https://3v4l.org/rkiSC
  * @see \Rector\Tests\Php70\Rector\MethodCall\ThisCallOnStaticMethodToStaticCallRector\ThisCallOnStaticMethodToStaticCallRectorTest
  */
-final class ThisCallOnStaticMethodToStaticCallRector extends \Rector\Core\Rector\AbstractRector implements \Rector\VersionBonding\Contract\MinPhpVersionInterface
+final class ThisCallOnStaticMethodToStaticCallRector extends AbstractRector implements MinPhpVersionInterface
 {
     /**
      * @readonly
@@ -34,18 +35,24 @@ final class ThisCallOnStaticMethodToStaticCallRector extends \Rector\Core\Rector
      * @var \Rector\Core\Reflection\ReflectionResolver
      */
     private $reflectionResolver;
-    public function __construct(\Rector\NodeCollector\StaticAnalyzer $staticAnalyzer, \Rector\Core\Reflection\ReflectionResolver $reflectionResolver)
+    /**
+     * @readonly
+     * @var \PHPStan\Reflection\ReflectionProvider
+     */
+    private $reflectionProvider;
+    public function __construct(StaticAnalyzer $staticAnalyzer, ReflectionResolver $reflectionResolver, ReflectionProvider $reflectionProvider)
     {
         $this->staticAnalyzer = $staticAnalyzer;
         $this->reflectionResolver = $reflectionResolver;
+        $this->reflectionProvider = $reflectionProvider;
     }
     public function provideMinPhpVersion() : int
     {
-        return \Rector\Core\ValueObject\PhpVersionFeature::STATIC_CALL_ON_NON_STATIC;
+        return PhpVersionFeature::STATIC_CALL_ON_NON_STATIC;
     }
-    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
+    public function getRuleDefinition() : RuleDefinition
     {
-        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Changes $this->call() to static method to static call', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample(<<<'CODE_SAMPLE'
+        return new RuleDefinition('Changes $this->call() to static method to static call', [new CodeSample(<<<'CODE_SAMPLE'
 class SomeClass
 {
     public static function run()
@@ -78,14 +85,14 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [\PhpParser\Node\Expr\MethodCall::class];
+        return [MethodCall::class];
     }
     /**
      * @param MethodCall $node
      */
-    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
+    public function refactor(Node $node) : ?Node
     {
-        if (!$node->var instanceof \PhpParser\Node\Expr\Variable) {
+        if (!$node->var instanceof Variable) {
             return null;
         }
         if (!$this->nodeNameResolver->isName($node->var, 'this')) {
@@ -96,37 +103,44 @@ CODE_SAMPLE
             return null;
         }
         // skip PHPUnit calls, as they accept both self:: and $this-> formats
-        if ($this->isObjectType($node->var, new \PHPStan\Type\ObjectType('PHPUnit\\Framework\\TestCase'))) {
+        if ($this->isObjectType($node->var, new ObjectType('PHPUnit\\Framework\\TestCase'))) {
             return null;
         }
-        $classLike = $this->betterNodeFinder->findParentType($node, \PhpParser\Node\Stmt\ClassLike::class);
-        if (!$classLike instanceof \PhpParser\Node\Stmt\ClassLike) {
+        $classLike = $this->betterNodeFinder->findParentType($node, ClassLike::class);
+        if (!$classLike instanceof ClassLike) {
             return null;
         }
         $className = (string) $this->nodeNameResolver->getName($classLike);
-        $isStaticMethod = $this->staticAnalyzer->isStaticMethod($methodName, $className);
+        if (!$this->reflectionProvider->hasClass($className)) {
+            return null;
+        }
+        $classReflection = $this->reflectionProvider->getClass($className);
+        $isStaticMethod = $this->staticAnalyzer->isStaticMethod($classReflection, $methodName);
         if (!$isStaticMethod) {
             return null;
         }
         $objectReference = $this->resolveClassSelf($node);
         return $this->nodeFactory->createStaticCall($objectReference, $methodName, $node->args);
     }
-    private function resolveClassSelf(\PhpParser\Node\Expr\MethodCall $methodCall) : \Rector\Core\Enum\ObjectReference
+    /**
+     * @return ObjectReference::STATIC|ObjectReference::SELF
+     */
+    private function resolveClassSelf(MethodCall $methodCall) : string
     {
-        $classLike = $this->betterNodeFinder->findParentType($methodCall, \PhpParser\Node\Stmt\Class_::class);
-        if (!$classLike instanceof \PhpParser\Node\Stmt\Class_) {
-            return \Rector\Core\Enum\ObjectReference::STATIC();
+        $classLike = $this->betterNodeFinder->findParentType($methodCall, Class_::class);
+        if (!$classLike instanceof Class_) {
+            return ObjectReference::STATIC;
         }
         if ($classLike->isFinal()) {
-            return \Rector\Core\Enum\ObjectReference::SELF();
+            return ObjectReference::SELF;
         }
         $methodReflection = $this->reflectionResolver->resolveMethodReflectionFromMethodCall($methodCall);
-        if (!$methodReflection instanceof \PHPStan\Reflection\Php\PhpMethodReflection) {
-            return \Rector\Core\Enum\ObjectReference::STATIC();
+        if (!$methodReflection instanceof PhpMethodReflection) {
+            return ObjectReference::STATIC;
         }
         if (!$methodReflection->isPrivate()) {
-            return \Rector\Core\Enum\ObjectReference::STATIC();
+            return ObjectReference::STATIC;
         }
-        return \Rector\Core\Enum\ObjectReference::SELF();
+        return ObjectReference::SELF;
     }
 }

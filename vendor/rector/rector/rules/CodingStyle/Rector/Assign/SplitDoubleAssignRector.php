@@ -8,17 +8,16 @@ use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\CallLike;
 use PhpParser\Node\Stmt\Expression;
 use Rector\Core\Rector\AbstractRector;
-use Rector\NodeTypeResolver\Node\AttributeKey;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
  * @see \Rector\Tests\CodingStyle\Rector\Assign\SplitDoubleAssignRector\SplitDoubleAssignRectorTest
  */
-final class SplitDoubleAssignRector extends \Rector\Core\Rector\AbstractRector
+final class SplitDoubleAssignRector extends AbstractRector
 {
-    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
+    public function getRuleDefinition() : RuleDefinition
     {
-        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Split multiple inline assigns to each own lines default value, to prevent undefined array issues', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample(<<<'CODE_SAMPLE'
+        return new RuleDefinition('Split multiple inline assigns to each own lines default value, to prevent undefined array issues', [new CodeSample(<<<'CODE_SAMPLE'
 class SomeClass
 {
     public function run()
@@ -44,27 +43,30 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [\PhpParser\Node\Expr\Assign::class];
+        return [Expression::class];
     }
     /**
-     * @param Assign $node
+     * @param Expression $node
+     * @return Expression[]|null
      */
-    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
+    public function refactor(Node $node) : ?array
     {
-        $parent = $node->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::PARENT_NODE);
-        if (!$parent instanceof \PhpParser\Node\Stmt\Expression) {
+        if (!$node->expr instanceof Assign) {
             return null;
         }
-        if (!$node->expr instanceof \PhpParser\Node\Expr\Assign) {
+        $firstAssign = $node->expr;
+        if (!$firstAssign->expr instanceof Assign) {
             return null;
         }
-        $newAssign = new \PhpParser\Node\Expr\Assign($node->var, $node->expr->expr);
-        if (!$node->expr->expr instanceof \PhpParser\Node\Expr\CallLike) {
-            $this->nodesToAddCollector->addNodeAfterNode($node->expr, $node);
-            return $newAssign;
+        $nestedAssign = $firstAssign->expr;
+        $newAssign = new Assign($firstAssign->var, $nestedAssign->expr);
+        $newAssignExpression = new Expression($newAssign);
+        // avoid calling the same method/funtion/new twice
+        if (!$nestedAssign->expr instanceof CallLike) {
+            $varAssign = new Assign($nestedAssign->var, $nestedAssign->expr);
+            return [$newAssignExpression, new Expression($varAssign)];
         }
-        $varAssign = new \PhpParser\Node\Expr\Assign($node->expr->var, $node->var);
-        $this->nodesToAddCollector->addNodeBeforeNode(new \PhpParser\Node\Stmt\Expression($newAssign), $node);
-        return $varAssign;
+        $varAssign = new Assign($nestedAssign->var, $firstAssign->var);
+        return [$newAssignExpression, new Expression($varAssign)];
     }
 }

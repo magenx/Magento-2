@@ -8,9 +8,9 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix20211221\Symfony\Component\Config\Definition\Builder;
+namespace RectorPrefix202208\Symfony\Component\Config\Definition\Builder;
 
-use RectorPrefix20211221\Symfony\Component\Config\Definition\Exception\UnsetKeyException;
+use RectorPrefix202208\Symfony\Component\Config\Definition\Exception\UnsetKeyException;
 /**
  * This class builds an if expression.
  *
@@ -22,7 +22,7 @@ class ExprBuilder
     protected $node;
     public $ifPart;
     public $thenPart;
-    public function __construct(\RectorPrefix20211221\Symfony\Component\Config\Definition\Builder\NodeDefinition $node)
+    public function __construct(NodeDefinition $node)
     {
         $this->node = $node;
     }
@@ -85,7 +85,7 @@ class ExprBuilder
     /**
      * Tests if the value is empty.
      *
-     * @return ExprBuilder
+     * @return $this
      */
     public function ifEmpty()
     {
@@ -193,16 +193,15 @@ class ExprBuilder
     public function thenUnset()
     {
         $this->thenPart = function () {
-            throw new \RectorPrefix20211221\Symfony\Component\Config\Definition\Exception\UnsetKeyException('Unsetting key.');
+            throw new UnsetKeyException('Unsetting key.');
         };
         return $this;
     }
     /**
      * Returns the related node.
      *
-     * @return NodeDefinition|ArrayNodeDefinition|VariableNodeDefinition
-     *
      * @throws \RuntimeException
+     * @return \Symfony\Component\Config\Definition\Builder\NodeDefinition|\Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition|\Symfony\Component\Config\Definition\Builder\VariableNodeDefinition
      */
     public function end()
     {
@@ -218,10 +217,8 @@ class ExprBuilder
      * Builds the expressions.
      *
      * @param ExprBuilder[] $expressions An array of ExprBuilder instances to build
-     *
-     * @return array
      */
-    public static function buildExpressions(array $expressions)
+    public static function buildExpressions(array $expressions) : array
     {
         foreach ($expressions as $k => $expr) {
             if ($expr instanceof self) {

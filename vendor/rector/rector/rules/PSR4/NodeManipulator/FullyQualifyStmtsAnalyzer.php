@@ -8,14 +8,16 @@ use PhpParser\Node\Expr\ConstFetch;
 use PhpParser\Node\Name;
 use PhpParser\Node\Name\FullyQualified;
 use PhpParser\Node\Stmt;
+use PhpParser\Node\Stmt\GroupUse;
+use PhpParser\Node\Stmt\UseUse;
 use PHPStan\Reflection\Constant\RuntimeConstantReflection;
 use PHPStan\Reflection\ReflectionProvider;
 use Rector\Core\Configuration\Option;
 use Rector\Core\Enum\ObjectReference;
 use Rector\NodeNameResolver\NodeNameResolver;
 use Rector\NodeTypeResolver\Node\AttributeKey;
-use RectorPrefix20211221\Symplify\Astral\NodeTraverser\SimpleCallableNodeTraverser;
-use RectorPrefix20211221\Symplify\PackageBuilder\Parameter\ParameterProvider;
+use RectorPrefix202208\Symplify\Astral\NodeTraverser\SimpleCallableNodeTraverser;
+use RectorPrefix202208\Symplify\PackageBuilder\Parameter\ParameterProvider;
 final class FullyQualifyStmtsAnalyzer
 {
     /**
@@ -38,7 +40,7 @@ final class FullyQualifyStmtsAnalyzer
      * @var \PHPStan\Reflection\ReflectionProvider
      */
     private $reflectionProvider;
-    public function __construct(\RectorPrefix20211221\Symplify\PackageBuilder\Parameter\ParameterProvider $parameterProvider, \RectorPrefix20211221\Symplify\Astral\NodeTraverser\SimpleCallableNodeTraverser $simpleCallableNodeTraverser, \Rector\NodeNameResolver\NodeNameResolver $nodeNameResolver, \PHPStan\Reflection\ReflectionProvider $reflectionProvider)
+    public function __construct(ParameterProvider $parameterProvider, SimpleCallableNodeTraverser $simpleCallableNodeTraverser, NodeNameResolver $nodeNameResolver, ReflectionProvider $reflectionProvider)
     {
         $this->parameterProvider = $parameterProvider;
         $this->simpleCallableNodeTraverser = $simpleCallableNodeTraverser;
@@ -51,35 +53,43 @@ final class FullyQualifyStmtsAnalyzer
     public function process(array $stmts) : void
     {
         // no need to
-        if ($this->parameterProvider->provideBoolParameter(\Rector\Core\Configuration\Option::AUTO_IMPORT_NAMES)) {
+        if ($this->parameterProvider->provideBoolParameter(Option::AUTO_IMPORT_NAMES)) {
             return;
         }
         // FQNize all class names
-        $this->simpleCallableNodeTraverser->traverseNodesWithCallable($stmts, function (\PhpParser\Node $node) : ?FullyQualified {
-            if (!$node instanceof \PhpParser\Node\Name) {
+        $this->simpleCallableNodeTraverser->traverseNodesWithCallable($stmts, function (Node $node) : ?FullyQualified {
+            if (!$node instanceof Name) {
                 return null;
             }
             $name = $this->nodeNameResolver->getName($node);
-            if (\Rector\Core\Enum\ObjectReference::isValid($name)) {
+            if (\in_array($name, [ObjectReference::STATIC, ObjectReference::PARENT, ObjectReference::SELF], \true)) {
                 return null;
             }
             if ($this->isNativeConstant($node)) {
                 return null;
             }
-            return new \PhpParser\Node\Name\FullyQualified($name);
+            $parent = $node->getAttribute(AttributeKey::PARENT_NODE);
+            if ($parent instanceof GroupUse) {
+                $parent->setAttribute(AttributeKey::ORIGINAL_NODE, null);
+                return null;
+            }
+            if ($parent instanceof UseUse) {
+                return null;
+            }
+            return new FullyQualified($name);
         });
     }
-    private function isNativeConstant(\PhpParser\Node\Name $name) : bool
+    private function isNativeConstant(Name $name) : bool
     {
-        $parent = $name->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::PARENT_NODE);
-        if (!$parent instanceof \PhpParser\Node\Expr\ConstFetch) {
+        $parent = $name->getAttribute(AttributeKey::PARENT_NODE);
+        if (!$parent instanceof ConstFetch) {
             return \false;
         }
-        $scope = $name->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::SCOPE);
+        $scope = $name->getAttribute(AttributeKey::SCOPE);
         if (!$this->reflectionProvider->hasConstant($name, $scope)) {
             return \false;
         }
-        $constantReflection = $this->reflectionProvider->getConstant($name, $scope);
-        return $constantReflection instanceof \PHPStan\Reflection\Constant\RuntimeConstantReflection;
+        $globalConstantReflection = $this->reflectionProvider->getConstant($name, $scope);
+        return $globalConstantReflection instanceof RuntimeConstantReflection;
     }
 }

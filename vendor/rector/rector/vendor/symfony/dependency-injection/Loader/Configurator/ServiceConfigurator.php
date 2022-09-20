@@ -8,14 +8,14 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix20211221\Symfony\Component\DependencyInjection\Loader\Configurator;
+namespace RectorPrefix202208\Symfony\Component\DependencyInjection\Loader\Configurator;
 
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\ContainerBuilder;
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\Definition;
+use RectorPrefix202208\Symfony\Component\DependencyInjection\ContainerBuilder;
+use RectorPrefix202208\Symfony\Component\DependencyInjection\Definition;
 /**
  * @author Nicolas Grekas <p@tchwork.com>
  */
-class ServiceConfigurator extends \RectorPrefix20211221\Symfony\Component\DependencyInjection\Loader\Configurator\AbstractServiceConfigurator
+class ServiceConfigurator extends AbstractServiceConfigurator
 {
     use Traits\AbstractTrait;
     use Traits\ArgumentTrait;
@@ -37,12 +37,27 @@ class ServiceConfigurator extends \RectorPrefix20211221\Symfony\Component\Depend
     use Traits\SyntheticTrait;
     use Traits\TagTrait;
     public const FACTORY = 'services';
+    /**
+     * @var \Symfony\Component\DependencyInjection\ContainerBuilder
+     */
     private $container;
+    /**
+     * @var mixed[]
+     */
     private $instanceof;
+    /**
+     * @var bool
+     */
     private $allowParent;
+    /**
+     * @var string|null
+     */
     private $path;
+    /**
+     * @var bool
+     */
     private $destructed = \false;
-    public function __construct(\RectorPrefix20211221\Symfony\Component\DependencyInjection\ContainerBuilder $container, array $instanceof, bool $allowParent, \RectorPrefix20211221\Symfony\Component\DependencyInjection\Loader\Configurator\ServicesConfigurator $parent, \RectorPrefix20211221\Symfony\Component\DependencyInjection\Definition $definition, ?string $id, array $defaultTags, string $path = null)
+    public function __construct(ContainerBuilder $container, array $instanceof, bool $allowParent, ServicesConfigurator $parent, Definition $definition, ?string $id, array $defaultTags, string $path = null)
     {
         $this->container = $container;
         $this->instanceof = $instanceof;

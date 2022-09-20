@@ -5,18 +5,17 @@ namespace Rector\DeadCode\Rector\ClassConst;
 
 use PhpParser\Node;
 use PhpParser\Node\Stmt\ClassConst;
-use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\ClassReflection;
 use Rector\Core\NodeAnalyzer\EnumAnalyzer;
 use Rector\Core\NodeManipulator\ClassConstManipulator;
 use Rector\Core\Rector\AbstractRector;
-use Rector\NodeTypeResolver\Node\AttributeKey;
+use Rector\Core\Reflection\ReflectionResolver;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
  * @see \Rector\Tests\DeadCode\Rector\ClassConst\RemoveUnusedPrivateClassConstantRector\RemoveUnusedPrivateClassConstantRectorTest
  */
-final class RemoveUnusedPrivateClassConstantRector extends \Rector\Core\Rector\AbstractRector
+final class RemoveUnusedPrivateClassConstantRector extends AbstractRector
 {
     /**
      * @readonly
@@ -28,14 +27,20 @@ final class RemoveUnusedPrivateClassConstantRector extends \Rector\Core\Rector\A
      * @var \Rector\Core\NodeAnalyzer\EnumAnalyzer
      */
     private $enumAnalyzer;
-    public function __construct(\Rector\Core\NodeManipulator\ClassConstManipulator $classConstManipulator, \Rector\Core\NodeAnalyzer\EnumAnalyzer $enumAnalyzer)
+    /**
+     * @readonly
+     * @var \Rector\Core\Reflection\ReflectionResolver
+     */
+    private $reflectionResolver;
+    public function __construct(ClassConstManipulator $classConstManipulator, EnumAnalyzer $enumAnalyzer, ReflectionResolver $reflectionResolver)
     {
         $this->classConstManipulator = $classConstManipulator;
         $this->enumAnalyzer = $enumAnalyzer;
+        $this->reflectionResolver = $reflectionResolver;
     }
-    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
+    public function getRuleDefinition() : RuleDefinition
     {
-        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Remove unused class constants', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample(<<<'CODE_SAMPLE'
+        return new RuleDefinition('Remove unused class constants', [new CodeSample(<<<'CODE_SAMPLE'
 class SomeClass
 {
     private const SOME_CONST = 'dead';
@@ -60,22 +65,18 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [\PhpParser\Node\Stmt\ClassConst::class];
+        return [ClassConst::class];
     }
     /**
      * @param ClassConst $node
      */
-    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
+    public function refactor(Node $node) : ?Node
     {
         if ($this->shouldSkipClassConst($node)) {
             return null;
         }
-        $scope = $node->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::SCOPE);
-        if (!$scope instanceof \PHPStan\Analyser\Scope) {
-            return null;
-        }
-        $classReflection = $scope->getClassReflection();
-        if (!$classReflection instanceof \PHPStan\Reflection\ClassReflection) {
+        $classReflection = $this->reflectionResolver->resolveClassReflection($node);
+        if (!$classReflection instanceof ClassReflection) {
             return null;
         }
         if ($this->classConstManipulator->hasClassConstFetch($node, $classReflection)) {
@@ -84,7 +85,7 @@ CODE_SAMPLE
         $this->removeNode($node);
         return null;
     }
-    private function shouldSkipClassConst(\PhpParser\Node\Stmt\ClassConst $classConst) : bool
+    private function shouldSkipClassConst(ClassConst $classConst) : bool
     {
         if (!$classConst->isPrivate()) {
             return \true;

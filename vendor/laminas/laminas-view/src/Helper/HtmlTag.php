@@ -1,12 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Laminas\View\Helper;
+
+use function array_merge;
+use function method_exists;
+use function sprintf;
 
 /**
  * Renders <html> tag (both opening and closing) of a web page, to which some custom
  * attributes can be added dynamically.
- *
- * @author Nikola Posa <posa.nikola@gmail.com>
  */
 class HtmlTag extends AbstractHtmlElement
 {
@@ -25,10 +29,7 @@ class HtmlTag extends AbstractHtmlElement
      */
     protected $useNamespaces = false;
 
-    /**
-     * @var bool
-     */
-    private $handledNamespaces = false;
+    private bool $handledNamespaces = false;
 
     /**
      * Retrieve object instance; optionally add attributes.

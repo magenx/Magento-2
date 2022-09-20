@@ -17,9 +17,9 @@ interface InjectorInterface
     /**
      * Create a new instance of a class or alias
      *
-     * @param array $options Parameters used for instanciation
-     * @return object The resulting instace
-     * @throws Exception\ExceptionInterface When an error occours during instanciation.
+     * @param array $options Parameters used for instantiation
+     * @return object The resulting instance
+     * @throws Exception\ExceptionInterface When an error occours during instantiation.
      */
     public function create(string $name, array $options = []);
 }

@@ -8,20 +8,21 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix20211221\Symfony\Component\DependencyInjection\Loader;
+namespace RectorPrefix202208\Symfony\Component\DependencyInjection\Loader;
 
 /**
  * GlobFileLoader loads files from a glob pattern.
  *
  * @author Nicolas Grekas <p@tchwork.com>
  */
-class GlobFileLoader extends \RectorPrefix20211221\Symfony\Component\DependencyInjection\Loader\FileLoader
+class GlobFileLoader extends FileLoader
 {
     /**
      * {@inheritdoc}
-     * @param string|null $type
+     * @param mixed $resource
+     * @return mixed
      */
-    public function load($resource, $type = null)
+    public function load($resource, string $type = null)
     {
         foreach ($this->glob($resource, \false, $globResource) as $path => $info) {
             $this->import($path);
@@ -31,8 +32,9 @@ class GlobFileLoader extends \RectorPrefix20211221\Symfony\Component\DependencyI
     }
     /**
      * {@inheritdoc}
+     * @param mixed $resource
      */
-    public function supports($resource, string $type = null)
+    public function supports($resource, string $type = null) : bool
     {
         return 'glob' === $type;
     }

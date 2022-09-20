@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © 2013-2017 Magento, Inc. All rights reserved.
+ * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
 namespace PayPal\Braintree\Gateway\Response;
@@ -12,19 +12,15 @@ use PayPal\Braintree\Gateway\Helper\SubjectReader;
 use Magento\Payment\Gateway\Response\HandlerInterface;
 use Magento\Sales\Api\Data\OrderPaymentInterface;
 
-/**
- * Class ThreeDSecureDetailsHandler
- * @package PayPal\Braintree\Gateway\Response
- */
 class ThreeDSecureDetailsHandler implements HandlerInterface
 {
-    const LIABILITY_SHIFTED = 'liabilityShifted';
+    private const LIABILITY_SHIFTED = 'liabilityShifted';
 
-    const LIABILITY_SHIFT_POSSIBLE = 'liabilityShiftPossible';
+    private const LIABILITY_SHIFT_POSSIBLE = 'liabilityShiftPossible';
 
-    const ECI_FLAG = 'eciFlag';
+    private const ECI_FLAG = 'eciFlag';
 
-    const ECI_ACCEPTED_VALUES = [
+    private const ECI_ACCEPTED_VALUES = [
         '00' => 'Failed',
         '01' => 'Attempted',
         '02' => 'Success',
@@ -84,12 +80,14 @@ class ThreeDSecureDetailsHandler implements HandlerInterface
     }
 
     /**
-     * @param $eciFlagValue
+     * Get Eci Flag information
+     *
+     * @param string $eciFlagValue
      * @return mixed|string
      */
-    public function getEciFlagInformation($eciFlagValue)
+    public function getEciFlagInformation(string $eciFlagValue)
     {
-        if ($eciFlagValue !== NULL && array_key_exists($eciFlagValue, self::ECI_ACCEPTED_VALUES)) {
+        if ($eciFlagValue !== null && array_key_exists($eciFlagValue, self::ECI_ACCEPTED_VALUES)) {
             return self::ECI_ACCEPTED_VALUES[$eciFlagValue];
         }
         return '';

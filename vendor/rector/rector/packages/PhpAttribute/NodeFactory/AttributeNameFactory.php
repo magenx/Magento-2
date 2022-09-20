@@ -5,21 +5,47 @@ namespace Rector\PhpAttribute\NodeFactory;
 
 use PhpParser\Node\Name;
 use PhpParser\Node\Name\FullyQualified;
+use PhpParser\Node\Stmt\Use_;
 use Rector\BetterPhpDocParser\PhpDoc\DoctrineAnnotationTagValueNode;
 use Rector\Php80\ValueObject\AnnotationToAttribute;
+use Rector\PhpAttribute\UseAliasNameMatcher;
+use Rector\PhpAttribute\ValueObject\UseAliasMetadata;
 final class AttributeNameFactory
 {
     /**
-     * @return \PhpParser\Node\Name|\PhpParser\Node\Name\FullyQualified
+     * @readonly
+     * @var \Rector\PhpAttribute\UseAliasNameMatcher
      */
-    public function create(\Rector\Php80\ValueObject\AnnotationToAttribute $annotationToAttribute, \Rector\BetterPhpDocParser\PhpDoc\DoctrineAnnotationTagValueNode $doctrineAnnotationTagValueNode)
+    private $useAliasNameMatcher;
+    public function __construct(UseAliasNameMatcher $useAliasNameMatcher)
     {
-        // attribute and class name are the same, so we re-use the short form to keep code compatible with previous one
+        $this->useAliasNameMatcher = $useAliasNameMatcher;
+    }
+    /**
+     * @param Use_[] $uses
+     * @return \PhpParser\Node\Name\FullyQualified|\PhpParser\Node\Name
+     */
+    public function create(AnnotationToAttribute $annotationToAttribute, DoctrineAnnotationTagValueNode $doctrineAnnotationTagValueNode, array $uses)
+    {
+        // A. attribute and class name are the same, so we re-use the short form to keep code compatible with previous one
         if ($annotationToAttribute->getAttributeClass() === $annotationToAttribute->getTag()) {
             $attributeName = $doctrineAnnotationTagValueNode->identifierTypeNode->name;
             $attributeName = \ltrim($attributeName, '@');
-            return new \PhpParser\Node\Name($attributeName);
+            return new Name($attributeName);
         }
-        return new \PhpParser\Node\Name\FullyQualified($annotationToAttribute->getAttributeClass());
+        // B. different name
+        $useAliasMetadata = $this->useAliasNameMatcher->match($uses, $doctrineAnnotationTagValueNode->identifierTypeNode->name, $annotationToAttribute);
+        if ($useAliasMetadata instanceof UseAliasMetadata) {
+            $useUse = $useAliasMetadata->getUseUse();
+            // is same as name?
+            $useImportName = $useAliasMetadata->getUseImportName();
+            if ($useUse->name->toString() !== $useImportName) {
+                // no? rename
+                $useUse->name = new Name($useImportName);
+            }
+            return new Name($useAliasMetadata->getShortAttributeName());
+        }
+        // 3. the class is not aliased and is compeltelly new... return the FQN version
+        return new FullyQualified($annotationToAttribute->getAttributeClass());
     }
 }

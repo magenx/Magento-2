@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Laminas\Router\Http;
 
 use Laminas\Router\Exception;
@@ -15,8 +17,7 @@ use function sprintf;
  */
 class Placeholder implements RouteInterface
 {
-    /** @var array */
-    private $defaults;
+    private array $defaults;
 
     public function __construct(array $defaults)
     {

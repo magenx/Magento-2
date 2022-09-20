@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Laminas\Di\Definition\Reflection;
 
 use Laminas\Di\Definition\ParameterInterface;
+use Laminas\Di\Exception\UnsupportedReflectionTypeException;
+use ReflectionNamedType;
 use ReflectionParameter;
 
 /**
@@ -56,11 +58,19 @@ class Parameter implements ParameterInterface
      * {@inheritDoc}
      *
      * @see ParameterInterface::getType()
+     *
+     * @throws UnsupportedReflectionTypeException
      */
     public function getType(): ?string
     {
         if ($this->reflection->hasType()) {
-            return $this->reflection->getType()->getName();
+            $type = $this->reflection->getType();
+
+            if ($type !== null && ! $type instanceof ReflectionNamedType) {
+                throw UnsupportedReflectionTypeException::fromUnionOrIntersectionType($type);
+            }
+
+            return $type->getName();
         }
 
         return null;
@@ -80,11 +90,18 @@ class Parameter implements ParameterInterface
      * {@inheritDoc}
      *
      * @see ParameterInterface::isScalar()
+     *
+     * @throws UnsupportedReflectionTypeException
      */
     public function isBuiltin(): bool
     {
         if ($this->reflection->hasType()) {
             $type = $this->reflection->getType();
+
+            if ($type !== null && ! $type instanceof ReflectionNamedType) {
+                throw UnsupportedReflectionTypeException::fromUnionOrIntersectionType($type);
+            }
+
             return $type !== null ? $type->isBuiltin() : false;
         }
 

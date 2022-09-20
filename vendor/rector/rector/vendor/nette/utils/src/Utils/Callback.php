@@ -5,9 +5,9 @@
  * Copyright (c) 2004 David Grudl (https://davidgrudl.com)
  */
 declare (strict_types=1);
-namespace RectorPrefix20211221\Nette\Utils;
+namespace RectorPrefix202208\Nette\Utils;
 
-use RectorPrefix20211221\Nette;
+use RectorPrefix202208\Nette;
 use function is_array, is_object, is_string;
 /**
  * PHP callable tools.
@@ -19,13 +19,13 @@ final class Callback
      * @param  string|object|callable  $callable  class, object, callable
      * @deprecated use Closure::fromCallable()
      */
-    public static function closure($callable, string $method = null) : \Closure
+    public static function closure($callable, ?string $method = null) : \Closure
     {
         \trigger_error(__METHOD__ . '() is deprecated, use Closure::fromCallable().', \E_USER_DEPRECATED);
         try {
             return \Closure::fromCallable($method === null ? $callable : [$callable, $method]);
         } catch (\TypeError $e) {
-            throw new \RectorPrefix20211221\Nette\InvalidArgumentException($e->getMessage());
+            throw new Nette\InvalidArgumentException($e->getMessage());
         }
     }
     /**
@@ -58,7 +58,7 @@ final class Callback
     {
         $prev = \set_error_handler(function ($severity, $message, $file) use($onError, &$prev, $function) : ?bool {
             if ($file === __FILE__) {
-                $msg = \ini_get('html_errors') ? \RectorPrefix20211221\Nette\Utils\Html::htmlToText($message) : $message;
+                $msg = \ini_get('html_errors') ? Html::htmlToText($message) : $message;
                 $msg = \preg_replace("#^{$function}\\(.*?\\): #", '', $msg);
                 if ($onError($msg, $severity) !== \false) {
                     return null;
@@ -82,7 +82,7 @@ final class Callback
     public static function check($callable, bool $syntax = \false)
     {
         if (!\is_callable($callable, $syntax)) {
-            throw new \RectorPrefix20211221\Nette\InvalidArgumentException($syntax ? 'Given value is not a callable type.' : \sprintf("Callback '%s' is not callable.", self::toString($callable)));
+            throw new Nette\InvalidArgumentException($syntax ? 'Given value is not a callable type.' : \sprintf("Callback '%s' is not callable.", self::toString($callable)));
         }
         return $callable;
     }
@@ -95,10 +95,10 @@ final class Callback
         if ($callable instanceof \Closure) {
             $inner = self::unwrap($callable);
             return '{closure' . ($inner instanceof \Closure ? '}' : ' ' . self::toString($inner) . '}');
-        } elseif (\is_string($callable) && $callable[0] === "\0") {
+        } elseif (is_string($callable) && $callable[0] === "\x00") {
             return '{lambda}';
         } else {
-            \is_callable(\is_object($callable) ? [$callable, '__invoke'] : $callable, \true, $textual);
+            \is_callable(is_object($callable) ? [$callable, '__invoke'] : $callable, \true, $textual);
             return $textual;
         }
     }
@@ -113,11 +113,11 @@ final class Callback
         if ($callable instanceof \Closure) {
             $callable = self::unwrap($callable);
         }
-        if (\is_string($callable) && \strpos($callable, '::')) {
+        if (is_string($callable) && \strpos($callable, '::')) {
             return new \ReflectionMethod($callable);
-        } elseif (\is_array($callable)) {
+        } elseif (is_array($callable)) {
             return new \ReflectionMethod($callable[0], $callable[1]);
-        } elseif (\is_object($callable) && !$callable instanceof \Closure) {
+        } elseif (is_object($callable) && !$callable instanceof \Closure) {
             return new \ReflectionMethod($callable, '__invoke');
         } else {
             return new \ReflectionFunction($callable);
@@ -128,7 +128,7 @@ final class Callback
      */
     public static function isStatic(callable $callable) : bool
     {
-        return \is_array($callable) ? \is_string($callable[0]) : \is_string($callable);
+        return is_array($callable) ? is_string($callable[0]) : is_string($callable);
     }
     /**
      * Unwraps closure created by Closure::fromCallable().

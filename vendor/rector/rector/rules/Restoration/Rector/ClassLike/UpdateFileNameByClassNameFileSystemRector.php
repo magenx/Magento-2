@@ -5,6 +5,7 @@ namespace Rector\Restoration\Rector\ClassLike;
 
 use PhpParser\Node;
 use PhpParser\Node\Stmt\ClassLike;
+use Rector\Core\Application\FileSystem\RemovedAndAddedFilesCollector;
 use Rector\Core\Rector\AbstractRector;
 use Rector\Core\ValueObject\Application\File;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
@@ -12,11 +13,20 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
  * @see \Rector\Tests\Restoration\Rector\ClassLike\UpdateFileNameByClassNameFileSystemRector\UpdateFileNameByClassNameFileSystemRectorTest
  */
-final class UpdateFileNameByClassNameFileSystemRector extends \Rector\Core\Rector\AbstractRector
+final class UpdateFileNameByClassNameFileSystemRector extends AbstractRector
 {
-    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
+    /**
+     * @readonly
+     * @var \Rector\Core\Application\FileSystem\RemovedAndAddedFilesCollector
+     */
+    private $removedAndAddedFilesCollector;
+    public function __construct(RemovedAndAddedFilesCollector $removedAndAddedFilesCollector)
     {
-        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Rename file to respect class name', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample(<<<'CODE_SAMPLE'
+        $this->removedAndAddedFilesCollector = $removedAndAddedFilesCollector;
+    }
+    public function getRuleDefinition() : RuleDefinition
+    {
+        return new RuleDefinition('Rename file to respect class name', [new CodeSample(<<<'CODE_SAMPLE'
 // app/SomeClass.php
 class AnotherClass
 {
@@ -35,12 +45,12 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [\PhpParser\Node\Stmt\ClassLike::class];
+        return [ClassLike::class];
     }
     /**
      * @param ClassLike $node
      */
-    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
+    public function refactor(Node $node) : ?Node
     {
         $className = $this->getName($node);
         if ($className === null) {

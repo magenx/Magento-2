@@ -8,13 +8,11 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix20211221\Symfony\Component\DependencyInjection\Loader\Configurator\Traits;
+namespace RectorPrefix202208\Symfony\Component\DependencyInjection\Loader\Configurator\Traits;
 
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\Argument\BoundArgument;
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\InvalidArgumentException;
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\Loader\Configurator\DefaultsConfigurator;
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\Loader\Configurator\InstanceofConfigurator;
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\Reference;
+use RectorPrefix202208\Symfony\Component\DependencyInjection\Argument\BoundArgument;
+use RectorPrefix202208\Symfony\Component\DependencyInjection\Loader\Configurator\DefaultsConfigurator;
+use RectorPrefix202208\Symfony\Component\DependencyInjection\Loader\Configurator\InstanceofConfigurator;
 trait BindTrait
 {
     /**
@@ -29,15 +27,12 @@ trait BindTrait
      *
      * @return $this
      */
-    public final function bind(string $nameOrFqcn, $valueOrRef) : self
+    public final function bind(string $nameOrFqcn, $valueOrRef)
     {
         $valueOrRef = static::processValue($valueOrRef, \true);
-        if (!\preg_match('/^(?:(?:array|bool|float|int|string|iterable)[ \\t]*+)?\\$/', $nameOrFqcn) && !$valueOrRef instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Reference) {
-            throw new \RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\InvalidArgumentException(\sprintf('Invalid binding for service "%s": named arguments must start with a "$", and FQCN must map to references. Neither applies to binding "%s".', $this->id, $nameOrFqcn));
-        }
         $bindings = $this->definition->getBindings();
-        $type = $this instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Loader\Configurator\DefaultsConfigurator ? \RectorPrefix20211221\Symfony\Component\DependencyInjection\Argument\BoundArgument::DEFAULTS_BINDING : ($this instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Loader\Configurator\InstanceofConfigurator ? \RectorPrefix20211221\Symfony\Component\DependencyInjection\Argument\BoundArgument::INSTANCEOF_BINDING : \RectorPrefix20211221\Symfony\Component\DependencyInjection\Argument\BoundArgument::SERVICE_BINDING);
-        $bindings[$nameOrFqcn] = new \RectorPrefix20211221\Symfony\Component\DependencyInjection\Argument\BoundArgument($valueOrRef, \true, $type, $this->path ?? null);
+        $type = $this instanceof DefaultsConfigurator ? BoundArgument::DEFAULTS_BINDING : ($this instanceof InstanceofConfigurator ? BoundArgument::INSTANCEOF_BINDING : BoundArgument::SERVICE_BINDING);
+        $bindings[$nameOrFqcn] = new BoundArgument($valueOrRef, \true, $type, $this->path ?? null);
         $this->definition->setBindings($bindings);
         return $this;
     }

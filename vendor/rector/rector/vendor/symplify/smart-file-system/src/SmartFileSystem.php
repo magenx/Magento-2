@@ -1,15 +1,15 @@
 <?php
 
 declare (strict_types=1);
-namespace RectorPrefix20211221\Symplify\SmartFileSystem;
+namespace RectorPrefix202208\Symplify\SmartFileSystem;
 
-use RectorPrefix20211221\Nette\Utils\Strings;
-use RectorPrefix20211221\Symfony\Component\Filesystem\Exception\IOException;
-use RectorPrefix20211221\Symfony\Component\Filesystem\Filesystem;
+use RectorPrefix202208\Nette\Utils\Strings;
+use RectorPrefix202208\Symfony\Component\Filesystem\Exception\IOException;
+use RectorPrefix202208\Symfony\Component\Filesystem\Filesystem;
 /**
  * @see \Symplify\SmartFileSystem\Tests\SmartFileSystem\SmartFileSystemTest
  */
-final class SmartFileSystem extends \RectorPrefix20211221\Symfony\Component\Filesystem\Filesystem
+final class SmartFileSystem extends Filesystem
 {
     /**
      * @var string
@@ -19,40 +19,28 @@ final class SmartFileSystem extends \RectorPrefix20211221\Symfony\Component\File
     /**
      * @see https://github.com/symfony/filesystem/pull/4/files
      */
-    public function readFile(string $filename) : string
+    public function readFile(string $fileName) : string
     {
-        $source = @\file_get_contents($filename);
+        $source = @\file_get_contents($fileName);
         if (!$source) {
-            $message = \sprintf('Failed to read "%s" file: "%s"', $filename, $this->getLastError());
-            throw new \RectorPrefix20211221\Symfony\Component\Filesystem\Exception\IOException($message, 0, null, $filename);
+            $message = \sprintf('Failed to read "%s" file: "%s"', $fileName, $this->getLastError());
+            throw new IOException($message, 0, null, $fileName);
         }
         return $source;
     }
-    public function readFileToSmartFileInfo(string $filename) : \Symplify\SmartFileSystem\SmartFileInfo
+    public function readFileToSmartFileInfo(string $fileName) : SmartFileInfo
     {
-        return new \Symplify\SmartFileSystem\SmartFileInfo($filename);
+        return new SmartFileInfo($fileName);
     }
     /**
      * Converts given HTML code to plain text
      *
      * @source https://github.com/nette/utils/blob/e7bd59f1dd860d25dbbb1ac720dddd0fa1388f4c/src/Utils/Html.php#L325-L331
      */
-    public function htmlToText(string $html) : string
+    private function htmlToText(string $html) : string
     {
         $content = \strip_tags($html);
         return \html_entity_decode($content, \ENT_QUOTES | \ENT_HTML5, 'UTF-8');
-    }
-    /**
-     * @param SmartFileInfo[] $fileInfos
-     * @return string[]
-     */
-    public function resolveFilePathsFromFileInfos(array $fileInfos) : array
-    {
-        $filePaths = [];
-        foreach ($fileInfos as $fileInfo) {
-            $filePaths[] = $fileInfo->getRelativeFilePathFromCwd();
-        }
-        return $filePaths;
     }
     /**
      * Returns the last PHP error as plain string.
@@ -63,6 +51,6 @@ final class SmartFileSystem extends \RectorPrefix20211221\Symfony\Component\File
     {
         $message = \error_get_last()['message'] ?? '';
         $htmlMessage = \ini_get('html_errors') ? $this->htmlToText($message) : $message;
-        return \RectorPrefix20211221\Nette\Utils\Strings::replace($htmlMessage, self::BEFORE_COLLON_REGEX, '');
+        return Strings::replace($htmlMessage, self::BEFORE_COLLON_REGEX, '');
     }
 }

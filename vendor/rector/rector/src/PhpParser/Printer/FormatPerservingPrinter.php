@@ -5,10 +5,11 @@ namespace Rector\Core\PhpParser\Printer;
 
 use PhpParser\Node;
 use PhpParser\Node\Stmt;
+use PhpParser\Node\Stmt\Namespace_;
 use Rector\Core\PhpParser\Node\CustomNode\FileWithoutNamespace;
 use Rector\Core\ValueObject\Application\File;
-use Symplify\SmartFileSystem\SmartFileInfo;
-use RectorPrefix20211221\Symplify\SmartFileSystem\SmartFileSystem;
+use RectorPrefix202208\Symplify\SmartFileSystem\SmartFileInfo;
+use RectorPrefix202208\Symplify\SmartFileSystem\SmartFileSystem;
 /**
  * @see \Rector\Core\Tests\PhpParser\Printer\FormatPerservingPrinterTest
  */
@@ -24,7 +25,7 @@ final class FormatPerservingPrinter
      * @var \Symplify\SmartFileSystem\SmartFileSystem
      */
     private $smartFileSystem;
-    public function __construct(\Rector\Core\PhpParser\Printer\BetterStandardPrinter $betterStandardPrinter, \RectorPrefix20211221\Symplify\SmartFileSystem\SmartFileSystem $smartFileSystem)
+    public function __construct(\Rector\Core\PhpParser\Printer\BetterStandardPrinter $betterStandardPrinter, SmartFileSystem $smartFileSystem)
     {
         $this->betterStandardPrinter = $betterStandardPrinter;
         $this->smartFileSystem = $smartFileSystem;
@@ -34,19 +35,19 @@ final class FormatPerservingPrinter
      * @param Node[] $oldStmts
      * @param Node[] $oldTokens
      */
-    public function printToFile(\Symplify\SmartFileSystem\SmartFileInfo $fileInfo, array $newStmts, array $oldStmts, array $oldTokens) : string
+    public function printToFile(SmartFileInfo $fileInfo, array $newStmts, array $oldStmts, array $oldTokens) : string
     {
         $newContent = $this->betterStandardPrinter->printFormatPreserving($newStmts, $oldStmts, $oldTokens);
         $this->smartFileSystem->dumpFile($fileInfo->getRealPath(), $newContent);
         $this->smartFileSystem->chmod($fileInfo->getRealPath(), $fileInfo->getPerms());
         return $newContent;
     }
-    public function printParsedStmstAndTokensToString(\Rector\Core\ValueObject\Application\File $file) : string
+    public function printParsedStmstAndTokensToString(File $file) : string
     {
         $newStmts = $this->resolveNewStmts($file);
         return $this->betterStandardPrinter->printFormatPreserving($newStmts, $file->getOldStmts(), $file->getOldTokens());
     }
-    public function printParsedStmstAndTokens(\Rector\Core\ValueObject\Application\File $file) : string
+    public function printParsedStmstAndTokens(File $file) : string
     {
         $newStmts = $this->resolveNewStmts($file);
         return $this->printToFile($file->getSmartFileInfo(), $newStmts, $file->getOldStmts(), $file->getOldTokens());
@@ -54,14 +55,17 @@ final class FormatPerservingPrinter
     /**
      * @return Stmt[]|mixed[]
      */
-    private function resolveNewStmts(\Rector\Core\ValueObject\Application\File $file) : array
+    private function resolveNewStmts(File $file) : array
     {
-        if (\count($file->getNewStmts()) === 1) {
-            $onlyStmt = $file->getNewStmts()[0];
-            if ($onlyStmt instanceof \Rector\Core\PhpParser\Node\CustomNode\FileWithoutNamespace) {
-                return $onlyStmt->stmts;
-            }
+        $newStmts = $file->getNewStmts();
+        if (\count($newStmts) !== 1) {
+            return $newStmts;
         }
-        return $file->getNewStmts();
+        /** @var Namespace_|FileWithoutNamespace $onlyStmt */
+        $onlyStmt = $newStmts[0];
+        if (!$onlyStmt instanceof FileWithoutNamespace) {
+            return $newStmts;
+        }
+        return $onlyStmt->stmts;
     }
 }

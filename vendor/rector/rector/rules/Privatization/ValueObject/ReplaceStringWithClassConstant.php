@@ -8,8 +8,8 @@ use Rector\Core\Validation\RectorAssert;
 final class ReplaceStringWithClassConstant
 {
     /**
+     * @var class-string
      * @readonly
-     * @var string
      */
     private $class;
     /**
@@ -33,6 +33,7 @@ final class ReplaceStringWithClassConstant
      */
     private $caseInsensitive = \false;
     /**
+     * @param class-string $class
      * @param class-string $classWithConstants
      */
     public function __construct(string $class, string $method, int $argPosition, string $classWithConstants, bool $caseInsensitive = \false)
@@ -42,11 +43,11 @@ final class ReplaceStringWithClassConstant
         $this->argPosition = $argPosition;
         $this->classWithConstants = $classWithConstants;
         $this->caseInsensitive = $caseInsensitive;
-        \Rector\Core\Validation\RectorAssert::className($class);
+        RectorAssert::className($class);
     }
-    public function getObjectType() : \PHPStan\Type\ObjectType
+    public function getObjectType() : ObjectType
     {
-        return new \PHPStan\Type\ObjectType($this->class);
+        return new ObjectType($this->class);
     }
     public function getMethod() : string
     {

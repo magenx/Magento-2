@@ -6,42 +6,41 @@ namespace Rector\Symfony\Rector\MethodCall;
 use PhpParser\Node;
 use PhpParser\Node\Arg;
 use PhpParser\Node\Expr\MethodCall;
-use PHPStan\Analyser\Scope;
-use PHPStan\Reflection\ClassReflection;
 use Rector\Core\Rector\AbstractRector;
-use Rector\NodeTypeResolver\Node\AttributeKey;
+use Rector\Symfony\TypeAnalyzer\ControllerAnalyzer;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
  * @see \Rector\Symfony\Tests\Rector\MethodCall\RedirectToRouteRector\RedirectToRouteRectorTest
  */
-final class RedirectToRouteRector extends \Rector\Core\Rector\AbstractRector
+final class RedirectToRouteRector extends AbstractRector
 {
-    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
+    /**
+     * @readonly
+     * @var \Rector\Symfony\TypeAnalyzer\ControllerAnalyzer
+     */
+    private $controllerAnalyzer;
+    public function __construct(ControllerAnalyzer $controllerAnalyzer)
     {
-        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Turns redirect to route to short helper method in Controller in Symfony', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample('$this->redirect($this->generateUrl("homepage"));', '$this->redirectToRoute("homepage");')]);
+        $this->controllerAnalyzer = $controllerAnalyzer;
+    }
+    public function getRuleDefinition() : RuleDefinition
+    {
+        return new RuleDefinition('Turns redirect to route to short helper method in Controller in Symfony', [new CodeSample('$this->redirect($this->generateUrl("homepage"));', '$this->redirectToRoute("homepage");')]);
     }
     /**
      * @return array<class-string<Node>>
      */
     public function getNodeTypes() : array
     {
-        return [\PhpParser\Node\Expr\MethodCall::class];
+        return [MethodCall::class];
     }
     /**
      * @param MethodCall $node
      */
-    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
+    public function refactor(Node $node) : ?Node
     {
-        $scope = $node->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::SCOPE);
-        if (!$scope instanceof \PHPStan\Analyser\Scope) {
-            return null;
-        }
-        $classReflection = $scope->getClassReflection();
-        if (!$classReflection instanceof \PHPStan\Reflection\ClassReflection) {
-            return null;
-        }
-        if (!$classReflection->isSubclassOf('Symfony\\Bundle\\FrameworkBundle\\Controller\\Controller') && !$classReflection->isSubclassOf('Symfony\\Bundle\\FrameworkBundle\\Controller\\AbstractController')) {
+        if (!$this->controllerAnalyzer->isInsideController($node)) {
             return null;
         }
         if (!$this->isName($node->name, 'redirect')) {
@@ -51,11 +50,11 @@ final class RedirectToRouteRector extends \Rector\Core\Rector\AbstractRector
             return null;
         }
         $firstArg = $node->args[0];
-        if (!$firstArg instanceof \PhpParser\Node\Arg) {
+        if (!$firstArg instanceof Arg) {
             return null;
         }
         $argumentValue = $firstArg->value;
-        if (!$argumentValue instanceof \PhpParser\Node\Expr\MethodCall) {
+        if (!$argumentValue instanceof MethodCall) {
             return null;
         }
         if (!$this->isName($argumentValue->name, 'generateUrl')) {
@@ -66,14 +65,14 @@ final class RedirectToRouteRector extends \Rector\Core\Rector\AbstractRector
     /**
      * @return mixed[]
      */
-    private function resolveArguments(\PhpParser\Node\Expr\MethodCall $methodCall) : array
+    private function resolveArguments(MethodCall $methodCall) : array
     {
         $firstArg = $methodCall->args[0];
-        if (!$firstArg instanceof \PhpParser\Node\Arg) {
+        if (!$firstArg instanceof Arg) {
             return [];
         }
         $generateUrlNode = $firstArg->value;
-        if (!$generateUrlNode instanceof \PhpParser\Node\Expr\MethodCall) {
+        if (!$generateUrlNode instanceof MethodCall) {
             return [];
         }
         $arguments = [];

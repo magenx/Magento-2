@@ -133,8 +133,12 @@ class Level23ProcessingDataBuilder implements BuilderInterface
             self::KEY_PURCHASE_ORDER_NUMBER => substr($order->getOrderIncrementId(), -12, 12), // Level 2.
             self::KEY_TAX_AMT => $this->numberToString($order->getBaseTaxAmount(), 2), // Level 2.
             self::KEY_DISCOUNT_AMT => $this->numberToString(abs($order->getBaseDiscountAmount()), 2), // Level 3.
-            self::KEY_LINE_ITEMS => $lineItems, // Level 3.
         ];
+
+        if ($this->isSendLineItems()) {
+            $processingData[self::KEY_LINE_ITEMS] = $lineItems; // Level 3.
+        }
+
 
         // Only add these shipping related details if a shipping address is present.
         if ($order->getShippingAddress()) {
@@ -171,5 +175,16 @@ class Level23ProcessingDataBuilder implements BuilderInterface
         }
 
         return (string) round($num, $precision);
+    }
+
+    /**
+     * @return bool
+     */
+    private function isSendLineItems()
+    {
+        return (bool) $this->scopeConfig->getValue(
+            'payment/braintree/send_line_items',
+            ScopeInterface::SCOPE_STORE
+        );
     }
 }

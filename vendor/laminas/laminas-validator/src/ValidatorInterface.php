@@ -2,6 +2,14 @@
 
 namespace Laminas\Validator;
 
+/**
+ * @psalm-type ValidatorSpecification = array{
+ *     name: string|class-string<ValidatorInterface>,
+ *     priority?: int,
+ *     break_chain_on_failure?: bool,
+ *     options?: array<string, mixed>,
+ * }
+ */
 interface ValidatorInterface
 {
     /**
@@ -25,7 +33,7 @@ interface ValidatorInterface
      * If isValid() was never called or if the most recent isValid() call
      * returned true, then this method returns an empty array.
      *
-     * @return array
+     * @return array<string, string>
      */
     public function getMessages();
 }

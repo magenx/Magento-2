@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!--
 /**
- * Copyright © 2013-2017 Magento, Inc. All rights reserved.
+ * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
 -->
@@ -30,6 +30,7 @@
                 <can_deny_payment>1</can_deny_payment>
                 <cctypes>AE,VI,MC,DI,JCB,DN,MI</cctypes>
                 <useccv>1</useccv>
+                <send_line_items>1</send_line_items>
                 <cctypes_braintree_mapper><![CDATA[{"american-express":"AE","discover":"DI","jcb":"JCB","mastercard":"MC","master-card":"MC","visa":"VI","maestro":"MI","uk-maestro":"MI","diners-club":"DN"}]]></cctypes_braintree_mapper>
                 <order_status>processing</order_status>
                 <environment>sandbox</environment>
@@ -41,7 +42,6 @@
                 <masked_fields>cvv,number</masked_fields>
                 <privateInfoKeys>avsPostalCodeResponseCode,avsStreetAddressResponseCode,cvvResponseCode,processorAuthorizationCode,processorResponseCode,processorResponseText,liabilityShifted,liabilityShiftPossible,eciFlag,riskDataId,riskDataDecision,transactionSource</privateInfoKeys>
                 <paymentInfoKeys>cc_type,cc_number,avsPostalCodeResponseCode,avsStreetAddressResponseCode,cvvResponseCode,processorAuthorizationCode,processorResponseCode,processorResponseText,liabilityShifted,liabilityShiftPossible,eciFlag,riskDataId,riskDataDecision,transactionSource</paymentInfoKeys>
-                <kount_allowed_ips>208.75.112.0/22,209.81.12.0/24</kount_allowed_ips>
                 <group>braintree_group</group>
             </braintree>
             <braintree_paypal>
@@ -76,21 +76,86 @@
                 <message_checkout_enable>1</message_checkout_enable>
                 <button_cart_enabled>1</button_cart_enabled>
                 <message_cart_enabled>1</message_cart_enabled>
-
-                <!-- These are also defined in Gateway/Config/PayPal/Config.php::getButtonStyle() -->
-                <button_customise_cart>0</button_customise_cart>
-                <button_color_cart>2</button_color_cart>
-                <button_size_cart>2</button_size_cart>
-                <button_shape_cart>1</button_shape_cart>
-                <button_customise_checkout>0</button_customise_checkout>
-                <button_color_checkout>2</button_color_checkout>
-                <button_size_checkout>2</button_size_checkout>
-                <button_shape_checkout>1</button_shape_checkout>
-                <button_customise_productpage>0</button_customise_productpage>
-                <button_color_productpage>2</button_color_productpage>
-                <button_size_productpage>2</button_size_productpage>
-                <button_shape_productpage>1</button_shape_productpage>
                 <group>braintree_group</group>
+                <payment_location>cart</payment_location>
+                <button_location_cart_type_paypal_show>1</button_location_cart_type_paypal_show>
+                <button_location_cart_type_paypal_layout>horizontal</button_location_cart_type_paypal_layout>
+                <button_location_cart_type_paypal_tagline>0</button_location_cart_type_paypal_tagline>
+                <button_location_cart_type_paypal_label>paypal</button_location_cart_type_paypal_label>
+                <button_location_cart_type_paypal_color>gold</button_location_cart_type_paypal_color>
+                <button_location_cart_type_paypal_shape>rect</button_location_cart_type_paypal_shape>
+                <button_location_cart_type_paypal_size>responsive</button_location_cart_type_paypal_size>
+                <button_location_cart_type_paylater_show>1</button_location_cart_type_paylater_show>
+                <button_location_cart_type_paylater_layout>horizontal</button_location_cart_type_paylater_layout>
+                <button_location_cart_type_paylater_tagline>0</button_location_cart_type_paylater_tagline>
+                <button_location_cart_type_paylater_label>paypal</button_location_cart_type_paylater_label>
+                <button_location_cart_type_paylater_color>gold</button_location_cart_type_paylater_color>
+                <button_location_cart_type_paylater_shape>rect</button_location_cart_type_paylater_shape>
+                <button_location_cart_type_paylater_size>responsive</button_location_cart_type_paylater_size>
+                <button_location_cart_type_credit_show>1</button_location_cart_type_credit_show>
+                <button_location_cart_type_credit_layout>horizontal</button_location_cart_type_credit_layout>
+                <button_location_cart_type_credit_tagline>0</button_location_cart_type_credit_tagline>
+                <button_location_cart_type_credit_label>paypal</button_location_cart_type_credit_label>
+                <button_location_cart_type_credit_color>gold</button_location_cart_type_credit_color>
+                <button_location_cart_type_credit_shape>rect</button_location_cart_type_credit_shape>
+                <button_location_cart_type_credit_size>responsive</button_location_cart_type_credit_size>
+                <button_location_checkout_type_paypal_show>1</button_location_checkout_type_paypal_show>
+                <button_location_checkout_type_paypal_layout>horizontal</button_location_checkout_type_paypal_layout>
+                <button_location_checkout_type_paypal_tagline>0</button_location_checkout_type_paypal_tagline>
+                <button_location_checkout_type_paypal_label>paypal</button_location_checkout_type_paypal_label>
+                <button_location_checkout_type_paypal_color>gold</button_location_checkout_type_paypal_color>
+                <button_location_checkout_type_paypal_shape>rect</button_location_checkout_type_paypal_shape>
+                <button_location_checkout_type_paypal_size>responsive</button_location_checkout_type_paypal_size>
+                <button_location_checkout_type_credit_show>1</button_location_checkout_type_credit_show>
+                <button_location_checkout_type_credit_layout>horizontal</button_location_checkout_type_credit_layout>
+                <button_location_checkout_type_credit_tagline>0</button_location_checkout_type_credit_tagline>
+                <button_location_checkout_type_credit_label>paypal</button_location_checkout_type_credit_label>
+                <button_location_checkout_type_credit_color>gold</button_location_checkout_type_credit_color>
+                <button_location_checkout_type_credit_shape>rect</button_location_checkout_type_credit_shape>
+                <button_location_checkout_type_credit_size>responsive</button_location_checkout_type_credit_size>
+                <button_location_checkout_type_paylater_show>1</button_location_checkout_type_paylater_show>
+                <button_location_checkout_type_paylater_layout>horizontal</button_location_checkout_type_paylater_layout>
+                <button_location_checkout_type_paylater_tagline>0</button_location_checkout_type_paylater_tagline>
+                <button_location_checkout_type_paylater_label>paypal</button_location_checkout_type_paylater_label>
+                <button_location_checkout_type_paylater_color>gold</button_location_checkout_type_paylater_color>
+                <button_location_checkout_type_paylater_shape>rect</button_location_checkout_type_paylater_shape>
+                <button_location_checkout_type_paylater_size>responsive</button_location_checkout_type_paylater_size>
+                <button_location_productpage_type_paypal_show>1</button_location_productpage_type_paypal_show>
+                <button_location_productpage_type_paypal_layout>horizontal</button_location_productpage_type_paypal_layout>
+                <button_location_productpage_type_paypal_tagline>0</button_location_productpage_type_paypal_tagline>
+                <button_location_productpage_type_paypal_label>paypal</button_location_productpage_type_paypal_label>
+                <button_location_productpage_type_paypal_color>gold</button_location_productpage_type_paypal_color>
+                <button_location_productpage_type_paypal_shape>rect</button_location_productpage_type_paypal_shape>
+                <button_location_productpage_type_paypal_size>responsive</button_location_productpage_type_paypal_size>
+                <button_location_productpage_type_paylater_show>1</button_location_productpage_type_paylater_show>
+                <button_location_productpage_type_paylater_layout>horizontal</button_location_productpage_type_paylater_layout>
+                <button_location_productpage_type_paylater_tagline>0</button_location_productpage_type_paylater_tagline>
+                <button_location_productpage_type_paylater_label>paypal</button_location_productpage_type_paylater_label>
+                <button_location_productpage_type_paylater_color>gold</button_location_productpage_type_paylater_color>
+                <button_location_productpage_type_paylater_shape>rect</button_location_productpage_type_paylater_shape>
+                <button_location_productpage_type_paylater_size>responsive</button_location_productpage_type_paylater_size>
+                <button_location_productpage_type_credit_show>1</button_location_productpage_type_credit_show>
+                <button_location_productpage_type_credit_layout>horizontal</button_location_productpage_type_credit_layout>
+                <button_location_productpage_type_credit_tagline>0</button_location_productpage_type_credit_tagline>
+                <button_location_productpage_type_credit_label>paypal</button_location_productpage_type_credit_label>
+                <button_location_productpage_type_credit_color>gold</button_location_productpage_type_credit_color>
+                <button_location_productpage_type_credit_shape>rect</button_location_productpage_type_credit_shape>
+                <button_location_productpage_type_credit_size>responsive</button_location_productpage_type_credit_size>
+                <button_location_cart_type_messaging_show>1</button_location_cart_type_messaging_show>
+                <button_location_cart_type_messaging_layout>text</button_location_cart_type_messaging_layout>
+                <button_location_cart_type_messaging_logo>inline</button_location_cart_type_messaging_logo>
+                <button_location_cart_type_messaging_logo_position>left</button_location_cart_type_messaging_logo_position>
+                <button_location_cart_type_messaging_text_color>black</button_location_cart_type_messaging_text_color>
+                <button_location_checkout_type_messaging_show>1</button_location_checkout_type_messaging_show>
+                <button_location_checkout_type_messaging_layout>text</button_location_checkout_type_messaging_layout>
+                <button_location_checkout_type_messaging_logo>inline</button_location_checkout_type_messaging_logo>
+                <button_location_checkout_type_messaging_logo_position>left</button_location_checkout_type_messaging_logo_position>
+                <button_location_checkout_type_messaging_text_color>black</button_location_checkout_type_messaging_text_color>
+                <button_location_productpage_type_messaging_show>1</button_location_productpage_type_messaging_show>
+                <button_location_productpage_type_messaging_layout>text</button_location_productpage_type_messaging_layout>
+                <button_location_productpage_type_messaging_logo>inline</button_location_productpage_type_messaging_logo>
+                <button_location_productpage_type_messaging_logo_position>left</button_location_productpage_type_messaging_logo_position>
+                <button_location_productpage_type_messaging_text_color>black</button_location_productpage_type_messaging_text_color>
             </braintree_paypal>
             <braintree_cc_vault>
                 <model>BraintreeCreditCardVaultFacade</model>
@@ -126,7 +191,7 @@
                 <can_use_checkout>1</can_use_checkout>
                 <can_authorize>1</can_authorize>
                 <can_capture>1</can_capture>
-                <can_capture_partial>1</can_capture_partial>
+                <can_capture_partial>0</can_capture_partial>
                 <can_refund>1</can_refund>
                 <can_refund_partial_per_invoice>1</can_refund_partial_per_invoice>
                 <can_void>1</can_void>
@@ -150,7 +215,7 @@
                 <can_use_checkout>1</can_use_checkout>
                 <can_authorize>1</can_authorize>
                 <can_capture>1</can_capture>
-                <can_capture_partial>1</can_capture_partial>
+                <can_capture_partial>0</can_capture_partial>
                 <can_refund>1</can_refund>
                 <can_refund_partial_per_invoice>1</can_refund_partial_per_invoice>
                 <can_void>1</can_void>
@@ -223,4 +288,3 @@
         </payment>
     </default>
 </config>
-

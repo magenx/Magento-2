@@ -1,21 +1,21 @@
 <?php
 
 declare (strict_types=1);
-namespace RectorPrefix20211221\Symplify\Astral\NodeNameResolver;
+namespace RectorPrefix202208\Symplify\Astral\NodeNameResolver;
 
 use PhpParser\Node;
 use PhpParser\Node\Expr\ConstFetch;
-use RectorPrefix20211221\Symplify\Astral\Contract\NodeNameResolverInterface;
-final class ConstFetchNodeNameResolver implements \RectorPrefix20211221\Symplify\Astral\Contract\NodeNameResolverInterface
+use RectorPrefix202208\Symplify\Astral\Contract\NodeNameResolverInterface;
+final class ConstFetchNodeNameResolver implements NodeNameResolverInterface
 {
-    public function match(\PhpParser\Node $node) : bool
+    public function match(Node $node) : bool
     {
-        return $node instanceof \PhpParser\Node\Expr\ConstFetch;
+        return $node instanceof ConstFetch;
     }
     /**
      * @param ConstFetch $node
      */
-    public function resolve(\PhpParser\Node $node) : ?string
+    public function resolve(Node $node) : ?string
     {
         return $node->name->toString();
     }

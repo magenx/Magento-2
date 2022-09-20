@@ -8,26 +8,22 @@ use PhpParser\Node\Expr\ConstFetch;
 use PhpParser\Node\Name;
 use Rector\Core\Contract\Rector\ConfigurableRectorInterface;
 use Rector\Core\Rector\AbstractRector;
+use Rector\Core\Validation\RectorAssert;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
-use RectorPrefix20211221\Webmozart\Assert\Assert;
+use RectorPrefix202208\Webmozart\Assert\Assert;
 /**
  * @see \Rector\Tests\Renaming\Rector\ConstFetch\RenameConstantRector\RenameConstantRectorTest
  */
-final class RenameConstantRector extends \Rector\Core\Rector\AbstractRector implements \Rector\Core\Contract\Rector\ConfigurableRectorInterface
+final class RenameConstantRector extends AbstractRector implements ConfigurableRectorInterface
 {
-    /**
-     * @deprecated
-     * @var string
-     */
-    public const OLD_TO_NEW_CONSTANTS = 'old_to_new_constants';
     /**
      * @var array<string, string>
      */
     private $oldToNewConstants = [];
-    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
+    public function getRuleDefinition() : RuleDefinition
     {
-        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Replace constant by new ones', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample(<<<'CODE_SAMPLE'
+        return new RuleDefinition('Replace constant by new ones', [new ConfiguredCodeSample(<<<'CODE_SAMPLE'
 final class SomeClass
 {
     public function run()
@@ -52,18 +48,18 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [\PhpParser\Node\Expr\ConstFetch::class];
+        return [ConstFetch::class];
     }
     /**
      * @param ConstFetch $node
      */
-    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
+    public function refactor(Node $node) : ?Node
     {
         foreach ($this->oldToNewConstants as $oldConstant => $newConstant) {
             if (!$this->isName($node->name, $oldConstant)) {
                 continue;
             }
-            $node->name = new \PhpParser\Node\Name($newConstant);
+            $node->name = new Name($newConstant);
             return $node;
         }
         return null;
@@ -73,10 +69,13 @@ CODE_SAMPLE
      */
     public function configure(array $configuration) : void
     {
-        $oldToNewConstants = $configuration[self::OLD_TO_NEW_CONSTANTS] ?? $configuration;
-        \RectorPrefix20211221\Webmozart\Assert\Assert::allString(\array_keys($oldToNewConstants));
-        \RectorPrefix20211221\Webmozart\Assert\Assert::allString($oldToNewConstants);
-        /** @var array<string, string> $oldToNewConstants */
-        $this->oldToNewConstants = $oldToNewConstants;
+        Assert::allString(\array_keys($configuration));
+        Assert::allString($configuration);
+        foreach ($configuration as $oldConstant => $newConstant) {
+            RectorAssert::constantName($oldConstant);
+            RectorAssert::constantName($newConstant);
+        }
+        /** @var array<string, string> $configuration */
+        $this->oldToNewConstants = $configuration;
     }
 }

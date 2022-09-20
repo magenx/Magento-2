@@ -4,7 +4,7 @@ declare (strict_types=1);
 namespace Rector\PHPUnit\Set;
 
 use Rector\Set\Contract\SetListInterface;
-final class PHPUnitSetList implements \Rector\Set\Contract\SetListInterface
+final class PHPUnitSetList implements SetListInterface
 {
     /**
      * @var string
@@ -29,10 +29,6 @@ final class PHPUnitSetList implements \Rector\Set\Contract\SetListInterface
     /**
      * @var string
      */
-    public const PHPUNIT_75 = __DIR__ . '/../../config/sets/phpunit75.php';
-    /**
-     * @var string
-     */
     public const PHPUNIT_80 = __DIR__ . '/../../config/sets/phpunit80.php';
     /**
      * @var string
@@ -53,7 +49,7 @@ final class PHPUnitSetList implements \Rector\Set\Contract\SetListInterface
     /**
      * @var string
      */
-    public const PHPUNIT_MOCK = __DIR__ . '/../../config/sets/phpunit-mock.php';
+    public const REMOVE_MOCKS = __DIR__ . '/../../config/sets/remove-mocks.php';
     /**
      * @var string
      */

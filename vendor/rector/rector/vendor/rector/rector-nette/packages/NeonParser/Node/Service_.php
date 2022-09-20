@@ -3,8 +3,8 @@
 declare (strict_types=1);
 namespace Rector\Nette\NeonParser\Node;
 
-use RectorPrefix20211221\Nette\Neon\Node;
-use RectorPrefix20211221\Nette\Neon\Node\LiteralNode;
+use RectorPrefix202208\Nette\Neon\Node;
+use RectorPrefix202208\Nette\Neon\Node\LiteralNode;
 use Rector\Nette\NeonParser\Node\Service_\SetupMethodCall;
 /**
  * Metanode for easier subscribing
@@ -28,7 +28,7 @@ final class Service_ extends \Rector\Nette\NeonParser\Node\AbstractVirtualNode
      */
     private $factoryLiteralNode;
     /**
-     * @var \Rector\Nette\NeonParser\Node\Service_\SetupMethodCall[]
+     * @var SetupMethodCall[]
      */
     private $setupMethodCalls;
     /**
@@ -60,15 +60,16 @@ final class Service_ extends \Rector\Nette\NeonParser\Node\AbstractVirtualNode
     /**
      * @return Node[]
      */
-    public function getSubNodes() : array
+    public function &getIterator() : \Generator
     {
-        $subNodes = [];
-        if ($this->classLiteralNode instanceof \RectorPrefix20211221\Nette\Neon\Node\LiteralNode) {
-            $subNodes[] = $this->classLiteralNode;
+        if ($this->classLiteralNode instanceof LiteralNode) {
+            (yield $this->classLiteralNode);
         }
-        if ($this->factoryLiteralNode instanceof \RectorPrefix20211221\Nette\Neon\Node\LiteralNode) {
-            $subNodes[] = $this->factoryLiteralNode;
+        if ($this->factoryLiteralNode instanceof LiteralNode) {
+            (yield $this->factoryLiteralNode);
         }
-        return \array_merge($subNodes, $this->setupMethodCalls);
+        foreach ($this->setupMethodCalls as $setupMethodCall) {
+            (yield $setupMethodCall);
+        }
     }
 }

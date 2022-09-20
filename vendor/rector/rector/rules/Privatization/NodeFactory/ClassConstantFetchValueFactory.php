@@ -25,7 +25,7 @@ final class ClassConstantFetchValueFactory
      * @var \Rector\Privatization\Reflection\ClassConstantsResolver
      */
     private $classConstantsResolver;
-    public function __construct(\Rector\Core\PhpParser\Node\Value\ValueResolver $valueResolver, \Rector\Core\PhpParser\Node\NodeFactory $nodeFactory, \Rector\Privatization\Reflection\ClassConstantsResolver $classConstantsResolver)
+    public function __construct(ValueResolver $valueResolver, NodeFactory $nodeFactory, ClassConstantsResolver $classConstantsResolver)
     {
         $this->valueResolver = $valueResolver;
         $this->nodeFactory = $nodeFactory;
@@ -34,7 +34,7 @@ final class ClassConstantFetchValueFactory
     /**
      * @param class-string $classWithConstants
      */
-    public function create(\PhpParser\Node\Expr $expr, string $classWithConstants, bool $caseInsensitive) : ?\PhpParser\Node\Expr\ClassConstFetch
+    public function create(Expr $expr, string $classWithConstants, bool $caseInsensitive) : ?ClassConstFetch
     {
         $value = $this->valueResolver->getValue($expr);
         if ($value === null) {
@@ -43,8 +43,8 @@ final class ClassConstantFetchValueFactory
         $constantNamesToValues = $this->classConstantsResolver->getClassConstantNamesToValues($classWithConstants);
         foreach ($constantNamesToValues as $constantName => $constantValue) {
             if ($caseInsensitive) {
-                $constantValue = \strtolower($constantValue);
-                $value = \strtolower($value);
+                $constantValue = \strtolower((string) $constantValue);
+                $value = \strtolower((string) $value);
             }
             if ($constantValue !== $value) {
                 continue;

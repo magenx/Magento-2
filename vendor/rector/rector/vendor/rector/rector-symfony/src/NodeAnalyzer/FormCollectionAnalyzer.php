@@ -10,22 +10,24 @@ use Rector\NodeNameResolver\NodeNameResolver;
 final class FormCollectionAnalyzer
 {
     /**
+     * @readonly
      * @var \Rector\Core\PhpParser\Node\Value\ValueResolver
      */
     private $valueResolver;
     /**
+     * @readonly
      * @var \Rector\NodeNameResolver\NodeNameResolver
      */
     private $nodeNameResolver;
-    public function __construct(\Rector\Core\PhpParser\Node\Value\ValueResolver $valueResolver, \Rector\NodeNameResolver\NodeNameResolver $nodeNameResolver)
+    public function __construct(ValueResolver $valueResolver, NodeNameResolver $nodeNameResolver)
     {
         $this->valueResolver = $valueResolver;
         $this->nodeNameResolver = $nodeNameResolver;
     }
-    public function isCollectionType(\PhpParser\Node\Expr\MethodCall $methodCall) : bool
+    public function isCollectionType(MethodCall $methodCall) : bool
     {
-        $typeValue = $methodCall->args[1]->value;
-        if (!$typeValue instanceof \PhpParser\Node\Expr\ClassConstFetch) {
+        $typeValue = $methodCall->getArgs()[1]->value;
+        if (!$typeValue instanceof ClassConstFetch) {
             return $this->valueResolver->isValue($typeValue, 'collection');
         }
         if (!$this->nodeNameResolver->isName($typeValue->class, 'Symfony\\Component\\Form\\Extension\\Core\\Type\\CollectionType')) {

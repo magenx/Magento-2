@@ -4,7 +4,7 @@ declare (strict_types=1);
 namespace PhpParser\Node\Stmt;
 
 use PhpParser\Node;
-abstract class ClassLike extends \PhpParser\Node\Stmt
+abstract class ClassLike extends Node\Stmt
 {
     /** @var Node\Identifier|null Name */
     public $name;
@@ -12,7 +12,7 @@ abstract class ClassLike extends \PhpParser\Node\Stmt
     public $stmts;
     /** @var Node\AttributeGroup[] PHP attribute groups */
     public $attrGroups;
-    /** @var Node\Name Namespaced name (if using NameResolver) */
+    /** @var Node\Name|null Namespaced name (if using NameResolver) */
     public $namespacedName;
     /**
      * @return TraitUse[]

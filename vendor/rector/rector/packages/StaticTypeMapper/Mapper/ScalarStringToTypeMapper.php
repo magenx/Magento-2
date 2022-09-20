@@ -3,10 +3,12 @@
 declare (strict_types=1);
 namespace Rector\StaticTypeMapper\Mapper;
 
-use RectorPrefix20211221\Nette\Utils\Strings;
+use RectorPrefix202208\Nette\Utils\Strings;
+use PHPStan\Type\Accessory\AccessoryNonEmptyStringType;
 use PHPStan\Type\ArrayType;
 use PHPStan\Type\BooleanType;
 use PHPStan\Type\CallableType;
+use PHPStan\Type\ClassStringType;
 use PHPStan\Type\Constant\ConstantBooleanType;
 use PHPStan\Type\FloatType;
 use PHPStan\Type\IntegerType;
@@ -24,15 +26,15 @@ final class ScalarStringToTypeMapper
     /**
      * @var array<class-string<Type>, string[]>
      */
-    private const SCALAR_NAME_BY_TYPE = [\PHPStan\Type\StringType::class => ['string'], \PHPStan\Type\FloatType::class => ['float', 'real', 'double'], \PHPStan\Type\IntegerType::class => ['int', 'integer'], \PHPStan\Type\BooleanType::class => ['bool', 'boolean'], \PHPStan\Type\NullType::class => ['null'], \PHPStan\Type\VoidType::class => ['void'], \PHPStan\Type\ResourceType::class => ['resource'], \PHPStan\Type\CallableType::class => ['callback', 'callable'], \PHPStan\Type\ObjectWithoutClassType::class => ['object'], \PHPStan\Type\NeverType::class => ['never']];
-    public function mapScalarStringToType(string $scalarName) : \PHPStan\Type\Type
+    private const SCALAR_NAME_BY_TYPE = [StringType::class => ['string'], AccessoryNonEmptyStringType::class => ['non-empty-string'], ClassStringType::class => ['class-string'], FloatType::class => ['float', 'real', 'double'], IntegerType::class => ['int', 'integer'], BooleanType::class => ['bool', 'boolean'], NullType::class => ['null'], VoidType::class => ['void'], ResourceType::class => ['resource'], CallableType::class => ['callback', 'callable'], ObjectWithoutClassType::class => ['object'], NeverType::class => ['never', 'never-return', 'never-returns', 'no-return']];
+    public function mapScalarStringToType(string $scalarName) : Type
     {
-        $loweredScalarName = \RectorPrefix20211221\Nette\Utils\Strings::lower($scalarName);
+        $loweredScalarName = Strings::lower($scalarName);
         if ($loweredScalarName === 'false') {
-            return new \PHPStan\Type\Constant\ConstantBooleanType(\false);
+            return new ConstantBooleanType(\false);
         }
         if ($loweredScalarName === 'true') {
-            return new \PHPStan\Type\Constant\ConstantBooleanType(\true);
+            return new ConstantBooleanType(\true);
         }
         foreach (self::SCALAR_NAME_BY_TYPE as $objectType => $scalarNames) {
             if (!\in_array($loweredScalarName, $scalarNames, \true)) {
@@ -41,14 +43,14 @@ final class ScalarStringToTypeMapper
             return new $objectType();
         }
         if ($loweredScalarName === 'array') {
-            return new \PHPStan\Type\ArrayType(new \PHPStan\Type\MixedType(), new \PHPStan\Type\MixedType());
+            return new ArrayType(new MixedType(), new MixedType());
         }
         if ($loweredScalarName === 'iterable') {
-            return new \PHPStan\Type\IterableType(new \PHPStan\Type\MixedType(), new \PHPStan\Type\MixedType());
+            return new IterableType(new MixedType(), new MixedType());
         }
         if ($loweredScalarName === 'mixed') {
-            return new \PHPStan\Type\MixedType(\true);
+            return new MixedType(\true);
         }
-        return new \PHPStan\Type\MixedType();
+        return new MixedType();
     }
 }

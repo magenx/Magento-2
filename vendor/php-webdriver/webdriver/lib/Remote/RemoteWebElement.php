@@ -89,6 +89,10 @@ class RemoteWebElement implements WebDriverElement, WebDriverLocatable
     /**
      * Find the first WebDriverElement within this element using the given mechanism.
      *
+     * When using xpath be aware that webdriver follows standard conventions: a search prefixed with "//" will
+     * search the entire document from the root, not just the children (relative context) of this current node.
+     * Use ".//" to limit your search to the children of this element.
+     *
      * @param WebDriverBy $by
      * @return RemoteWebElement NoSuchElementException is thrown in HttpCommandExecutor if no element is found.
      * @see WebDriverBy
@@ -108,6 +112,10 @@ class RemoteWebElement implements WebDriverElement, WebDriverLocatable
 
     /**
      * Find all WebDriverElements within this element using the given mechanism.
+     *
+     * When using xpath be aware that webdriver follows standard conventions: a search prefixed with "//" will
+     * search the entire document from the root, not just the children (relative context) of this current node.
+     * Use ".//" to limit your search to the children of this element.
      *
      * @param WebDriverBy $by
      * @return RemoteWebElement[] A list of all WebDriverElements, or an empty
@@ -137,7 +145,8 @@ class RemoteWebElement implements WebDriverElement, WebDriverLocatable
      * To read a value of a IDL "JavaScript" property (like `innerHTML`), use `getDomProperty()` method.
      *
      * @param string $attribute_name The name of the attribute.
-     * @return string|null The value of the attribute.
+     * @return string|true|null The value of the attribute. If this is boolean attribute, return true if the element
+     *      has it, otherwise return null.
      */
     public function getAttribute($attribute_name)
     {
@@ -171,7 +180,7 @@ class RemoteWebElement implements WebDriverElement, WebDriverLocatable
      * @see https://developer.mozilla.org/en-US/docs/Glossary/IDL
      * @see https://developer.mozilla.org/en-US/docs/Web/API/Element#properties
      * @param string $propertyName
-     * @return string|null The property's current value or null if the value is not set or the property does not exist.
+     * @return mixed|null The property's current value or null if the value is not set or the property does not exist.
      */
     public function getDomProperty($propertyName)
     {

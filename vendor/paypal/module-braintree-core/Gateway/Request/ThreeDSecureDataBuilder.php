@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © 2013-2017 Magento, Inc. All rights reserved.
+ * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
 namespace PayPal\Braintree\Gateway\Request;
@@ -51,7 +51,8 @@ class ThreeDSecureDataBuilder implements BuilderInterface
         $amount = $this->formatPrice($this->subjectReader->readAmount($buildSubject));
 
         // disable 3d secure for vault CC payment method
-        if ($paymentDO->getPayment()->getMethod() == ConfigProvider::CC_VAULT_CODE && $paymentDO->getOrder()->isMultishipping()) {
+        if ($paymentDO->getPayment()->getMethod() == ConfigProvider::CC_VAULT_CODE
+            && $paymentDO->getOrder()->isMultishipping()) {
             return $result;
         }
         if ($this->is3DSecureEnabled($paymentDO->getOrder(), $amount)) {
@@ -62,6 +63,7 @@ class ThreeDSecureDataBuilder implements BuilderInterface
 
     /**
      * Check if 3d secure is enabled
+     *
      * @param OrderAdapterInterface $order
      * @param float $amount
      * @return bool

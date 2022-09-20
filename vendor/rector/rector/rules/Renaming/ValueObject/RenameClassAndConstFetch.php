@@ -4,12 +4,13 @@ declare (strict_types=1);
 namespace Rector\Renaming\ValueObject;
 
 use PHPStan\Type\ObjectType;
+use Rector\Core\Validation\RectorAssert;
 use Rector\Renaming\Contract\RenameClassConstFetchInterface;
-final class RenameClassAndConstFetch implements \Rector\Renaming\Contract\RenameClassConstFetchInterface
+final class RenameClassAndConstFetch implements RenameClassConstFetchInterface
 {
     /**
+     * @var class-string
      * @readonly
-     * @var string
      */
     private $oldClass;
     /**
@@ -18,8 +19,8 @@ final class RenameClassAndConstFetch implements \Rector\Renaming\Contract\Rename
      */
     private $oldConstant;
     /**
+     * @var class-string
      * @readonly
-     * @var string
      */
     private $newClass;
     /**
@@ -27,16 +28,24 @@ final class RenameClassAndConstFetch implements \Rector\Renaming\Contract\Rename
      * @var string
      */
     private $newConstant;
+    /**
+     * @param class-string $oldClass
+     * @param class-string $newClass
+     */
     public function __construct(string $oldClass, string $oldConstant, string $newClass, string $newConstant)
     {
         $this->oldClass = $oldClass;
         $this->oldConstant = $oldConstant;
         $this->newClass = $newClass;
         $this->newConstant = $newConstant;
+        RectorAssert::className($oldClass);
+        RectorAssert::constantName($oldConstant);
+        RectorAssert::className($newClass);
+        RectorAssert::constantName($newConstant);
     }
-    public function getOldObjectType() : \PHPStan\Type\ObjectType
+    public function getOldObjectType() : ObjectType
     {
-        return new \PHPStan\Type\ObjectType($this->oldClass);
+        return new ObjectType($this->oldClass);
     }
     public function getOldConstant() : string
     {

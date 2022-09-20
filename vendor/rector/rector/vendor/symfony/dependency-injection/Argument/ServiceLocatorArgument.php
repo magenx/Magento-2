@@ -8,32 +8,44 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix20211221\Symfony\Component\DependencyInjection\Argument;
+namespace RectorPrefix202208\Symfony\Component\DependencyInjection\Argument;
 
-use RectorPrefix20211221\Symfony\Component\DependencyInjection\Reference;
 /**
  * Represents a closure acting as a service locator.
  *
  * @author Nicolas Grekas <p@tchwork.com>
  */
-class ServiceLocatorArgument implements \RectorPrefix20211221\Symfony\Component\DependencyInjection\Argument\ArgumentInterface
+class ServiceLocatorArgument implements ArgumentInterface
 {
-    use ReferenceSetArgumentTrait;
+    /**
+     * @var mixed[]
+     */
+    private $values;
+    /**
+     * @var \Symfony\Component\DependencyInjection\Argument\TaggedIteratorArgument|null
+     */
     private $taggedIteratorArgument;
     /**
-     * @param Reference[]|TaggedIteratorArgument $values
+     * @param mixed[]|\Symfony\Component\DependencyInjection\Argument\TaggedIteratorArgument $values
      */
     public function __construct($values = [])
     {
-        if ($values instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Argument\TaggedIteratorArgument) {
+        if ($values instanceof TaggedIteratorArgument) {
             $this->taggedIteratorArgument = $values;
-            $this->values = [];
-        } else {
-            $this->setValues($values);
+            $values = [];
         }
+        $this->setValues($values);
     }
-    public function getTaggedIteratorArgument() : ?\RectorPrefix20211221\Symfony\Component\DependencyInjection\Argument\TaggedIteratorArgument
+    public function getTaggedIteratorArgument() : ?TaggedIteratorArgument
     {
         return $this->taggedIteratorArgument;
+    }
+    public function getValues() : array
+    {
+        return $this->values;
+    }
+    public function setValues(array $values)
+    {
+        $this->values = $values;
     }
 }

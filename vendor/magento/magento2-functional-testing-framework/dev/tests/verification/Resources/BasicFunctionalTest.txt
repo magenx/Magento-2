@@ -30,7 +30,9 @@ class BasicFunctionalTestCest
 	  */
 	public function _before(AcceptanceTester $I)
 	{
+		$I->comment('[START BEFORE HOOK]');
 		$I->amOnPage("/beforeUrl"); // stepKey: beforeAmOnPageKey
+		$I->comment('[END BEFORE HOOK]');
 	}
 
 	/**
@@ -39,7 +41,9 @@ class BasicFunctionalTestCest
 	  */
 	public function _after(AcceptanceTester $I)
 	{
+		$I->comment('[START AFTER HOOK]');
 		$I->amOnPage("/afterUrl"); // stepKey: afterAmOnPageKey
+		$I->comment('[END AFTER HOOK]');
 		if ($this->isSuccess) {
 			unlink(__FILE__);
 		}
@@ -58,7 +62,6 @@ class BasicFunctionalTestCest
 	 * @Severity(level = SeverityLevel::CRITICAL)
 	 * @Features({"TestModule"})
 	 * @Stories({"MQE-305"})
-	 * @Parameter(name = "AcceptanceTester", value="$I")
 	 * @param AcceptanceTester $I
 	 * @return void
 	 * @throws \Exception
@@ -124,6 +127,7 @@ class BasicFunctionalTestCest
 		$getOtpWithInput = $I->getOTP("someInput"); // stepKey: getOtpWithInput
 		$grabAttributeFromKey1 = $I->grabAttributeFrom(".functionalTestSelector", "someInput"); // stepKey: grabAttributeFromKey1
 		$grabCookieKey1 = $I->grabCookie("grabCookieInput", ['domain' => 'www.google.com']); // stepKey: grabCookieKey1
+		$grabCookieAttributesKey1 = $I->grabCookieAttributes("grabCookieAttributesInput", ['domain' => 'www.google.com']); // stepKey: grabCookieAttributesKey1
 		$grabFromCurrentUrlKey1 = $I->grabFromCurrentUrl("/grabCurrentUrl"); // stepKey: grabFromCurrentUrlKey1
 		$grabMultipleKey1 = $I->grabMultiple(".functionalTestSelector"); // stepKey: grabMultipleKey1
 		$grabTextFromKey1 = $I->grabTextFrom(".functionalTestSelector"); // stepKey: grabTextFromKey1
@@ -148,7 +152,7 @@ class BasicFunctionalTestCest
 		$I->moveForward(); // stepKey: moveForwardKey1
 		$I->moveMouseOver(".functionalTestSelector"); // stepKey: moveMouseOverKey1
 		$I->openNewTab(); // stepKey: openNewTabKey1
-		$I->pause(); // stepKey: pauseKey1
+		$I->pause(true); // stepKey: pauseKey1
 		$I->pressKey("#page", "a"); // stepKey: pressKey1
 		$I->pressKey("#page", ['ctrl', 'a'],'new'); // stepKey: pressKey2
 		$I->pressKey("#page", ['shift', '111'],'1','x'); // stepKey: pressKey3

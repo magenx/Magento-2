@@ -15,7 +15,7 @@ final class NamingConventionAnalyzer
      * @var \Rector\NodeNameResolver\NodeNameResolver
      */
     private $nodeNameResolver;
-    public function __construct(\Rector\NodeNameResolver\NodeNameResolver $nodeNameResolver)
+    public function __construct(NodeNameResolver $nodeNameResolver)
     {
         $this->nodeNameResolver = $nodeNameResolver;
     }
@@ -25,7 +25,7 @@ final class NamingConventionAnalyzer
      * $someNameSuffix = $this->getSomeName();
      * $prefixSomeName = $this->getSomeName();
      * $someName = $this->getSomeName();
-     * @param \PhpParser\Node\Expr\FuncCall|\PhpParser\Node\Expr\MethodCall|\PhpParser\Node\Expr\StaticCall $expr
+     * @param \PhpParser\Node\Expr\FuncCall|\PhpParser\Node\Expr\StaticCall|\PhpParser\Node\Expr\MethodCall $expr
      */
     public function isCallMatchingVariableName($expr, string $currentName, string $expectedName) : bool
     {
@@ -35,6 +35,6 @@ final class NamingConventionAnalyzer
             return \true;
         }
         // starts with or ends with
-        return \Rector\Core\Util\StringUtils::isMatch($currentName, '#^(' . $expectedName . '|' . $expectedName . '$)#i');
+        return StringUtils::isMatch($currentName, '#^(' . $expectedName . '|' . $expectedName . '$)#i');
     }
 }

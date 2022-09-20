@@ -132,8 +132,13 @@ class FormTest extends \PHPUnit\Framework\TestCase
      */
     public function testIsVaultEnabled()
     {
+        //$this->markTestSkipped('Skip this test');
         $storeId = 1;
         $store = $this->getMockForAbstractClass(StoreInterface::class);
+
+        $this->sessionQuote->method('getStoreId')
+            ->willReturn(0);
+
         $this->storeManager->expects(static::once())
             ->method('getStore')
             ->willReturn($store);
@@ -178,7 +183,7 @@ class FormTest extends \PHPUnit\Framework\TestCase
     {
         $this->sessionQuote = $this->getMockBuilder(Quote::class)
             ->disableOriginalConstructor()
-            ->setMethods(['getQuote', 'getBillingAddress', 'getCountryId', '__wakeup'])
+            ->setMethods(['getStoreId', 'getQuote', 'getBillingAddress', 'getCountryId', '__wakeup'])
             ->getMock();
 
         $this->sessionQuote->expects(static::any())

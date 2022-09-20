@@ -6,26 +6,24 @@ namespace Rector\ReadWrite\NodeAnalyzer;
 use PhpParser\Node;
 use PhpParser\Node\Arg;
 use PhpParser\Node\Expr\ArrayDimFetch;
+use PhpParser\Node\Expr\AssignOp;
+use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Expr\Isset_;
-use PhpParser\Node\Expr\PostDec;
-use PhpParser\Node\Expr\PostInc;
-use PhpParser\Node\Expr\PreDec;
-use PhpParser\Node\Expr\PreInc;
 use PhpParser\Node\Expr\PropertyFetch;
 use PhpParser\Node\Expr\StaticPropertyFetch;
 use PhpParser\Node\Stmt\Unset_;
 use Rector\Core\Exception\ShouldNotHappenException;
 use Rector\Core\NodeManipulator\AssignManipulator;
 use Rector\Core\PhpParser\Node\BetterNodeFinder;
+use Rector\DeadCode\SideEffect\PureFunctionDetector;
 use Rector\NodeTypeResolver\Node\AttributeKey;
-use Rector\ReadWrite\Guard\VariableToConstantGuard;
+use Rector\ReadWrite\Contract\ParentNodeReadAnalyzerInterface;
+/**
+ * Possibly re-use the same logic from PHPStan rule:
+ * https://github.com/phpstan/phpstan-src/blob/8f16632f6ccb312159250bc06df5531fa4a1ff91/src/Rules/DeadCode/UnusedPrivatePropertyRule.php#L64-L116
+ */
 final class ReadWritePropertyAnalyzer
 {
-    /**
-     * @readonly
-     * @var \Rector\ReadWrite\Guard\VariableToConstantGuard
-     */
-    private $variableToConstantGuard;
     /**
      * @readonly
      * @var \Rector\Core\NodeManipulator\AssignManipulator
@@ -41,58 +39,83 @@ final class ReadWritePropertyAnalyzer
      * @var \Rector\Core\PhpParser\Node\BetterNodeFinder
      */
     private $betterNodeFinder;
-    public function __construct(\Rector\ReadWrite\Guard\VariableToConstantGuard $variableToConstantGuard, \Rector\Core\NodeManipulator\AssignManipulator $assignManipulator, \Rector\ReadWrite\NodeAnalyzer\ReadExprAnalyzer $readExprAnalyzer, \Rector\Core\PhpParser\Node\BetterNodeFinder $betterNodeFinder)
+    /**
+     * @readonly
+     * @var \Rector\DeadCode\SideEffect\PureFunctionDetector
+     */
+    private $pureFunctionDetector;
+    /**
+     * @var ParentNodeReadAnalyzerInterface[]
+     * @readonly
+     */
+    private $parentNodeReadAnalyzers;
+    /**
+     * @param ParentNodeReadAnalyzerInterface[] $parentNodeReadAnalyzers
+     */
+    public function __construct(AssignManipulator $assignManipulator, \Rector\ReadWrite\NodeAnalyzer\ReadExprAnalyzer $readExprAnalyzer, BetterNodeFinder $betterNodeFinder, PureFunctionDetector $pureFunctionDetector, array $parentNodeReadAnalyzers)
     {
-        $this->variableToConstantGuard = $variableToConstantGuard;
         $this->assignManipulator = $assignManipulator;
         $this->readExprAnalyzer = $readExprAnalyzer;
         $this->betterNodeFinder = $betterNodeFinder;
+        $this->pureFunctionDetector = $pureFunctionDetector;
+        $this->parentNodeReadAnalyzers = $parentNodeReadAnalyzers;
     }
     /**
      * @param \PhpParser\Node\Expr\PropertyFetch|\PhpParser\Node\Expr\StaticPropertyFetch $node
      */
     public function isRead($node) : bool
     {
-        $parent = $node->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::PARENT_NODE);
-        if (!$parent instanceof \PhpParser\Node) {
-            throw new \Rector\Core\Exception\ShouldNotHappenException();
+        $parent = $node->getAttribute(AttributeKey::PARENT_NODE);
+        if (!$parent instanceof Node) {
+            throw new ShouldNotHappenException();
         }
-        $parent = $this->unwrapPostPreIncDec($parent);
-        if ($parent instanceof \PhpParser\Node\Arg) {
-            $readArg = $this->variableToConstantGuard->isReadArg($parent);
-            if ($readArg) {
+        foreach ($this->parentNodeReadAnalyzers as $parentNodeReadAnalyzer) {
+            if ($parentNodeReadAnalyzer->isRead($node, $parent)) {
                 return \true;
             }
         }
-        if ($parent instanceof \PhpParser\Node\Expr\ArrayDimFetch && $parent->dim === $node && $this->isNotInsideIssetUnset($parent)) {
+        if ($parent instanceof AssignOp) {
+            return \true;
+        }
+        if (!$parent instanceof ArrayDimFetch) {
+            return !$this->assignManipulator->isLeftPartOfAssign($node);
+        }
+        if ($parent->dim === $node && $this->isNotInsideIssetUnset($parent)) {
             return $this->isArrayDimFetchRead($parent);
         }
-        return !$this->assignManipulator->isLeftPartOfAssign($node);
+        if ($this->assignManipulator->isLeftPartOfAssign($parent)) {
+            return \false;
+        }
+        return !$this->isArrayDimFetchInImpureFunction($parent, $node);
     }
-    private function unwrapPostPreIncDec(\PhpParser\Node $node) : \PhpParser\Node
+    private function isArrayDimFetchInImpureFunction(ArrayDimFetch $arrayDimFetch, Node $node) : bool
     {
-        if ($node instanceof \PhpParser\Node\Expr\PreInc || $node instanceof \PhpParser\Node\Expr\PreDec || $node instanceof \PhpParser\Node\Expr\PostInc || $node instanceof \PhpParser\Node\Expr\PostDec) {
-            $node = $node->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::PARENT_NODE);
-            if (!$node instanceof \PhpParser\Node) {
-                throw new \Rector\Core\Exception\ShouldNotHappenException();
+        if ($arrayDimFetch->var === $node) {
+            $arg = $this->betterNodeFinder->findParentType($arrayDimFetch, Arg::class);
+            if ($arg instanceof Arg) {
+                $parentArg = $arg->getAttribute(AttributeKey::PARENT_NODE);
+                if (!$parentArg instanceof FuncCall) {
+                    return \false;
+                }
+                return !$this->pureFunctionDetector->detect($parentArg);
             }
         }
-        return $node;
+        return \false;
     }
-    private function isNotInsideIssetUnset(\PhpParser\Node\Expr\ArrayDimFetch $arrayDimFetch) : bool
+    private function isNotInsideIssetUnset(ArrayDimFetch $arrayDimFetch) : bool
     {
-        return !(bool) $this->betterNodeFinder->findParentByTypes($arrayDimFetch, [\PhpParser\Node\Expr\Isset_::class, \PhpParser\Node\Stmt\Unset_::class]);
+        return !(bool) $this->betterNodeFinder->findParentByTypes($arrayDimFetch, [Isset_::class, Unset_::class]);
     }
-    private function isArrayDimFetchRead(\PhpParser\Node\Expr\ArrayDimFetch $arrayDimFetch) : bool
+    private function isArrayDimFetchRead(ArrayDimFetch $arrayDimFetch) : bool
     {
-        $parentParent = $arrayDimFetch->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::PARENT_NODE);
-        if (!$parentParent instanceof \PhpParser\Node) {
-            throw new \Rector\Core\Exception\ShouldNotHappenException();
+        $parentParent = $arrayDimFetch->getAttribute(AttributeKey::PARENT_NODE);
+        if (!$parentParent instanceof Node) {
+            throw new ShouldNotHappenException();
         }
         if (!$this->assignManipulator->isLeftPartOfAssign($arrayDimFetch)) {
             return \false;
         }
-        if ($arrayDimFetch->var instanceof \PhpParser\Node\Expr\ArrayDimFetch) {
+        if ($arrayDimFetch->var instanceof ArrayDimFetch) {
             return \true;
         }
         // the array dim fetch is assing here only; but the variable might be used later

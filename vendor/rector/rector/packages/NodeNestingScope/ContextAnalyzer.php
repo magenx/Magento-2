@@ -6,17 +6,13 @@ namespace Rector\NodeNestingScope;
 use PhpParser\Node;
 use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\FunctionLike;
-use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\ClassMethod;
-use PhpParser\Node\Stmt\Do_;
-use PhpParser\Node\Stmt\For_;
-use PhpParser\Node\Stmt\Foreach_;
 use PhpParser\Node\Stmt\If_;
 use PhpParser\Node\Stmt\Return_;
 use PhpParser\Node\Stmt\Switch_;
-use PhpParser\Node\Stmt\While_;
 use PHPStan\Type\ObjectType;
 use Rector\Core\PhpParser\Node\BetterNodeFinder;
+use Rector\NodeNestingScope\ValueObject\ControlStructure;
 use Rector\NodeTypeResolver\Node\AttributeKey;
 use Rector\NodeTypeResolver\NodeTypeResolver;
 final class ContextAnalyzer
@@ -25,11 +21,7 @@ final class ContextAnalyzer
      * Nodes that break the scope they way up, e.g. class method
      * @var array<class-string<FunctionLike>>
      */
-    private const BREAK_NODES = [\PhpParser\Node\FunctionLike::class, \PhpParser\Node\Stmt\ClassMethod::class];
-    /**
-     * @var array<class-string<Stmt>>
-     */
-    private const LOOP_NODES = [\PhpParser\Node\Stmt\For_::class, \PhpParser\Node\Stmt\Foreach_::class, \PhpParser\Node\Stmt\While_::class, \PhpParser\Node\Stmt\Do_::class];
+    private const BREAK_NODES = [FunctionLike::class, ClassMethod::class];
     /**
      * @readonly
      * @var \Rector\Core\PhpParser\Node\BetterNodeFinder
@@ -40,55 +32,59 @@ final class ContextAnalyzer
      * @var \Rector\NodeTypeResolver\NodeTypeResolver
      */
     private $nodeTypeResolver;
-    public function __construct(\Rector\Core\PhpParser\Node\BetterNodeFinder $betterNodeFinder, \Rector\NodeTypeResolver\NodeTypeResolver $nodeTypeResolver)
+    public function __construct(BetterNodeFinder $betterNodeFinder, NodeTypeResolver $nodeTypeResolver)
     {
         $this->betterNodeFinder = $betterNodeFinder;
         $this->nodeTypeResolver = $nodeTypeResolver;
     }
-    public function isInLoop(\PhpParser\Node $node) : bool
+    public function isInLoop(Node $node) : bool
     {
-        $stopNodes = \array_merge(self::LOOP_NODES, self::BREAK_NODES);
+        $stopNodes = \array_merge(ControlStructure::LOOP_NODES, self::BREAK_NODES);
         $firstParent = $this->betterNodeFinder->findParentByTypes($node, $stopNodes);
-        if (!$firstParent instanceof \PhpParser\Node) {
+        if (!$firstParent instanceof Node) {
             return \false;
         }
-        foreach (self::LOOP_NODES as $type) {
+        foreach (ControlStructure::LOOP_NODES as $type) {
             if (\is_a($firstParent, $type, \true)) {
                 return \true;
             }
         }
         return \false;
     }
-    public function isInSwitch(\PhpParser\Node $node) : bool
+    /**
+     * @api
+     */
+    public function isInSwitch(Node $node) : bool
     {
-        return (bool) $this->betterNodeFinder->findParentType($node, \PhpParser\Node\Stmt\Switch_::class);
+        return (bool) $this->betterNodeFinder->findParentType($node, Switch_::class);
     }
-    public function isInIf(\PhpParser\Node $node) : bool
+    /**
+     * @api
+     */
+    public function isInIf(Node $node) : bool
     {
-        $breakNodes = \array_merge([\PhpParser\Node\Stmt\If_::class], self::BREAK_NODES);
+        $breakNodes = \array_merge([If_::class], self::BREAK_NODES);
         $previousNode = $this->betterNodeFinder->findParentByTypes($node, $breakNodes);
-        if (!$previousNode instanceof \PhpParser\Node) {
+        if (!$previousNode instanceof Node) {
             return \false;
         }
-        return $previousNode instanceof \PhpParser\Node\Stmt\If_;
+        return $previousNode instanceof If_;
     }
-    public function isHasAssignWithIndirectReturn(\PhpParser\Node $node, \PhpParser\Node\Stmt\If_ $if) : bool
+    public function hasAssignWithIndirectReturn(Node $node, If_ $if) : bool
     {
-        $loopNodes = self::LOOP_NODES;
-        foreach ($loopNodes as $loopNode) {
-            $loopObjectType = new \PHPStan\Type\ObjectType($loopNode);
+        foreach (ControlStructure::LOOP_NODES as $loopNode) {
+            $loopObjectType = new ObjectType($loopNode);
             $parentType = $this->nodeTypeResolver->getType($node);
             $superType = $parentType->isSuperTypeOf($loopObjectType);
-            $isLoopType = $superType->yes();
-            if (!$isLoopType) {
+            if (!$superType->yes()) {
                 continue;
             }
-            $next = $node->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::NEXT_NODE);
-            if ($next instanceof \PhpParser\Node) {
-                if ($next instanceof \PhpParser\Node\Stmt\Return_ && $next->expr === null) {
+            $next = $node->getAttribute(AttributeKey::NEXT_NODE);
+            if ($next instanceof Node) {
+                if ($next instanceof Return_ && $next->expr === null) {
                     continue;
                 }
-                $hasAssign = (bool) $this->betterNodeFinder->findInstanceOf($if->stmts, \PhpParser\Node\Expr\Assign::class);
+                $hasAssign = (bool) $this->betterNodeFinder->findInstanceOf($if->stmts, Assign::class);
                 if (!$hasAssign) {
                     continue;
                 }

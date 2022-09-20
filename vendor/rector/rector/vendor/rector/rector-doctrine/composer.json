@@ -8,19 +8,19 @@
     },
     "require-dev": {
         "phpstan\/extension-installer": "^1.1",
-        "rector\/phpstan-rules": "^0.4.8",
-        "phpstan\/phpstan": "^1.0",
+        "rector\/phpstan-rules": "^0.5",
+        "phpstan\/phpstan": "^1.8.1",
         "phpunit\/phpunit": "^9.5",
-        "symplify\/phpstan-rules": "^10.0",
-        "symplify\/phpstan-extensions": "^10.0",
-        "symplify\/easy-coding-standard": "^10.0",
-        "symplify\/rule-doc-generator": "^10.0",
+        "symplify\/phpstan-rules": "^11.0",
+        "symplify\/phpstan-extensions": "^11.0",
+        "symplify\/easy-coding-standard": "^11.0",
+        "symplify\/rule-doc-generator": "^11.0",
         "rector\/rector-src": "dev-main",
-        "doctrine\/orm": "^2.9",
-        "symplify\/monorepo-builder": "^10.0",
+        "doctrine\/orm": "^2.10",
+        "symplify\/monorepo-builder": "^11.0",
         "phpstan\/phpstan-webmozart-assert": "^1.0",
         "phpstan\/phpstan-strict-rules": "^1.1",
-        "symplify\/vendor-patches": "^10.0"
+        "symplify\/vendor-patches": "^11.0"
     },
     "autoload": {
         "psr-4": {
@@ -41,7 +41,7 @@
         "check-cs": "vendor\/bin\/ecs check --ansi",
         "fix-cs": "vendor\/bin\/ecs check --fix --ansi",
         "docs": [
-            "vendor\/bin\/rule-doc-generator generate src --output-file docs\/rector_rules_overview.md --ansi --configure-method",
+            "vendor\/bin\/rule-doc-generator generate src --output-file docs\/rector_rules_overview.md --ansi",
             "vendor\/bin\/ecs check-markdown docs\/rector_rules_overview.md --ansi --fix"
         ]
     },
@@ -60,5 +60,13 @@
         "rector\/rector": "<0.11"
     },
     "minimum-stability": "dev",
-    "prefer-stable": true
+    "prefer-stable": true,
+    "config": {
+        "allow-plugins": {
+            "composer\/package-versions-deprecated": false,
+            "cweagans\/composer-patches": true,
+            "rector\/extension-installer": true,
+            "phpstan\/extension-installer": true
+        }
+    }
 }

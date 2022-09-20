@@ -1,9 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Laminas\View\Helper\Navigation;
 
-use Interop\Container\ContainerInterface;
+use Interop\Container\ContainerInterface; // phpcs:ignore
 use Laminas\ServiceManager\Factory\InvokableFactory;
+use Laminas\ServiceManager\ServiceManager;
 use Laminas\View\HelperPluginManager;
 
 /**
@@ -12,18 +15,20 @@ use Laminas\View\HelperPluginManager;
  * Enforces that helpers retrieved are instances of
  * Navigation\HelperInterface. Additionally, it registers a number of default
  * helpers.
+ *
+ * @template InstanceType of HelperInterface|AbstractHelper
+ * @psalm-import-type ServiceManagerConfiguration from ServiceManager
+ * @extends HelperPluginManager<InstanceType>
  */
 class PluginManager extends HelperPluginManager
 {
-    /**
-     * @var string Valid instance types.
-     */
+    /** {@inheritDoc} */
     protected $instanceOf = AbstractHelper::class;
 
     /**
      * Default aliases
      *
-     * @var string[]
+     * @var array<string, string>
      */
     protected $aliases = [
         'breadcrumbs' => Breadcrumbs::class,
@@ -33,21 +38,21 @@ class PluginManager extends HelperPluginManager
 
         // Legacy Zend Framework aliases
         \Zend\View\Helper\Navigation\Breadcrumbs::class => Breadcrumbs::class,
-        \Zend\View\Helper\Navigation\Links::class => Links::class,
-        \Zend\View\Helper\Navigation\Menu::class => Menu::class,
-        \Zend\View\Helper\Navigation\Sitemap::class => Sitemap::class,
+        \Zend\View\Helper\Navigation\Links::class       => Links::class, // phpcs:ignore
+        \Zend\View\Helper\Navigation\Menu::class        => Menu::class,
+        \Zend\View\Helper\Navigation\Sitemap::class     => Sitemap::class,
 
         // v2 normalized FQCNs
         'zendviewhelpernavigationbreadcrumbs' => Breadcrumbs::class,
-        'zendviewhelpernavigationlinks' => Links::class,
-        'zendviewhelpernavigationmenu' => Menu::class,
-        'zendviewhelpernavigationsitemap' => Sitemap::class,
+        'zendviewhelpernavigationlinks'       => Links::class,
+        'zendviewhelpernavigationmenu'        => Menu::class,
+        'zendviewhelpernavigationsitemap'     => Sitemap::class,
     ];
 
     /**
      * Default factories
      *
-     * @var string[]
+     * {@inheritDoc}
      */
     protected $factories = [
         Breadcrumbs::class => InvokableFactory::class,
@@ -56,7 +61,6 @@ class PluginManager extends HelperPluginManager
         Sitemap::class     => InvokableFactory::class,
 
         // v2 canonical FQCNs
-
         'laminasviewhelpernavigationbreadcrumbs' => InvokableFactory::class,
         'laminasviewhelpernavigationlinks'       => InvokableFactory::class,
         'laminasviewhelpernavigationmenu'        => InvokableFactory::class,
@@ -64,38 +68,19 @@ class PluginManager extends HelperPluginManager
     ];
 
     /**
-     * @param null|ConfigInterface|ContainerInterface $configOrContainerInstance
-     * @param array $v3config If $configOrContainerInstance is a container, this
-     *     value will be passed to the parent constructor.
+     * @param ContainerInterface $configOrContainerInstance
+     * @param array $v3config
+     * @psalm-param ServiceManagerConfiguration $v3config
      */
     public function __construct($configOrContainerInstance = null, array $v3config = [])
     {
-        $this->initializers[] = function ($first, $second): void {
-            // v2 vs v3 argument order
-            if ($first instanceof ContainerInterface) {
-                // v3
-                $container = $first;
-                $instance = $second;
-            } else {
-                // v2
-                $container = $second;
-                $instance = $first;
-            }
-
+        /** @psalm-suppress UnusedClosureParam, MissingClosureParamType */
+        $this->initializers[] = function (ContainerInterface $container, $instance): void {
             if (! $instance instanceof AbstractHelper) {
                 return;
             }
 
-            // This initializer was written with v2 functionality in mind; as such,
-            // we need to test and see if we're called in a v2 context, and, if so,
-            // set the service locator to the parent locator.
-            //
-            // Under v3, the parent locator is what is passed to the method already.
-            if (! method_exists($container, 'configure') && $container->getServiceLocator()) {
-                $container = $container->getServiceLocator();
-            }
-
-            $instance->setServiceLocator($container);
+            $instance->setServiceLocator($this->creationContext);
         };
 
         parent::__construct($configOrContainerInstance, $v3config);

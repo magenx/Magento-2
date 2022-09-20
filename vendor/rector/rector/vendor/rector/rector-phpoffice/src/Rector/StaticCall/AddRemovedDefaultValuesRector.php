@@ -17,11 +17,15 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
  *
  * @see \Rector\PHPOffice\Tests\Rector\StaticCall\AddRemovedDefaultValuesRector\AddRemovedDefaultValuesRectorTest
  */
-final class AddRemovedDefaultValuesRector extends \Rector\Core\Rector\AbstractRector
+final class AddRemovedDefaultValuesRector extends AbstractRector
 {
-    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
+    /**
+     * @var bool
+     */
+    private $hasChanged = \false;
+    public function getRuleDefinition() : RuleDefinition
     {
-        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Complete removed default values explicitly', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample(<<<'CODE_SAMPLE'
+        return new RuleDefinition('Complete removed default values explicitly', [new CodeSample(<<<'CODE_SAMPLE'
 final class SomeClass
 {
     public function run(): void
@@ -48,16 +52,16 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [\PhpParser\Node\Expr\StaticCall::class, \PhpParser\Node\Expr\MethodCall::class];
+        return [StaticCall::class, MethodCall::class];
     }
     /**
      * @param StaticCall|MethodCall $node
-     * @return \PhpParser\Node\Expr\MethodCall|\PhpParser\Node\Expr\StaticCall
+     * @return null|\PhpParser\Node\Expr\StaticCall|\PhpParser\Node\Expr\MethodCall
      */
-    public function refactor(\PhpParser\Node $node)
+    public function refactor(Node $node)
     {
-        foreach (\Rector\PHPOffice\ValueObject\PHPExcelMethodDefaultValues::METHOD_NAMES_BY_TYPE_WITH_VALUE as $type => $defaultValuesByMethodName) {
-            if (!$this->isCallerObjectType($node, new \PHPStan\Type\ObjectType($type))) {
+        foreach (PHPExcelMethodDefaultValues::METHOD_NAMES_BY_TYPE_WITH_VALUE as $type => $defaultValuesByMethodName) {
+            if (!$this->isCallerObjectType($node, new ObjectType($type))) {
                 continue;
             }
             foreach ($defaultValuesByMethodName as $methodName => $defaultValuesByPosition) {
@@ -67,11 +71,14 @@ CODE_SAMPLE
                 $this->refactorArgs($node, $defaultValuesByPosition);
             }
         }
+        if (!$this->hasChanged) {
+            return null;
+        }
         return $node;
     }
     /**
      * @param array<int, mixed> $defaultValuesByPosition
-     * @param \PhpParser\Node\Expr\MethodCall|\PhpParser\Node\Expr\StaticCall $node
+     * @param \PhpParser\Node\Expr\StaticCall|\PhpParser\Node\Expr\MethodCall $node
      */
     private function refactorArgs($node, array $defaultValuesByPosition) : void
     {
@@ -83,19 +90,20 @@ CODE_SAMPLE
             if (\is_string($defaultValue) && \strpos($defaultValue, '::') !== \false) {
                 [$className, $constant] = \explode('::', $defaultValue);
                 $classConstant = $this->nodeFactory->createClassConstFetch($className, $constant);
-                $arg = new \PhpParser\Node\Arg($classConstant);
+                $arg = new Arg($classConstant);
             } else {
                 $arg = $this->nodeFactory->createArg($defaultValue);
             }
             $node->args[$position] = $arg;
+            $this->hasChanged = \true;
         }
     }
     /**
-     * @param \PhpParser\Node\Expr\MethodCall|\PhpParser\Node\Expr\StaticCall $node
+     * @param \PhpParser\Node\Expr\StaticCall|\PhpParser\Node\Expr\MethodCall $node
      */
-    private function isCallerObjectType($node, \PHPStan\Type\ObjectType $objectType) : bool
+    private function isCallerObjectType($node, ObjectType $objectType) : bool
     {
-        $caller = $node instanceof \PhpParser\Node\Expr\MethodCall ? $node->var : $node->class;
+        $caller = $node instanceof MethodCall ? $node->var : $node->class;
         return $this->isObjectType($caller, $objectType);
     }
 }

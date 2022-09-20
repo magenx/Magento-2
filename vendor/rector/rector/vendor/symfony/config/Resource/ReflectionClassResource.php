@@ -8,22 +8,37 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix20211221\Symfony\Component\Config\Resource;
+namespace RectorPrefix202208\Symfony\Component\Config\Resource;
 
-use RectorPrefix20211221\Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use RectorPrefix20211221\Symfony\Component\Messenger\Handler\MessageSubscriberInterface;
-use RectorPrefix20211221\Symfony\Contracts\Service\ServiceSubscriberInterface;
+use RectorPrefix202208\Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use RectorPrefix202208\Symfony\Component\Messenger\Handler\MessageSubscriberInterface;
+use RectorPrefix202208\Symfony\Contracts\Service\ServiceSubscriberInterface;
 /**
  * @author Nicolas Grekas <p@tchwork.com>
  *
  * @final
  */
-class ReflectionClassResource implements \RectorPrefix20211221\Symfony\Component\Config\Resource\SelfCheckingResourceInterface
+class ReflectionClassResource implements SelfCheckingResourceInterface
 {
+    /**
+     * @var mixed[]
+     */
     private $files = [];
+    /**
+     * @var string
+     */
     private $className;
+    /**
+     * @var \ReflectionClass
+     */
     private $classReflector;
+    /**
+     * @var mixed[]
+     */
     private $excludedVendors = [];
+    /**
+     * @var string
+     */
     private $hash;
     public function __construct(\ReflectionClass $classReflector, array $excludedVendors = [])
     {
@@ -36,7 +51,7 @@ class ReflectionClassResource implements \RectorPrefix20211221\Symfony\Component
      */
     public function isFresh(int $timestamp) : bool
     {
-        if (null === $this->hash) {
+        if (!isset($this->hash)) {
             $this->hash = $this->computeHash();
             $this->loadFiles($this->classReflector);
         }
@@ -59,7 +74,7 @@ class ReflectionClassResource implements \RectorPrefix20211221\Symfony\Component
      */
     public function __sleep() : array
     {
-        if (null === $this->hash) {
+        if (!isset($this->hash)) {
             $this->hash = $this->computeHash();
             $this->loadFiles($this->classReflector);
         }
@@ -90,13 +105,11 @@ class ReflectionClassResource implements \RectorPrefix20211221\Symfony\Component
     }
     private function computeHash() : string
     {
-        if (null === $this->classReflector) {
-            try {
-                $this->classReflector = new \ReflectionClass($this->className);
-            } catch (\ReflectionException $e) {
-                // the class does not exist anymore
-                return \false;
-            }
+        try {
+            $this->classReflector = $this->classReflector ?? new \ReflectionClass($this->className);
+        } catch (\ReflectionException $exception) {
+            // the class does not exist anymore
+            return \false;
         }
         $hash = \hash_init('md5');
         foreach ($this->generateSignature($this->classReflector) as $info) {
@@ -106,14 +119,12 @@ class ReflectionClassResource implements \RectorPrefix20211221\Symfony\Component
     }
     private function generateSignature(\ReflectionClass $class) : iterable
     {
-        if (\PHP_VERSION_ID >= 80000) {
-            $attributes = [];
-            foreach (\method_exists($class, 'getAttributes') ? $class->getAttributes() : [] as $a) {
-                $attributes[] = [$a->getName(), \PHP_VERSION_ID >= 80100 ? (string) $a : $a->getArguments()];
-            }
-            (yield \print_r($attributes, \true));
-            $attributes = [];
+        $attributes = [];
+        foreach (\method_exists($class, 'getAttributes') ? $class->getAttributes() : [] as $a) {
+            $attributes[] = [$a->getName(), (string) $a];
         }
+        (yield \print_r($attributes, \true));
+        $attributes = [];
         (yield $class->getDocComment());
         (yield (int) $class->isFinal());
         (yield (int) $class->isAbstract());
@@ -127,13 +138,11 @@ class ReflectionClassResource implements \RectorPrefix20211221\Symfony\Component
         if (!$class->isInterface()) {
             $defaults = $class->getDefaultProperties();
             foreach ($class->getProperties(\ReflectionProperty::IS_PUBLIC | \ReflectionProperty::IS_PROTECTED) as $p) {
-                if (\PHP_VERSION_ID >= 80000) {
-                    foreach (\method_exists($p, 'getAttributes') ? $p->getAttributes() : [] as $a) {
-                        $attributes[] = [$a->getName(), \PHP_VERSION_ID >= 80100 ? (string) $a : $a->getArguments()];
-                    }
-                    (yield \print_r($attributes, \true));
-                    $attributes = [];
+                foreach (\method_exists($p, 'getAttributes') ? $p->getAttributes() : [] as $a) {
+                    $attributes[] = [$a->getName(), (string) $a];
                 }
+                (yield \print_r($attributes, \true));
+                $attributes = [];
                 (yield $p->getDocComment());
                 (yield $p->isDefault() ? '<default>' : '');
                 (yield $p->isPublic() ? 'public' : 'protected');
@@ -146,74 +155,42 @@ class ReflectionClassResource implements \RectorPrefix20211221\Symfony\Component
             return \defined($c);
         }, null, $class->name);
         foreach ($class->getMethods(\ReflectionMethod::IS_PUBLIC | \ReflectionMethod::IS_PROTECTED) as $m) {
-            if (\PHP_VERSION_ID >= 80000) {
-                foreach (\method_exists($m, 'getAttributes') ? $m->getAttributes() : [] as $a) {
-                    $attributes[] = [$a->getName(), \PHP_VERSION_ID >= 80100 ? (string) $a : $a->getArguments()];
+            foreach (\method_exists($m, 'getAttributes') ? $m->getAttributes() : [] as $a) {
+                $attributes[] = [$a->getName(), (string) $a];
+            }
+            (yield \print_r($attributes, \true));
+            $attributes = [];
+            $defaults = [];
+            foreach ($m->getParameters() as $p) {
+                foreach (\method_exists($p, 'getAttributes') ? $p->getAttributes() : [] as $a) {
+                    $attributes[] = [$a->getName(), (string) $a];
                 }
                 (yield \print_r($attributes, \true));
                 $attributes = [];
-            }
-            $defaults = [];
-            $parametersWithUndefinedConstants = [];
-            foreach ($m->getParameters() as $p) {
-                if (\PHP_VERSION_ID >= 80000) {
-                    foreach (\method_exists($p, 'getAttributes') ? $p->getAttributes() : [] as $a) {
-                        $attributes[] = [$a->getName(), \PHP_VERSION_ID >= 80100 ? (string) $a : $a->getArguments()];
-                    }
-                    (yield \print_r($attributes, \true));
-                    $attributes = [];
-                }
                 if (!$p->isDefaultValueAvailable()) {
                     $defaults[$p->name] = null;
                     continue;
                 }
-                if (\PHP_VERSION_ID >= 80100) {
-                    $defaults[$p->name] = (string) $p;
-                    continue;
-                }
-                if (!$p->isDefaultValueConstant() || $defined($p->getDefaultValueConstantName())) {
-                    $defaults[$p->name] = $p->getDefaultValue();
-                    continue;
-                }
-                $defaults[$p->name] = $p->getDefaultValueConstantName();
-                $parametersWithUndefinedConstants[$p->name] = \true;
+                $defaults[$p->name] = (string) $p;
             }
-            if (!$parametersWithUndefinedConstants) {
-                (yield \preg_replace('/^  @@.*/m', '', $m));
-            } else {
-                $t = $m->getReturnType();
-                $stack = [$m->getDocComment(), $m->getName(), $m->isAbstract(), $m->isFinal(), $m->isStatic(), $m->isPublic(), $m->isPrivate(), $m->isProtected(), $m->returnsReference(), $t instanceof \ReflectionNamedType ? (string) $t->allowsNull() . $t->getName() : (string) $t];
-                foreach ($m->getParameters() as $p) {
-                    if (!isset($parametersWithUndefinedConstants[$p->name])) {
-                        $stack[] = (string) $p;
-                    } else {
-                        $t = $p->getType();
-                        $stack[] = $p->isOptional();
-                        $stack[] = $t instanceof \ReflectionNamedType ? (string) $t->allowsNull() . $t->getName() : (string) $t;
-                        $stack[] = $p->isPassedByReference();
-                        $stack[] = $p->isVariadic();
-                        $stack[] = $p->getName();
-                    }
-                }
-                (yield \implode(',', $stack));
-            }
+            (yield \preg_replace('/^  @@.*/m', '', $m));
             (yield \print_r($defaults, \true));
         }
         if ($class->isAbstract() || $class->isInterface() || $class->isTrait()) {
             return;
         }
-        if (\interface_exists(\RectorPrefix20211221\Symfony\Component\EventDispatcher\EventSubscriberInterface::class, \false) && $class->isSubclassOf(\RectorPrefix20211221\Symfony\Component\EventDispatcher\EventSubscriberInterface::class)) {
-            (yield \RectorPrefix20211221\Symfony\Component\EventDispatcher\EventSubscriberInterface::class);
+        if (\interface_exists(EventSubscriberInterface::class, \false) && $class->isSubclassOf(EventSubscriberInterface::class)) {
+            (yield EventSubscriberInterface::class);
             (yield \print_r($class->name::getSubscribedEvents(), \true));
         }
-        if (\interface_exists(\RectorPrefix20211221\Symfony\Component\Messenger\Handler\MessageSubscriberInterface::class, \false) && $class->isSubclassOf(\RectorPrefix20211221\Symfony\Component\Messenger\Handler\MessageSubscriberInterface::class)) {
-            (yield \RectorPrefix20211221\Symfony\Component\Messenger\Handler\MessageSubscriberInterface::class);
+        if (\interface_exists(MessageSubscriberInterface::class, \false) && $class->isSubclassOf(MessageSubscriberInterface::class)) {
+            (yield MessageSubscriberInterface::class);
             foreach ($class->name::getHandledMessages() as $key => $value) {
                 (yield $key . \print_r($value, \true));
             }
         }
-        if (\interface_exists(\RectorPrefix20211221\Symfony\Contracts\Service\ServiceSubscriberInterface::class, \false) && $class->isSubclassOf(\RectorPrefix20211221\Symfony\Contracts\Service\ServiceSubscriberInterface::class)) {
-            (yield \RectorPrefix20211221\Symfony\Contracts\Service\ServiceSubscriberInterface::class);
+        if (\interface_exists(ServiceSubscriberInterface::class, \false) && $class->isSubclassOf(ServiceSubscriberInterface::class)) {
+            (yield ServiceSubscriberInterface::class);
             (yield \print_r($class->name::getSubscribedServices(), \true));
         }
     }

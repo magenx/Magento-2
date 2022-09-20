@@ -9,8 +9,8 @@ use Rector\Core\Validation\RectorAssert;
 final class AddReturnTypeDeclaration
 {
     /**
+     * @var class-string
      * @readonly
-     * @var string
      */
     private $class;
     /**
@@ -23,12 +23,15 @@ final class AddReturnTypeDeclaration
      * @var \PHPStan\Type\Type
      */
     private $returnType;
-    public function __construct(string $class, string $method, \PHPStan\Type\Type $returnType)
+    /**
+     * @param class-string $class
+     */
+    public function __construct(string $class, string $method, Type $returnType)
     {
         $this->class = $class;
         $this->method = $method;
         $this->returnType = $returnType;
-        \Rector\Core\Validation\RectorAssert::className($class);
+        RectorAssert::className($class);
     }
     public function getClass() : string
     {
@@ -38,12 +41,12 @@ final class AddReturnTypeDeclaration
     {
         return $this->method;
     }
-    public function getReturnType() : \PHPStan\Type\Type
+    public function getReturnType() : Type
     {
         return $this->returnType;
     }
-    public function getObjectType() : \PHPStan\Type\ObjectType
+    public function getObjectType() : ObjectType
     {
-        return new \PHPStan\Type\ObjectType($this->class);
+        return new ObjectType($this->class);
     }
 }
