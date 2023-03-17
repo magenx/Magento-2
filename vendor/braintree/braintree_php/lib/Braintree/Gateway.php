@@ -121,6 +121,15 @@ class Gateway
 
     /**
      *
+     * @return ExchangeRateQuoteGateway
+     */
+    public function exchangeRateQuote()
+    {
+        return new ExchangeRateQuoteGateway($this);
+    }
+
+    /**
+     *
      * @return MerchantGateway
      */
     public function merchant()
@@ -171,6 +180,15 @@ class Gateway
     public function payPalAccount()
     {
         return new PayPalAccountGateway($this);
+    }
+
+    /**
+     *
+     * @return SepaDirectDebitAccountGateway
+     */
+    public function sepaDirectDebitAccount()
+    {
+        return new SepaDirectDebitAccountGateway($this);
     }
 
     /**

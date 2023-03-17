@@ -2,8 +2,11 @@
 
 namespace Facebook\WebDriver\Remote;
 
+use Facebook\WebDriver\Exception\UnknownErrorException;
 use Facebook\WebDriver\Interactions\WebDriverActions;
 use Facebook\WebDriver\JavaScriptExecutor;
+use Facebook\WebDriver\Support\IsElementDisplayedAtom;
+use Facebook\WebDriver\Support\ScreenshotHelper;
 use Facebook\WebDriver\WebDriver;
 use Facebook\WebDriver\WebDriverBy;
 use Facebook\WebDriver\WebDriverCapabilities;
@@ -21,7 +24,7 @@ class RemoteWebDriver implements WebDriver, JavaScriptExecutor, WebDriverHasInpu
      */
     protected $executor;
     /**
-     * @var WebDriverCapabilities
+     * @var WebDriverCapabilities|null
      */
     protected $capabilities;
 
@@ -139,8 +142,8 @@ class RemoteWebDriver implements WebDriver, JavaScriptExecutor, WebDriverHasInpu
      * This constructor can boost the performance a lot by reusing the same browser for the whole test suite.
      * You cannot pass the desired capabilities because the session was created before.
      *
-     * @param string $selenium_server_url The url of the remote Selenium WebDriver server
      * @param string $session_id The existing session id
+     * @param string $selenium_server_url The url of the remote Selenium WebDriver server
      * @param int|null $connection_timeout_in_ms Set timeout for the connect phase to remote Selenium WebDriver server
      * @param int|null $request_timeout_in_ms Set the maximum time of a request to remote Selenium WebDriver server
      * @param bool $isW3cCompliant True to use W3C WebDriver (default), false to use the legacy JsonWire protocol
@@ -208,6 +211,10 @@ class RemoteWebDriver implements WebDriver, JavaScriptExecutor, WebDriverHasInpu
             JsonWireCompat::getUsing($by, $this->isW3cCompliant)
         );
 
+        if ($raw_element === null) {
+            throw new UnknownErrorException('Unexpected server response to findElement command');
+        }
+
         return $this->newElement(JsonWireCompat::getElement($raw_element));
     }
 
@@ -224,6 +231,10 @@ class RemoteWebDriver implements WebDriver, JavaScriptExecutor, WebDriverHasInpu
             DriverCommand::FIND_ELEMENTS,
             JsonWireCompat::getUsing($by, $this->isW3cCompliant)
         );
+
+        if ($raw_elements === null) {
+            throw new UnknownErrorException('Unexpected server response to findElements command');
+        }
 
         $elements = [];
         foreach ($raw_elements as $raw_element) {
@@ -364,19 +375,7 @@ class RemoteWebDriver implements WebDriver, JavaScriptExecutor, WebDriverHasInpu
      */
     public function takeScreenshot($save_as = null)
     {
-        $screenshot = base64_decode($this->execute(DriverCommand::SCREENSHOT), true);
-
-        if ($save_as !== null) {
-            $directoryPath = dirname($save_as);
-
-            if (!file_exists($directoryPath)) {
-                mkdir($directoryPath, 0777, true);
-            }
-
-            file_put_contents($save_as, $screenshot);
-        }
-
-        return $screenshot;
+        return (new ScreenshotHelper($this->getExecuteMethod()))->takePageScreenshot($save_as);
     }
 
     /**
@@ -545,7 +544,7 @@ class RemoteWebDriver implements WebDriver, JavaScriptExecutor, WebDriverHasInpu
     /**
      * Get capabilities of the RemoteWebDriver.
      *
-     * @return WebDriverCapabilities
+     * @return WebDriverCapabilities|null
      */
     public function getCapabilities()
     {
@@ -555,6 +554,7 @@ class RemoteWebDriver implements WebDriver, JavaScriptExecutor, WebDriverHasInpu
     /**
      * Returns a list of the currently active sessions.
      *
+     * @deprecated Removed in W3C WebDriver.
      * @param string $selenium_server_url The url of the remote Selenium WebDriver server
      * @param int $timeout_in_ms
      * @return array
@@ -575,6 +575,19 @@ class RemoteWebDriver implements WebDriver, JavaScriptExecutor, WebDriverHasInpu
 
     public function execute($command_name, $params = [])
     {
+        // As we so far only use atom for IS_ELEMENT_DISPLAYED, this condition is hardcoded here. In case more atoms
+        // are used, this should be rewritten and separated from this class (e.g. to some abstract matcher logic).
+        if ($command_name === DriverCommand::IS_ELEMENT_DISPLAYED
+            && (
+                // When capabilities are missing in php-webdriver 1.13.x, always fallback to use the atom
+                $this->getCapabilities() === null
+                // If capabilities are present, use the atom only if condition matches
+                || IsElementDisplayedAtom::match($this->getCapabilities()->getBrowserName())
+            )
+        ) {
+            return (new IsElementDisplayedAtom($this))->execute($params);
+        }
+
         $command = new WebDriverCommand(
             $this->sessionID,
             $command_name,

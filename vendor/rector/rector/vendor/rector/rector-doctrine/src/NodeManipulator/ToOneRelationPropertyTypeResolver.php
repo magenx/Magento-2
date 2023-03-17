@@ -3,7 +3,7 @@
 declare (strict_types=1);
 namespace Rector\Doctrine\NodeManipulator;
 
-use RectorPrefix202208\Nette\Utils\Strings;
+use RectorPrefix202303\Nette\Utils\Strings;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Stmt\Property;
 use PHPStan\PhpDocParser\Ast\ConstExpr\ConstExprTrueNode;
@@ -11,6 +11,7 @@ use PHPStan\Type\MixedType;
 use PHPStan\Type\NullType;
 use PHPStan\Type\Type;
 use PHPStan\Type\TypeCombinator;
+use Rector\BetterPhpDocParser\PhpDoc\ArrayItemNode;
 use Rector\BetterPhpDocParser\PhpDoc\DoctrineAnnotationTagValueNode;
 use Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfo;
 use Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfoFactory;
@@ -79,15 +80,19 @@ final class ToOneRelationPropertyTypeResolver
     }
     private function processToOneRelation(Property $property, DoctrineAnnotationTagValueNode $toOneDoctrineAnnotationTagValueNode, ?DoctrineAnnotationTagValueNode $joinDoctrineAnnotationTagValueNode) : Type
     {
-        $targetEntity = $toOneDoctrineAnnotationTagValueNode->getValueWithoutQuotes('targetEntity');
-        if (!\is_string($targetEntity)) {
+        $targetEntityArrayItemNode = $toOneDoctrineAnnotationTagValueNode->getValue('targetEntity');
+        if (!$targetEntityArrayItemNode instanceof ArrayItemNode) {
             return new MixedType();
         }
-        if (\substr_compare($targetEntity, '::class', -\strlen('::class')) === 0) {
-            $targetEntity = Strings::before($targetEntity, '::class');
+        $targetEntityClass = $targetEntityArrayItemNode->value;
+        if (!\is_string($targetEntityClass)) {
+            return new MixedType();
+        }
+        if (\substr_compare($targetEntityClass, '::class', -\strlen('::class')) === 0) {
+            $targetEntityClass = Strings::before($targetEntityClass, '::class');
         }
         // resolve to FQN
-        $tagFullyQualifiedName = $this->classAnnotationMatcher->resolveTagFullyQualifiedName($targetEntity, $property);
+        $tagFullyQualifiedName = $this->classAnnotationMatcher->resolveTagFullyQualifiedName($targetEntityClass, $property);
         if ($tagFullyQualifiedName === null) {
             return new MixedType();
         }
@@ -97,8 +102,11 @@ final class ToOneRelationPropertyTypeResolver
     }
     private function shouldAddNullType(DoctrineAnnotationTagValueNode $doctrineAnnotationTagValueNode) : bool
     {
-        $isNullableValue = $doctrineAnnotationTagValueNode->getValue('nullable');
-        return $isNullableValue instanceof ConstExprTrueNode;
+        $isNullableValueArrayItemNode = $doctrineAnnotationTagValueNode->getValue('nullable');
+        if (!$isNullableValueArrayItemNode instanceof ArrayItemNode) {
+            return \false;
+        }
+        return $isNullableValueArrayItemNode->value instanceof ConstExprTrueNode;
     }
     private function resolveFromDocBlock(PhpDocInfo $phpDocInfo, Property $property, DoctrineAnnotationTagValueNode $doctrineAnnotationTagValueNode) : Type
     {

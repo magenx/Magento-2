@@ -13,7 +13,6 @@ use Magento\Sales\Api\Data\OrderPaymentInterface;
 class PayPalDetailsHandler implements HandlerInterface
 {
     private const PAYMENT_ID = 'paymentId';
-
     private const PAYER_EMAIL = 'payerEmail';
 
     /**
@@ -22,7 +21,7 @@ class PayPalDetailsHandler implements HandlerInterface
     private $subjectReader;
 
     /**
-     * Constructor
+     * PayPalDetailsHandler Constructor
      *
      * @param SubjectReader $subjectReader
      */

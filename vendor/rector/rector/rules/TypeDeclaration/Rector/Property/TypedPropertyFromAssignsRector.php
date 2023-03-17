@@ -10,7 +10,6 @@ use PHPStan\Type\MixedType;
 use PHPStan\Type\Type;
 use PHPStan\Type\TypeCombinator;
 use PHPStan\Type\UnionType;
-use Rector\BetterPhpDocParser\PhpDocManipulator\PhpDocTypeChanger;
 use Rector\Core\Contract\Rector\AllowEmptyConfigurableRectorInterface;
 use Rector\Core\Php\PhpVersionProvider;
 use Rector\Core\Rector\AbstractRector;
@@ -54,11 +53,6 @@ final class TypedPropertyFromAssignsRector extends AbstractRector implements All
     private $propertyTypeDecorator;
     /**
      * @readonly
-     * @var \Rector\BetterPhpDocParser\PhpDocManipulator\PhpDocTypeChanger
-     */
-    private $phpDocTypeChanger;
-    /**
-     * @readonly
      * @var \Rector\DeadCode\PhpDoc\TagRemover\VarTagRemover
      */
     private $varTagRemover;
@@ -72,11 +66,10 @@ final class TypedPropertyFromAssignsRector extends AbstractRector implements All
      * @var \Rector\Core\Php\PhpVersionProvider
      */
     private $phpVersionProvider;
-    public function __construct(AllAssignNodePropertyTypeInferer $allAssignNodePropertyTypeInferer, PropertyTypeDecorator $propertyTypeDecorator, PhpDocTypeChanger $phpDocTypeChanger, VarTagRemover $varTagRemover, MakePropertyTypedGuard $makePropertyTypedGuard, PhpVersionProvider $phpVersionProvider)
+    public function __construct(AllAssignNodePropertyTypeInferer $allAssignNodePropertyTypeInferer, PropertyTypeDecorator $propertyTypeDecorator, VarTagRemover $varTagRemover, MakePropertyTypedGuard $makePropertyTypedGuard, PhpVersionProvider $phpVersionProvider)
     {
         $this->allAssignNodePropertyTypeInferer = $allAssignNodePropertyTypeInferer;
         $this->propertyTypeDecorator = $propertyTypeDecorator;
-        $this->phpDocTypeChanger = $phpDocTypeChanger;
         $this->varTagRemover = $varTagRemover;
         $this->makePropertyTypedGuard = $makePropertyTypedGuard;
         $this->phpVersionProvider = $phpVersionProvider;
@@ -137,22 +130,22 @@ CODE_SAMPLE
         $phpDocInfo = $this->phpDocInfoFactory->createFromNodeOrEmpty($node);
         $typeNode = $this->staticTypeMapper->mapPHPStanTypeToPhpParserNode($inferredType, TypeKind::PROPERTY);
         if ($typeNode === null) {
-            $this->phpDocTypeChanger->changeVarType($phpDocInfo, $inferredType);
-            return $node;
+            return null;
         }
         if (!$this->phpVersionProvider->isAtLeastPhpVersion(PhpVersionFeature::TYPED_PROPERTIES)) {
-            $this->phpDocTypeChanger->changeVarType($phpDocInfo, $inferredType);
-            return $node;
+            return null;
         }
         // non-private property can be anything with not inline public configured
         if (!$node->isPrivate() && !$this->inlinePublic) {
-            $this->phpDocTypeChanger->changeVarType($phpDocInfo, $inferredType);
-            return $node;
+            return null;
         }
         if ($inferredType instanceof UnionType) {
-            $this->propertyTypeDecorator->decoratePropertyUnionType($inferredType, $typeNode, $node, $phpDocInfo);
+            $this->propertyTypeDecorator->decoratePropertyUnionType($inferredType, $typeNode, $node, $phpDocInfo, \false);
         } else {
             $node->type = $typeNode;
+        }
+        if (!$node->type instanceof Node) {
+            return null;
         }
         $this->varTagRemover->removeVarTagIfUseless($phpDocInfo, $node);
         return $node;

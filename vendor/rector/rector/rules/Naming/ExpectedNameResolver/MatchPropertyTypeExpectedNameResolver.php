@@ -3,16 +3,20 @@
 declare (strict_types=1);
 namespace Rector\Naming\ExpectedNameResolver;
 
+use PhpParser\Node;
 use PhpParser\Node\Stmt\Class_;
+use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\Property;
 use PHPStan\Reflection\ClassReflection;
+use PHPStan\Type\ObjectType;
+use Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfo;
 use Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfoFactory;
 use Rector\Core\NodeManipulator\PropertyManipulator;
-use Rector\Core\PhpParser\Node\BetterNodeFinder;
 use Rector\Core\Reflection\ReflectionResolver;
 use Rector\Naming\Naming\PropertyNaming;
 use Rector\Naming\ValueObject\ExpectedName;
 use Rector\NodeNameResolver\NodeNameResolver;
+use Rector\StaticTypeMapper\StaticTypeMapper;
 final class MatchPropertyTypeExpectedNameResolver
 {
     /**
@@ -32,11 +36,6 @@ final class MatchPropertyTypeExpectedNameResolver
     private $nodeNameResolver;
     /**
      * @readonly
-     * @var \Rector\Core\PhpParser\Node\BetterNodeFinder
-     */
-    private $betterNodeFinder;
-    /**
-     * @readonly
      * @var \Rector\Core\NodeManipulator\PropertyManipulator
      */
     private $propertyManipulator;
@@ -45,19 +44,23 @@ final class MatchPropertyTypeExpectedNameResolver
      * @var \Rector\Core\Reflection\ReflectionResolver
      */
     private $reflectionResolver;
-    public function __construct(PropertyNaming $propertyNaming, PhpDocInfoFactory $phpDocInfoFactory, NodeNameResolver $nodeNameResolver, BetterNodeFinder $betterNodeFinder, PropertyManipulator $propertyManipulator, ReflectionResolver $reflectionResolver)
+    /**
+     * @readonly
+     * @var \Rector\StaticTypeMapper\StaticTypeMapper
+     */
+    private $staticTypeMapper;
+    public function __construct(PropertyNaming $propertyNaming, PhpDocInfoFactory $phpDocInfoFactory, NodeNameResolver $nodeNameResolver, PropertyManipulator $propertyManipulator, ReflectionResolver $reflectionResolver, StaticTypeMapper $staticTypeMapper)
     {
         $this->propertyNaming = $propertyNaming;
         $this->phpDocInfoFactory = $phpDocInfoFactory;
         $this->nodeNameResolver = $nodeNameResolver;
-        $this->betterNodeFinder = $betterNodeFinder;
         $this->propertyManipulator = $propertyManipulator;
         $this->reflectionResolver = $reflectionResolver;
+        $this->staticTypeMapper = $staticTypeMapper;
     }
-    public function resolve(Property $property) : ?string
+    public function resolve(Property $property, ClassLike $classLike) : ?string
     {
-        $class = $this->betterNodeFinder->findParentType($property, Class_::class);
-        if (!$class instanceof Class_) {
+        if (!$classLike instanceof Class_) {
             return null;
         }
         $classReflection = $this->reflectionResolver->resolveClassReflection($property);
@@ -68,8 +71,7 @@ final class MatchPropertyTypeExpectedNameResolver
         if ($this->propertyManipulator->isUsedByTrait($classReflection, $propertyName)) {
             return null;
         }
-        $phpDocInfo = $this->phpDocInfoFactory->createFromNodeOrEmpty($property);
-        $expectedName = $this->propertyNaming->getExpectedNameFromType($phpDocInfo->getVarType());
+        $expectedName = $this->resolveExpectedName($property);
         if (!$expectedName instanceof ExpectedName) {
             return null;
         }
@@ -79,5 +81,28 @@ final class MatchPropertyTypeExpectedNameResolver
             return null;
         }
         return $expectedName->getName();
+    }
+    private function resolveExpectedName(Property $property) : ?ExpectedName
+    {
+        $phpDocInfo = $this->phpDocInfoFactory->createFromNode($property);
+        $isPhpDocInfo = $phpDocInfo instanceof PhpDocInfo;
+        // property type first
+        if ($property->type instanceof Node) {
+            $propertyType = $this->staticTypeMapper->mapPhpParserNodePHPStanType($property->type);
+            // not has docblock, use property type
+            if (!$isPhpDocInfo) {
+                return $this->propertyNaming->getExpectedNameFromType($propertyType);
+            }
+            // @var type is ObjectType, use property type
+            $varType = $phpDocInfo->getVarType();
+            if ($varType instanceof ObjectType) {
+                return $this->propertyNaming->getExpectedNameFromType($propertyType);
+            }
+        }
+        // fallback to docblock
+        if ($isPhpDocInfo) {
+            return $this->propertyNaming->getExpectedNameFromType($phpDocInfo->getVarType());
+        }
+        return null;
     }
 }

@@ -104,10 +104,7 @@ CODE_SAMPLE
         }
         return $ifStmt->stmts;
     }
-    /**
-     * @return \PhpParser\Node\Stmt\If_|null
-     */
-    private function matchTruableIf(If_ $if)
+    private function matchTruableIf(If_ $if) : ?\PhpParser\Node\Stmt\If_
     {
         // just one if
         if ($if->elseifs !== []) {
@@ -179,7 +176,7 @@ CODE_SAMPLE
         $resolvedTypes = [];
         $this->traverseNodesWithCallable($stmts, function (Node $node) use($propertyName, &$resolvedTypes) : ?int {
             if ($node instanceof ClassMethod && $this->isName($node, MethodName::CONSTRUCT)) {
-                return NodeTraverser::DONT_TRAVERSE_CHILDREN;
+                return NodeTraverser::DONT_TRAVERSE_CURRENT_AND_CHILDREN;
             }
             if (!$this->isPropertyFetchAssignOfPropertyName($node, $propertyName)) {
                 return null;

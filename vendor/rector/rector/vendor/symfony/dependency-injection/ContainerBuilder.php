@@ -8,42 +8,42 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202208\Symfony\Component\DependencyInjection;
+namespace RectorPrefix202303\Symfony\Component\DependencyInjection;
 
-use RectorPrefix202208\Composer\InstalledVersions;
-use RectorPrefix202208\Symfony\Component\Config\Resource\ClassExistenceResource;
-use RectorPrefix202208\Symfony\Component\Config\Resource\ComposerResource;
-use RectorPrefix202208\Symfony\Component\Config\Resource\DirectoryResource;
-use RectorPrefix202208\Symfony\Component\Config\Resource\FileExistenceResource;
-use RectorPrefix202208\Symfony\Component\Config\Resource\FileResource;
-use RectorPrefix202208\Symfony\Component\Config\Resource\GlobResource;
-use RectorPrefix202208\Symfony\Component\Config\Resource\ReflectionClassResource;
-use RectorPrefix202208\Symfony\Component\Config\Resource\ResourceInterface;
-use RectorPrefix202208\Symfony\Component\DependencyInjection\Argument\AbstractArgument;
-use RectorPrefix202208\Symfony\Component\DependencyInjection\Argument\IteratorArgument;
-use RectorPrefix202208\Symfony\Component\DependencyInjection\Argument\RewindableGenerator;
-use RectorPrefix202208\Symfony\Component\DependencyInjection\Argument\ServiceClosureArgument;
-use RectorPrefix202208\Symfony\Component\DependencyInjection\Argument\ServiceLocator;
-use RectorPrefix202208\Symfony\Component\DependencyInjection\Argument\ServiceLocatorArgument;
-use RectorPrefix202208\Symfony\Component\DependencyInjection\Attribute\Target;
-use RectorPrefix202208\Symfony\Component\DependencyInjection\Compiler\Compiler;
-use RectorPrefix202208\Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
-use RectorPrefix202208\Symfony\Component\DependencyInjection\Compiler\PassConfig;
-use RectorPrefix202208\Symfony\Component\DependencyInjection\Compiler\ResolveEnvPlaceholdersPass;
-use RectorPrefix202208\Symfony\Component\DependencyInjection\Exception\BadMethodCallException;
-use RectorPrefix202208\Symfony\Component\DependencyInjection\Exception\InvalidArgumentException;
-use RectorPrefix202208\Symfony\Component\DependencyInjection\Exception\LogicException;
-use RectorPrefix202208\Symfony\Component\DependencyInjection\Exception\RuntimeException;
-use RectorPrefix202208\Symfony\Component\DependencyInjection\Exception\ServiceCircularReferenceException;
-use RectorPrefix202208\Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
-use RectorPrefix202208\Symfony\Component\DependencyInjection\Extension\ExtensionInterface;
-use RectorPrefix202208\Symfony\Component\DependencyInjection\LazyProxy\Instantiator\InstantiatorInterface;
-use RectorPrefix202208\Symfony\Component\DependencyInjection\LazyProxy\Instantiator\RealServiceInstantiator;
-use RectorPrefix202208\Symfony\Component\DependencyInjection\ParameterBag\EnvPlaceholderParameterBag;
-use RectorPrefix202208\Symfony\Component\DependencyInjection\ParameterBag\ParameterBag;
-use RectorPrefix202208\Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
-use RectorPrefix202208\Symfony\Component\ExpressionLanguage\Expression;
-use RectorPrefix202208\Symfony\Component\ExpressionLanguage\ExpressionFunctionProviderInterface;
+use RectorPrefix202303\Composer\InstalledVersions;
+use RectorPrefix202303\Symfony\Component\Config\Resource\ClassExistenceResource;
+use RectorPrefix202303\Symfony\Component\Config\Resource\ComposerResource;
+use RectorPrefix202303\Symfony\Component\Config\Resource\DirectoryResource;
+use RectorPrefix202303\Symfony\Component\Config\Resource\FileExistenceResource;
+use RectorPrefix202303\Symfony\Component\Config\Resource\FileResource;
+use RectorPrefix202303\Symfony\Component\Config\Resource\GlobResource;
+use RectorPrefix202303\Symfony\Component\Config\Resource\ReflectionClassResource;
+use RectorPrefix202303\Symfony\Component\Config\Resource\ResourceInterface;
+use RectorPrefix202303\Symfony\Component\DependencyInjection\Argument\AbstractArgument;
+use RectorPrefix202303\Symfony\Component\DependencyInjection\Argument\IteratorArgument;
+use RectorPrefix202303\Symfony\Component\DependencyInjection\Argument\RewindableGenerator;
+use RectorPrefix202303\Symfony\Component\DependencyInjection\Argument\ServiceClosureArgument;
+use RectorPrefix202303\Symfony\Component\DependencyInjection\Argument\ServiceLocator;
+use RectorPrefix202303\Symfony\Component\DependencyInjection\Argument\ServiceLocatorArgument;
+use RectorPrefix202303\Symfony\Component\DependencyInjection\Attribute\Target;
+use RectorPrefix202303\Symfony\Component\DependencyInjection\Compiler\Compiler;
+use RectorPrefix202303\Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
+use RectorPrefix202303\Symfony\Component\DependencyInjection\Compiler\PassConfig;
+use RectorPrefix202303\Symfony\Component\DependencyInjection\Compiler\ResolveEnvPlaceholdersPass;
+use RectorPrefix202303\Symfony\Component\DependencyInjection\Exception\BadMethodCallException;
+use RectorPrefix202303\Symfony\Component\DependencyInjection\Exception\InvalidArgumentException;
+use RectorPrefix202303\Symfony\Component\DependencyInjection\Exception\LogicException;
+use RectorPrefix202303\Symfony\Component\DependencyInjection\Exception\RuntimeException;
+use RectorPrefix202303\Symfony\Component\DependencyInjection\Exception\ServiceCircularReferenceException;
+use RectorPrefix202303\Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
+use RectorPrefix202303\Symfony\Component\DependencyInjection\Extension\ExtensionInterface;
+use RectorPrefix202303\Symfony\Component\DependencyInjection\LazyProxy\Instantiator\InstantiatorInterface;
+use RectorPrefix202303\Symfony\Component\DependencyInjection\LazyProxy\Instantiator\RealServiceInstantiator;
+use RectorPrefix202303\Symfony\Component\DependencyInjection\ParameterBag\EnvPlaceholderParameterBag;
+use RectorPrefix202303\Symfony\Component\DependencyInjection\ParameterBag\ParameterBag;
+use RectorPrefix202303\Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
+use RectorPrefix202303\Symfony\Component\ExpressionLanguage\Expression;
+use RectorPrefix202303\Symfony\Component\ExpressionLanguage\ExpressionFunctionProviderInterface;
 /**
  * ContainerBuilder is a DI container that provides an API to easily describe services.
  *
@@ -435,8 +435,8 @@ class ContainerBuilder extends Container implements TaggedContainerInterface
      */
     public function get(string $id, int $invalidBehavior = ContainerInterface::EXCEPTION_ON_INVALID_REFERENCE) : ?object
     {
-        if ($this->isCompiled() && isset($this->removedIds[$id]) && ContainerInterface::EXCEPTION_ON_INVALID_REFERENCE >= $invalidBehavior) {
-            return parent::get($id);
+        if ($this->isCompiled() && isset($this->removedIds[$id])) {
+            return ContainerInterface::EXCEPTION_ON_INVALID_REFERENCE >= $invalidBehavior ? parent::get($id) : null;
         }
         return $this->doGet($id, $invalidBehavior);
     }
@@ -454,9 +454,9 @@ class ContainerBuilder extends Container implements TaggedContainerInterface
         }
         try {
             if (ContainerInterface::IGNORE_ON_UNINITIALIZED_REFERENCE === $invalidBehavior) {
-                return parent::get($id, $invalidBehavior);
+                return $this->privates[$id] ?? parent::get($id, $invalidBehavior);
             }
-            if ($service = parent::get($id, ContainerInterface::NULL_ON_INVALID_REFERENCE)) {
+            if (null !== ($service = $this->privates[$id] ?? parent::get($id, ContainerInterface::NULL_ON_INVALID_REFERENCE))) {
                 return $service;
             }
         } catch (ServiceCircularReferenceException $e) {
@@ -468,7 +468,7 @@ class ContainerBuilder extends Container implements TaggedContainerInterface
             $alias = $this->aliasDefinitions[$id];
             if ($alias->isDeprecated()) {
                 $deprecation = $alias->getDeprecation($id);
-                \RectorPrefix202208\trigger_deprecation($deprecation['package'], $deprecation['version'], $deprecation['message']);
+                \RectorPrefix202303\trigger_deprecation($deprecation['package'], $deprecation['version'], $deprecation['message']);
             }
             return $this->doGet((string) $alias, $invalidBehavior, $inlineServices, $isConstructorArgument);
         }
@@ -851,7 +851,7 @@ class ContainerBuilder extends Container implements TaggedContainerInterface
         }
         if ($definition->isDeprecated()) {
             $deprecation = $definition->getDeprecation($id);
-            \RectorPrefix202208\trigger_deprecation($deprecation['package'], $deprecation['version'], $deprecation['message']);
+            \RectorPrefix202303\trigger_deprecation($deprecation['package'], $deprecation['version'], $deprecation['message']);
         }
         if ($tryProxy && $definition->isLazy() && !($tryProxy = !($proxy = $this->proxyInstantiator) || $proxy instanceof RealServiceInstantiator)) {
             $proxy = $proxy->instantiateProxy($this, $definition, $id, function () use($definition, &$inlineServices, $id) {
@@ -878,22 +878,43 @@ class ContainerBuilder extends Container implements TaggedContainerInterface
             }
         }
         $arguments = $this->doResolveServices($parameterBag->unescapeValue($parameterBag->resolveValue($arguments)), $inlineServices, $isConstructorArgument);
-        if (null !== $id && $definition->isShared() && isset($this->services[$id]) && ($tryProxy || !$definition->isLazy())) {
-            return $this->services[$id];
+        if (null !== $id && $definition->isShared() && (isset($this->services[$id]) || isset($this->privates[$id])) && ($tryProxy || !$definition->isLazy())) {
+            return $this->services[$id] ?? $this->privates[$id];
+        }
+        $arrayIsList = function (array $array) : bool {
+            if (\function_exists('array_is_list')) {
+                return \array_is_list($array);
+            }
+            if ($array === []) {
+                return \true;
+            }
+            $current_key = 0;
+            foreach ($array as $key => $noop) {
+                if ($key !== $current_key) {
+                    return \false;
+                }
+                ++$current_key;
+            }
+            return \true;
+        };
+        if (!$arrayIsList($arguments)) {
+            $arguments = \array_combine(\array_map(function ($k) {
+                return \preg_replace('/^.*\\$/', '', $k);
+            }, \array_keys($arguments)), $arguments);
         }
         if (null !== $factory) {
             $service = $factory(...$arguments);
             if (!$definition->isDeprecated() && \is_array($factory) && \is_string($factory[0])) {
                 $r = new \ReflectionClass($factory[0]);
                 if (0 < \strpos($r->getDocComment(), "\n * @deprecated ")) {
-                    \RectorPrefix202208\trigger_deprecation('', '', 'The "%s" service relies on the deprecated "%s" factory class. It should either be deprecated or its factory upgraded.', $id, $r->name);
+                    \RectorPrefix202303\trigger_deprecation('', '', 'The "%s" service relies on the deprecated "%s" factory class. It should either be deprecated or its factory upgraded.', $id, $r->name);
                 }
             }
         } else {
             $r = new \ReflectionClass($parameterBag->resolveValue($definition->getClass()));
-            $service = null === $r->getConstructor() ? $r->newInstance() : $r->newInstanceArgs(\array_values($arguments));
+            $service = null === $r->getConstructor() ? $r->newInstance() : $r->newInstanceArgs($arguments);
             if (!$definition->isDeprecated() && 0 < \strpos($r->getDocComment(), "\n * @deprecated ")) {
-                \RectorPrefix202208\trigger_deprecation('', '', 'The "%s" service relies on the deprecated "%s" class. It should either be deprecated or its implementation upgraded.', $id, $r->name);
+                \RectorPrefix202303\trigger_deprecation('', '', 'The "%s" service relies on the deprecated "%s" class. It should either be deprecated or its implementation upgraded.', $id, $r->name);
             }
         }
         $lastWitherIndex = null;
@@ -1372,7 +1393,11 @@ class ContainerBuilder extends Container implements TaggedContainerInterface
     {
         $inlineServices[$id ?? \spl_object_hash($definition)] = $service;
         if (null !== $id && $definition->isShared()) {
-            $this->services[$id] = $service;
+            if ($definition->isPrivate() && $this->isCompiled()) {
+                $this->privates[$id] = $service;
+            } else {
+                $this->services[$id] = $service;
+            }
             unset($this->loading[$id]);
         }
     }

@@ -120,7 +120,7 @@ if (count($x)) {
     {
         $namespaceAnalyses = (new NamespacesAnalyzer())->getDeclarations($tokens);
 
-        if (1 !== \count($namespaceAnalyses) || '' === $namespaceAnalyses[0]->getFullName()) {
+        if (1 !== \count($namespaceAnalyses) || $namespaceAnalyses[0]->isGlobalNamespace()) {
             return;
         }
 
@@ -173,6 +173,8 @@ if (count($x)) {
 
     /**
      * @param NamespaceUseAnalysis[] $useDeclarations
+     *
+     * @return array<string, string>
      */
     private function importConstants(Tokens $tokens, array $useDeclarations): array
     {
@@ -201,8 +203,7 @@ if (count($x)) {
         }
 
         $analyzer = new TokensAnalyzer($tokens);
-
-        $indexes = [];
+        $indices = [];
 
         for ($index = $tokens->count() - 1; $index >= 0; --$index) {
             $token = $tokens[$index];
@@ -237,14 +238,16 @@ if (count($x)) {
                 continue;
             }
 
-            $indexes[] = $index;
+            $indices[] = $index;
         }
 
-        return $this->prepareImports($tokens, $indexes, $global, $other, true);
+        return $this->prepareImports($tokens, $indices, $global, $other, true);
     }
 
     /**
      * @param NamespaceUseAnalysis[] $useDeclarations
+     *
+     * @return array<string, string>
      */
     private function importFunctions(Tokens $tokens, array $useDeclarations): array
     {
@@ -259,8 +262,7 @@ if (count($x)) {
         }
 
         $analyzer = new FunctionsAnalyzer();
-
-        $indexes = [];
+        $indices = [];
 
         for ($index = $tokens->count() - 1; $index >= 0; --$index) {
             $token = $tokens[$index];
@@ -288,14 +290,16 @@ if (count($x)) {
                 continue;
             }
 
-            $indexes[] = $index;
+            $indices[] = $index;
         }
 
-        return $this->prepareImports($tokens, $indexes, $global, $other, false);
+        return $this->prepareImports($tokens, $indices, $global, $other, false);
     }
 
     /**
      * @param NamespaceUseAnalysis[] $useDeclarations
+     *
+     * @return array<string, string>
      */
     private function importClasses(Tokens $tokens, array $useDeclarations): array
     {
@@ -339,8 +343,7 @@ if (count($x)) {
         }
 
         $analyzer = new ClassyAnalyzer();
-
-        $indexes = [];
+        $indices = [];
 
         for ($index = $tokens->count() - 1; $index >= 0; --$index) {
             $token = $tokens[$index];
@@ -372,7 +375,7 @@ if (count($x)) {
                 continue;
             }
 
-            $indexes[] = $index;
+            $indices[] = $index;
         }
 
         $imports = [];
@@ -404,21 +407,22 @@ if (count($x)) {
             }
         }
 
-        return $imports + $this->prepareImports($tokens, $indexes, $global, $other, false);
+        return $imports + $this->prepareImports($tokens, $indices, $global, $other, false);
     }
 
     /**
-     * Removes the leading slash at the given indexes (when the name is not already used).
+     * Removes the leading slash at the given indices (when the name is not already used).
      *
-     * @param int[] $indexes
+     * @param int[]               $indices
+     * @param array<string, true> $other
      *
-     * @return array array keys contain the names that must be imported
+     * @return array<string, string> array keys contain the names that must be imported
      */
-    private function prepareImports(Tokens $tokens, array $indexes, array $global, array $other, bool $caseSensitive): array
+    private function prepareImports(Tokens $tokens, array $indices, array $global, array $other, bool $caseSensitive): array
     {
         $imports = [];
 
-        foreach ($indexes as $index) {
+        foreach ($indices as $index) {
             $name = $tokens[$index]->getContent();
             $checkName = $caseSensitive ? $name : strtolower($name);
 
@@ -655,6 +659,9 @@ if (count($x)) {
         return [$global, $other];
     }
 
+    /**
+     * @return iterable<string>
+     */
     private function findFunctionDeclarations(Tokens $tokens, int $start, int $end): iterable
     {
         for ($index = $start; $index <= $end; ++$index) {

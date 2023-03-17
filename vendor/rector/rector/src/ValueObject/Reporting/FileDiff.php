@@ -3,12 +3,12 @@
 declare (strict_types=1);
 namespace Rector\Core\ValueObject\Reporting;
 
-use RectorPrefix202208\Nette\Utils\Strings;
+use RectorPrefix202303\Nette\Utils\Strings;
 use Rector\ChangesReporting\ValueObject\RectorWithLineChange;
 use Rector\Core\Contract\Rector\RectorInterface;
 use Rector\Parallel\ValueObject\Name;
-use RectorPrefix202208\Symplify\EasyParallel\Contract\SerializableInterface;
-use RectorPrefix202208\Webmozart\Assert\Assert;
+use RectorPrefix202303\Symplify\EasyParallel\Contract\SerializableInterface;
+use RectorPrefix202303\Webmozart\Assert\Assert;
 final class FileDiff implements SerializableInterface
 {
     /**
@@ -49,7 +49,7 @@ final class FileDiff implements SerializableInterface
         $this->diff = $diff;
         $this->diffConsoleFormatted = $diffConsoleFormatted;
         $this->rectorsWithLineChanges = $rectorsWithLineChanges;
-        Assert::allIsAOf($rectorsWithLineChanges, RectorWithLineChange::class);
+        Assert::allIsInstanceOf($rectorsWithLineChanges, RectorWithLineChange::class);
     }
     public function getDiff() : string
     {

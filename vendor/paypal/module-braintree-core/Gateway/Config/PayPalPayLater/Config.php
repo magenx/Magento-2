@@ -125,11 +125,11 @@ class Config implements ConfigInterface
             "payment/braintree_paypal/button_location_" . $buttonType . "_type_messaging_show"
         );
         // If PayPal or PayPal Pay Later is disabled in the admin
-        if (!$paypalActive || !$paypalPayLaterMessageActive || $this->isPayPalVaultActive()) {
+        if (!$paypalActive || !$paypalPayLaterMessageActive) {
             return false;
         }
 
-        if (!in_array($this->getMerchantCountry(), ['GB','FR','US','DE', 'AU'])) {
+        if (!in_array($this->getMerchantCountry(), ['GB','FR','US','DE', 'AU', 'ES', 'IT'])) {
             return false;
         }
 

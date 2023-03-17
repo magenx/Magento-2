@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 /*
  * This file is part of Composer.
@@ -27,50 +27,48 @@ class ProxyHelper
      *
      * @throws \RuntimeException on malformed url
      */
-    public static function getProxyData()
+    public static function getProxyData(): array
     {
         $httpProxy = null;
         $httpsProxy = null;
 
         // Handle http_proxy/HTTP_PROXY on CLI only for security reasons
         if (PHP_SAPI === 'cli' || PHP_SAPI === 'phpdbg') {
-            if ($env = self::getProxyEnv(array('http_proxy', 'HTTP_PROXY'), $name)) {
+            if ($env = self::getProxyEnv(['http_proxy', 'HTTP_PROXY'], $name)) {
                 $httpProxy = self::checkProxy($env, $name);
             }
         }
 
         // Prefer CGI_HTTP_PROXY if available
-        if ($env = self::getProxyEnv(array('CGI_HTTP_PROXY'), $name)) {
+        if ($env = self::getProxyEnv(['CGI_HTTP_PROXY'], $name)) {
             $httpProxy = self::checkProxy($env, $name);
         }
 
         // Handle https_proxy/HTTPS_PROXY
-        if ($env = self::getProxyEnv(array('https_proxy', 'HTTPS_PROXY'), $name)) {
+        if ($env = self::getProxyEnv(['https_proxy', 'HTTPS_PROXY'], $name)) {
             $httpsProxy = self::checkProxy($env, $name);
         } else {
             $httpsProxy = $httpProxy;
         }
 
         // Handle no_proxy
-        $noProxy = self::getProxyEnv(array('no_proxy', 'NO_PROXY'), $name);
+        $noProxy = self::getProxyEnv(['no_proxy', 'NO_PROXY'], $name);
 
-        return array($httpProxy, $httpsProxy, $noProxy);
+        return [$httpProxy, $httpsProxy, $noProxy];
     }
 
     /**
      * Returns http context options for the proxy url
      *
-     * @param string $proxyUrl
-     *
      * @return array{http: array{proxy: string, header?: string}}
      */
-    public static function getContextOptions($proxyUrl)
+    public static function getContextOptions(string $proxyUrl): array
     {
         $proxy = parse_url($proxyUrl);
 
         // Remove any authorization
         $proxyUrl = self::formatParsedUrl($proxy, false);
-        $proxyUrl = str_replace(array('http://', 'https://'), array('tcp://', 'ssl://'), $proxyUrl);
+        $proxyUrl = str_replace(['http://', 'https://'], ['tcp://', 'ssl://'], $proxyUrl);
 
         $options['http']['proxy'] = $proxyUrl;
 
@@ -92,12 +90,9 @@ class ProxyHelper
     /**
      * Sets/unsets request_fulluri value in http context options array
      *
-     * @param string  $requestUrl
      * @param mixed[] $options Set by method
-     *
-     * @return void
      */
-    public static function setRequestFullUri($requestUrl, array &$options)
+    public static function setRequestFullUri(string $requestUrl, array &$options): void
     {
         if ('http' === parse_url($requestUrl, PHP_URL_SCHEME)) {
             $options['http']['request_fulluri'] = true;
@@ -114,7 +109,7 @@ class ProxyHelper
      *
      * @return string|null The found value
      */
-    private static function getProxyEnv(array $names, &$name)
+    private static function getProxyEnv(array $names, ?string &$name): ?string
     {
         foreach ($names as $name) {
             if (!empty($_SERVER[$name])) {
@@ -128,12 +123,10 @@ class ProxyHelper
     /**
      * Checks and formats a proxy url from the environment
      *
-     * @param  string            $proxyUrl
-     * @param  string            $envName
      * @throws \RuntimeException on malformed url
      * @return string            The formatted proxy url
      */
-    private static function checkProxy($proxyUrl, $envName)
+    private static function checkProxy(string $proxyUrl, string $envName): string
     {
         $error = sprintf('malformed %s url', $envName);
         $proxy = parse_url($proxyUrl);
@@ -157,11 +150,10 @@ class ProxyHelper
      * Formats a url from its component parts
      *
      * @param  array{scheme?: string, host: string, port?: int, user?: string, pass?: string} $proxy
-     * @param  bool                                                                           $includeAuth
      *
      * @return string The formatted value
      */
-    private static function formatParsedUrl(array $proxy, $includeAuth)
+    private static function formatParsedUrl(array $proxy, bool $includeAuth): string
     {
         $proxyUrl = isset($proxy['scheme']) ? strtolower($proxy['scheme']) . '://' : '';
 

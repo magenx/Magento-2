@@ -3,7 +3,7 @@
 declare (strict_types=1);
 namespace Rector\CodeQuality\Rector\Concat;
 
-use RectorPrefix202208\Nette\Utils\Strings;
+use RectorPrefix202303\Nette\Utils\Strings;
 use PhpParser\Node;
 use PhpParser\Node\Expr\BinaryOp\Concat;
 use PhpParser\Node\Scalar\String_;
@@ -73,8 +73,8 @@ CODE_SAMPLE
     }
     private function isTopMostConcatNode(Concat $concat) : bool
     {
-        $parent = $concat->getAttribute(AttributeKey::PARENT_NODE);
-        return !$parent instanceof Concat;
+        $parentNode = $concat->getAttribute(AttributeKey::PARENT_NODE);
+        return !$parentNode instanceof Concat;
     }
     /**
      * @return \PhpParser\Node\Expr\BinaryOp\Concat|\PhpParser\Node\Scalar\String_

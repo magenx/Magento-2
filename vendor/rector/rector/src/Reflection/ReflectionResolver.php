@@ -22,6 +22,7 @@ use PHPStan\Reflection\Php\PhpPropertyReflection;
 use PHPStan\Reflection\ReflectionProvider;
 use PHPStan\Type\TypeUtils;
 use PHPStan\Type\TypeWithClassName;
+use Rector\Core\Exception\ShouldNotHappenException;
 use Rector\Core\NodeAnalyzer\ClassAnalyzer;
 use Rector\Core\PhpParser\AstResolver;
 use Rector\Core\PhpParser\Node\BetterNodeFinder;
@@ -30,7 +31,7 @@ use Rector\Core\ValueObject\MethodName;
 use Rector\NodeNameResolver\NodeNameResolver;
 use Rector\NodeTypeResolver\Node\AttributeKey;
 use Rector\NodeTypeResolver\NodeTypeResolver;
-use RectorPrefix202208\Symfony\Contracts\Service\Attribute\Required;
+use RectorPrefix202303\Symfony\Contracts\Service\Attribute\Required;
 final class ReflectionResolver
 {
     /**
@@ -89,7 +90,11 @@ final class ReflectionResolver
     public function resolveClassAndAnonymousClass(ClassLike $classLike) : ClassReflection
     {
         if ($classLike instanceof Class_ && $this->classAnalyzer->isAnonymousClass($classLike)) {
-            return $this->reflectionProvider->getAnonymousClassReflection($classLike, $classLike->getAttribute(AttributeKey::SCOPE));
+            $classLikeScope = $classLike->getAttribute(AttributeKey::SCOPE);
+            if (!$classLikeScope instanceof Scope) {
+                throw new ShouldNotHappenException();
+            }
+            return $this->reflectionProvider->getAnonymousClassReflection($classLike, $classLikeScope);
         }
         $className = (string) $this->nodeNameResolver->getName($classLike);
         return $this->reflectionProvider->getClass($className);

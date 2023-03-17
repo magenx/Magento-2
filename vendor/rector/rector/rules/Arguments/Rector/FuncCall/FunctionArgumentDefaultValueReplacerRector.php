@@ -11,7 +11,7 @@ use Rector\Core\Contract\Rector\ConfigurableRectorInterface;
 use Rector\Core\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
-use RectorPrefix202208\Webmozart\Assert\Assert;
+use RectorPrefix202303\Webmozart\Assert\Assert;
 /**
  * @changelog https://php.watch/versions/8.1/version_compare-operator-restrictions
  * @changelog https://github.com/rectorphp/rector/issues/6271
@@ -52,9 +52,8 @@ CODE_SAMPLE
     }
     /**
      * @param FuncCall $node
-     * @return \PhpParser\Node\Expr\FuncCall|null
      */
-    public function refactor(Node $node)
+    public function refactor(Node $node) : ?\PhpParser\Node\Expr\FuncCall
     {
         $hasChanged = \false;
         foreach ($this->replacedArguments as $replacedArgument) {

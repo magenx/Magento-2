@@ -44,13 +44,14 @@ final class OrderedClassElementsFixer extends AbstractFixer implements Configura
     ];
 
     /**
-     * @var array Array containing all class element base types (keys) and their parent types (values)
+     * @var array<string, null|list<string>> Array containing all class element base types (keys) and their parent types (values)
      */
-    private static $typeHierarchy = [
+    private static array $typeHierarchy = [
         'use_trait' => null,
         'public' => null,
         'protected' => null,
         'private' => null,
+        'case' => ['public'],
         'constant' => null,
         'constant_public' => ['constant', 'public'],
         'constant_protected' => ['constant', 'protected'],
@@ -74,17 +75,19 @@ final class OrderedClassElementsFixer extends AbstractFixer implements Configura
         'method_private' => ['method', 'private'],
         'method_public_abstract' => ['method_abstract', 'method_public'],
         'method_protected_abstract' => ['method_abstract', 'method_protected'],
+        'method_private_abstract' => ['method_abstract', 'method_private'],
         'method_public_abstract_static' => ['method_abstract', 'method_static', 'method_public'],
         'method_protected_abstract_static' => ['method_abstract', 'method_static', 'method_protected'],
+        'method_private_abstract_static' => ['method_abstract', 'method_static', 'method_private'],
         'method_public_static' => ['method_static', 'method_public'],
         'method_protected_static' => ['method_static', 'method_protected'],
         'method_private_static' => ['method_static', 'method_private'],
     ];
 
     /**
-     * @var array Array containing special method types
+     * @var array<string, null> Array containing special method types
      */
-    private static $specialTypes = [
+    private static array $specialTypes = [
         'construct' => null,
         'destruct' => null,
         'magic' => null,
@@ -92,9 +95,9 @@ final class OrderedClassElementsFixer extends AbstractFixer implements Configura
     ];
 
     /**
-     * @var array Resolved configuration array (type => position)
+     * @var array<string, int> Resolved configuration array (type => position)
      */
-    private $typePosition;
+    private array $typePosition;
 
     /**
      * {@inheritdoc}
@@ -105,6 +108,7 @@ final class OrderedClassElementsFixer extends AbstractFixer implements Configura
 
         $this->typePosition = [];
         $pos = 0;
+
         foreach ($this->configuration['order'] as $type) {
             $this->typePosition[$type] = $pos++;
         }
@@ -132,12 +136,13 @@ final class OrderedClassElementsFixer extends AbstractFixer implements Configura
         }
 
         $lastPosition = \count($this->configuration['order']);
+
         foreach ($this->typePosition as &$pos) {
             if (null === $pos) {
                 $pos = $lastPosition;
             }
-            // last digit is used by phpunit method ordering
-            $pos *= 10;
+
+            $pos *= 10; // last digit is used by phpunit method ordering
         }
     }
 
@@ -155,7 +160,7 @@ final class OrderedClassElementsFixer extends AbstractFixer implements Configura
     public function getDefinition(): FixerDefinitionInterface
     {
         return new FixerDefinition(
-            'Orders the elements of classes/interfaces/traits.',
+            'Orders the elements of classes/interfaces/traits/enums.',
             [
                 new CodeSample(
                     '<?php
@@ -266,6 +271,7 @@ class Example
                 ->setAllowedValues([new AllowedValueSubset(array_keys(array_merge(self::$typeHierarchy, self::$specialTypes)))])
                 ->setDefault([
                     'use_trait',
+                    'case',
                     'constant_public',
                     'constant_protected',
                     'constant_private',
@@ -289,11 +295,20 @@ class Example
     }
 
     /**
-     * @return array[]
+     * @return list<array{
+     *     start: int,
+     *     visibility: string,
+     *     abstract: bool,
+     *     static: bool,
+     *     readonly: bool,
+     *     type: string,
+     *     name: string,
+     *     end: int,
+     * }>
      */
     private function getElements(Tokens $tokens, int $startIndex): array
     {
-        static $elementTokenKinds = [CT::T_USE_TRAIT, T_CONST, T_VARIABLE, T_FUNCTION];
+        static $elementTokenKinds = [CT::T_USE_TRAIT, T_CASE, T_CONST, T_VARIABLE, T_FUNCTION];
 
         ++$startIndex;
         $elements = [];
@@ -342,6 +357,7 @@ class Example
                 }
 
                 $type = $this->detectElementType($tokens, $i);
+
                 if (\is_array($type)) {
                     $element['type'] = $type[0];
                     $element['name'] = $type[1];
@@ -351,7 +367,7 @@ class Example
 
                 if ('property' === $element['type']) {
                     $element['name'] = $tokens[$i]->getContent();
-                } elseif (\in_array($element['type'], ['use_trait', 'constant', 'method', 'magic', 'construct', 'destruct'], true)) {
+                } elseif (\in_array($element['type'], ['use_trait', 'case', 'constant', 'method', 'magic', 'construct', 'destruct'], true)) {
                     $element['name'] = $tokens[$tokens->getNextMeaningfulToken($i)]->getContent();
                 }
 
@@ -366,7 +382,7 @@ class Example
     }
 
     /**
-     * @return array|string type or array of type and name
+     * @return array<string>|string type or array of type and name
      */
     private function detectElementType(Tokens $tokens, int $index)
     {
@@ -374,6 +390,10 @@ class Example
 
         if ($token->isGivenKind(CT::T_USE_TRAIT)) {
             return 'use_trait';
+        }
+
+        if ($token->isGivenKind(T_CASE)) {
+            return 'case';
         }
 
         if ($token->isGivenKind(T_CONST)) {
@@ -411,10 +431,7 @@ class Example
             return ['phpunit', strtolower($nameToken->getContent())];
         }
 
-        return str_starts_with($nameToken->getContent(), '__')
-            ? 'magic'
-            : 'method'
-        ;
+        return str_starts_with($nameToken->getContent(), '__') ? 'magic' : 'method';
     }
 
     private function findElementEnd(Tokens $tokens, int $index): int
@@ -433,9 +450,17 @@ class Example
     }
 
     /**
-     * @param array[] $elements
-     *
-     * @return array[]
+     * @return list<array{
+     *     start: int,
+     *     visibility: string,
+     *     abstract: bool,
+     *     static: bool,
+     *     readonly: bool,
+     *     type: string,
+     *     name: string,
+     *     end: int,
+     *     position: int,
+     * }>
      */
     private function sortElements(array $elements): array
     {
@@ -458,6 +483,7 @@ class Example
             if (\array_key_exists($type, self::$specialTypes)) {
                 if (isset($this->typePosition[$type])) {
                     $element['position'] = $this->typePosition[$type];
+
                     if ('phpunit' === $type) {
                         $element['position'] += $phpunitPositions[$element['name']];
                     }
@@ -470,12 +496,15 @@ class Example
 
             if (\in_array($type, ['constant', 'property', 'method'], true)) {
                 $type .= '_'.$element['visibility'];
+
                 if ($element['abstract']) {
                     $type .= '_abstract';
                 }
+
                 if ($element['static']) {
                     $type .= '_static';
                 }
+
                 if ($element['readonly']) {
                     $type .= '_readonly';
                 }
@@ -483,6 +512,7 @@ class Example
 
             $element['position'] = $this->typePosition[$type];
         }
+
         unset($element);
 
         usort($elements, function (array $a, array $b): int {
@@ -496,6 +526,30 @@ class Example
         return $elements;
     }
 
+    /**
+     * @param array{
+     *     start: int,
+     *     visibility: string,
+     *     abstract: bool,
+     *     static: bool,
+     *     readonly: bool,
+     *     type: string,
+     *     name: string,
+     *     end: int,
+     *     position: int,
+     * } $a
+     * @param array{
+     *     start: int,
+     *     visibility: string,
+     *     abstract: bool,
+     *     static: bool,
+     *     readonly: bool,
+     *     type: string,
+     *     name: string,
+     *     end: int,
+     *     position: int,
+     * } $b
+     */
     private function sortGroupElements(array $a, array $b): int
     {
         $selectedSortAlgorithm = $this->configuration['sort_algorithm'];
@@ -508,7 +562,17 @@ class Example
     }
 
     /**
-     * @param array[] $elements
+     * @param list<array{
+     *     start: int,
+     *     visibility: string,
+     *     abstract: bool,
+     *     static: bool,
+     *     readonly: bool,
+     *     type: string,
+     *     name: string,
+     *     end: int,
+     *     position: int,
+     * }> $elements
      */
     private function sortTokens(Tokens $tokens, int $startIndex, int $endIndex, array $elements): void
     {

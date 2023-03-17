@@ -1,7 +1,7 @@
 <?php
 
 declare (strict_types=1);
-namespace RectorPrefix202208;
+namespace RectorPrefix202303;
 
 use Rector\Arguments\Rector\ClassMethod\ArgumentAdderRector;
 use Rector\Arguments\Rector\FuncCall\FunctionArgumentDefaultValueReplacerRector;
@@ -13,6 +13,7 @@ use Rector\DeadCode\Rector\StaticCall\RemoveParentCallWithoutParentRector;
 use Rector\Php80\Rector\Catch_\RemoveUnusedVariableInCatchRector;
 use Rector\Php80\Rector\Class_\ClassPropertyAssignToConstructorPromotionRector;
 use Rector\Php80\Rector\Class_\StringableForToStringRector;
+use Rector\Php80\Rector\ClassConstFetch\ClassOnThisVariableObjectRector;
 use Rector\Php80\Rector\ClassMethod\AddParamBasedOnParentClassMethodRector;
 use Rector\Php80\Rector\ClassMethod\FinalPrivateToPrivateVisibilityRector;
 use Rector\Php80\Rector\ClassMethod\SetStateToStaticRector;
@@ -54,4 +55,5 @@ return static function (RectorConfig $rectorConfig) : void {
     $rectorConfig->rule(Php8ResourceReturnToObjectRector::class);
     $rectorConfig->rule(AddParamBasedOnParentClassMethodRector::class);
     $rectorConfig->rule(MixedTypeRector::class);
+    $rectorConfig->rule(ClassOnThisVariableObjectRector::class);
 };

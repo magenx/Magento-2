@@ -2,19 +2,9 @@
 
 declare(strict_types=1);
 
-/*
- * The MIT License (MIT)
- *
- * Copyright (c) 2014-2020 Spomky-Labs
- *
- * This software may be modified and distributed under the terms
- * of the MIT license.  See the LICENSE file for details.
- */
-
 namespace Jose\Bundle\JoseFramework\DataCollector;
 
 use function array_key_exists;
-use function function_exists;
 use Jose\Component\Core\Algorithm;
 use Jose\Component\Core\AlgorithmManagerFactory;
 use Jose\Component\Encryption\Algorithm\ContentEncryptionAlgorithm;
@@ -27,16 +17,14 @@ use Throwable;
 
 final class AlgorithmCollector implements Collector
 {
-    /**
-     * @var AlgorithmManagerFactory
-     */
-    private $algorithmManagerFactory;
-
-    public function __construct(AlgorithmManagerFactory $algorithmManagerFactory)
-    {
-        $this->algorithmManagerFactory = $algorithmManagerFactory;
+    public function __construct(
+        private readonly AlgorithmManagerFactory $algorithmManagerFactory
+    ) {
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     public function collect(array &$data, Request $request, Response $response, ?Throwable $exception = null): void
     {
         $algorithms = $this->algorithmManagerFactory->all();
@@ -49,8 +37,14 @@ final class AlgorithmCollector implements Collector
         $keyEncryptionAlgorithms = 0;
         $contentEncryptionAlgorithms = 0;
         foreach ($algorithms as $alias => $algorithm) {
-            $type = $this->getAlgorithmType($algorithm, $signatureAlgorithms, $macAlgorithms, $keyEncryptionAlgorithms, $contentEncryptionAlgorithms);
-            if (!array_key_exists($type, $data['algorithm']['algorithms'])) {
+            $type = $this->getAlgorithmType(
+                $algorithm,
+                $signatureAlgorithms,
+                $macAlgorithms,
+                $keyEncryptionAlgorithms,
+                $contentEncryptionAlgorithms
+            );
+            if (! array_key_exists($type, $data['algorithm']['algorithms'])) {
                 $data['algorithm']['algorithms'][$type] = [];
             }
             $data['algorithm']['algorithms'][$type][$alias] = [
@@ -66,8 +60,13 @@ final class AlgorithmCollector implements Collector
         ];
     }
 
-    private function getAlgorithmType(Algorithm $algorithm, int &$signatureAlgorithms, int &$macAlgorithms, int &$keyEncryptionAlgorithms, int &$contentEncryptionAlgorithms): string
-    {
+    private function getAlgorithmType(
+        Algorithm $algorithm,
+        int &$signatureAlgorithms,
+        int &$macAlgorithms,
+        int &$keyEncryptionAlgorithms,
+        int &$contentEncryptionAlgorithms
+    ): string {
         switch (true) {
             case $algorithm instanceof SignatureAlgorithm:
                 $signatureAlgorithms++;
@@ -94,9 +93,12 @@ final class AlgorithmCollector implements Collector
         }
     }
 
+    /**
+     * @return array<string, array<string, string>>
+     */
     private function getAlgorithmMessages(): array
     {
-        $messages = [
+        return [
             'none' => [
                 'severity' => 'severity-low',
                 'message' => 'This algorithm is not secured. Please use with caution.',
@@ -198,27 +200,5 @@ final class AlgorithmCollector implements Collector
                 'message' => 'This algorithm is not secured (known attacks). See <a target="_blank" href="https://tools.ietf.org/html/draft-irtf-cfrg-webcrypto-algorithms-00#section-5">https://tools.ietf.org/html/draft-irtf-cfrg-webcrypto-algorithms-00#section-5</a>.',
             ],
         ];
-        if (!function_exists('openssl_pkey_derive')) {
-            $messages += [
-                'ECDH-ES' => [
-                    'severity' => 'severity-medium',
-                    'message' => 'This algorithm is very slow when used with curves P-256, P-384, P-521 with php 7.2 and below.',
-                ],
-                'ECDH-ES+A128KW' => [
-                    'severity' => 'severity-medium',
-                    'message' => 'This algorithm is very slow when used with curves P-256, P-384, P-521 with php 7.2 and below.',
-                ],
-                'ECDH-ES+A192KW' => [
-                    'severity' => 'severity-medium',
-                    'message' => 'This algorithm is very slow when used with curves P-256, P-384, P-521 with php 7.2 and below.',
-                ],
-                'ECDH-ES+A256KW' => [
-                    'severity' => 'severity-medium',
-                    'message' => 'This algorithm is very slow when used with curves P-256, P-384, P-521 with php 7.2 and below.',
-                ],
-            ];
-        }
-
-        return $messages;
     }
 }

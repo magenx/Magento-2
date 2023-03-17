@@ -17,7 +17,7 @@ use Rector\BetterPhpDocParser\ValueObject\Parser\BetterTokenIterator;
 use Rector\BetterPhpDocParser\ValueObject\PhpDocAttributeKey;
 use Rector\Core\Configuration\CurrentNodeProvider;
 use Rector\Core\Exception\ShouldNotHappenException;
-use RectorPrefix202208\Symfony\Contracts\Service\Attribute\Required;
+use RectorPrefix202303\Symfony\Contracts\Service\Attribute\Required;
 final class PlainValueParser
 {
     /**
@@ -113,10 +113,7 @@ final class PlainValueParser
         $identifierTypeNode->setAttribute(PhpDocAttributeKey::RESOLVED_CLASS, $fullyQualifiedAnnotationClass);
         return new DoctrineAnnotationTagValueNode($identifierTypeNode, $annotationShortName, $values);
     }
-    /**
-     * @return \PHPStan\PhpDocParser\Ast\ConstExpr\ConstExprNode|null
-     */
-    private function matchConstantValue(string $currentTokenValue)
+    private function matchConstantValue(string $currentTokenValue) : ?\PHPStan\PhpDocParser\Ast\ConstExpr\ConstExprNode
     {
         if (\strtolower($currentTokenValue) === 'false') {
             return new ConstExprFalseNode();

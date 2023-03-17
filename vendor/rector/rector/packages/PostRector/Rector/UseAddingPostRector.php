@@ -8,9 +8,11 @@ use PhpParser\Node\Stmt\Namespace_;
 use Rector\CodingStyle\Application\UseImportsAdder;
 use Rector\CodingStyle\Application\UseImportsRemover;
 use Rector\Core\Configuration\RenamedClassesDataCollector;
+use Rector\Core\Exception\ShouldNotHappenException;
 use Rector\Core\PhpParser\Node\BetterNodeFinder;
 use Rector\Core\PhpParser\Node\CustomNode\FileWithoutNamespace;
 use Rector\Core\Provider\CurrentFileProvider;
+use Rector\Core\ValueObject\Application\File;
 use Rector\NodeTypeResolver\PHPStan\Type\TypeFactory;
 use Rector\PostRector\Collector\UseNodesToAddCollector;
 use Rector\StaticTypeMapper\ValueObject\Type\FullyQualifiedObjectType;
@@ -67,16 +69,18 @@ final class UseAddingPostRector extends \Rector\PostRector\Rector\AbstractPostRe
      * @param Stmt[] $nodes
      * @return Stmt[]
      */
-    public function beforeTraverse(array $nodes) : ?array
+    public function beforeTraverse(array $nodes) : array
     {
         // no nodes → just return
         if ($nodes === []) {
             return $nodes;
         }
         $file = $this->currentFileProvider->getFile();
-        $smartFileInfo = $file->getSmartFileInfo();
-        $useImportTypes = $this->useNodesToAddCollector->getObjectImportsByFileInfo($smartFileInfo);
-        $functionUseImportTypes = $this->useNodesToAddCollector->getFunctionImportsByFileInfo($smartFileInfo);
+        if (!$file instanceof File) {
+            throw new ShouldNotHappenException();
+        }
+        $useImportTypes = $this->useNodesToAddCollector->getObjectImportsByFilePath($file->getFilePath());
+        $functionUseImportTypes = $this->useNodesToAddCollector->getFunctionImportsByFilePath($file->getFilePath());
         $oldToNewClasses = $this->renamedClassesDataCollector->getOldToNewClasses();
         // nothing to import or remove
         if ($useImportTypes === [] && $functionUseImportTypes === [] && $oldToNewClasses === []) {
@@ -88,7 +92,6 @@ final class UseAddingPostRector extends \Rector\PostRector\Rector\AbstractPostRe
         $namespace = $this->betterNodeFinder->findFirstInstanceOf($nodes, Namespace_::class);
         if ($namespace instanceof Namespace_) {
             // first clean
-            //$this->useImportsRemover->removeImportsFromNamespace($namespace, $removedShortUses);
             // then add, to prevent adding + removing false positive of same short use
             $this->useImportsAdder->addImportsToNamespace($namespace, $useImportTypes, $functionUseImportTypes);
             return $nodes;

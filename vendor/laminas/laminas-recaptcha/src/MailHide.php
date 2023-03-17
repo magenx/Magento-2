@@ -30,6 +30,8 @@ use const ENT_COMPAT;
 
 /**
  * Render and validate MailHide reCaptchas.
+ *
+ * @deprecated This class is deprecated and will be removed in version 4.0
  */
 class MailHide extends ReCaptcha
 {

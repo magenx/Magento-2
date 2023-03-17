@@ -3,7 +3,7 @@
 declare (strict_types=1);
 namespace Rector\Core\PHPStan\Reflection\TypeToCallReflectionResolver;
 
-use RectorPrefix202208\Nette\Utils\Strings;
+use RectorPrefix202303\Nette\Utils\Strings;
 use PhpParser\Node\Name;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\FunctionReflection;
@@ -50,7 +50,7 @@ final class ConstantStringTypeToCallReflectionResolver implements TypeToCallRefl
     }
     /**
      * @param ConstantStringType $type
-     * @return FunctionReflection|MethodReflection|null
+     * @return \PHPStan\Reflection\FunctionReflection|\PHPStan\Reflection\MethodReflection|null
      */
     public function resolve(Type $type, Scope $scope)
     {

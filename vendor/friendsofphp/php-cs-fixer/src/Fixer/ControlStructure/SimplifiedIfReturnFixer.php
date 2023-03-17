@@ -27,9 +27,9 @@ use PhpCsFixer\Tokenizer\Tokens;
 final class SimplifiedIfReturnFixer extends AbstractFixer
 {
     /**
-     * @var array[]
+     * @var list<array{isNegative: bool, sequence: array<int, list<int|string>|string>}>
      */
-    private $sequences = [
+    private array $sequences = [
         [
             'isNegative' => false,
             'sequence' => [
@@ -96,10 +96,12 @@ final class SimplifiedIfReturnFixer extends AbstractFixer
     protected function applyFix(\SplFileInfo $file, Tokens $tokens): void
     {
         for ($ifIndex = $tokens->count() - 1; 0 <= $ifIndex; --$ifIndex) {
-            $ifToken = $tokens[$ifIndex];
-
-            if (!$ifToken->isGivenKind([T_IF, T_ELSEIF])) {
+            if (!$tokens[$ifIndex]->isGivenKind([T_IF, T_ELSEIF])) {
                 continue;
+            }
+
+            if ($tokens[$tokens->getPrevMeaningfulToken($ifIndex)]->equals(')')) {
+                continue; // in a loop without braces
             }
 
             $startParenthesisIndex = $tokens->getNextTokenOfKind($ifIndex, ['(']);
@@ -119,11 +121,11 @@ final class SimplifiedIfReturnFixer extends AbstractFixer
                     continue;
                 }
 
-                $indexesToClear = array_keys($sequenceFound);
-                array_pop($indexesToClear); // Preserve last semicolon
-                rsort($indexesToClear);
+                $indicesToClear = array_keys($sequenceFound);
+                array_pop($indicesToClear); // Preserve last semicolon
+                rsort($indicesToClear);
 
-                foreach ($indexesToClear as $index) {
+                foreach ($indicesToClear as $index) {
                     $tokens->clearTokenAndMergeSurroundingWhitespace($index);
                 }
 

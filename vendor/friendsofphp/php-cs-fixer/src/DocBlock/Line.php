@@ -25,10 +25,8 @@ final class Line
 {
     /**
      * The content of this line.
-     *
-     * @var string
      */
-    private $content;
+    private string $content;
 
     /**
      * Create a new line instance.
@@ -102,7 +100,7 @@ final class Line
      * Remove this line by clearing its contents.
      *
      * Note that this method technically brakes the internal state of the
-     * docblock, but is useful when we need to retain the indexes of lines
+     * docblock, but is useful when we need to retain the indices of lines
      * during the execution of an algorithm.
      */
     public function remove(): void
@@ -114,7 +112,7 @@ final class Line
      * Append a blank docblock line to this line's contents.
      *
      * Note that this method technically brakes the internal state of the
-     * docblock, but is useful when we need to retain the indexes of lines
+     * docblock, but is useful when we need to retain the indices of lines
      * during the execution of an algorithm.
      */
     public function addBlank(): void

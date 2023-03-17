@@ -2,29 +2,34 @@
 
 /**
  * @see       https://github.com/laminas/laminas-server for the canonical source repository
- * @copyright https://github.com/laminas/laminas-server/blob/master/COPYRIGHT.md
- * @license   https://github.com/laminas/laminas-server/blob/master/LICENSE.md New BSD License
  */
 
 namespace Laminas\Server;
 
 use Countable;
 use Iterator;
+use Laminas\Server\Exception\InvalidArgumentException;
 use ReturnTypeWillChange;
+
+use function array_key_exists;
+use function count;
+use function current;
+use function is_array;
+use function is_numeric;
+use function key;
+use function next;
+use function reset;
+use function sprintf;
 
 /**
  * Server methods metadata
  */
 class Definition implements Countable, Iterator
 {
-    /**
-     * @var array Array of \Laminas\Server\Method\Definition objects
-     */
+    /** @var array Array of \Laminas\Server\Method\Definition objects */
     protected $methods = [];
 
-    /**
-     * @var bool Whether or not overwriting existing methods is allowed
-     */
+    /** @var bool Whether or not overwriting existing methods is allowed */
     protected $overwriteExistingMethods = false;
 
     /**
@@ -43,7 +48,7 @@ class Definition implements Countable, Iterator
      * Set flag indicating whether or not overwriting existing methods is allowed
      *
      * @param mixed $flag
-     * @return \Laminas\Server\Definition
+     * @return Definition
      */
     public function setOverwriteExistingMethods($flag)
     {
@@ -56,15 +61,15 @@ class Definition implements Countable, Iterator
      *
      * @param  array|\Laminas\Server\Method\Definition $method
      * @param  null|string $name
-     * @return \Laminas\Server\Definition
-     * @throws \Laminas\Server\Exception\InvalidArgumentException if duplicate or invalid method provided
+     * @return Definition
+     * @throws InvalidArgumentException If duplicate or invalid method provided.
      */
     public function addMethod($method, $name = null)
     {
         if (is_array($method)) {
             $method = new Method\Definition($method);
         } elseif (! $method instanceof Method\Definition) {
-            throw new Exception\InvalidArgumentException('Invalid method provided');
+            throw new InvalidArgumentException('Invalid method provided');
         }
 
         if (is_numeric($name)) {
@@ -76,11 +81,11 @@ class Definition implements Countable, Iterator
             $name = $method->getName();
         }
         if (null === $name) {
-            throw new Exception\InvalidArgumentException('No method name provided');
+            throw new InvalidArgumentException('No method name provided');
         }
 
         if (! $this->overwriteExistingMethods && array_key_exists($name, $this->methods)) {
-            throw new Exception\InvalidArgumentException(sprintf('Method by name of "%s" already exists', $name));
+            throw new InvalidArgumentException(sprintf('Method by name of "%s" already exists', $name));
         }
         $this->methods[$name] = $method;
         return $this;
@@ -90,7 +95,7 @@ class Definition implements Countable, Iterator
      * Add multiple methods
      *
      * @param  array $methods Array of \Laminas\Server\Method\Definition objects or arrays
-     * @return \Laminas\Server\Definition
+     * @return Definition
      */
     public function addMethods(array $methods)
     {
@@ -104,7 +109,7 @@ class Definition implements Countable, Iterator
      * Set all methods at once (overwrite)
      *
      * @param  array $methods Array of \Laminas\Server\Method\Definition objects or arrays
-     * @return \Laminas\Server\Definition
+     * @return Definition
      */
     public function setMethods(array $methods)
     {
@@ -152,7 +157,7 @@ class Definition implements Countable, Iterator
      * Remove a method definition
      *
      * @param  string $method
-     * @return \Laminas\Server\Definition
+     * @return Definition
      */
     public function removeMethod($method)
     {
@@ -165,7 +170,7 @@ class Definition implements Countable, Iterator
     /**
      * Clear all method definitions
      *
-     * @return \Laminas\Server\Definition
+     * @return Definition
      */
     public function clearMethods()
     {

@@ -5,7 +5,7 @@
  * Copyright (c) 2004 David Grudl (https://davidgrudl.com)
  */
 declare (strict_types=1);
-namespace RectorPrefix202208\Nette\Neon;
+namespace RectorPrefix202303\Nette\Neon;
 
 /** @internal */
 final class Token
@@ -16,10 +16,17 @@ final class Token
     public const Comment = 3;
     public const Newline = 4;
     public const Whitespace = 5;
-    /** @var string */
+    /**
+     * @var string
+     */
     public $value;
-    /** @var int|string */
+    /**
+     * @var int|string
+     */
     public $type;
+    /**
+     * @param int|string $type
+     */
     public function __construct(string $value, $type)
     {
         $this->value = $value;

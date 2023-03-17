@@ -5,9 +5,9 @@
  */
 namespace PayPal\Braintree\Gateway\Request;
 
-use PayPal\Braintree\Gateway\Helper\SubjectReader;
 use Magento\Payment\Gateway\Request\BuilderInterface;
 use Magento\Payment\Helper\Formatter;
+use PayPal\Braintree\Gateway\Helper\SubjectReader;
 
 class VaultCaptureDataBuilder implements BuilderInterface
 {
@@ -19,7 +19,7 @@ class VaultCaptureDataBuilder implements BuilderInterface
     private $subjectReader;
 
     /**
-     * Constructor
+     * VaultCaptureDataBuilder Constructor
      *
      * @param SubjectReader $subjectReader
      */
@@ -40,7 +40,7 @@ class VaultCaptureDataBuilder implements BuilderInterface
 
         return [
             'amount' => $this->formatPrice($this->subjectReader->readAmount($buildSubject)),
-            'paymentMethodToken' => $paymentToken->getGatewayToken()
+            'paymentMethodToken' => is_null($paymentToken) ?? $paymentToken->getGatewayToken()
         ];
     }
 }

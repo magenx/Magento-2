@@ -1,10 +1,10 @@
 <?php
 
-namespace RectorPrefix202208\React\Socket;
+namespace RectorPrefix202303\React\Socket;
 
-use RectorPrefix202208\React\EventLoop\Loop;
-use RectorPrefix202208\React\EventLoop\LoopInterface;
-use RectorPrefix202208\React\Promise;
+use RectorPrefix202303\React\EventLoop\Loop;
+use RectorPrefix202303\React\EventLoop\LoopInterface;
+use RectorPrefix202303\React\Promise;
 use BadMethodCallException;
 use InvalidArgumentException;
 use UnexpectedValueException;
@@ -35,6 +35,7 @@ final class SecureConnector implements ConnectorInterface
         $context = $this->context;
         $encryption = $this->streamEncryption;
         $connected = \false;
+        /** @var \React\Promise\PromiseInterface $promise */
         $promise = $this->connector->connect(\str_replace('tls://', '', $uri))->then(function (ConnectionInterface $connection) use($context, $encryption, $uri, &$promise, &$connected) {
             // (unencrypted) TCP/IP connection succeeded
             $connected = \true;
@@ -63,11 +64,11 @@ final class SecureConnector implements ConnectorInterface
                 $trace = $r->getValue($e);
                 // Exception trace arguments are not available on some PHP 7.4 installs
                 // @codeCoverageIgnoreStart
-                foreach ($trace as &$one) {
+                foreach ($trace as $ti => $one) {
                     if (isset($one['args'])) {
-                        foreach ($one['args'] as &$arg) {
+                        foreach ($one['args'] as $ai => $arg) {
                             if ($arg instanceof \Closure) {
-                                $arg = 'Object(' . \get_class($arg) . ')';
+                                $trace[$ti]['args'][$ai] = 'Object(' . \get_class($arg) . ')';
                             }
                         }
                     }
@@ -77,7 +78,7 @@ final class SecureConnector implements ConnectorInterface
             }
             throw $e;
         });
-        return new \RectorPrefix202208\React\Promise\Promise(function ($resolve, $reject) use($promise) {
+        return new \RectorPrefix202303\React\Promise\Promise(function ($resolve, $reject) use($promise) {
             $promise->then($resolve, $reject);
         }, function ($_, $reject) use(&$promise, $uri, &$connected) {
             if ($connected) {

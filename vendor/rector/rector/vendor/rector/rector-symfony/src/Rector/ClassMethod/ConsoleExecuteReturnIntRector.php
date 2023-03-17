@@ -17,6 +17,7 @@ use PhpParser\Node\Stmt\Return_;
 use PhpParser\NodeTraverser;
 use PHPStan\Type\IntegerType;
 use PHPStan\Type\ObjectType;
+use Rector\Core\NodeAnalyzer\TerminatedNodeAnalyzer;
 use Rector\Core\Rector\AbstractRector;
 use Rector\NodeTypeResolver\Node\AttributeKey;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
@@ -27,6 +28,19 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
  */
 final class ConsoleExecuteReturnIntRector extends AbstractRector
 {
+    /**
+     * @var bool
+     */
+    private $hasChanged = \false;
+    /**
+     * @readonly
+     * @var \Rector\Core\NodeAnalyzer\TerminatedNodeAnalyzer
+     */
+    private $terminatedNodeAnalyzer;
+    public function __construct(TerminatedNodeAnalyzer $terminatedNodeAnalyzer)
+    {
+        $this->terminatedNodeAnalyzer = $terminatedNodeAnalyzer;
+    }
     public function getRuleDefinition() : RuleDefinition
     {
         return new RuleDefinition('Returns int from Command::execute command', [new CodeSample(<<<'CODE_SAMPLE'
@@ -54,26 +68,26 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [ClassMethod::class];
+        return [Class_::class];
     }
     /**
-     * @param ClassMethod $node
+     * @param Class_ $node
      */
     public function refactor(Node $node) : ?Node
     {
-        if (!$this->isName($node, 'execute')) {
+        if (!$this->isObjectType($node, new ObjectType('Symfony\\Component\\Console\\Command\\Command'))) {
             return null;
         }
-        $class = $this->betterNodeFinder->findParentType($node, Class_::class);
-        if (!$class instanceof Class_) {
+        $executeClassMethod = $node->getMethod('execute');
+        if (!$executeClassMethod instanceof ClassMethod) {
             return null;
         }
-        if (!$this->isObjectType($class, new ObjectType('Symfony\\Component\\Console\\Command\\Command'))) {
-            return null;
+        $this->refactorReturnTypeDeclaration($executeClassMethod);
+        $this->addReturn0ToMethod($executeClassMethod);
+        if ($this->hasChanged) {
+            return $node;
         }
-        $this->refactorReturnTypeDeclaration($node);
-        $this->addReturn0ToMethod($node);
-        return $node;
+        return null;
     }
     private function refactorReturnTypeDeclaration(ClassMethod $classMethod) : void
     {
@@ -82,13 +96,18 @@ CODE_SAMPLE
             return;
         }
         $classMethod->returnType = new Identifier('int');
+        $this->hasChanged = \true;
     }
     private function addReturn0ToMethod(ClassMethod $classMethod) : void
     {
         $hasReturn = \false;
         $this->traverseNodesWithCallable((array) $classMethod->getStmts(), function (Node $node) use($classMethod, &$hasReturn) : ?int {
             if ($node instanceof FunctionLike) {
-                return NodeTraverser::DONT_TRAVERSE_CHILDREN;
+                return NodeTraverser::DONT_TRAVERSE_CURRENT_AND_CHILDREN;
+            }
+            // skip anonymous class
+            if ($node instanceof Class_) {
+                return NodeTraverser::DONT_TRAVERSE_CURRENT_AND_CHILDREN;
             }
             $parentNode = $node->getAttribute(AttributeKey::PARENT_NODE);
             if ($parentNode instanceof Node && $this->isReturnWithExprIntEquals($parentNode, $node)) {
@@ -98,7 +117,7 @@ CODE_SAMPLE
             if (!$node instanceof Return_) {
                 return null;
             }
-            if ($node->expr instanceof Int_) {
+            if ($this->isReturnIntegerType($node->expr)) {
                 return null;
             }
             if ($node->expr instanceof Ternary && $this->isIntegerTernaryIfElse($node->expr)) {
@@ -106,13 +125,24 @@ CODE_SAMPLE
                 return null;
             }
             // is there return without nesting?
-            if ($this->nodeComparator->areNodesEqual($parentNode, $classMethod)) {
+            if ($parentNode === $classMethod) {
                 $hasReturn = \true;
             }
             $this->setReturnTo0InsteadOfNull($node);
+            $this->hasChanged = \true;
             return null;
         });
         $this->processReturn0ToMethod($hasReturn, $classMethod);
+    }
+    private function isReturnIntegerType(?Expr $expr) : bool
+    {
+        if ($expr instanceof Expr) {
+            $returnedType = $this->getType($expr);
+            if ($returnedType instanceof IntegerType) {
+                return \true;
+            }
+        }
+        return \false;
     }
     private function isIntegerTernaryIfElse(Ternary $ternary) : bool
     {
@@ -132,7 +162,14 @@ CODE_SAMPLE
         if ($hasReturn) {
             return;
         }
-        $classMethod->stmts[] = new Return_(new LNumber(0));
+        $stmts = (array) $classMethod->stmts;
+        \end($stmts);
+        $lastKey = \key($stmts);
+        $return = new Return_(new LNumber(0));
+        if ($lastKey !== null && (isset($classMethod->stmts[$lastKey]) && $this->terminatedNodeAnalyzer->isAlwaysTerminated($classMethod, $classMethod->stmts[$lastKey], $return))) {
+            return;
+        }
+        $classMethod->stmts[] = $return;
     }
     private function isReturnWithExprIntEquals(Node $parentNode, Node $node) : bool
     {

@@ -18,7 +18,7 @@
     "config": {
         "sort-packages": true,
         "platform": {
-            "php": "7.4.99"
+            "php": "8.0.99"
         },
         "allow-plugins": {
             "dealerdirect/phpcodesniffer-composer-installer": true
@@ -26,7 +26,7 @@
     },
     "extra": {},
     "require": {
-        "php": "^7.4 || ~8.0.0 || ~8.1.0",
+        "php": "~8.0.0 || ~8.1.0 || ~8.2.0",
         "laminas/laminas-recaptcha": "^3.4.0",
         "laminas/laminas-session": "^2.12",
         "laminas/laminas-stdlib": "^3.10.1",
@@ -35,10 +35,10 @@
     },
     "require-dev": {
         "ext-gd": "*",
-        "laminas/laminas-coding-standard": "~2.3.0",
-        "phpunit/phpunit": "^9.5.21",
-        "psalm/plugin-phpunit": "^0.17.0",
-        "vimeo/psalm": "^4.24.0"
+        "laminas/laminas-coding-standard": "~2.4.0",
+        "phpunit/phpunit": "^9.5.26",
+        "psalm/plugin-phpunit": "^0.18.4",
+        "vimeo/psalm": "^5.1"
     },
     "suggest": {
         "laminas/laminas-i18n-resources": "Translations of captcha messages"

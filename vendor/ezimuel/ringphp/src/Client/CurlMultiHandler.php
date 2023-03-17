@@ -16,12 +16,13 @@ use React\Promise\Deferred;
  *
  * @property resource $_mh Internal use only. Lazy loaded multi-handle.
  */
+#[\AllowDynamicProperties]
 class CurlMultiHandler
 {
     /** @var callable */
     private $factory;
     private $selectTimeout;
-    private $active;
+    private $active = 0;
     private $handles = [];
     private $delays = [];
     private $maxHandles;

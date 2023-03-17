@@ -46,39 +46,35 @@ class Tokens extends \SplFixedArray
     /**
      * Static class cache.
      *
-     * @var array
+     * @var array<string, self>
      */
-    private static $cache = [];
+    private static array $cache = [];
 
     /**
      * Cache of block starts. Any change in collection will invalidate it.
      *
      * @var array<int, int>
      */
-    private $blockStartCache = [];
+    private array $blockStartCache = [];
 
     /**
      * Cache of block ends. Any change in collection will invalidate it.
      *
      * @var array<int, int>
      */
-    private $blockEndCache = [];
+    private array $blockEndCache = [];
 
     /**
-     * crc32 hash of code string.
-     *
-     * @var string
+     * A MD5 hash of the code string.
      */
-    private $codeHash;
+    private ?string $codeHash = null;
 
     /**
      * Flag is collection was changed.
      *
      * It doesn't know about change of collection's items. To check it run `isChanged` method.
-     *
-     * @var bool
      */
-    private $changed = false;
+    private bool $changed = false;
 
     /**
      * Set of found token kinds.
@@ -89,7 +85,7 @@ class Tokens extends \SplFixedArray
      *
      * @var array<int|string, int>
      */
-    private $foundTokenKinds = [];
+    private array $foundTokenKinds = [];
 
     /**
      * Clone tokens collection.
@@ -114,9 +110,7 @@ class Tokens extends \SplFixedArray
             return;
         }
 
-        if (self::hasCache($key)) {
-            unset(self::$cache[$key]);
-        }
+        unset(self::$cache[$key]);
     }
 
     /**
@@ -124,7 +118,7 @@ class Tokens extends \SplFixedArray
      *
      * @param Token $token token
      *
-     * @return null|array array with 'type' and 'isStart' keys or null if not found
+     * @return null|array{type: self::BLOCK_TYPE_*, isStart: bool}
      */
     public static function detectBlockType(Token $token): ?array
     {
@@ -145,13 +139,13 @@ class Tokens extends \SplFixedArray
      * Create token collection from array.
      *
      * @param Token[] $array       the array to import
-     * @param ?bool   $saveIndexes save the numeric indexes used in the original array, default is yes
+     * @param ?bool   $saveIndices save the numeric indices used in the original array, default is yes
      */
-    public static function fromArray($array, $saveIndexes = null): self
+    public static function fromArray($array, $saveIndices = null): self
     {
         $tokens = new self(\count($array));
 
-        if (null === $saveIndexes || $saveIndexes) {
+        if ($saveIndices ?? true) {
             foreach ($array as $key => $val) {
                 $tokens[$key] = $val;
             }
@@ -199,6 +193,9 @@ class Tokens extends \SplFixedArray
         return $tokens;
     }
 
+    /**
+     * @return array<self::BLOCK_TYPE_*, array<'start'|'end', string|array{int, string}>>
+     */
     public static function getBlockEdgeDefinitions(): array
     {
         $definitions = [
@@ -280,6 +277,7 @@ class Tokens extends \SplFixedArray
     {
         $this->changed = true;
         $this->unregisterFoundToken($this[$index]);
+
         parent::offsetUnset($index);
     }
 
@@ -325,9 +323,8 @@ class Tokens extends \SplFixedArray
     public function clearEmptyTokens(): void
     {
         $limit = $this->count();
-        $index = 0;
 
-        for (; $index < $limit; ++$index) {
+        for ($index = 0; $index < $limit; ++$index) {
             if ($this->isEmptyAt($index)) {
                 break;
             }
@@ -340,9 +337,14 @@ class Tokens extends \SplFixedArray
 
         for ($count = $index; $index < $limit; ++$index) {
             if (!$this->isEmptyAt($index)) {
-                $this[$count++] = $this[$index]; // @phpstan-ignore-line as we know that index exists
+                // use directly for speed, skip the register of token kinds found etc.
+                parent::offsetSet($count++, $this[$index]);
             }
         }
+
+        // we are moving the tokens, we need to clear the indices Cache
+        $this->blockStartCache = [];
+        $this->blockEndCache = [];
 
         $this->setSize($count);
     }
@@ -368,7 +370,7 @@ class Tokens extends \SplFixedArray
                 if (str_starts_with($whitespace, "\r\n")) {
                     $tokens[$index] = new Token([T_OPEN_TAG, rtrim($token->getContent())."\r\n"]);
 
-                    return \strlen($whitespace) > 2 // can be removed on PHP 7; https://php.net/manual/en/function.substr.php
+                    return \strlen($whitespace) > 2 // @TODO: can be removed on PHP 8; https://php.net/manual/en/function.substr.php
                         ? substr($whitespace, 2)
                         : ''
                     ;
@@ -376,7 +378,7 @@ class Tokens extends \SplFixedArray
 
                 $tokens[$index] = new Token([T_OPEN_TAG, rtrim($token->getContent()).$whitespace[0]]);
 
-                return \strlen($whitespace) > 1 // can be removed on PHP 7; https://php.net/manual/en/function.substr.php
+                return \strlen($whitespace) > 1 // @TODO: can be removed on PHP 8; https://php.net/manual/en/function.substr.php
                     ? substr($whitespace, 1)
                     : ''
                 ;
@@ -412,8 +414,8 @@ class Tokens extends \SplFixedArray
     }
 
     /**
-     * @param int $type        type of block, one of BLOCK_TYPE_*
-     * @param int $searchIndex index of opening brace
+     * @param self::BLOCK_TYPE_* $type        type of block
+     * @param int                $searchIndex index of opening brace
      *
      * @return int index of closing brace
      */
@@ -423,8 +425,8 @@ class Tokens extends \SplFixedArray
     }
 
     /**
-     * @param int $type        type of block, one of BLOCK_TYPE_*
-     * @param int $searchIndex index of closing brace
+     * @param self::BLOCK_TYPE_* $type        type of block
+     * @param int                $searchIndex index of closing brace
      *
      * @return int index of opening brace
      */
@@ -434,11 +436,11 @@ class Tokens extends \SplFixedArray
     }
 
     /**
-     * @param array|int $possibleKind kind or array of kind
-     * @param int       $start        optional offset
-     * @param null|int  $end          optional limit
+     * @param int|list<int> $possibleKind kind or array of kinds
+     * @param int           $start        optional offset
+     * @param null|int      $end          optional limit
      *
-     * @return array array of tokens of given kinds or assoc array of arrays
+     * @return array<int, array<int, Token>>|array<int, Token>
      */
     public function findGivenKind($possibleKind, int $start = 0, ?int $end = null): array
     {
@@ -453,9 +455,7 @@ class Tokens extends \SplFixedArray
             $elements[$kind] = [];
         }
 
-        $possibleKinds = array_filter($possibleKinds, function ($kind): bool {
-            return $this->isTokenKindFound($kind);
-        });
+        $possibleKinds = array_filter($possibleKinds, fn ($kind): bool => $this->isTokenKindFound($kind));
 
         if (\count($possibleKinds) > 0) {
             for ($i = $start; $i < $end; ++$i) {
@@ -478,7 +478,7 @@ class Tokens extends \SplFixedArray
     }
 
     /**
-     * Generate code from tokens between given indexes.
+     * Generate code from tokens between given indices.
      *
      * @param int $start start index
      * @param int $end   end index
@@ -520,9 +520,9 @@ class Tokens extends \SplFixedArray
      *
      * This method is shorthand for getTokenOfKindSibling method.
      *
-     * @param int   $index         token index
-     * @param array $tokens        possible tokens
-     * @param bool  $caseSensitive perform a case sensitive comparison
+     * @param int $index token index
+     * @param list<array{int}|string|Token> $tokens        possible tokens
+     * @param bool $caseSensitive perform a case sensitive comparison
      */
     public function getNextTokenOfKind(int $index, array $tokens = [], bool $caseSensitive = true): ?int
     {
@@ -533,7 +533,7 @@ class Tokens extends \SplFixedArray
      * Get index for closest sibling token which is non whitespace.
      *
      * @param int         $index       token index
-     * @param int         $direction   direction for looking, +1 or -1
+     * @param -1|1        $direction
      * @param null|string $whitespaces whitespaces characters for Token::isWhitespace
      */
     public function getNonWhitespaceSibling(int $index, int $direction, ?string $whitespaces = null): ?int
@@ -568,9 +568,9 @@ class Tokens extends \SplFixedArray
      * Get index for closest previous token of given kind.
      * This method is shorthand for getTokenOfKindSibling method.
      *
-     * @param int   $index         token index
-     * @param array $tokens        possible tokens
-     * @param bool  $caseSensitive perform a case sensitive comparison
+     * @param int $index token index
+     * @param list<array{int}|string|Token> $tokens        possible tokens
+     * @param bool $caseSensitive perform a case sensitive comparison
      */
     public function getPrevTokenOfKind(int $index, array $tokens = [], bool $caseSensitive = true): ?int
     {
@@ -580,10 +580,10 @@ class Tokens extends \SplFixedArray
     /**
      * Get index for closest sibling token of given kind.
      *
-     * @param int   $index         token index
-     * @param int   $direction     direction for looking, +1 or -1
-     * @param array $tokens        possible tokens
-     * @param bool  $caseSensitive perform a case sensitive comparison
+     * @param int  $index     token index
+     * @param -1|1 $direction
+     * @param list<array{int}|string|Token> $tokens possible tokens
+     * @param bool $caseSensitive perform a case sensitive comparison
      */
     public function getTokenOfKindSibling(int $index, int $direction, array $tokens = [], bool $caseSensitive = true): ?int
     {
@@ -611,44 +611,40 @@ class Tokens extends \SplFixedArray
     /**
      * Get index for closest sibling token not of given kind.
      *
-     * @param int   $index     token index
-     * @param int   $direction direction for looking, +1 or -1
-     * @param array $tokens    possible tokens
+     * @param int  $index     token index
+     * @param -1|1 $direction
+     * @param list<array{int}|string|Token> $tokens possible tokens
      */
     public function getTokenNotOfKindSibling(int $index, int $direction, array $tokens = []): ?int
     {
         return $this->getTokenNotOfKind(
             $index,
             $direction,
-            function (int $a) use ($tokens): bool {
-                return $this[$a]->equalsAny($tokens);
-            }
+            fn (int $a): bool => $this[$a]->equalsAny($tokens),
         );
     }
 
     /**
      * Get index for closest sibling token not of given kind.
      *
-     * @param int   $index     token index
-     * @param int   $direction direction for looking, +1 or -1
-     * @param array $kinds     possible tokens kinds
+     * @param int       $index     token index
+     * @param -1|1      $direction
+     * @param list<int> $kinds     possible tokens kinds
      */
     public function getTokenNotOfKindsSibling(int $index, int $direction, array $kinds = []): ?int
     {
         return $this->getTokenNotOfKind(
             $index,
             $direction,
-            function (int $index) use ($kinds): bool {
-                return $this[$index]->isGivenKind($kinds);
-            }
+            fn (int $index): bool => $this[$index]->isGivenKind($kinds),
         );
     }
 
     /**
      * Get index for closest sibling token that is not a whitespace, comment or attribute.
      *
-     * @param int $index     token index
-     * @param int $direction direction for looking, +1 or -1
+     * @param int  $index     token index
+     * @param -1|1 $direction
      */
     public function getMeaningfulTokenSibling(int $index, int $direction): ?int
     {
@@ -662,8 +658,8 @@ class Tokens extends \SplFixedArray
     /**
      * Get index for closest sibling token which is not empty.
      *
-     * @param int $index     token index
-     * @param int $direction direction for looking, +1 or -1
+     * @param int  $index     token index
+     * @param -1|1 $direction
      */
     public function getNonEmptySibling(int $index, int $direction): ?int
     {
@@ -703,12 +699,12 @@ class Tokens extends \SplFixedArray
     /**
      * Find a sequence of meaningful tokens and returns the array of their locations.
      *
-     * @param array                 $sequence      an array of tokens (kinds) (same format used by getNextTokenOfKind)
-     * @param int                   $start         start index, defaulting to the start of the file
-     * @param null|int              $end           end index, defaulting to the end of the file
-     * @param array<int, bool>|bool $caseSensitive global case sensitiveness or an array of booleans, whose keys should match
-     *                                             the ones used in $others. If any is missing, the default case-sensitive
-     *                                             comparison is used
+     * @param list<array{0: int, 1?: string}|string|Token> $sequence      an array of token (kinds)
+     * @param int                                          $start         start index, defaulting to the start of the file
+     * @param null|int                                     $end           end index, defaulting to the end of the file
+     * @param bool|list<bool>                              $caseSensitive global case sensitiveness or a list of booleans, whose keys should match
+     *                                                                    the ones used in $sequence. If any is missing, the default case-sensitive
+     *                                                                    comparison is used
      *
      * @return null|array<int, Token> an array containing the tokens matching the sequence elements, indexed by their position
      */
@@ -810,13 +806,11 @@ class Tokens extends \SplFixedArray
     /**
      * Insert instances of Token inside collection.
      *
-     * @param int                       $index start inserting index
-     * @param array<Token>|Token|Tokens $items instances of Token to insert
+     * @param int                      $index start inserting index
+     * @param list<Token>|Token|Tokens $items instances of Token to insert
      */
     public function insertAt(int $index, $items): void
     {
-        $items = \is_array($items) || $items instanceof self ? $items : [$items];
-
         $this->insertSlices([$index => $items]);
     }
 
@@ -824,7 +818,7 @@ class Tokens extends \SplFixedArray
      * Insert a slices or individual Tokens into multiple places in a single run.
      *
      * This approach is kind-of an experiment - it's proven to improve performance a lot for big files that needs plenty of new tickets to be inserted,
-     * like edge case example of 3.7h vs 4s (https://github.com/FriendsOfPHP/PHP-CS-Fixer/issues/3996#issuecomment-455617637),
+     * like edge case example of 3.7h vs 4s (https://github.com/PHP-CS-Fixer/PHP-CS-Fixer/issues/3996#issuecomment-455617637),
      * yet at same time changing a logic of fixers in not-always easy way.
      *
      * To be discussed:
@@ -832,16 +826,17 @@ class Tokens extends \SplFixedArray
      * - should we deprecate `insertAt` method ?
      *
      * The `$slices` parameter is an assoc array, in which:
-     * - index: starting point for inserting of individual slice, with indexes being relatives to original array collection before any Token inserted
+     * - index: starting point for inserting of individual slice, with indices being relatives to original array collection before any Token inserted
      * - value under index: a slice of Tokens to be inserted
      *
      * @internal
      *
-     * @param array<int, array<Token>|Token|Tokens> $slices
+     * @param array<int, list<Token>|Token|Tokens> $slices
      */
     public function insertSlices(array $slices): void
     {
         $itemsCount = 0;
+
         foreach ($slices as $slice) {
             $itemsCount += \is_array($slice) || $slice instanceof self ? \count($slice) : 1;
         }
@@ -857,21 +852,30 @@ class Tokens extends \SplFixedArray
         $this->setSize($oldSize + $itemsCount);
 
         krsort($slices);
+        $farthestSliceIndex = key($slices);
 
-        $insertBound = $oldSize - 1;
+        // We check only the farthest index, if it's within the size of collection, other indices will be valid too.
+        if (!\is_int($farthestSliceIndex) || $farthestSliceIndex > $oldSize) {
+            throw new \OutOfBoundsException(sprintf('Cannot insert index "%s" outside of collection.', $farthestSliceIndex));
+        }
+
+        $previousSliceIndex = $oldSize;
 
         // since we only move already existing items around, we directly call into SplFixedArray::offset* methods.
         // that way we get around additional overhead this class adds with overridden offset* methods.
         foreach ($slices as $index => $slice) {
+            if (!\is_int($index) || $index < 0) {
+                throw new \OutOfBoundsException(sprintf('Invalid index "%s".', $index));
+            }
+
             $slice = \is_array($slice) || $slice instanceof self ? $slice : [$slice];
             $sliceCount = \count($slice);
 
-            for ($i = $insertBound; $i >= $index; --$i) {
-                $oldItem = parent::offsetExists($i) ? parent::offsetGet($i) : new Token('');
-                parent::offsetSet($i + $itemsCount, $oldItem);
+            for ($i = $previousSliceIndex - 1; $i >= $index; --$i) {
+                parent::offsetSet($i + $itemsCount, parent::offsetGet($i));
             }
 
-            $insertBound = $index - $sliceCount;
+            $previousSliceIndex = $index;
             $itemsCount -= $sliceCount;
 
             foreach ($slice as $indexItem => $item) {
@@ -880,8 +884,8 @@ class Tokens extends \SplFixedArray
                 }
 
                 $this->registerFoundToken($item);
-                $newOffset = $index + $itemsCount + $indexItem;
-                parent::offsetSet($newOffset, $item);
+
+                parent::offsetSet($index + $itemsCount + $indexItem, $item);
             }
         }
     }
@@ -891,11 +895,7 @@ class Tokens extends \SplFixedArray
      */
     public function isChanged(): bool
     {
-        if ($this->changed) {
-            return true;
-        }
-
-        return false;
+        return $this->changed;
     }
 
     public function isEmptyAt(int $index): bool
@@ -913,9 +913,9 @@ class Tokens extends \SplFixedArray
     /**
      * Override tokens at given range.
      *
-     * @param int                 $indexStart start overriding index
-     * @param int                 $indexEnd   end overriding index
-     * @param array<Token>|Tokens $items      tokens to insert
+     * @param int                      $indexStart start overriding index
+     * @param int                      $indexEnd   end overriding index
+     * @param array<int, Token>|Tokens $items      tokens to insert
      */
     public function overrideRange(int $indexStart, int $indexEnd, iterable $items): void
     {
@@ -1020,6 +1020,8 @@ class Tokens extends \SplFixedArray
 
     /**
      * Check if all token kinds given as argument are found.
+     *
+     * @param list<int|string> $tokenKinds
      */
     public function isAllTokenKindsFound(array $tokenKinds): bool
     {
@@ -1034,6 +1036,8 @@ class Tokens extends \SplFixedArray
 
     /**
      * Check if any token kind given as argument is found.
+     *
+     * @param list<int|string> $tokenKinds
      */
     public function isAnyTokenKindsFound(array $tokenKinds): bool
     {
@@ -1082,17 +1086,19 @@ class Tokens extends \SplFixedArray
      */
     public function isMonolithicPhp(): bool
     {
-        $size = $this->count();
-
-        if (0 === $size) {
+        if (0 === $this->count()) {
             return false;
         }
 
-        if ($this->isTokenKindFound(T_INLINE_HTML)) {
+        if ($this->countTokenKind(T_INLINE_HTML) > 1) {
             return false;
         }
 
-        return 1 >= ($this->countTokenKind(T_OPEN_TAG) + $this->countTokenKind(T_OPEN_TAG_WITH_ECHO));
+        if (1 === $this->countTokenKind(T_INLINE_HTML)) {
+            return 1 === Preg::match('/^#!.+$/', $this[0]->getContent());
+        }
+
+        return 1 === ($this->countTokenKind(T_OPEN_TAG) + $this->countTokenKind(T_OPEN_TAG_WITH_ECHO));
     }
 
     /**
@@ -1157,6 +1163,9 @@ class Tokens extends \SplFixedArray
         $transformers->transform($this);
     }
 
+    /**
+     * @param -1|1 $direction
+     */
     private function removeWhitespaceSafely(int $index, int $direction, ?string $whitespaces = null): void
     {
         $whitespaceIndex = $this->getNonEmptySibling($index, $direction);
@@ -1188,9 +1197,9 @@ class Tokens extends \SplFixedArray
     }
 
     /**
-     * @param int  $type        type of block, one of BLOCK_TYPE_*
-     * @param int  $searchIndex index of starting brace
-     * @param bool $findEnd     if method should find block's end or start
+     * @param self::BLOCK_TYPE_* $type        type of block
+     * @param int                $searchIndex index of starting brace
+     * @param bool               $findEnd     if method should find block's end or start
      *
      * @return int index of opposite brace
      */
@@ -1205,6 +1214,7 @@ class Tokens extends \SplFixedArray
         if ($findEnd && isset($this->blockStartCache[$searchIndex])) {
             return $this->blockStartCache[$searchIndex];
         }
+
         if (!$findEnd && isset($this->blockEndCache[$searchIndex])) {
             return $this->blockEndCache[$searchIndex];
         }
@@ -1321,7 +1331,7 @@ class Tokens extends \SplFixedArray
     /**
      * Register token as found.
      *
-     * @param array|string|Token $token token prototype
+     * @param array{int}|string|Token $token token prototype
      */
     private function registerFoundToken($token): void
     {
@@ -1331,17 +1341,14 @@ class Tokens extends \SplFixedArray
             : (\is_array($token) ? $token[0] : $token)
         ;
 
-        if (!isset($this->foundTokenKinds[$tokenKind])) {
-            $this->foundTokenKinds[$tokenKind] = 0;
-        }
-
+        $this->foundTokenKinds[$tokenKind] ??= 0;
         ++$this->foundTokenKinds[$tokenKind];
     }
 
     /**
      * Register token as found.
      *
-     * @param array|string|Token $token token prototype
+     * @param array{int}|string|Token $token token prototype
      */
     private function unregisterFoundToken($token): void
     {
@@ -1359,7 +1366,7 @@ class Tokens extends \SplFixedArray
     }
 
     /**
-     * @param array|string|Token $token token prototype
+     * @param array{int}|string|Token $token token prototype
      *
      * @return int|string
      */
@@ -1372,8 +1379,9 @@ class Tokens extends \SplFixedArray
     }
 
     /**
-     * @param int $index     token index
-     * @param int $direction direction for looking, +1 or -1
+     * @param int                 $index     token index
+     * @param -1|1                $direction
+     * @param callable(int): bool $filter
      */
     private function getTokenNotOfKind(int $index, int $direction, callable $filter): ?int
     {

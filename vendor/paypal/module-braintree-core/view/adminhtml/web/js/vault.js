@@ -140,7 +140,7 @@ define([
         createPublicHashSelector: function () {
             var $input;
 
-            if (this.$selector.find('[name="payment[payment_method_nonce]"]').size() === 0) {
+            if (this.$selector.find('[name="payment[payment_method_nonce]"]').length === 0) {
                 $input = $('<input>').attr(
                     {
                         type: 'hidden',

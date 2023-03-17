@@ -8,22 +8,22 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202208\Symfony\Component\Console\Helper;
+namespace RectorPrefix202303\Symfony\Component\Console\Helper;
 
-use RectorPrefix202208\Symfony\Component\Console\Cursor;
-use RectorPrefix202208\Symfony\Component\Console\Exception\MissingInputException;
-use RectorPrefix202208\Symfony\Component\Console\Exception\RuntimeException;
-use RectorPrefix202208\Symfony\Component\Console\Formatter\OutputFormatter;
-use RectorPrefix202208\Symfony\Component\Console\Formatter\OutputFormatterStyle;
-use RectorPrefix202208\Symfony\Component\Console\Input\InputInterface;
-use RectorPrefix202208\Symfony\Component\Console\Input\StreamableInputInterface;
-use RectorPrefix202208\Symfony\Component\Console\Output\ConsoleOutputInterface;
-use RectorPrefix202208\Symfony\Component\Console\Output\ConsoleSectionOutput;
-use RectorPrefix202208\Symfony\Component\Console\Output\OutputInterface;
-use RectorPrefix202208\Symfony\Component\Console\Question\ChoiceQuestion;
-use RectorPrefix202208\Symfony\Component\Console\Question\Question;
-use RectorPrefix202208\Symfony\Component\Console\Terminal;
-use function RectorPrefix202208\Symfony\Component\String\s;
+use RectorPrefix202303\Symfony\Component\Console\Cursor;
+use RectorPrefix202303\Symfony\Component\Console\Exception\MissingInputException;
+use RectorPrefix202303\Symfony\Component\Console\Exception\RuntimeException;
+use RectorPrefix202303\Symfony\Component\Console\Formatter\OutputFormatter;
+use RectorPrefix202303\Symfony\Component\Console\Formatter\OutputFormatterStyle;
+use RectorPrefix202303\Symfony\Component\Console\Input\InputInterface;
+use RectorPrefix202303\Symfony\Component\Console\Input\StreamableInputInterface;
+use RectorPrefix202303\Symfony\Component\Console\Output\ConsoleOutputInterface;
+use RectorPrefix202303\Symfony\Component\Console\Output\ConsoleSectionOutput;
+use RectorPrefix202303\Symfony\Component\Console\Output\OutputInterface;
+use RectorPrefix202303\Symfony\Component\Console\Question\ChoiceQuestion;
+use RectorPrefix202303\Symfony\Component\Console\Question\Question;
+use RectorPrefix202303\Symfony\Component\Console\Terminal;
+use function RectorPrefix202303\Symfony\Component\String\s;
 /**
  * The QuestionHelper class provides helpers to interact with the user.
  *
@@ -77,9 +77,6 @@ class QuestionHelper extends Helper
             return $fallbackOutput;
         }
     }
-    /**
-     * {@inheritdoc}
-     */
     public function getName() : string
     {
         return 'question';
@@ -128,6 +125,8 @@ class QuestionHelper extends Helper
             $ret = $question->isTrimmable() ? \trim($autocomplete) : $autocomplete;
         }
         if ($output instanceof ConsoleSectionOutput) {
+            $output->addContent('');
+            // add EOL to the question
             $output->addContent($ret);
         }
         $ret = \strlen($ret) > 0 ? $ret : $question->getDefault();
@@ -361,6 +360,10 @@ class QuestionHelper extends Helper
             throw new RuntimeException('Unable to hide the response.');
         }
         $value = \fgets($inputStream, 4096);
+        if (4095 === \strlen($value)) {
+            $errOutput = $output instanceof ConsoleOutputInterface ? $output->getErrorOutput() : $output;
+            $errOutput->warning('The value was possibly truncated by your shell or terminal emulator');
+        }
         if (self::$stty && Terminal::hasSttyAvailable()) {
             \shell_exec('stty ' . $sttyMode);
         }
@@ -423,7 +426,7 @@ class QuestionHelper extends Helper
      *
      * @param resource $inputStream The handler resource
      * @param Question $question    The question being asked
-     * @return string|true
+     * @return string|false
      */
     private function readInput($inputStream, Question $question)
     {
@@ -457,8 +460,8 @@ class QuestionHelper extends Helper
     }
     /**
      * Sets console I/O to the specified code page and converts the user input.
-     * @param string|true $input
-     * @return string|true
+     * @param string|false $input
+     * @return string|false
      */
     private function resetIOCodepage(int $cp, $input)
     {

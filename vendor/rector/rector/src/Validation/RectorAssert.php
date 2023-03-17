@@ -4,7 +4,7 @@ declare (strict_types=1);
 namespace Rector\Core\Validation;
 
 use Rector\Core\Util\StringUtils;
-use RectorPrefix202208\Webmozart\Assert\InvalidArgumentException;
+use RectorPrefix202303\Webmozart\Assert\InvalidArgumentException;
 /**
  * @see \Rector\Core\Tests\Validation\RectorAssertTest
  */
@@ -73,6 +73,9 @@ final class RectorAssert
     {
         self::elementName($name, self::FUNCTION_NAME_REGEX, 'function');
     }
+    /**
+     * @api
+     */
     public static function elementName(string $name, string $regex, string $elementType) : void
     {
         if (StringUtils::isMatch($name, $regex)) {

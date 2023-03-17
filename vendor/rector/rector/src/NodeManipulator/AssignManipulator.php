@@ -5,7 +5,9 @@ namespace Rector\Core\NodeManipulator;
 
 use PhpParser\Node;
 use PhpParser\Node\Expr;
+use PhpParser\Node\Expr\Array_;
 use PhpParser\Node\Expr\ArrayDimFetch;
+use PhpParser\Node\Expr\ArrayItem;
 use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\AssignOp;
 use PhpParser\Node\Expr\FuncCall;
@@ -21,9 +23,9 @@ use PhpParser\Node\Stmt\Expression;
 use Rector\Core\NodeAnalyzer\PropertyFetchAnalyzer;
 use Rector\Core\PhpParser\Comparing\NodeComparator;
 use Rector\Core\PhpParser\Node\BetterNodeFinder;
+use Rector\Core\Util\MultiInstanceofChecker;
 use Rector\NodeNameResolver\NodeNameResolver;
 use Rector\NodeTypeResolver\Node\AttributeKey;
-use RectorPrefix202208\Symplify\PackageBuilder\Php\TypeChecker;
 final class AssignManipulator
 {
     /**
@@ -52,16 +54,16 @@ final class AssignManipulator
     private $propertyFetchAnalyzer;
     /**
      * @readonly
-     * @var \Symplify\PackageBuilder\Php\TypeChecker
+     * @var \Rector\Core\Util\MultiInstanceofChecker
      */
-    private $typeChecker;
-    public function __construct(NodeNameResolver $nodeNameResolver, NodeComparator $nodeComparator, BetterNodeFinder $betterNodeFinder, PropertyFetchAnalyzer $propertyFetchAnalyzer, TypeChecker $typeChecker)
+    private $multiInstanceofChecker;
+    public function __construct(NodeNameResolver $nodeNameResolver, NodeComparator $nodeComparator, BetterNodeFinder $betterNodeFinder, PropertyFetchAnalyzer $propertyFetchAnalyzer, MultiInstanceofChecker $multiInstanceofChecker)
     {
         $this->nodeNameResolver = $nodeNameResolver;
         $this->nodeComparator = $nodeComparator;
         $this->betterNodeFinder = $betterNodeFinder;
         $this->propertyFetchAnalyzer = $propertyFetchAnalyzer;
-        $this->typeChecker = $typeChecker;
+        $this->multiInstanceofChecker = $multiInstanceofChecker;
     }
     /**
      * Matches:
@@ -79,22 +81,25 @@ final class AssignManipulator
     }
     public function isLeftPartOfAssign(Node $node) : bool
     {
-        $parent = $node->getAttribute(AttributeKey::PARENT_NODE);
-        if ($parent instanceof Assign && $this->nodeComparator->areNodesEqual($parent->var, $node)) {
+        $parentNode = $node->getAttribute(AttributeKey::PARENT_NODE);
+        if ($parentNode instanceof Assign && $this->nodeComparator->areNodesEqual($parentNode->var, $node)) {
             return \true;
         }
-        if ($parent !== null && $this->typeChecker->isInstanceOf($parent, self::MODIFYING_NODE_TYPES)) {
+        if ($parentNode !== null && $this->multiInstanceofChecker->isInstanceOf($parentNode, self::MODIFYING_NODE_TYPES)) {
+            return \true;
+        }
+        if ($this->isOnArrayDestructuring($parentNode)) {
             return \true;
         }
         // traverse up to array dim fetches
-        if ($parent instanceof ArrayDimFetch) {
-            $previousParent = $parent;
-            while ($parent instanceof ArrayDimFetch) {
-                $previousParent = $parent;
-                $parent = $parent->getAttribute(AttributeKey::PARENT_NODE);
+        if ($parentNode instanceof ArrayDimFetch) {
+            $previousParent = $parentNode;
+            while ($parentNode instanceof ArrayDimFetch) {
+                $previousParent = $parentNode;
+                $parentNode = $parentNode->getAttribute(AttributeKey::PARENT_NODE);
             }
-            if ($parent instanceof Assign) {
-                return $parent->var === $previousParent;
+            if ($parentNode instanceof Assign) {
+                return $parentNode->var === $previousParent;
             }
         }
         return \false;
@@ -113,6 +118,7 @@ final class AssignManipulator
         return \false;
     }
     /**
+     * @api doctrine
      * @return array<PropertyFetch|StaticPropertyFetch>
      */
     public function resolveAssignsToLocalPropertyFetches(FunctionLike $functionLike) : array
@@ -123,5 +129,17 @@ final class AssignManipulator
             }
             return $this->isLeftPartOfAssign($node);
         });
+    }
+    private function isOnArrayDestructuring(?Node $parentNode) : bool
+    {
+        if (!$parentNode instanceof ArrayItem) {
+            return \false;
+        }
+        $parentArrayItem = $parentNode->getAttribute(AttributeKey::PARENT_NODE);
+        if (!$parentArrayItem instanceof Array_) {
+            return \false;
+        }
+        $node = $parentArrayItem->getAttribute(AttributeKey::PARENT_NODE);
+        return $node instanceof Assign && $node->var === $parentArrayItem;
     }
 }

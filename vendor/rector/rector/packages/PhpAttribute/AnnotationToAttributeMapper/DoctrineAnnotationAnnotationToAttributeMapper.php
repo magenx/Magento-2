@@ -13,9 +13,7 @@ use Rector\Core\ValueObject\PhpVersionFeature;
 use Rector\PhpAttribute\AnnotationToAttributeMapper;
 use Rector\PhpAttribute\AttributeArrayNameInliner;
 use Rector\PhpAttribute\Contract\AnnotationToAttributeMapperInterface;
-use Rector\PhpAttribute\Exception\InvalidNestedAttributeException;
-use Rector\PhpAttribute\UnwrapableAnnotationAnalyzer;
-use RectorPrefix202208\Symfony\Contracts\Service\Attribute\Required;
+use RectorPrefix202303\Symfony\Contracts\Service\Attribute\Required;
 /**
  * @implements AnnotationToAttributeMapperInterface<DoctrineAnnotationTagValueNode>
  */
@@ -32,18 +30,12 @@ final class DoctrineAnnotationAnnotationToAttributeMapper implements AnnotationT
     private $phpVersionProvider;
     /**
      * @readonly
-     * @var \Rector\PhpAttribute\UnwrapableAnnotationAnalyzer
-     */
-    private $unwrapableAnnotationAnalyzer;
-    /**
-     * @readonly
      * @var \Rector\PhpAttribute\AttributeArrayNameInliner
      */
     private $attributeArrayNameInliner;
-    public function __construct(PhpVersionProvider $phpVersionProvider, UnwrapableAnnotationAnalyzer $unwrapableAnnotationAnalyzer, AttributeArrayNameInliner $attributeArrayNameInliner)
+    public function __construct(PhpVersionProvider $phpVersionProvider, AttributeArrayNameInliner $attributeArrayNameInliner)
     {
         $this->phpVersionProvider = $phpVersionProvider;
-        $this->unwrapableAnnotationAnalyzer = $unwrapableAnnotationAnalyzer;
         $this->attributeArrayNameInliner = $attributeArrayNameInliner;
     }
     /**
@@ -62,21 +54,17 @@ final class DoctrineAnnotationAnnotationToAttributeMapper implements AnnotationT
         if (!$value instanceof DoctrineAnnotationTagValueNode) {
             return \false;
         }
-        return !$this->unwrapableAnnotationAnalyzer->areUnwrappable([$value]);
+        return $this->phpVersionProvider->isAtLeastPhpVersion(PhpVersionFeature::NEW_INITIALIZERS);
     }
     /**
      * @param DoctrineAnnotationTagValueNode $value
      */
     public function map($value) : \PhpParser\Node\Expr
     {
-        // if PHP 8.0- throw exception
-        if (!$this->phpVersionProvider->isAtLeastPhpVersion(PhpVersionFeature::NEW_INITIALIZERS)) {
-            throw new InvalidNestedAttributeException();
-        }
         $annotationShortName = $this->resolveAnnotationName($value);
         $values = $value->getValues();
         if ($values !== []) {
-            $argValues = $this->annotationToAttributeMapper->map($value->getValuesWithExplicitSilentAndWithoutQuotes());
+            $argValues = $this->annotationToAttributeMapper->map($value->getValues());
             if ($argValues instanceof Array_) {
                 // create named args
                 $args = $this->attributeArrayNameInliner->inlineArrayToArgs($argValues);

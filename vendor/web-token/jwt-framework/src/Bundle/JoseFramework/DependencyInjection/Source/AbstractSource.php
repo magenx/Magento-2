@@ -2,15 +2,6 @@
 
 declare(strict_types=1);
 
-/*
- * The MIT License (MIT)
- *
- * Copyright (c) 2014-2020 Spomky-Labs
- *
- * This software may be modified and distributed under the terms
- * of the MIT license.  See the LICENSE file for details.
- */
-
 namespace Jose\Bundle\JoseFramework\DependencyInjection\Source;
 
 use Symfony\Component\Config\Definition\Builder\NodeDefinition;
@@ -19,6 +10,9 @@ use Symfony\Component\DependencyInjection\Definition;
 
 abstract class AbstractSource
 {
+    /**
+     * @param array{is_public: bool, tags: array<string, array>, string?: mixed} $config
+     */
     public function create(ContainerBuilder $container, string $type, string $name, array $config): void
     {
         $service_id = sprintf('jose.%s.%s', $type, $name);
@@ -28,7 +22,7 @@ abstract class AbstractSource
             $definition->addTag($id, $attributes);
         }
         $container->setDefinition($service_id, $definition);
-        $container->registerAliasForArgument($service_id, $definition->getClass(), $name.' '.$type);
+        $container->registerAliasForArgument($service_id, $definition->getClass() ?? '', $name . ' ' . $type);
     }
 
     public function addConfiguration(NodeDefinition $node): void
@@ -44,11 +38,14 @@ abstract class AbstractSource
             ->useAttributeAsKey('name')
             ->treatNullLike([])
             ->treatFalseLike([])
-            ->variablePrototype()->end()
+            ->variablePrototype()
             ->end()
             ->end()
-        ;
+            ->end();
     }
 
+    /**
+     * @param array<string, mixed> $config
+     */
     abstract protected function createDefinition(ContainerBuilder $container, array $config): Definition;
 }

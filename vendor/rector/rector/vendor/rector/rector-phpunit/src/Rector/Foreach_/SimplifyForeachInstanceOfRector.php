@@ -33,7 +33,10 @@ foreach ($foos as $foo) {
     $this->assertInstanceOf(SplFileInfo::class, $foo);
 }
 CODE_SAMPLE
-, '$this->assertContainsOnlyInstancesOf(\\SplFileInfo::class, $foos);')]);
+, <<<'CODE_SAMPLE'
+$this->assertContainsOnlyInstancesOf(\SplFileInfo::class, $foos);
+CODE_SAMPLE
+)]);
     }
     /**
      * @return array<class-string<Node>>
@@ -61,6 +64,10 @@ CODE_SAMPLE
             return $node;
         });
         if ($matchedNode === null) {
+            return null;
+        }
+        // skip if there is a custom message included; it might be per item
+        if (\count($matchedNode->getArgs()) === 3) {
             return null;
         }
         $args = [$matchedNode->args[0], new Arg($node->expr)];

@@ -8,11 +8,11 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202208\Symfony\Component\Console\Descriptor;
+namespace RectorPrefix202303\Symfony\Component\Console\Descriptor;
 
-use RectorPrefix202208\Symfony\Component\Console\Application;
-use RectorPrefix202208\Symfony\Component\Console\Command\Command;
-use RectorPrefix202208\Symfony\Component\Console\Exception\CommandNotFoundException;
+use RectorPrefix202303\Symfony\Component\Console\Application;
+use RectorPrefix202303\Symfony\Component\Console\Command\Command;
+use RectorPrefix202303\Symfony\Component\Console\Exception\CommandNotFoundException;
 /**
  * @author Jean-François Simon <jeanfrancois.simon@sensiolabs.com>
  *
@@ -118,7 +118,7 @@ class ApplicationDescription
             $sortedCommands[self::GLOBAL_NAMESPACE] = $globalCommands;
         }
         if ($namespacedCommands) {
-            \ksort($namespacedCommands);
+            \ksort($namespacedCommands, \SORT_STRING);
             foreach ($namespacedCommands as $key => $commandsSet) {
                 \ksort($commandsSet);
                 $sortedCommands[$key] = $commandsSet;

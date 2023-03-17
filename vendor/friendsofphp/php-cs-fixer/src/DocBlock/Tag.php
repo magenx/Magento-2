@@ -20,15 +20,14 @@ use PhpCsFixer\Preg;
  * This represents a tag, as defined by the proposed PSR PHPDoc standard.
  *
  * @author Graham Campbell <hello@gjcampbell.co.uk>
+ * @author Jakub Kwaśniewski <jakub@zero-85.pl>
  */
 final class Tag
 {
     /**
      * All the tags defined by the proposed PSR PHPDoc standard.
-     *
-     * @var string[]
      */
-    private static $tags = [
+    public const PSR_STANDARD_TAGS = [
         'api', 'author', 'category', 'copyright', 'deprecated', 'example',
         'global', 'internal', 'license', 'link', 'method', 'package', 'param',
         'property', 'property-read', 'property-write', 'return', 'see',
@@ -37,17 +36,13 @@ final class Tag
 
     /**
      * The line containing the tag.
-     *
-     * @var Line
      */
-    private $line;
+    private Line $line;
 
     /**
      * The cached tag name.
-     *
-     * @var null|string
      */
-    private $name;
+    private ?string $name = null;
 
     /**
      * Create a new tag instance.
@@ -102,6 +97,6 @@ final class Tag
      */
     public function valid(): bool
     {
-        return \in_array($this->getName(), self::$tags, true);
+        return \in_array($this->getName(), self::PSR_STANDARD_TAGS, true);
     }
 }

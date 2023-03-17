@@ -1,9 +1,9 @@
 <?php
 
-namespace RectorPrefix202208\React\Socket;
+namespace RectorPrefix202303\React\Socket;
 
-use RectorPrefix202208\React\EventLoop\LoopInterface;
-use RectorPrefix202208\React\Promise\Deferred;
+use RectorPrefix202303\React\EventLoop\LoopInterface;
+use RectorPrefix202303\React\Promise\Deferred;
 use RuntimeException;
 use UnexpectedValueException;
 /**
@@ -94,7 +94,7 @@ class StreamEncryption
         $result = \stream_socket_enable_crypto($socket, $toggle, $method);
         \restore_error_handler();
         if (\true === $result) {
-            $deferred->resolve();
+            $deferred->resolve(null);
         } else {
             if (\false === $result) {
                 // overwrite callback arguments for PHP7+ only, so they do not show

@@ -9,7 +9,7 @@ declare (strict_types=1);
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202208\SebastianBergmann\Diff\Output;
+namespace RectorPrefix202303\SebastianBergmann\Diff\Output;
 
 use function count;
 abstract class AbstractChunkOutputBuilder implements DiffOutputBuilderInterface
@@ -25,14 +25,14 @@ abstract class AbstractChunkOutputBuilder implements DiffOutputBuilderInterface
         $chunkStart = 0;
         $chunkSize = 0;
         $commonChunks = [];
-        for ($i = 0; $i < $diffSize; ++$i) {
+        for ($i = 0; $i < $diffSize; $i++) {
             if ($diff[$i][1] === 0) {
                 if ($capturing === \false) {
                     $capturing = \true;
                     $chunkStart = $i;
                     $chunkSize = 0;
                 } else {
-                    ++$chunkSize;
+                    $chunkSize++;
                 }
             } elseif ($capturing !== \false) {
                 if ($chunkSize >= $lineThreshold) {

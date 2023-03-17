@@ -9,10 +9,10 @@
  * the LICENSE file that was distributed with this source code.
  */
 declare (strict_types=1);
-namespace RectorPrefix202208\Composer\XdebugHandler;
+namespace RectorPrefix202303\Composer\XdebugHandler;
 
-use RectorPrefix202208\Composer\Pcre\Preg;
-use RectorPrefix202208\Psr\Log\LoggerInterface;
+use RectorPrefix202303\Composer\Pcre\Preg;
+use RectorPrefix202303\Psr\Log\LoggerInterface;
 /**
  * @author John Stevenson <john-stevenson@blueyonder.co.uk>
  *
@@ -236,6 +236,9 @@ class XdebugHandler
                 // Outer quotes required on cmd string below PHP 8
                 $cmd = '"' . $cmd . '"';
             }
+        }
+        if (\is_array($cmd)) {
+            $cmd = \implode(' ', $cmd);
         }
         $process = \proc_open($cmd, [], $pipes);
         if (\is_resource($process)) {

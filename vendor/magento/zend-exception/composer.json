@@ -1,0 +1,27 @@
+{
+    "name": "magento/zend-exception",
+    "description": "Zend Framework 1 Exception package",
+    "type": "library",
+    "keywords": [
+        "framework", "zf1", "zend", "exception"
+    ],
+    "homepage": "http://framework.zend.com/",
+    "license": "BSD-3-Clause",
+    "require": {
+        "php": ">=7.0.0"
+    },
+    "replace": {
+        "zf1/zend-exception": "^1.12",
+        "zfs1/zend-exception": "^1.12"
+    },
+    "autoload": {
+        "psr-0": {
+            "Zend_Exception": "library/"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "1.16.x-dev"
+        }
+    }
+}

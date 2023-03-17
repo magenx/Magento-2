@@ -78,7 +78,7 @@ class ASTType extends AbstractASTNode
     }
 
     /**
-     * This method will return <b>true</b> when this type use union pipe tos specify multiple types.
+     * This method will return <b>true</b> when this type use union pipe to specify multiple types.
      *
      * @return bool
      */
@@ -88,13 +88,12 @@ class ASTType extends AbstractASTNode
     }
 
     /**
-     * Accept method of the visitor design pattern. This method will be called
-     * by a visitor during tree traversal.
+     * This method will return <b>true</b> when this type uses intersection ampersand to specify multiple types.
      *
-     * @since 0.9.12
+     * @return bool
      */
-    public function accept(ASTVisitor $visitor, $data = null)
+    public function isIntersection()
     {
-        return $visitor->visitType($this, $data);
+        return false;
     }
 }

@@ -20,14 +20,15 @@ use function sprintf;
 use function strlen;
 
 /**
- * Part route.
+ * @template TRoute of RouteInterface
+ * @template-extends TreeRouteStack<TRoute>
  */
 class Part extends TreeRouteStack implements RouteInterface
 {
     /**
      * RouteInterface to match.
      *
-     * @var RouteInterface
+     * @var TRoute
      */
     protected $route;
 
@@ -46,21 +47,13 @@ class Part extends TreeRouteStack implements RouteInterface
     protected $childRoutes;
 
     /**
-     * Priority.
-     *
-     * @internal For internal classes only. Not designed for general use.
-     * @deprecated Since 3.9.0 This property will be removed or made private in version 4.0
-     *
-     * @var int|null
-     */
-    public $priority;
-
-    /**
      * Create a new part route.
      *
-     * @param  mixed              $route
-     * @param  bool               $mayTerminate
-     * @param  array|null         $childRoutes
+     * @param TRoute|iterable|string           $route
+     * @param bool                             $mayTerminate
+     * @param array|null                       $childRoutes
+     * @param RoutePluginManager<TRoute>       $routePlugins
+     * @param ArrayObject<string, TRoute>|null $prototypes
      * @throws Exception\InvalidArgumentException
      */
     public function __construct(
@@ -84,7 +77,8 @@ class Part extends TreeRouteStack implements RouteInterface
         $this->mayTerminate = $mayTerminate;
         $this->childRoutes  = $childRoutes;
         $this->prototypes   = $prototypes;
-        $this->routes       = new PriorityList();
+        /** @var PriorityList<string, TRoute> $this->routes */
+        $this->routes = new PriorityList();
     }
 
     /**

@@ -7,7 +7,6 @@ use Laminas\Uri\Http;
 use Laminas\Uri\Mailto;
 use Laminas\Uri\Uri;
 
-use function get_class;
 use function gettype;
 use function is_object;
 use function is_string;
@@ -96,7 +95,7 @@ abstract class UriFactory
         if (! is_string($uriString)) {
             throw new Exception\InvalidArgumentException(sprintf(
                 'Expecting a string, received "%s"',
-                is_object($uriString) ? get_class($uriString) : gettype($uriString)
+                is_object($uriString) ? $uriString::class : gettype($uriString)
             ));
         }
 

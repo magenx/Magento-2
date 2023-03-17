@@ -3,33 +3,24 @@
 declare (strict_types=1);
 namespace Rector\Symfony\ValueObjectFactory;
 
-use RectorPrefix202208\Nette\Utils\Json;
-use RectorPrefix202208\Nette\Utils\Strings;
+use RectorPrefix202303\Nette\Utils\FileSystem;
+use RectorPrefix202303\Nette\Utils\Json;
+use RectorPrefix202303\Nette\Utils\Strings;
 use Rector\Symfony\Exception\XmlContainerNotExistsException;
 use Rector\Symfony\ValueObject\ServiceDefinition;
 use Rector\Symfony\ValueObject\ServiceMap\ServiceMap;
 use Rector\Symfony\ValueObject\Tag;
 use Rector\Symfony\ValueObject\Tag\EventListenerTag;
 use SimpleXMLElement;
-use RectorPrefix202208\Symplify\SmartFileSystem\SmartFileSystem;
 final class ServiceMapFactory
 {
     /**
      * @var string
      */
     private const TAG = 'tag';
-    /**
-     * @readonly
-     * @var \Symplify\SmartFileSystem\SmartFileSystem
-     */
-    private $smartFileSystem;
-    public function __construct(SmartFileSystem $smartFileSystem)
-    {
-        $this->smartFileSystem = $smartFileSystem;
-    }
     public function createFromFileContent(string $configFilePath) : ServiceMap
     {
-        $fileContents = $this->smartFileSystem->readFile($configFilePath);
+        $fileContents = FileSystem::read($configFilePath);
         // "@" intentionally
         $xml = @\simplexml_load_string($fileContents);
         if ($xml === \false) {

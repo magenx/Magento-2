@@ -5,7 +5,7 @@
  * Copyright (c) 2004 David Grudl (https://davidgrudl.com)
  */
 declare (strict_types=1);
-namespace RectorPrefix202208\Tracy;
+namespace RectorPrefix202303\Tracy;
 
 use ErrorException;
 /**
@@ -43,7 +43,8 @@ final class ProductionStrategy
     {
         if ($severity & Debugger::$logSeverity) {
             $err = new ErrorException($message, 0, $severity, $file, $line);
-            $err->context = $context;
+            @($err->context = $context);
+            // dynamic properties are deprecated since PHP 8.2
             Helpers::improveException($err);
         } else {
             $err = 'PHP ' . Helpers::errorTypeToString($severity) . ': ' . Helpers::improveError($message, (array) $context) . " in {$file}:{$line}";

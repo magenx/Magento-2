@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use Jose\Component\Encryption\Compression\CompressionMethodManagerFactory;
+use Jose\Component\Encryption\Compression\Deflate;
+
 /*
  * The MIT License (MIT)
  *
@@ -11,21 +14,20 @@ declare(strict_types=1);
  * of the MIT license.  See the LICENSE file for details.
  */
 
-use Jose\Component\Encryption\Compression;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 
 return function (ContainerConfigurator $container): void {
-    $container = $container->services()->defaults()
+    $container = $container->services()
+        ->defaults()
         ->private()
         ->autoconfigure()
-        ->autowire()
-    ;
+        ->autowire();
 
-    $container->set(Compression\CompressionMethodManagerFactory::class)
-        ->public()
-    ;
+    $container->set(CompressionMethodManagerFactory::class)
+        ->public();
 
-    $container->set(Compression\Deflate::class)
-        ->tag('jose.compression_method', ['alias' => 'DEF'])
-    ;
+    $container->set(Deflate::class)
+        ->tag('jose.compression_method', [
+            'alias' => 'DEF',
+        ]);
 };

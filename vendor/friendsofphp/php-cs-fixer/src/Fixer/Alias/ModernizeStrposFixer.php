@@ -78,6 +78,7 @@ if (strpos($haystack, $needle) === false) {}
      * {@inheritdoc}
      *
      * Must run before BinaryOperatorSpacesFixer, NoExtraBlankLinesFixer, NoSpacesInsideParenthesisFixer, NoTrailingWhitespaceFixer, NotOperatorWithSpaceFixer, NotOperatorWithSuccessorSpaceFixer, PhpUnitDedicateAssertFixer, SingleSpaceAfterConstructFixer.
+     * Must run after StrictComparisonFixer.
      */
     public function getPriority(): int
     {
@@ -127,19 +128,22 @@ if (strpos($haystack, $needle) === false) {}
         }
     }
 
-    private function fixCall(Tokens $tokens, int $functionIndex, array $operatorIndexes): void
+    /**
+     * @param array{operator_index: int, operand_index: int} $operatorIndices
+     */
+    private function fixCall(Tokens $tokens, int $functionIndex, array $operatorIndices): void
     {
         foreach (self::REPLACEMENTS as $replacement) {
-            if (!$tokens[$operatorIndexes['operator_index']]->equals($replacement['operator'])) {
+            if (!$tokens[$operatorIndices['operator_index']]->equals($replacement['operator'])) {
                 continue;
             }
 
-            if (!$tokens[$operatorIndexes['operand_index']]->equals($replacement['operand'], false)) {
+            if (!$tokens[$operatorIndices['operand_index']]->equals($replacement['operand'], false)) {
                 continue;
             }
 
-            $tokens->clearTokenAndMergeSurroundingWhitespace($operatorIndexes['operator_index']);
-            $tokens->clearTokenAndMergeSurroundingWhitespace($operatorIndexes['operand_index']);
+            $tokens->clearTokenAndMergeSurroundingWhitespace($operatorIndices['operator_index']);
+            $tokens->clearTokenAndMergeSurroundingWhitespace($operatorIndices['operand_index']);
             $tokens->clearTokenAndMergeSurroundingWhitespace($functionIndex);
 
             if ($replacement['negate']) {
@@ -160,11 +164,20 @@ if (strpos($haystack, $needle) === false) {}
         }
     }
 
+    /**
+     * @param -1|1 $direction
+     *
+     * @return null|array{operator_index: int, operand_index: int}
+     */
     private function getCompareTokens(Tokens $tokens, int $offsetIndex, int $direction): ?array
     {
         $operatorIndex = $tokens->getMeaningfulTokenSibling($offsetIndex, $direction);
 
-        if (null === $operatorIndex) {
+        if (null !== $operatorIndex && $tokens[$operatorIndex]->isGivenKind(T_NS_SEPARATOR)) {
+            $operatorIndex = $tokens->getMeaningfulTokenSibling($operatorIndex, $direction);
+        }
+
+        if (null === $operatorIndex || !$tokens[$operatorIndex]->isGivenKind([T_IS_IDENTICAL, T_IS_NOT_IDENTICAL])) {
             return null;
         }
 
@@ -177,10 +190,6 @@ if (strpos($haystack, $needle) === false) {}
         $operand = $tokens[$operandIndex];
 
         if (!$operand->equals([T_LNUMBER, '0']) && !$operand->equals([T_STRING, 'false'], false)) {
-            return null;
-        }
-
-        if (!$tokens[$operatorIndex]->isGivenKind([T_IS_IDENTICAL, T_IS_NOT_IDENTICAL])) {
             return null;
         }
 

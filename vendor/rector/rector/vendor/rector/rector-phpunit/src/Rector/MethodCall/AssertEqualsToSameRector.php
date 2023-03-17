@@ -81,13 +81,42 @@ final class AssertEqualsToSameRector extends AbstractRector
         if (!$this->isScalarValue($firstArgValue)) {
             return null;
         }
+        if ($this->shouldSkipConstantArrayType($firstArgValue)) {
+            return null;
+        }
         $hasChanged = $this->identifierManipulator->renameNodeWithMap($node, self::RENAME_METHODS_MAP);
         return $hasChanged ? $node : null;
+    }
+    private function shouldSkipConstantArrayType(Expr $expr) : bool
+    {
+        $type = $this->getType($expr);
+        if (!$type instanceof ConstantArrayType) {
+            return \false;
+        }
+        return $this->hasNonScalarType($type);
+    }
+    private function hasNonScalarType(ConstantArrayType $constantArrayType) : bool
+    {
+        $valueTypes = $constantArrayType->getValueTypes();
+        // empty array
+        if ($valueTypes === []) {
+            return \false;
+        }
+        foreach ($valueTypes as $valueType) {
+            if ($valueType instanceof ConstantArrayType && $this->hasNonScalarType($valueType)) {
+                return \true;
+            }
+            // non-scalar type can be an object or mixed, which should be skipped
+            if (!$this->isScalarType($valueType)) {
+                return \true;
+            }
+        }
+        return \false;
     }
     private function isScalarType(Type $valueNodeType) : bool
     {
         foreach (self::SCALAR_TYPES as $scalarType) {
-            if (\is_a($valueNodeType, $scalarType, \true)) {
+            if ($valueNodeType instanceof $scalarType) {
                 return \true;
             }
         }

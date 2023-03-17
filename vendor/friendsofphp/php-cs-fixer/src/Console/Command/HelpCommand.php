@@ -17,6 +17,7 @@ namespace PhpCsFixer\Console\Command;
 use PhpCsFixer\FixerConfiguration\AllowedValueSubset;
 use PhpCsFixer\FixerConfiguration\FixerOptionInterface;
 use PhpCsFixer\Preg;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\HelpCommand as BaseHelpCommand;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 use Symfony\Component\Console\Input\InputInterface;
@@ -28,6 +29,7 @@ use Symfony\Component\Console\Output\OutputInterface;
  *
  * @internal
  */
+#[AsCommand(name: 'help')]
 final class HelpCommand extends BaseHelpCommand
 {
     /**
@@ -48,6 +50,8 @@ final class HelpCommand extends BaseHelpCommand
 
     /**
      * Returns the allowed values of the given option that can be converted to a string.
+     *
+     * @return null|list<AllowedValueSubset|mixed>
      */
     public static function getDisplayableAllowedValues(FixerOptionInterface $option): ?array
     {
@@ -55,7 +59,7 @@ final class HelpCommand extends BaseHelpCommand
 
         if (null !== $allowed) {
             $allowed = array_filter($allowed, static function ($value): bool {
-                return !($value instanceof \Closure);
+                return !$value instanceof \Closure;
             });
 
             usort($allowed, static function ($valueA, $valueB): int {
@@ -99,6 +103,9 @@ final class HelpCommand extends BaseHelpCommand
         return Preg::replace('/\bNULL\b/', 'null', $str);
     }
 
+    /**
+     * @param array<mixed> $value
+     */
     private static function arrayToString(array $value): string
     {
         if (0 === \count($value)) {

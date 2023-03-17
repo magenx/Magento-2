@@ -24,15 +24,13 @@ use Rector\Core\PhpParser\Node\BetterNodeFinder;
 use Rector\Core\Reflection\ReflectionResolver;
 use Rector\NodeTypeResolver\NodeTypeResolver;
 use Rector\NodeTypeResolver\PHPStan\Type\TypeFactory;
-use Rector\TypeDeclaration\Contract\TypeInferer\ReturnTypeInfererInterface;
+use Rector\PhpDocParser\NodeTraverser\SimpleCallableNodeTraverser;
 use Rector\TypeDeclaration\TypeInferer\SilentVoidResolver;
 use Rector\TypeDeclaration\TypeInferer\SplArrayFixedTypeNarrower;
-use RectorPrefix202208\Symplify\Astral\NodeTraverser\SimpleCallableNodeTraverser;
 /**
- * @deprecated
- * @todo Split into many narrow-focused rules
+ * @internal
  */
-final class ReturnedNodesReturnTypeInfererTypeInferer implements ReturnTypeInfererInterface
+final class ReturnedNodesReturnTypeInfererTypeInferer
 {
     /**
      * @readonly
@@ -46,7 +44,7 @@ final class ReturnedNodesReturnTypeInfererTypeInferer implements ReturnTypeInfer
     private $nodeTypeResolver;
     /**
      * @readonly
-     * @var \Symplify\Astral\NodeTraverser\SimpleCallableNodeTraverser
+     * @var \Rector\PhpDocParser\NodeTraverser\SimpleCallableNodeTraverser
      */
     private $simpleCallableNodeTraverser;
     /**
@@ -116,10 +114,6 @@ final class ReturnedNodesReturnTypeInfererTypeInferer implements ReturnTypeInfer
         }
         return $this->typeFactory->createMixedPassedOrUnionType($types);
     }
-    public function getPriority() : int
-    {
-        return 1000;
-    }
     /**
      * @return Return_[]
      */
@@ -129,7 +123,7 @@ final class ReturnedNodesReturnTypeInfererTypeInferer implements ReturnTypeInfer
         $this->simpleCallableNodeTraverser->traverseNodesWithCallable((array) $functionLike->getStmts(), static function (Node $node) use(&$returns) : ?int {
             // skip Return_ nodes in nested functions or switch statements
             if ($node instanceof FunctionLike) {
-                return NodeTraverser::DONT_TRAVERSE_CHILDREN;
+                return NodeTraverser::DONT_TRAVERSE_CURRENT_AND_CHILDREN;
             }
             if (!$node instanceof Return_) {
                 return null;

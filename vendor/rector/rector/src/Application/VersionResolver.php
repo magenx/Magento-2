@@ -6,6 +6,8 @@ namespace Rector\Core\Application;
 use DateTime;
 use Rector\Core\Exception\VersionException;
 /**
+ * @api
+ *
  * Inspired by https://github.com/composer/composer/blob/master/src/Composer/Composer.php
  * See https://github.com/composer/composer/blob/6587715d0f8cae0cd39073b3bc5f018d0e6b84fe/src/Composer/Compiler.php#L208
  *
@@ -17,12 +19,12 @@ final class VersionResolver
      * @api
      * @var string
      */
-    public const PACKAGE_VERSION = '0.13.10';
+    public const PACKAGE_VERSION = '0.15.21';
     /**
      * @api
      * @var string
      */
-    public const RELEASE_DATE = '2022-08-03 14:32:31';
+    public const RELEASE_DATE = '2023-03-06 12:39:26';
     /**
      * @var int
      */
@@ -44,7 +46,7 @@ final class VersionResolver
         if ($commitHashResultCode !== 0) {
             throw new VersionException('Ensure to run compile from composer git repository clone and that git binary is available.');
         }
-        $version = \trim((string) $commitHashExecOutput[0]);
+        $version = \trim($commitHashExecOutput[0]);
         return \trim($version, '"');
     }
     public static function resolverReleaseDateTime() : DateTime
@@ -53,6 +55,6 @@ final class VersionResolver
         if ($resultCode !== self::SUCCESS_CODE) {
             throw new VersionException('You must ensure to run compile from composer git repository clone and that git binary is available.');
         }
-        return new DateTime(\trim((string) $output[0]));
+        return new DateTime(\trim($output[0]));
     }
 }

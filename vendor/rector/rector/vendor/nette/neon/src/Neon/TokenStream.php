@@ -5,17 +5,22 @@
  * Copyright (c) 2004 David Grudl (https://davidgrudl.com)
  */
 declare (strict_types=1);
-namespace RectorPrefix202208\Nette\Neon;
+namespace RectorPrefix202303\Nette\Neon;
 
 /** @internal */
 final class TokenStream
 {
-    /** @var Token[] */
-    private $tokens;
-    /** @var int */
+    /**
+     * @var int
+     */
     private $pos = 0;
+    /**
+     * @var mixed[]
+     */
+    public $tokens;
     public function __construct(array $tokens)
     {
+        /** @var Token[] */
         $this->tokens = $tokens;
     }
     public function getPos() : int
@@ -27,6 +32,9 @@ final class TokenStream
     {
         return $this->tokens;
     }
+    /**
+     * @param int|string ...$types
+     */
     public function isNext(...$types) : bool
     {
         while (\in_array($this->tokens[$this->pos]->type ?? null, [Token::Comment, Token::Whitespace], \true)) {
@@ -34,6 +42,9 @@ final class TokenStream
         }
         return $types ? \in_array($this->tokens[$this->pos]->type ?? null, $types, \true) : isset($this->tokens[$this->pos]);
     }
+    /**
+     * @param int|string ...$types
+     */
     public function consume(...$types) : ?Token
     {
         return $this->isNext(...$types) ? $this->tokens[$this->pos++] : null;

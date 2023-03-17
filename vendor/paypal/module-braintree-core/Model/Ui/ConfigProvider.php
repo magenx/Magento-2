@@ -130,7 +130,7 @@ class ConfigProvider implements ConfigProviderInterface
      * @throws InputException
      * @throws NoSuchEntityException
      */
-    public function getClientToken()
+    public function getClientToken(): Error|Successful|string|null
     {
         if (empty($this->clientToken)) {
             $params = [];

@@ -3,7 +3,7 @@
 declare (strict_types=1);
 namespace Rector\CodingStyle\NodeAnalyzer;
 
-use RectorPrefix202208\Nette\Utils\Strings;
+use RectorPrefix202303\Nette\Utils\Strings;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\GroupUse;
@@ -63,7 +63,7 @@ final class UseImportNameMatcher
         }
         return null;
     }
-    public function resolveName(string $prefix, string $tag, UseUse $useUse) : string
+    private function resolveName(string $prefix, string $tag, UseUse $useUse) : string
     {
         // useuse can be renamed on the fly, so just in case, use the original one
         $originalUseUse = $useUse->getAttribute(AttributeKey::ORIGINAL_NODE);

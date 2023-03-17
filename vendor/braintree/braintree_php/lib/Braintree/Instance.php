@@ -7,7 +7,7 @@ namespace Braintree;
  *
  * @abstract
  */
-abstract class Instance
+abstract class Instance extends \stdClass
 {
     protected $_attributes = [];
 
@@ -90,7 +90,7 @@ abstract class Instance
     {
         return array_map(function ($value) {
             if (!is_array($value)) {
-                return method_exists($value, 'toArray') ? $value->toArray() : $value;
+                return is_object($value) && method_exists($value, 'toArray') ? $value->toArray() : $value;
             } else {
                 return $value;
             }

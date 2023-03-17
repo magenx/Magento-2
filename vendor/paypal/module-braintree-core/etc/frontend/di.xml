@@ -17,7 +17,6 @@
                 <item name="braintree_venmo_config_provider" xsi:type="object">PayPal\Braintree\Model\Venmo\Ui\ConfigProvider</item>
                 <item name="braintree_ach_config_provider" xsi:type="object">PayPal\Braintree\Model\Ach\Ui\ConfigProvider</item>
                 <item name="braintree_lpm_config_provider" xsi:type="object">PayPal\Braintree\Model\Lpm\Ui\ConfigProvider</item>
-                <item name="braintree_recaptcha_config_provider" xsi:type="object">PayPal\Braintree\Model\CheckoutConfigProvider</item>
             </argument>
         </arguments>
     </type>

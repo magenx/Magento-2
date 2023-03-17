@@ -4,13 +4,13 @@ declare (strict_types=1);
 namespace Rector\Core\Php;
 
 use Rector\Core\Configuration\Option;
+use Rector\Core\Configuration\Parameter\ParameterProvider;
 use Rector\Core\Exception\Configuration\InvalidConfigurationException;
 use Rector\Core\Php\PhpVersionResolver\ProjectComposerJsonPhpVersionResolver;
 use Rector\Core\Util\StringUtils;
 use Rector\Core\ValueObject\PhpVersion;
 use Rector\Testing\PHPUnit\StaticPHPUnitEnvironment;
 use ReflectionClass;
-use RectorPrefix202208\Symplify\PackageBuilder\Parameter\ParameterProvider;
 /**
  * @see \Rector\Core\Tests\Php\PhpVersionProviderTest
  */
@@ -23,7 +23,7 @@ final class PhpVersionProvider
     private const VALID_PHP_VERSION_REGEX = '#^\\d{5,6}$#';
     /**
      * @readonly
-     * @var \Symplify\PackageBuilder\Parameter\ParameterProvider
+     * @var \Rector\Core\Configuration\Parameter\ParameterProvider
      */
     private $parameterProvider;
     /**
@@ -87,9 +87,10 @@ final class PhpVersionProvider
         $this->throwInvalidTypeException($phpVersionFeatures);
     }
     /**
+     * @return never
      * @param mixed $phpVersionFeatures
      */
-    private function throwInvalidTypeException($phpVersionFeatures) : void
+    private function throwInvalidTypeException($phpVersionFeatures)
     {
         $errorMessage = \sprintf('Parameter "%s::%s" must be int, "%s" given.%sUse constant from "%s" to provide it, e.g. "%s::%s"', Option::class, 'PHP_VERSION_FEATURES', (string) $phpVersionFeatures, \PHP_EOL, PhpVersion::class, PhpVersion::class, 'PHP_80');
         throw new InvalidConfigurationException($errorMessage);

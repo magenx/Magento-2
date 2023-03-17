@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 /*
  * This file is part of Composer.
@@ -26,9 +26,9 @@ class ArrayDumper
     /**
      * @return array<string, mixed>
      */
-    public function dump(PackageInterface $package)
+    public function dump(PackageInterface $package): array
     {
-        $keys = array(
+        $keys = [
             'binaries' => 'bin',
             'type',
             'extra',
@@ -37,9 +37,9 @@ class ArrayDumper
             'devAutoload' => 'autoload-dev',
             'notificationUrl' => 'notification-url',
             'includePaths' => 'include-path',
-        );
+        ];
 
-        $data = array();
+        $data = [];
         $data['name'] = $package->getPrettyName();
         $data['version'] = $package->getPrettyVersion();
         $data['version_normalized'] = $package->getVersion();
@@ -87,7 +87,7 @@ class ArrayDumper
             $data['suggest'] = $packages;
         }
 
-        if ($package->getReleaseDate()) {
+        if ($package->getReleaseDate() instanceof \DateTimeInterface) {
             $data['time'] = $package->getReleaseDate()->format(DATE_RFC3339);
         }
 
@@ -105,7 +105,7 @@ class ArrayDumper
                 $data['archive']['exclude'] = $package->getArchiveExcludes();
             }
 
-            $keys = array(
+            $keys = [
                 'scripts',
                 'license',
                 'authors',
@@ -115,7 +115,7 @@ class ArrayDumper
                 'repositories',
                 'support',
                 'funding',
-            );
+            ];
 
             $data = $this->dumpValues($package, $keys, $data);
 
@@ -148,7 +148,7 @@ class ArrayDumper
      *
      * @return array<string, mixed>
      */
-    private function dumpValues(PackageInterface $package, array $keys, array $data)
+    private function dumpValues(PackageInterface $package, array $keys, array $data): array
     {
         foreach ($keys as $method => $key) {
             if (is_numeric($method)) {
@@ -156,7 +156,7 @@ class ArrayDumper
             }
 
             $getter = 'get'.ucfirst($method);
-            $value = $package->$getter();
+            $value = $package->{$getter}();
 
             if (null !== $value && !(\is_array($value) && 0 === \count($value))) {
                 $data[$key] = $value;

@@ -12,7 +12,7 @@ use Rector\Core\Rector\AbstractRector;
 use Rector\Transform\ValueObject\StaticCallToNew;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
-use RectorPrefix202208\Webmozart\Assert\Assert;
+use RectorPrefix202303\Webmozart\Assert\Assert;
 /**
  * @changelog https://github.com/symfony/symfony/pull/35308
  *
@@ -71,7 +71,7 @@ CODE_SAMPLE
             }
             return new New_(new FullyQualified($class), $node->args);
         }
-        return $node;
+        return null;
     }
     /**
      * @param mixed[] $configuration

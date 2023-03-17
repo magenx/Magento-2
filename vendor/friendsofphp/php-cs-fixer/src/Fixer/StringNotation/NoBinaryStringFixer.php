@@ -31,7 +31,13 @@ final class NoBinaryStringFixer extends AbstractFixer
      */
     public function isCandidate(Tokens $tokens): bool
     {
-        return $tokens->isAnyTokenKindsFound([T_CONSTANT_ENCAPSED_STRING, T_START_HEREDOC]);
+        return $tokens->isAnyTokenKindsFound(
+            [
+                T_CONSTANT_ENCAPSED_STRING,
+                T_START_HEREDOC,
+                'b"',
+            ]
+        );
     }
 
     /**
@@ -50,18 +56,28 @@ final class NoBinaryStringFixer extends AbstractFixer
 
     /**
      * {@inheritdoc}
+     *
+     * Must run before NoUselessConcatOperatorFixer, PhpUnitDedicateAssertInternalTypeFixer, RegularCallableCallFixer, SetTypeToCastFixer.
+     */
+    public function getPriority(): int
+    {
+        return 40;
+    }
+
+    /**
+     * {@inheritdoc}
      */
     protected function applyFix(\SplFileInfo $file, Tokens $tokens): void
     {
         foreach ($tokens as $index => $token) {
-            if (!$token->isGivenKind([T_CONSTANT_ENCAPSED_STRING, T_START_HEREDOC])) {
-                continue;
-            }
+            if ($token->isGivenKind([T_CONSTANT_ENCAPSED_STRING, T_START_HEREDOC])) {
+                $content = $token->getContent();
 
-            $content = $token->getContent();
-
-            if ('b' === strtolower($content[0])) {
-                $tokens[$index] = new Token([$token->getId(), substr($content, 1)]);
+                if ('b' === strtolower($content[0])) {
+                    $tokens[$index] = new Token([$token->getId(), substr($content, 1)]);
+                }
+            } elseif ($token->equals('b"')) {
+                $tokens[$index] = new Token('"');
             }
         }
     }

@@ -5,6 +5,7 @@ namespace Rector\Restoration\Rector\Property;
 
 use PhpParser\Node;
 use PhpParser\Node\ComplexType;
+use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\BinaryOp\Identical;
 use PhpParser\Node\Expr\BinaryOp\NotIdentical;
 use PhpParser\Node\Expr\BooleanNot;
@@ -14,6 +15,8 @@ use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\Property;
 use PhpParser\Node\Stmt\PropertyProperty;
 use Rector\Core\Rector\AbstractRector;
+use Rector\Privatization\NodeManipulator\VisibilityManipulator;
+use Rector\TypeDeclaration\AlreadyAssignDetector\ConstructorAssignDetector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
@@ -21,6 +24,21 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
  */
 final class MakeTypedPropertyNullableIfCheckedRector extends AbstractRector
 {
+    /**
+     * @readonly
+     * @var \Rector\Privatization\NodeManipulator\VisibilityManipulator
+     */
+    private $visibilityManipulator;
+    /**
+     * @readonly
+     * @var \Rector\TypeDeclaration\AlreadyAssignDetector\ConstructorAssignDetector
+     */
+    private $constructorAssignDetector;
+    public function __construct(VisibilityManipulator $visibilityManipulator, ConstructorAssignDetector $constructorAssignDetector)
+    {
+        $this->visibilityManipulator = $visibilityManipulator;
+        $this->constructorAssignDetector = $constructorAssignDetector;
+    }
     public function getRuleDefinition() : RuleDefinition
     {
         return new RuleDefinition('Make typed property nullable if checked', [new CodeSample(<<<'CODE_SAMPLE'
@@ -68,8 +86,20 @@ CODE_SAMPLE
         }
         /** @var PropertyProperty $onlyProperty */
         $onlyProperty = $node->props[0];
-        $isPropretyNullChecked = $this->isPropertyNullChecked($onlyProperty);
-        if (!$isPropretyNullChecked) {
+        //Skip properties with default values
+        if ($onlyProperty->default instanceof Expr) {
+            return null;
+        }
+        $classLike = $this->betterNodeFinder->findParentType($onlyProperty, Class_::class);
+        if (!$classLike instanceof Class_) {
+            return null;
+        }
+        $isPropertyConstructorAssigned = $this->isPropertyConstructorAssigned($classLike, $onlyProperty);
+        if ($isPropertyConstructorAssigned) {
+            return null;
+        }
+        $isPropertyNullChecked = $this->isPropertyNullChecked($classLike, $onlyProperty);
+        if (!$isPropertyNullChecked) {
             return null;
         }
         if ($node->type instanceof ComplexType) {
@@ -81,6 +111,9 @@ CODE_SAMPLE
         }
         $node->type = new NullableType($currentPropertyType);
         $onlyProperty->default = $this->nodeFactory->createNull();
+        if ($node->isReadonly()) {
+            $this->visibilityManipulator->removeReadonly($node);
+        }
         return $node;
     }
     private function shouldSkipProperty(Property $property) : bool
@@ -93,16 +126,17 @@ CODE_SAMPLE
         }
         return $property->type instanceof NullableType;
     }
-    private function isPropertyNullChecked(PropertyProperty $onlyPropertyProperty) : bool
+    private function isPropertyConstructorAssigned(Class_ $class, PropertyProperty $onlyPropertyProperty) : bool
     {
-        $classLike = $this->betterNodeFinder->findParentType($onlyPropertyProperty, Class_::class);
-        if (!$classLike instanceof Class_) {
-            return \false;
-        }
-        if ($this->isIdenticalOrNotIdenticalToNull($classLike, $onlyPropertyProperty)) {
+        $propertyName = $this->nodeNameResolver->getName($onlyPropertyProperty);
+        return $this->constructorAssignDetector->isPropertyAssigned($class, $propertyName);
+    }
+    private function isPropertyNullChecked(Class_ $class, PropertyProperty $onlyPropertyProperty) : bool
+    {
+        if ($this->isIdenticalOrNotIdenticalToNull($class, $onlyPropertyProperty)) {
             return \true;
         }
-        return $this->isBooleanNot($classLike, $onlyPropertyProperty);
+        return $this->isBooleanNot($class, $onlyPropertyProperty);
     }
     private function isIdenticalOrNotIdenticalToNull(Class_ $class, PropertyProperty $onlyPropertyProperty) : bool
     {

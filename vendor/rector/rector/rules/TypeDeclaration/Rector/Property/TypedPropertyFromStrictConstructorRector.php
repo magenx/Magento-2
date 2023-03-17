@@ -4,12 +4,15 @@ declare (strict_types=1);
 namespace Rector\TypeDeclaration\Rector\Property;
 
 use PhpParser\Node;
+use PhpParser\Node\Expr;
 use PhpParser\Node\Stmt\Class_;
+use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Property;
+use PhpParser\Node\Stmt\PropertyProperty;
 use PHPStan\Type\MixedType;
+use PHPStan\Type\ObjectType;
 use PHPStan\Type\Type;
 use Rector\BetterPhpDocParser\PhpDocManipulator\PhpDocTypeChanger;
-use Rector\Core\Php\PhpVersionProvider;
 use Rector\Core\Rector\AbstractRector;
 use Rector\Core\ValueObject\MethodName;
 use Rector\Core\ValueObject\PhpVersionFeature;
@@ -48,21 +51,15 @@ final class TypedPropertyFromStrictConstructorRector extends AbstractRector impl
     private $constructorAssignDetector;
     /**
      * @readonly
-     * @var \Rector\Core\Php\PhpVersionProvider
-     */
-    private $phpVersionProvider;
-    /**
-     * @readonly
      * @var \Rector\TypeDeclaration\Guard\PropertyTypeOverrideGuard
      */
     private $propertyTypeOverrideGuard;
-    public function __construct(TrustedClassMethodPropertyTypeInferer $trustedClassMethodPropertyTypeInferer, VarTagRemover $varTagRemover, PhpDocTypeChanger $phpDocTypeChanger, ConstructorAssignDetector $constructorAssignDetector, PhpVersionProvider $phpVersionProvider, PropertyTypeOverrideGuard $propertyTypeOverrideGuard)
+    public function __construct(TrustedClassMethodPropertyTypeInferer $trustedClassMethodPropertyTypeInferer, VarTagRemover $varTagRemover, PhpDocTypeChanger $phpDocTypeChanger, ConstructorAssignDetector $constructorAssignDetector, PropertyTypeOverrideGuard $propertyTypeOverrideGuard)
     {
         $this->trustedClassMethodPropertyTypeInferer = $trustedClassMethodPropertyTypeInferer;
         $this->varTagRemover = $varTagRemover;
         $this->phpDocTypeChanger = $phpDocTypeChanger;
         $this->constructorAssignDetector = $constructorAssignDetector;
-        $this->phpVersionProvider = $phpVersionProvider;
         $this->propertyTypeOverrideGuard = $propertyTypeOverrideGuard;
     }
     public function getRuleDefinition() : RuleDefinition
@@ -96,54 +93,81 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [Property::class];
+        return [Class_::class];
     }
     /**
-     * @param Property $node
+     * @param Class_ $node
      */
     public function refactor(Node $node) : ?Node
     {
-        if ($node->type !== null) {
+        $constructClassMethod = $node->getMethod(MethodName::CONSTRUCT);
+        if (!$constructClassMethod instanceof ClassMethod) {
             return null;
         }
-        $propertyType = $this->trustedClassMethodPropertyTypeInferer->inferProperty($node, MethodName::CONSTRUCT);
-        if (!$propertyType instanceof Type) {
-            return null;
+        $hasChanged = \false;
+        foreach ($node->getProperties() as $property) {
+            if (!$this->propertyTypeOverrideGuard->isLegal($property)) {
+                continue;
+            }
+            $propertyType = $this->trustedClassMethodPropertyTypeInferer->inferProperty($property, $constructClassMethod);
+            if ($this->shouldSkipPropertyType($propertyType)) {
+                continue;
+            }
+            $phpDocInfo = $this->phpDocInfoFactory->createFromNodeOrEmpty($property);
+            // public property can be anything
+            if ($property->isPublic()) {
+                $this->phpDocTypeChanger->changeVarType($phpDocInfo, $propertyType);
+                $hasChanged = \true;
+                continue;
+            }
+            $propertyTypeNode = $this->staticTypeMapper->mapPHPStanTypeToPhpParserNode($propertyType, TypeKind::PROPERTY);
+            if (!$propertyTypeNode instanceof Node) {
+                continue;
+            }
+            $propertyProperty = $property->props[0];
+            $propertyName = $this->nodeNameResolver->getName($property);
+            if ($this->constructorAssignDetector->isPropertyAssigned($node, $propertyName)) {
+                $propertyProperty->default = null;
+                $hasChanged = \true;
+            }
+            if ($this->doesConflictWithDefaultValue($propertyProperty, $propertyType)) {
+                continue;
+            }
+            $property->type = $propertyTypeNode;
+            $this->varTagRemover->removeVarTagIfUseless($phpDocInfo, $property);
+            $hasChanged = \true;
         }
-        if ($propertyType instanceof MixedType) {
-            return null;
-        }
-        $classLike = $this->betterNodeFinder->findParentType($node, Class_::class);
-        if (!$classLike instanceof Class_) {
-            return null;
-        }
-        if (!$this->propertyTypeOverrideGuard->isLegal($node)) {
-            return null;
-        }
-        $phpDocInfo = $this->phpDocInfoFactory->createFromNodeOrEmpty($node);
-        if (!$this->phpVersionProvider->isAtLeastPhpVersion(PhpVersionFeature::TYPED_PROPERTIES)) {
-            $this->phpDocTypeChanger->changeVarType($phpDocInfo, $propertyType);
+        if ($hasChanged) {
             return $node;
         }
-        $propertyTypeNode = $this->staticTypeMapper->mapPHPStanTypeToPhpParserNode($propertyType, TypeKind::PROPERTY);
-        if (!$propertyTypeNode instanceof Node) {
-            return null;
-        }
-        // public property can be anything
-        if ($node->isPublic()) {
-            $this->phpDocTypeChanger->changeVarType($phpDocInfo, $propertyType);
-            return $node;
-        }
-        $node->type = $propertyTypeNode;
-        $propertyName = $this->nodeNameResolver->getName($node);
-        if ($this->constructorAssignDetector->isPropertyAssigned($classLike, $propertyName)) {
-            $node->props[0]->default = null;
-        }
-        $this->varTagRemover->removeVarTagIfUseless($phpDocInfo, $node);
-        return $node;
+        return null;
     }
     public function provideMinPhpVersion() : int
     {
         return PhpVersionFeature::TYPED_PROPERTIES;
+    }
+    private function doesConflictWithDefaultValue(PropertyProperty $propertyProperty, Type $propertyType) : bool
+    {
+        if (!$propertyProperty->default instanceof Expr) {
+            return \false;
+        }
+        // the defaults can be in conflict
+        $defaultType = $this->staticTypeMapper->mapPhpParserNodePHPStanType($propertyProperty->default);
+        // type is not matching, skip it
+        return !$defaultType->isSuperTypeOf($propertyType)->yes();
+    }
+    private function isDoctrineCollectionType(Type $type) : bool
+    {
+        if (!$type instanceof ObjectType) {
+            return \false;
+        }
+        return $type->isInstanceOf('Doctrine\\Common\\Collections\\Collection')->yes();
+    }
+    private function shouldSkipPropertyType(Type $propertyType) : bool
+    {
+        if ($propertyType instanceof MixedType) {
+            return \true;
+        }
+        return $this->isDoctrineCollectionType($propertyType);
     }
 }

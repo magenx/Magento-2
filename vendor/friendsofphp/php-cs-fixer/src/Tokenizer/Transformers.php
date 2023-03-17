@@ -29,9 +29,9 @@ final class Transformers
     /**
      * The registered transformers.
      *
-     * @var TransformerInterface[]
+     * @var list<TransformerInterface>
      */
-    private $items = [];
+    private array $items = [];
 
     /**
      * Register built in Transformers.
@@ -96,7 +96,7 @@ final class Transformers
     }
 
     /**
-     * @return \Generator|TransformerInterface[]
+     * @return \Generator<TransformerInterface>
      */
     private function findBuiltInTransformers(): iterable
     {

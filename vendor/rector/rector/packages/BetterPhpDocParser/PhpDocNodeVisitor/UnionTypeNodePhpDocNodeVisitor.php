@@ -13,7 +13,7 @@ use Rector\BetterPhpDocParser\ValueObject\Parser\BetterTokenIterator;
 use Rector\BetterPhpDocParser\ValueObject\PhpDocAttributeKey;
 use Rector\BetterPhpDocParser\ValueObject\StartAndEnd;
 use Rector\BetterPhpDocParser\ValueObject\Type\BracketsAwareUnionTypeNode;
-use RectorPrefix202208\Symplify\Astral\PhpDocParser\PhpDocNodeVisitor\AbstractPhpDocNodeVisitor;
+use Rector\PhpDocParser\PhpDocParser\PhpDocNodeVisitor\AbstractPhpDocNodeVisitor;
 final class UnionTypeNodePhpDocNodeVisitor extends AbstractPhpDocNodeVisitor implements BasePhpDocNodeVisitorInterface
 {
     /**
@@ -65,10 +65,10 @@ final class UnionTypeNodePhpDocNodeVisitor extends AbstractPhpDocNodeVisitor imp
             return $starAndEnd;
         }
         // unwrap with parent array type...
-        $parent = $unionTypeNode->getAttribute(PhpDocAttributeKey::PARENT);
-        if (!$parent instanceof Node) {
+        $parentNode = $unionTypeNode->getAttribute(PhpDocAttributeKey::PARENT);
+        if (!$parentNode instanceof Node) {
             return null;
         }
-        return $parent->getAttribute(PhpDocAttributeKey::START_AND_END);
+        return $parentNode->getAttribute(PhpDocAttributeKey::START_AND_END);
     }
 }

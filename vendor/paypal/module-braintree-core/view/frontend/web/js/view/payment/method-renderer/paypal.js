@@ -58,6 +58,19 @@ define([
             additionalData: {},
 
             /**
+             * {Array}
+             */
+            lineItemsArray: [
+                'name',
+                'kind',
+                'quantity',
+                'unitAmount',
+                'unitTaxAmount',
+                'productCode',
+                'description'
+            ],
+
+            /**
              * PayPal client configuration
              * {Object}
              */
@@ -261,9 +274,8 @@ define([
                         selectBillingAddress(quote.billingAddress());
                     }
                 }
-
-                this.placeOrder();
             }
+            this.placeOrder();
         },
 
         /**
@@ -278,6 +290,8 @@ define([
                 this.clientConfig.paypal.shippingAddressEditable = false;
                 this.clientConfig.paypal.shippingAddressOverride = this.getShippingAddress();
             }
+            // Send Line Items
+            this.clientConfig.paypal.lineItems = this.getLineItems();
 
             Braintree.setConfig(this.clientConfig);
 
@@ -341,9 +355,7 @@ define([
             var style = {
                 color: Braintree.getColor(funding),
                 shape: Braintree.getShape(funding),
-                layout: Braintree.getLayout(funding),
                 size: Braintree.getSize(funding),
-                tagline: Braintree.getTagline(funding),
                 label: Braintree.getLabel(funding)
             };
 
@@ -716,6 +728,192 @@ define([
          */
         getMessagingTextColor: function () {
             return window.checkoutConfig.payment['braintree_paypal_paylater']['message']['text_color'];
+        },
+
+        /**
+         * Get line items
+         * @returns {Array}
+         */
+        getLineItems: function () {
+            let self = this;
+            let lineItems = [], storeCredit = 0, giftCardAccount = 0;
+            let giftWrappingItems = 0, giftWrappingOrder = 0;
+            $.each(quote.totals()['total_segments'], function(segmentsKey, segmentsItem) {
+                if (segmentsItem['code'] === 'customerbalance') {
+                    storeCredit = parseFloat(Math.abs(segmentsItem['value']).toString()).toFixed(2);
+                }
+                if (segmentsItem['code'] === 'giftcardaccount') {
+                    giftCardAccount = parseFloat(Math.abs(segmentsItem['value']).toString()).toFixed(2);
+                }
+                if (segmentsItem['code'] === 'giftwrapping') {
+                    let extensionAttributes = segmentsItem['extension_attributes'];
+                    giftWrappingOrder = extensionAttributes['gw_base_price'];
+                    giftWrappingItems = extensionAttributes['gw_items_base_price'];
+                }
+            });
+            if (this.canSendLineItems()) {
+                $.each(quote.getItems(), function(quoteItemKey, quoteItem) {
+                    if (quoteItem.parent_item_id !== null || 0.0 === quoteItem.price) {
+                        return true;
+                    }
+
+                    let itemName = self.replaceUnsupportedCharacters(quoteItem.name);
+                    let itemSku = self.replaceUnsupportedCharacters(quoteItem.sku);
+
+                    let description = '';
+                    let itemQty = parseFloat(quoteItem.qty);
+                    let itemUnitAmount = parseFloat(quoteItem.price);
+                    if (itemQty > Math.floor(itemQty) && itemQty < Math.ceil(itemQty)) {
+                        description = 'Item quantity is ' + itemQty.toFixed(2) + ' and per unit amount is ' + itemUnitAmount.toFixed(2);
+                        itemUnitAmount = parseFloat(itemQty * itemUnitAmount);
+                        itemQty = parseFloat('1');
+                    }
+
+                    let lineItemValues = [
+                        itemName,
+                        'debit',
+                        itemQty.toFixed(2),
+                        itemUnitAmount.toFixed(2),
+                        parseFloat(quoteItem.base_tax_amount).toFixed(2),
+                        itemSku,
+                        description
+                    ];
+
+                    let mappedLineItems = $.map(self.lineItemsArray, function(itemElement, itemIndex) {
+                        return [[
+                            self.lineItemsArray[itemIndex],
+                            lineItemValues[itemIndex]
+                        ]]
+                    });
+
+                    lineItems[quoteItemKey] = Object.fromEntries(mappedLineItems);
+                });
+
+                /**
+                 * Adds credit (refund or discount) kind as LineItems for the
+                 * PayPal transaction if discount amount is greater than 0(Zero)
+                 * as discountAmount lineItem field is not being used by PayPal.
+                 *
+                 * https://developer.paypal.com/braintree/docs/reference/response/transaction-line-item/php#discount_amount
+                 */
+                let baseDiscountAmount = parseFloat(Math.abs(quote.totals()['base_discount_amount']).toString()).toFixed(2);
+                if (baseDiscountAmount > 0) {
+                    let discountLineItem = {
+                        'name': 'Discount',
+                        'kind': 'credit',
+                        'quantity': 1.00,
+                        'unitAmount': baseDiscountAmount
+                    };
+
+                    lineItems = $.merge(lineItems, [discountLineItem]);
+                }
+
+                /**
+                 * Adds shipping as LineItems for the PayPal transaction
+                 * if shipping amount is greater than 0(Zero) to manage
+                 * the totals with client-side implementation as there is
+                 * no any field exist in the client-side implementation
+                 * to send the shipping amount to the Braintree.
+                 */
+                if (quote.totals()['base_shipping_amount'] > 0) {
+                    let shippingLineItem = {
+                        'name': 'Shipping',
+                        'kind': 'debit',
+                        'quantity': 1.00,
+                        'unitAmount': quote.totals()['base_shipping_amount']
+                    };
+
+                    lineItems = $.merge(lineItems, [shippingLineItem]);
+                }
+
+                /**
+                 * Adds credit (Store Credit) kind as LineItems for the
+                 * PayPal transaction if store credit is greater than 0(Zero)
+                 * to manage the totals with client-side implementation
+                 */
+                if (storeCredit > 0) {
+                    let storeCreditItem = {
+                        'name': 'Store Credit',
+                        'kind': 'credit',
+                        'quantity': 1.00,
+                        'unitAmount': storeCredit
+                    };
+
+                    lineItems = $.merge(lineItems, [storeCreditItem]);
+                }
+
+                /**
+                 * Adds Gift Wrapping for items as LineItems for the PayPal
+                 * transaction if it is greater than 0(Zero) to manage
+                 * the totals with client-side implementation
+                 */
+                if (giftWrappingItems > 0) {
+                    let gwItems = {
+                        'name': 'Gift Wrapping for Items',
+                        'kind': 'debit',
+                        'quantity': 1.00,
+                        'unitAmount': giftWrappingItems
+                    };
+
+                    lineItems = $.merge(lineItems, [gwItems]);
+                }
+
+                /**
+                 * Adds Gift Wrapping for order as LineItems for the PayPal
+                 * transaction if it is greater than 0(Zero) to manage
+                 * the totals with client-side implementation
+                 */
+                if (giftWrappingOrder > 0) {
+                    let gwOrderItem = {
+                        'name': 'Gift Wrapping for Order',
+                        'kind': 'debit',
+                        'quantity': 1.00,
+                        'unitAmount': giftWrappingOrder
+                    };
+
+                    lineItems = $.merge(lineItems, [gwOrderItem]);
+                }
+
+                /**
+                 * Adds Gift Cards as credit LineItems for the PayPal
+                 * transaction if it is greater than 0(Zero) to manage
+                 * the totals with client-side implementation
+                 */
+                if (giftCardAccount > 0) {
+                    let giftCardItem = {
+                        'name': 'Gift Cards',
+                        'kind': 'credit',
+                        'quantity': 1.00,
+                        'unitAmount': giftCardAccount
+                    };
+
+                    lineItems = $.merge(lineItems, [giftCardItem]);
+                }
+
+                if (lineItems.length >= 250) {
+                    lineItems = [];
+                }
+            }
+            return lineItems;
+        },
+
+        /**
+         * Regex to replace all unsupported characters.
+         *
+         * @param str
+         */
+        replaceUnsupportedCharacters: function (str) {
+            str.replace('/[^a-zA-Z0-9\s\-.\']/', '');
+            return str.substr(0, 127);
+        },
+
+        /**
+         * Can send line items
+         *
+         * @returns {Boolean}
+         */
+        canSendLineItems: function () {
+            return window.checkoutConfig.payment[this.getCode()].canSendLineItems;
         }
     });
 });

@@ -3,7 +3,7 @@
 declare (strict_types=1);
 namespace Rector\CodingStyle\Rector\FuncCall;
 
-use RectorPrefix202208\Nette\Utils\Strings;
+use RectorPrefix202303\Nette\Utils\Strings;
 use PhpParser\Node;
 use PhpParser\Node\Arg;
 use PhpParser\Node\Expr\FuncCall;
@@ -159,7 +159,10 @@ CODE_SAMPLE
         if ($matchInnerRegex === $matchInnerUnionRegex) {
             return \false;
         }
-        return StringUtils::isMatch($matchInnerUnionRegex['content'], self::NEW_LINE_REGEX);
+        if (StringUtils::isMatch($matchInnerUnionRegex['content'], self::NEW_LINE_REGEX)) {
+            return \true;
+        }
+        return isset($string[0]) && $matchInnerUnionRegex['content'] === $string[0];
     }
     private function hasEscapedQuote(String_ $string) : bool
     {
@@ -171,9 +174,8 @@ CODE_SAMPLE
     }
     /**
      * @param \PhpParser\Node\Expr\FuncCall|\PhpParser\Node\Expr\StaticCall $node
-     * @return \PhpParser\Node|null
      */
-    private function refactorArgument($node, Arg $arg)
+    private function refactorArgument($node, Arg $arg) : ?\PhpParser\Node
     {
         if (!$arg->value instanceof String_) {
             return null;

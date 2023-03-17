@@ -13,14 +13,14 @@ https://phpmd.org
    :target: https://packagist.org/packages/phpmd/phpmd
    :alt: License
 
-.. image:: https://travis-ci.org/phpmd/phpmd.svg?branch=master
-   :target: https://travis-ci.org/phpmd/phpmd
-   :alt: Travis Build Status
-
 .. image:: https://ci.appveyor.com/api/projects/status/pc08owbun2y00kwk?svg=true
    :target: https://ci.appveyor.com/project/phpmd/phpmd
    :alt: AppVeyor Build Status
-
+   
+.. image:: https://codecov.io/gh/phpmd/phpmd/branch/master/graph/badge.svg?token=XrBrvTLJeE 
+   :target: https://codecov.io/gh/phpmd/phpmd
+   :alt: Codecov Status
+ 
 .. image:: https://scrutinizer-ci.com/g/phpmd/phpmd/badges/build.png?b=master
    :target: https://scrutinizer-ci.com/g/phpmd/phpmd/build-status/master
    :alt: Scrutinizer Build Status
@@ -53,7 +53,9 @@ Type ``phpmd [filename|directory] [report format] [ruleset file]``, i.e: ::
 
   mapi@arwen ~ $ phpmd php/PDepend/DbusUI/ xml rulesets.xml
 
-While the ``rulesets.xml`` ruleset file could look like this::
+While the ``rulesets.xml`` ruleset file could look like this:
+
+.. code:: xml
 
   <?xml version="1.0"?>
   <ruleset name="My first PHPMD rule set"
@@ -75,7 +77,9 @@ While the ``rulesets.xml`` ruleset file could look like this::
     <rule ref="rulesets/unusedcode.xml" />
   </ruleset>
 
-The xml report would like like this::
+The xml report would like like this:
+
+.. code:: xml
 
   <?xml version="1.0" encoding="UTF-8" ?>
   <pmd version="0.0.1" timestamp="2009-12-19T22:17:18+01:00">
@@ -209,6 +213,7 @@ At the moment PHPMD comes with the following renderers:
 - *json*, formats JSON report.
 - *ansi*, a command line friendly format.
 - *github*, a format that GitHub Actions understands.
+- *gitlab*, a format that GitLab CI understands.
 - *sarif*, the Static Analysis Results Interchange Format.
 - *checkstyle*, language and tool agnostic XML format
 

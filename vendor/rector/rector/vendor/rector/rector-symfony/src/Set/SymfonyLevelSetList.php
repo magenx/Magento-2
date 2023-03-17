@@ -4,12 +4,23 @@ declare (strict_types=1);
 namespace Rector\Symfony\Set;
 
 use Rector\Set\Contract\SetListInterface;
+/**
+ * @api
+ */
 final class SymfonyLevelSetList implements SetListInterface
 {
     /**
      * @var string
      */
+    public const UP_TO_SYMFONY_25 = __DIR__ . '/../../config/sets/symfony/level/up-to-symfony-25.php';
+    /**
+     * @var string
+     */
     public const UP_TO_SYMFONY_26 = __DIR__ . '/../../config/sets/symfony/level/up-to-symfony-26.php';
+    /**
+     * @var string
+     */
+    public const UP_TO_SYMFONY_27 = __DIR__ . '/../../config/sets/symfony/level/up-to-symfony-27.php';
     /**
      * @var string
      */
@@ -78,4 +89,12 @@ final class SymfonyLevelSetList implements SetListInterface
      * @var string
      */
     public const UP_TO_SYMFONY_60 = __DIR__ . '/../../config/sets/symfony/level/up-to-symfony-60.php';
+    /**
+     * @var string
+     */
+    public const UP_TO_SYMFONY_61 = __DIR__ . '/../../config/sets/symfony/level/up-to-symfony-61.php';
+    /**
+     * @var string
+     */
+    public const UP_TO_SYMFONY_62 = __DIR__ . '/../../config/sets/symfony/level/up-to-symfony-62.php';
 }

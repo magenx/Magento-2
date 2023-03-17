@@ -264,15 +264,24 @@ class ASTParameter extends AbstractASTArtifact
      */
     public function allowsNull()
     {
-        return (
-            (
-                $this->isArray() === false
-                && $this->getClass() === null
-            ) || (
-                $this->isDefaultValueAvailable() === true
-                && $this->getDefaultValue() === null
-            )
-        );
+        $node = $this->formalParameter->getChild(0);
+
+        if ($this->isTypeAllowingNull($node)) {
+            return true;
+        }
+
+        if (!($node instanceof ASTTypeArray)
+            && !($node instanceof ASTScalarType)
+            && $this->getClass() === null
+        ) {
+            return true;
+        }
+
+        if ($this->isDefaultValueAvailable() && $this->getDefaultValue() === null) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -329,6 +338,8 @@ class ASTParameter extends AbstractASTArtifact
      * {@link ASTParameter::isDefaultValueAvailable()} to
      * detect a NULL-value.
      *
+     * @return mixed
+     *
      * @since  0.9.5
      */
     public function getDefaultValue()
@@ -336,16 +347,6 @@ class ASTParameter extends AbstractASTArtifact
         $value = $this->variableDeclarator->getValue();
 
         return $value === null ? null : $value->getValue();
-    }
-
-    /**
-     * ASTVisitor method for node tree traversal.
-     *
-     * @return void
-     */
-    public function accept(ASTVisitor $visitor)
-    {
-        $visitor->visitParameter($this);
     }
 
     /**
@@ -405,5 +406,23 @@ class ASTParameter extends AbstractASTArtifact
             $this->getName(),
             $default
         );
+    }
+
+    /**
+     * @param ASTNode $node
+     *
+     * @return bool
+     */
+    private function isTypeAllowingNull($node)
+    {
+        if ($node instanceof ASTUnionType) {
+            foreach ($node->getChildren() as $child) {
+                if ($this->isTypeAllowingNull($child)) {
+                    return true;
+                }
+            }
+        }
+
+        return $node instanceof ASTScalarType && $node->isNull();
     }
 }

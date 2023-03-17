@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 /*
  * This file is part of Composer.
@@ -14,6 +14,7 @@ namespace Composer\Installer;
 
 use Composer\Composer;
 use Composer\IO\IOInterface;
+use Composer\PartialComposer;
 use Composer\Pcre\Preg;
 use Composer\Repository\InstalledRepositoryInterface;
 use Composer\Package\PackageInterface;
@@ -31,11 +32,11 @@ use Composer\Downloader\DownloadManager;
  */
 class LibraryInstaller implements InstallerInterface, BinaryPresenceInterface
 {
-    /** @var Composer */
+    /** @var PartialComposer */
     protected $composer;
     /** @var string */
     protected $vendorDir;
-    /** @var DownloadManager */
+    /** @var DownloadManager|null */
     protected $downloadManager;
     /** @var IOInterface */
     protected $io;
@@ -49,16 +50,13 @@ class LibraryInstaller implements InstallerInterface, BinaryPresenceInterface
     /**
      * Initializes library installer.
      *
-     * @param IOInterface     $io
-     * @param Composer        $composer
-     * @param string|null     $type
      * @param Filesystem      $filesystem
      * @param BinaryInstaller $binaryInstaller
      */
-    public function __construct(IOInterface $io, Composer $composer, $type = 'library', Filesystem $filesystem = null, BinaryInstaller $binaryInstaller = null)
+    public function __construct(IOInterface $io, PartialComposer $composer, ?string $type = 'library', ?Filesystem $filesystem = null, ?BinaryInstaller $binaryInstaller = null)
     {
         $this->composer = $composer;
-        $this->downloadManager = $composer->getDownloadManager();
+        $this->downloadManager = $composer instanceof Composer ? $composer->getDownloadManager() : null;
         $this->io = $io;
         $this->type = $type;
 
@@ -70,7 +68,7 @@ class LibraryInstaller implements InstallerInterface, BinaryPresenceInterface
     /**
      * @inheritDoc
      */
-    public function supports($packageType)
+    public function supports(string $packageType)
     {
         return $packageType === $this->type || null === $this->type;
     }
@@ -108,34 +106,34 @@ class LibraryInstaller implements InstallerInterface, BinaryPresenceInterface
     /**
      * @inheritDoc
      */
-    public function download(PackageInterface $package, PackageInterface $prevPackage = null)
+    public function download(PackageInterface $package, ?PackageInterface $prevPackage = null)
     {
         $this->initializeVendorDir();
         $downloadPath = $this->getInstallPath($package);
 
-        return $this->downloadManager->download($package, $downloadPath, $prevPackage);
+        return $this->getDownloadManager()->download($package, $downloadPath, $prevPackage);
     }
 
     /**
      * @inheritDoc
      */
-    public function prepare($type, PackageInterface $package, PackageInterface $prevPackage = null)
+    public function prepare($type, PackageInterface $package, ?PackageInterface $prevPackage = null)
     {
         $this->initializeVendorDir();
         $downloadPath = $this->getInstallPath($package);
 
-        return $this->downloadManager->prepare($type, $package, $downloadPath, $prevPackage);
+        return $this->getDownloadManager()->prepare($type, $package, $downloadPath, $prevPackage);
     }
 
     /**
      * @inheritDoc
      */
-    public function cleanup($type, PackageInterface $package, PackageInterface $prevPackage = null)
+    public function cleanup($type, PackageInterface $package, ?PackageInterface $prevPackage = null)
     {
         $this->initializeVendorDir();
         $downloadPath = $this->getInstallPath($package);
 
-        return $this->downloadManager->cleanup($type, $package, $downloadPath, $prevPackage);
+        return $this->getDownloadManager()->cleanup($type, $package, $downloadPath, $prevPackage);
     }
 
     /**
@@ -153,13 +151,13 @@ class LibraryInstaller implements InstallerInterface, BinaryPresenceInterface
 
         $promise = $this->installCode($package);
         if (!$promise instanceof PromiseInterface) {
-            $promise = \React\Promise\resolve();
+            $promise = \React\Promise\resolve(null);
         }
 
         $binaryInstaller = $this->binaryInstaller;
         $installPath = $this->getInstallPath($package);
 
-        return $promise->then(function () use ($binaryInstaller, $installPath, $package, $repo) {
+        return $promise->then(static function () use ($binaryInstaller, $installPath, $package, $repo): void {
             $binaryInstaller->installBinaries($package, $installPath);
             if (!$repo->hasPackage($package)) {
                 $repo->addPackage(clone $package);
@@ -181,13 +179,13 @@ class LibraryInstaller implements InstallerInterface, BinaryPresenceInterface
         $this->binaryInstaller->removeBinaries($initial);
         $promise = $this->updateCode($initial, $target);
         if (!$promise instanceof PromiseInterface) {
-            $promise = \React\Promise\resolve();
+            $promise = \React\Promise\resolve(null);
         }
 
         $binaryInstaller = $this->binaryInstaller;
         $installPath = $this->getInstallPath($target);
 
-        return $promise->then(function () use ($binaryInstaller, $installPath, $target, $initial, $repo) {
+        return $promise->then(static function () use ($binaryInstaller, $installPath, $target, $initial, $repo): void {
             $binaryInstaller->installBinaries($target, $installPath);
             $repo->removePackage($initial);
             if (!$repo->hasPackage($target)) {
@@ -207,14 +205,14 @@ class LibraryInstaller implements InstallerInterface, BinaryPresenceInterface
 
         $promise = $this->removeCode($package);
         if (!$promise instanceof PromiseInterface) {
-            $promise = \React\Promise\resolve();
+            $promise = \React\Promise\resolve(null);
         }
 
         $binaryInstaller = $this->binaryInstaller;
         $downloadPath = $this->getPackageBasePath($package);
         $filesystem = $this->filesystem;
 
-        return $promise->then(function () use ($binaryInstaller, $filesystem, $downloadPath, $package, $repo) {
+        return $promise->then(static function () use ($binaryInstaller, $filesystem, $downloadPath, $package, $repo): void {
             $binaryInstaller->removeBinaries($package);
             $repo->removePackage($package);
 
@@ -256,7 +254,6 @@ class LibraryInstaller implements InstallerInterface, BinaryPresenceInterface
      * It is used for BC as getInstallPath tends to be overridden by
      * installer plugins but not getPackageBasePath
      *
-     * @param  PackageInterface $package
      * @return string
      */
     protected function getPackageBasePath(PackageInterface $package)
@@ -278,7 +275,7 @@ class LibraryInstaller implements InstallerInterface, BinaryPresenceInterface
     {
         $downloadPath = $this->getInstallPath($package);
 
-        return $this->downloadManager->install($package, $downloadPath);
+        return $this->getDownloadManager()->install($package, $downloadPath);
     }
 
     /**
@@ -296,25 +293,23 @@ class LibraryInstaller implements InstallerInterface, BinaryPresenceInterface
             ) {
                 $promise = $this->removeCode($initial);
                 if (!$promise instanceof PromiseInterface) {
-                    $promise = \React\Promise\resolve();
+                    $promise = \React\Promise\resolve(null);
                 }
 
-                $self = $this;
+                return $promise->then(function () use ($target): PromiseInterface {
+                    $promise = $this->installCode($target);
+                    if ($promise instanceof PromiseInterface) {
+                        return $promise;
+                    }
 
-                return $promise->then(function () use ($self, $target) {
-                    $reflMethod = new \ReflectionMethod($self, 'installCode');
-                    $reflMethod->setAccessible(true);
-
-                    // equivalent of $this->installCode($target) with php 5.3 support
-                    // TODO remove this once 5.3 support is dropped
-                    return $reflMethod->invoke($self, $target);
+                    return \React\Promise\resolve(null);
                 });
             }
 
             $this->filesystem->rename($initialDownloadPath, $targetDownloadPath);
         }
 
-        return $this->downloadManager->update($initial, $target, $targetDownloadPath);
+        return $this->getDownloadManager()->update($initial, $target, $targetDownloadPath);
     }
 
     /**
@@ -324,7 +319,7 @@ class LibraryInstaller implements InstallerInterface, BinaryPresenceInterface
     {
         $downloadPath = $this->getPackageBasePath($package);
 
-        return $this->downloadManager->remove($package, $downloadPath);
+        return $this->getDownloadManager()->remove($package, $downloadPath);
     }
 
     /**
@@ -334,5 +329,12 @@ class LibraryInstaller implements InstallerInterface, BinaryPresenceInterface
     {
         $this->filesystem->ensureDirectoryExists($this->vendorDir);
         $this->vendorDir = realpath($this->vendorDir);
+    }
+
+    protected function getDownloadManager(): DownloadManager
+    {
+        assert($this->downloadManager instanceof DownloadManager, new \LogicException(self::class.' should be initialized with a fully loaded Composer instance to be able to install/... packages'));
+
+        return $this->downloadManager;
     }
 }

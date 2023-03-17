@@ -1,0 +1,59 @@
+name: Build
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - '*'
+  push:
+    branches:
+      - 'main'
+
+jobs:
+  tests:
+    name: PHP ${{ matrix.php-version }} on ${{ matrix.os }} (${{ matrix.composer-options }})
+    runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.php-version == '8.2' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        php-version:
+          - "8.0"
+          - "8.1"
+          - "8.2"
+        os:
+          - ubuntu-latest
+          - windows-latest
+          - macOS-latest
+        composer-options:
+          - ""
+          - "--prefer-lowest"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3.3.0
+
+      - name: Validate composer.json and composer.lock
+        run: composer validate
+        
+      - name: Set up PHP ${{ matrix.php-version }}
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          extensions: pcntl, posix
+          coverage: xdebug
+          ini-values: error_reporting=E_ALL
+
+      - name: Install dependencies
+        run: composer update
+          --prefer-dist
+          --no-progress
+          ${{ matrix.composer-options }}
+
+      - name: Run tests
+        if: ${{ matrix.php-version != '8.2' }}
+        run: composer test
+
+      - name: Run tests (experimental)
+        if: ${{ matrix.php-version == '8.2' }}
+        continue-on-error: true
+        run: composer test

@@ -22,11 +22,14 @@
                 <value id="ca_braintree_gateway" type="host">client-analytics.braintreegateway.com</value>
                 <value id="ca_sandbox_braintree_gateway" type="host">client-analytics.sandbox.braintreegateway.com</value>
                 <value id="paypal_script" type="host">*.paypal.com</value>
+                <value id="songbird_sandbox_script" type="host">songbirdstag.cardinalcommerce.com</value>
+                <value id="songbird_script" type="host">songbird.cardinalcommerce.com</value>
             </values>
         </policy>
         <policy id="style-src">
             <values>
                 <value id="unsafe_inline" type="host">unsafe-inline</value>
+                <value id="assets_braintree_style" type="host">assets.braintreegateway.com</value>
             </values>
         </policy>
         <policy id="img-src">
@@ -59,6 +62,7 @@
                 <value id="pay_google" type="host">pay.google.com</value>
                 <value id="cardinal_commerce" type="host">*.cardinalcommerce.com</value>
                 <value id="paypal_frame" type="host">*.paypal.com</value>
+                <value id="all_potential_frame" type="host">*</value>
             </values>
         </policy>
         <policy id="connect-src">
@@ -71,12 +75,23 @@
                 <value id="ca_sandbox_braintree_gateway" type="host">client-analytics.sandbox.braintreegateway.com</value>
                 <value id="braintree_api" type="host">*.braintree-api.com</value>
                 <value id="paypal_connect" type="host">*.paypal.com</value>
+                <value id="cardinal_commerce_connect" type="host">*.cardinalcommerce.com</value>
             </values>
         </policy>
         <policy id="form-action">
             <values>
                 <value id="cardinal_commerce_form" type="host">*.cardinalcommerce.com</value>
                 <value id="paypal_form" type="host">*.paypal.com</value>
+                <value id="card_complete_form" type="host">3ds-secure.cardcomplete.com</value>
+                <value id="click_safe_form" type="host">www.clicksafe.lloydstsb.com</value>
+                <value id="activa_card_form" type="host">pay.activa-card.com</value>
+                <value id="wirecard_form" type="host">*.wirecard.com acs.sia.eu</value>
+                <value id="touch_tech_payments_form" type="host">*.touchtechpayments.com</value>
+                <value id="secure_suite_form" type="host">www.securesuite.co.uk</value>
+                <value id="rsa3ds_auth_form" type="host">rsa3dsauth.com</value>
+                <value id="monzo_form" type="host">*.monzo.com</value>
+                <value id="arcot_form" type="host">*.arcot.com</value>
+                <value id="wlp_acs_form" type="host">*.wlp-acs.com</value>
             </values>
         </policy>
     </policies>

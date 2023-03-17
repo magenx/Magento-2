@@ -12,14 +12,21 @@ use Psr\Container\ContainerInterface;
 %use_array_key_exists%
 use function is_array;
 
+/**
+ * @template-implements FactoryInterface<%class%>
+ */
 final class %factory_class% implements FactoryInterface
 {
-    public function create(ContainerInterface $container, array $options = [])
-    {%options_to_args_code%
+    public function create(ContainerInterface $container, array $options = []): %class%
+    {%options_to_args_code%%psalm_suppress%
         return new %class%(%args%);
     }
 
-    public function __invoke(ContainerInterface $container, $name = null, array $options = null)
+    /**
+     * @param array<mixed>|string|null $name
+     * @param array<mixed>|null $options
+     */
+    public function __invoke(ContainerInterface $container, $name = null, array $options = null): %class%
     {
         if (is_array($name) && $options === null) {
             $options = $name;

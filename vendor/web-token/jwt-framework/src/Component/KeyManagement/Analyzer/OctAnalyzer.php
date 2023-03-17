@@ -2,28 +2,26 @@
 
 declare(strict_types=1);
 
-/*
- * The MIT License (MIT)
- *
- * Copyright (c) 2014-2020 Spomky-Labs
- *
- * This software may be modified and distributed under the terms
- * of the MIT license.  See the LICENSE file for details.
- */
-
 namespace Jose\Component\KeyManagement\Analyzer;
 
-use Base64Url\Base64Url;
+use function is_string;
 use Jose\Component\Core\JWK;
+use ParagonIE\ConstantTime\Base64UrlSafe;
 
 final class OctAnalyzer implements KeyAnalyzer
 {
     public function analyze(JWK $jwk, MessageBag $bag): void
     {
-        if ('oct' !== $jwk->get('kty')) {
+        if ($jwk->get('kty') !== 'oct') {
             return;
         }
-        $k = Base64Url::decode($jwk->get('k'));
+        $k = $jwk->get('k');
+        if (! is_string($k)) {
+            $bag->add(Message::high('The key is not valid'));
+
+            return;
+        }
+        $k = Base64UrlSafe::decode($k);
         $kLength = 8 * mb_strlen($k, '8bit');
         if ($kLength < 128) {
             $bag->add(Message::high('The key length is less than 128 bits.'));

@@ -2,15 +2,6 @@
 
 declare(strict_types=1);
 
-/*
- * The MIT License (MIT)
- *
- * Copyright (c) 2014-2020 Spomky-Labs
- *
- * This software may be modified and distributed under the terms
- * of the MIT license.  See the LICENSE file for details.
- */
-
 namespace Jose\Bundle\JoseFramework\DataCollector;
 
 use Jose\Bundle\JoseFramework\Event\ClaimCheckedFailureEvent;
@@ -24,57 +15,51 @@ use Jose\Bundle\JoseFramework\Services\HeaderCheckerManagerFactory;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\VarDumper\Cloner\Data;
 use Symfony\Component\VarDumper\Cloner\VarCloner;
 use Throwable;
 
 class CheckerCollector implements Collector, EventSubscriberInterface
 {
     /**
-     * @var null|ClaimCheckerManagerFactory
+     * @var array<Data>
      */
-    private $claimCheckerManagerFactory;
+    private array $headerCheckedSuccesses = [];
 
     /**
-     * @var null|HeaderCheckerManagerFactory
+     * @var array<Data>
      */
-    private $headerCheckerManagerFactory;
+    private array $headerCheckedFailures = [];
 
     /**
-     * @var array
+     * @var array<Data>
      */
-    private $headerCheckedSuccesses = [];
+    private array $claimCheckedSuccesses = [];
 
     /**
-     * @var array
+     * @var array<Data>
      */
-    private $headerCheckedFailures = [];
+    private array $claimCheckedFailures = [];
 
     /**
-     * @var array
+     * @var array<HeaderCheckerManager>
      */
-    private $claimCheckedSuccesses = [];
+    private array $headerCheckerManagers = [];
 
     /**
-     * @var array
+     * @var array<ClaimCheckerManager>
      */
-    private $claimCheckedFailures = [];
+    private array $claimCheckerManagers = [];
 
-    /**
-     * @var HeaderCheckerManager[]
-     */
-    private $headerCheckerManagers = [];
-
-    /**
-     * @var ClaimCheckerManager[]
-     */
-    private $claimCheckerManagers = [];
-
-    public function __construct(?ClaimCheckerManagerFactory $claimCheckerManagerFactory = null, ?HeaderCheckerManagerFactory $headerCheckerManagerFactory = null)
-    {
-        $this->claimCheckerManagerFactory = $claimCheckerManagerFactory;
-        $this->headerCheckerManagerFactory = $headerCheckerManagerFactory;
+    public function __construct(
+        private readonly ?ClaimCheckerManagerFactory $claimCheckerManagerFactory = null,
+        private readonly ?HeaderCheckerManagerFactory $headerCheckerManagerFactory = null
+    ) {
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     public function collect(array &$data, Request $request, Response $response, ?Throwable $exception = null): void
     {
         $this->collectHeaderCheckerManagers($data);
@@ -94,7 +79,7 @@ class CheckerCollector implements Collector, EventSubscriberInterface
         $this->claimCheckerManagers[$id] = $claimCheckerManager;
     }
 
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
         return [
             HeaderCheckedSuccessEvent::class => ['catchHeaderCheckSuccess'],
@@ -128,6 +113,9 @@ class CheckerCollector implements Collector, EventSubscriberInterface
         $this->claimCheckedFailures[] = $cloner->cloneVar($event);
     }
 
+    /**
+     * @param array<string, array<string, mixed>> $data
+     */
     private function collectHeaderCheckerManagers(array &$data): void
     {
         $data['checker']['header_checker_managers'] = [];
@@ -142,10 +130,13 @@ class CheckerCollector implements Collector, EventSubscriberInterface
         }
     }
 
+    /**
+     * @param array<string, array<string, mixed>> $data
+     */
     private function collectSupportedHeaderCheckers(array &$data): void
     {
         $data['checker']['header_checkers'] = [];
-        if (null !== $this->headerCheckerManagerFactory) {
+        if ($this->headerCheckerManagerFactory !== null) {
             $aliases = $this->headerCheckerManagerFactory->all();
             foreach ($aliases as $alias => $checker) {
                 $data['checker']['header_checkers'][$alias] = [
@@ -156,6 +147,9 @@ class CheckerCollector implements Collector, EventSubscriberInterface
         }
     }
 
+    /**
+     * @param array<string, array<string, mixed>> $data
+     */
     private function collectClaimCheckerManagers(array &$data): void
     {
         $data['checker']['claim_checker_managers'] = [];
@@ -169,10 +163,13 @@ class CheckerCollector implements Collector, EventSubscriberInterface
         }
     }
 
+    /**
+     * @param array<string, array<string, mixed>> $data
+     */
     private function collectSupportedClaimCheckers(array &$data): void
     {
         $data['checker']['claim_checkers'] = [];
-        if (null !== $this->claimCheckerManagerFactory) {
+        if ($this->claimCheckerManagerFactory !== null) {
             $aliases = $this->claimCheckerManagerFactory->all();
             foreach ($aliases as $alias => $checker) {
                 $data['checker']['claim_checkers'][$alias] = [
@@ -182,6 +179,9 @@ class CheckerCollector implements Collector, EventSubscriberInterface
         }
     }
 
+    /**
+     * @param array<string, array<string, mixed>> $data
+     */
     private function collectEvents(array &$data): void
     {
         $data['checker']['events'] = [

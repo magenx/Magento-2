@@ -8,11 +8,11 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202208\Symfony\Contracts\Cache;
+namespace RectorPrefix202303\Symfony\Contracts\Cache;
 
-use RectorPrefix202208\Psr\Cache\CacheItemPoolInterface;
-use RectorPrefix202208\Psr\Cache\InvalidArgumentException;
-use RectorPrefix202208\Psr\Log\LoggerInterface;
+use RectorPrefix202303\Psr\Cache\CacheItemPoolInterface;
+use RectorPrefix202303\Psr\Cache\InvalidArgumentException;
+use RectorPrefix202303\Psr\Log\LoggerInterface;
 // Help opcache.preload discover always-needed symbols
 \class_exists(InvalidArgumentException::class);
 /**
@@ -22,16 +22,10 @@ use RectorPrefix202208\Psr\Log\LoggerInterface;
  */
 trait CacheTrait
 {
-    /**
-     * {@inheritdoc}
-     */
     public function get(string $key, callable $callback, float $beta = null, array &$metadata = null) : mixed
     {
         return $this->doGet($this, $key, $callback, $beta, $metadata);
     }
-    /**
-     * {@inheritdoc}
-     */
     public function delete(string $key) : bool
     {
         return $this->deleteItem($key);

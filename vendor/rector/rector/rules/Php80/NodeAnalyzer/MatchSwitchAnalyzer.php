@@ -8,13 +8,14 @@ use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\ArrayDimFetch;
 use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\Match_;
+use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Expression;
 use PhpParser\Node\Stmt\Return_;
 use PhpParser\Node\Stmt\Switch_;
 use PhpParser\Node\Stmt\Throw_;
 use Rector\Core\PhpParser\Comparing\NodeComparator;
+use Rector\Core\PhpParser\Printer\BetterStandardPrinter;
 use Rector\NodeNameResolver\NodeNameResolver;
-use Rector\NodeTypeResolver\Node\AttributeKey;
 use Rector\Php80\Enum\MatchKind;
 use Rector\Php80\ValueObject\CondAndExpr;
 final class MatchSwitchAnalyzer
@@ -34,16 +35,34 @@ final class MatchSwitchAnalyzer
      * @var \Rector\Core\PhpParser\Comparing\NodeComparator
      */
     private $nodeComparator;
-    public function __construct(\Rector\Php80\NodeAnalyzer\SwitchAnalyzer $switchAnalyzer, NodeNameResolver $nodeNameResolver, NodeComparator $nodeComparator)
+    /**
+     * @readonly
+     * @var \Rector\Core\PhpParser\Printer\BetterStandardPrinter
+     */
+    private $betterStandardPrinter;
+    public function __construct(\Rector\Php80\NodeAnalyzer\SwitchAnalyzer $switchAnalyzer, NodeNameResolver $nodeNameResolver, NodeComparator $nodeComparator, BetterStandardPrinter $betterStandardPrinter)
     {
         $this->switchAnalyzer = $switchAnalyzer;
         $this->nodeNameResolver = $nodeNameResolver;
         $this->nodeComparator = $nodeComparator;
+        $this->betterStandardPrinter = $betterStandardPrinter;
     }
     /**
      * @param CondAndExpr[] $condAndExprs
      */
-    public function shouldSkipSwitch(Switch_ $switch, array $condAndExprs) : bool
+    public function isReturnCondsAndExprs(array $condAndExprs) : bool
+    {
+        foreach ($condAndExprs as $condAndExpr) {
+            if ($condAndExpr->equalsMatchKind(MatchKind::RETURN)) {
+                return \true;
+            }
+        }
+        return \false;
+    }
+    /**
+     * @param CondAndExpr[] $condAndExprs
+     */
+    public function shouldSkipSwitch(Switch_ $switch, array $condAndExprs, ?Stmt $nextStmt) : bool
     {
         if ($condAndExprs === []) {
             return \true;
@@ -51,7 +70,7 @@ final class MatchSwitchAnalyzer
         if (!$this->switchAnalyzer->hasEachCaseBreak($switch)) {
             return \true;
         }
-        if ($this->switchAnalyzer->hasDifferentTypeCases($switch->cases)) {
+        if ($this->switchAnalyzer->hasDifferentTypeCases($switch->cases, $switch->cond)) {
             return \true;
         }
         if (!$this->switchAnalyzer->hasEachCaseSingleStmt($switch)) {
@@ -61,10 +80,10 @@ final class MatchSwitchAnalyzer
             return \false;
         }
         // is followed by return? is considered implicit default
-        if ($this->isNextStmtReturnWithExpr($switch)) {
+        if ($this->isNextStmtReturnWithExpr($switch, $nextStmt)) {
             return \false;
         }
-        return !$this->isNextStmtThrows($switch);
+        return !$nextStmt instanceof Throw_;
     }
     /**
      * @param CondAndExpr[] $condAndExprs
@@ -82,14 +101,25 @@ final class MatchSwitchAnalyzer
                 continue;
             }
             if ($expr->var instanceof ArrayDimFetch) {
-                $arrayDimFethName = $this->nodeNameResolver->getName($expr->var->var);
-                $assignVariableNames[] = \get_class($expr->var) . $arrayDimFethName . '[]';
+                $assignVariableNames[] = $this->betterStandardPrinter->print($expr->var);
             } else {
                 $assignVariableNames[] = \get_class($expr->var) . $this->nodeNameResolver->getName($expr->var);
             }
         }
         $assignVariableNames = \array_unique($assignVariableNames);
         return \count($assignVariableNames) <= 1;
+    }
+    /**
+     * @param CondAndExpr[] $condAndExprs
+     */
+    public function hasCondsAndExprDefaultValue(array $condAndExprs) : bool
+    {
+        foreach ($condAndExprs as $condAndExpr) {
+            if ($condAndExpr->getCondExprs() === null) {
+                return \true;
+            }
+        }
+        return \false;
     }
     public function hasDefaultValue(Match_ $match) : bool
     {
@@ -118,13 +148,12 @@ final class MatchSwitchAnalyzer
         }
         return \array_unique($condAndExprKinds);
     }
-    private function isNextStmtReturnWithExpr(Switch_ $switch) : bool
+    private function isNextStmtReturnWithExpr(Switch_ $switch, ?Stmt $nextStmt) : bool
     {
-        $next = $switch->getAttribute(AttributeKey::NEXT_NODE);
-        if (!$next instanceof Return_) {
+        if (!$nextStmt instanceof Return_) {
             return \false;
         }
-        if (!$next->expr instanceof Expr) {
+        if (!$nextStmt->expr instanceof Expr) {
             return \false;
         }
         foreach ($switch->cases as $case) {
@@ -136,16 +165,11 @@ final class MatchSwitchAnalyzer
                 if (!$expression->expr instanceof Assign) {
                     continue;
                 }
-                if (!$this->nodeComparator->areNodesEqual($expression->expr->var, $next->expr)) {
+                if (!$this->nodeComparator->areNodesEqual($expression->expr->var, $nextStmt->expr)) {
                     return \false;
                 }
             }
         }
         return \true;
-    }
-    private function isNextStmtThrows(Switch_ $switch) : bool
-    {
-        $next = $switch->getAttribute(AttributeKey::NEXT_NODE);
-        return $next instanceof Throw_;
     }
 }

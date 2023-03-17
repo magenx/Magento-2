@@ -1,0 +1,10 @@
+/.buildpath
+/.cache
+/.metadata
+/.project
+/.settings
+/.vscode
+/.idea
+vendor/*
+composer.lock
+.DS_Store

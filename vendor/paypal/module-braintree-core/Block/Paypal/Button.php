@@ -6,24 +6,34 @@
 
 namespace PayPal\Braintree\Block\Paypal;
 
-use PayPal\Braintree\Gateway\Config\PayPal\Config;
-use PayPal\Braintree\Model\Ui\ConfigProvider;
+use Braintree\TransactionLineItem;
 use Magento\Catalog\Block\ShortcutInterface;
 use Magento\Checkout\Model\Session;
 use Magento\Framework\Exception\InputException;
+use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Locale\ResolverInterface;
 use Magento\Framework\View\Element\Template;
 use Magento\Framework\View\Element\Template\Context;
 use Magento\Payment\Model\MethodInterface;
 use PayPal\Braintree\Gateway\Config\Config as BraintreeConfig;
+use PayPal\Braintree\Gateway\Config\PayPal\Config;
 use PayPal\Braintree\Gateway\Config\PayPalCredit\Config as PayPalCreditConfig;
 use PayPal\Braintree\Gateway\Config\PayPalPayLater\Config as PayPalPayLaterConfig;
+use PayPal\Braintree\Model\Ui\ConfigProvider;
 
 class Button extends Template implements ShortcutInterface
 {
     public const ALIAS_ELEMENT_INDEX = 'alias';
     public const BUTTON_ELEMENT_INDEX = 'button_id';
+    private const LINE_ITEMS_ARRAY = [
+        'name',
+        'kind',
+        'quantity',
+        'unitAmount',
+        'unitTaxAmount',
+        'productCode'
+    ];
 
     /**
      * @var ResolverInterface $localeResolver
@@ -149,9 +159,9 @@ class Button extends Template implements ShortcutInterface
      *
      * @return string|null
      * @throws NoSuchEntityException
-     * @throws \Magento\Framework\Exception\LocalizedException
+     * @throws LocalizedException
      */
-    public function getCurrency()
+    public function getCurrency(): ?string
     {
         return $this->checkoutSession->getQuote()->getCurrency()->getBaseCurrencyCode();
     }
@@ -161,7 +171,7 @@ class Button extends Template implements ShortcutInterface
      *
      * @return float
      * @throws NoSuchEntityException
-     * @throws \Magento\Framework\Exception\LocalizedException
+     * @throws LocalizedException
      */
     public function getAmount()
     {
@@ -173,7 +183,7 @@ class Button extends Template implements ShortcutInterface
      *
      * @return bool
      * @throws NoSuchEntityException
-     * @throws \Magento\Framework\Exception\LocalizedException
+     * @throws LocalizedException
      */
     public function isActive(): bool
     {
@@ -229,7 +239,7 @@ class Button extends Template implements ShortcutInterface
      * @param string $type
      * @return bool
      */
-    public function isPayLaterButtonActive($type): bool
+    public function isPayLaterButtonActive(string $type): bool
     {
         return $this->payPalPayLaterConfig->isButtonActive($type);
     }
@@ -241,7 +251,7 @@ class Button extends Template implements ShortcutInterface
      */
     public function isPayPalVaultActive(): bool
     {
-        return (bool) $this->payPalPayLaterConfig->isPayPalVaultActive();
+        return $this->payPalPayLaterConfig->isPayPalVaultActive();
     }
 
     /**
@@ -249,7 +259,7 @@ class Button extends Template implements ShortcutInterface
      *
      * @return string|null
      */
-    public function getMerchantName()
+    public function getMerchantName(): ?string
     {
         return $this->config->getMerchantName();
     }
@@ -288,32 +298,10 @@ class Button extends Template implements ShortcutInterface
     }
 
     /**
-     * Get Button Layout
-     *
-     * @param string $type
-     * @inheritDoc
-     */
-    public function getButtonLayout(string $type): string
-    {
-        return $this->config->getButtonLayout(Config::BUTTON_AREA_CART, $type);
-    }
-
-    /**
-     * Get Button Tagline
-     *
-     * @param string $type
-     * @inheritDoc
-     */
-    public function getButtonTagline(string $type): string
-    {
-        return $this->config->getButtonTagline(Config::BUTTON_AREA_CART, $type);
-    }
-
-    /**
      * Get Button Label
      *
      * @param string $type
-     * @inheritDoc
+     * @return string
      */
     public function getButtonLabel(string $type): string
     {
@@ -339,7 +327,7 @@ class Button extends Template implements ShortcutInterface
      * @throws InputException
      * @throws NoSuchEntityException
      */
-    public function getClientToken()
+    public function getClientToken(): ?string
     {
         return $this->configProvider->getClientToken();
     }
@@ -392,7 +380,7 @@ class Button extends Template implements ShortcutInterface
      *
      * @return string|null
      */
-    public function getMerchantCountry()
+    public function getMerchantCountry(): ?string
     {
         return $this->payPalPayLaterConfig->getMerchantCountry();
     }
@@ -401,7 +389,7 @@ class Button extends Template implements ShortcutInterface
      * Get Messaging Layout
      *
      * @param string $type
-     * @inheritDoc
+     * @return string
      */
     public function getMessagingLayout(string $type): string
     {
@@ -412,7 +400,7 @@ class Button extends Template implements ShortcutInterface
      * Get Messaging Logo
      *
      * @param string $type
-     * @inheritDoc
+     * @return string
      */
     public function getMessagingLogo(string $type): string
     {
@@ -423,7 +411,7 @@ class Button extends Template implements ShortcutInterface
      * Get Messaging Logo Position
      *
      * @param string $type
-     * @inheritDoc
+     * @return string
      */
     public function getMessagingLogoPosition(string $type): string
     {
@@ -434,10 +422,198 @@ class Button extends Template implements ShortcutInterface
      * Get Messaging Text Color
      *
      * @param string $type
-     * @inheritDoc
+     * @return string
      */
     public function getMessagingTextColor(string $type): string
     {
         return $this->config->getMessagingStyle(Config::BUTTON_AREA_CART, $type, 'text_color');
+    }
+
+    /**
+     * @return array
+     */
+    public function getCartLineItems(): array
+    {
+        $lineItems = [];
+        if ($this->braintreeConfig->canSendLineItems()) {
+            try {
+                $quote = $this->checkoutSession->getQuote();
+                foreach ($quote->getItems() as $item) {
+
+                    // Skip configurable parent items and items with a base price of 0.
+                    if ($item->getParentItem() || 0.0 === $item->getPrice()) {
+                        continue;
+                    }
+
+                    // Regex to replace all unsupported characters.
+                    $filteredFields = preg_replace(
+                        '/[^a-zA-Z0-9\s\-.\']/',
+                        '',
+                        [
+                            'name' => substr($item->getName(), 0, 127),
+                            'sku' => substr($item->getSku(), 0, 127)
+                        ]
+                    );
+
+                    $itemPrice = (float) $item->getPrice();
+                    $lineItems[] = array_combine(
+                        self::LINE_ITEMS_ARRAY,
+                        [
+                            $filteredFields['name'],
+                            TransactionLineItem::DEBIT,
+                            $this->numberToString((float)$item->getQty(), 2),
+                            $this->numberToString($itemPrice, 2),
+                            $item->getTaxAmount() === null ? '0.00' : $this->numberToString($item->getTaxAmount(), 2),
+                            $filteredFields['sku']
+                        ]
+                    );
+                }
+
+                /**
+                 * Adds credit (refund or discount) kind as LineItems for the
+                 * PayPal transaction if discount amount is greater than 0(Zero)
+                 * as discountAmount lineItem field is not being used by PayPal.
+                 *
+                 * https://developer.paypal.com/braintree/docs/reference/response/transaction-line-item/php#discount_amount
+                 */
+                $baseDiscountAmount = $this->numberToString(abs($quote->getShippingAddress()->getBaseDiscountAmount()), 2);
+                if ($baseDiscountAmount <= 0) {
+                    $baseDiscountAmount = $this->numberToString(abs($quote->getBillingAddress()->getBaseDiscountAmount()), 2);
+                }
+                if ($baseDiscountAmount > 0) {
+                    $discountLineItems[] = [
+                        'name' => 'Discount',
+                        'kind' => TransactionLineItem::CREDIT,
+                        'quantity' => 1.00,
+                        'unitAmount' => $baseDiscountAmount
+                    ];
+
+                    $lineItems = array_merge($lineItems, $discountLineItems);
+                }
+
+                /**
+                 * Adds shipping as LineItems for the PayPal transaction
+                 * if shipping amount is greater than 0(Zero) to manage
+                 * the totals with client-side implementation as there is
+                 * no any field exist in the client-side implementation
+                 * to send the shipping amount to the Braintree.
+                 */
+                $baseShippingAmount = $this->numberToString(abs($quote->getShippingAddress()->getBaseShippingAmount()), 2);
+                if ($baseShippingAmount > 0) {
+                    $shippingLineItem[] = [
+                        'name' => 'Shipping',
+                        'kind' => TransactionLineItem::DEBIT,
+                        'quantity' => 1.00,
+                        'unitAmount' => $baseShippingAmount
+                    ];
+
+                    $lineItems = array_merge($lineItems, $shippingLineItem);
+                }
+
+                /**
+                 * Adds Gift Wrapping for Order as LineItems for the PayPal
+                 * transaction if it is greater than 0(Zero) to manage
+                 * the totals with client-side implementation as there is
+                 * no any field exist to send that amount to the Braintree.
+                 */
+                $gwBasePrice = $this->numberToString($quote->getGwBasePrice(), 2);
+                if ($gwBasePrice > 0) {
+                    $gwBasePriceItems[] = [
+                        'name' => 'Gift Wrapping for Order',
+                        'kind' => TransactionLineItem::DEBIT,
+                        'quantity' => 1.00,
+                        'unitAmount' => $gwBasePrice,
+                        'totalAmount' => $gwBasePrice
+                    ];
+
+                    $lineItems = array_merge($lineItems, $gwBasePriceItems);
+                }
+
+                /**
+                 * Adds Gift Wrapping for items as LineItems for the PayPal
+                 * transaction if it is greater than 0(Zero) to manage
+                 * the totals with client-side implementation as there is
+                 * no any field exist to send that amount to the Braintree.
+                 */
+                $gwItemsBasePrice = $this->numberToString($quote->getGwItemsBasePrice(), 2);
+                if ($gwItemsBasePrice > 0) {
+                    $gwItemsBasePriceItems[] = [
+                        'name' => 'Gift Wrapping for Items',
+                        'kind' => TransactionLineItem::DEBIT,
+                        'quantity' => 1.00,
+                        'unitAmount' => $gwItemsBasePrice,
+                        'totalAmount' => $gwItemsBasePrice
+                    ];
+
+                    $lineItems = array_merge($lineItems, $gwItemsBasePriceItems);
+                }
+
+                /**
+                 * Adds Store Credit as credit LineItems for the PayPal
+                 * transaction if store credit is greater than 0(Zero)
+                 * to manage the totals with client-side implementation
+                 * as there is no any field exist to send that amount
+                 * to the Braintree.
+                 */
+                $baseCustomerBalAmountUsed = $this->numberToString(abs($quote->getBaseCustomerBalAmountUsed()), 2);
+                if ($baseCustomerBalAmountUsed > 0) {
+                    $storeCreditItems[] = [
+                        'name' => 'Store Credit',
+                        'kind' => TransactionLineItem::CREDIT,
+                        'quantity' => 1.00,
+                        'unitAmount' => $baseCustomerBalAmountUsed,
+                        'totalAmount' => $baseCustomerBalAmountUsed
+                    ];
+
+                    $lineItems = array_merge($lineItems, $storeCreditItems);
+                }
+
+                /**
+                 * Adds Gift Cards as credit LineItems for the PayPal
+                 * transaction if it is greater than 0(Zero) to manage
+                 * the totals with client-side implementation as there is
+                 * no any field exist to send that amount to the Braintree.
+                 */
+                $baseGiftCardsAmountUsed = $this->numberToString(abs($quote->getBaseGiftCardsAmountUsed()), 2);
+                if ($baseGiftCardsAmountUsed > 0) {
+                    $giftCardsItems[] = [
+                        'name' => 'Gift Cards',
+                        'kind' => TransactionLineItem::CREDIT,
+                        'quantity' => 1.00,
+                        'unitAmount' => $baseGiftCardsAmountUsed,
+                        'totalAmount' => $baseGiftCardsAmountUsed
+                    ];
+
+                    $lineItems = array_merge($lineItems, $giftCardsItems);
+                }
+
+                if (count($lineItems) >= 250) {
+                    $lineItems = [];
+                }
+            } catch (NoSuchEntityException|LocalizedException $e) {
+                $this->_logger->error($e->getMessage());
+            }
+        }
+
+        return $lineItems;
+    }
+
+    /**
+     * @param float|string $num
+     * @param int $precision
+     * @return string
+     */
+    private function numberToString(float|string $num, int $precision): string
+    {
+        /**
+         * To counter the fact that Magento often
+         * wrongly returns a sting for price values,
+         * we can cast it to a float.
+         */
+        if (is_string($num)) {
+            $num = (float) $num;
+        }
+
+        return (string) round($num, $precision);
     }
 }

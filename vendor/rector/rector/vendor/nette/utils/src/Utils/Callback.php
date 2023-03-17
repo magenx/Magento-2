@@ -5,9 +5,9 @@
  * Copyright (c) 2004 David Grudl (https://davidgrudl.com)
  */
 declare (strict_types=1);
-namespace RectorPrefix202208\Nette\Utils;
+namespace RectorPrefix202303\Nette\Utils;
 
-use RectorPrefix202208\Nette;
+use RectorPrefix202303\Nette;
 use function is_array, is_object, is_string;
 /**
  * PHP callable tools.
@@ -128,7 +128,7 @@ final class Callback
      */
     public static function isStatic(callable $callable) : bool
     {
-        return is_array($callable) ? is_string($callable[0]) : is_string($callable);
+        return is_string(is_array($callable) ? $callable[0] : $callable);
     }
     /**
      * Unwraps closure created by Closure::fromCallable().

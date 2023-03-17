@@ -9,7 +9,6 @@ use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\BinaryOp\Identical;
 use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Scalar\String_;
-use PHPStan\Type\StringType;
 use Rector\Core\NodeAnalyzer\ArgsAnalyzer;
 use Rector\Core\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
@@ -87,7 +86,7 @@ CODE_SAMPLE
         $variable = $firstArg->value;
         // Needs string cast if variable type is not string
         // see https://github.com/rectorphp/rector/issues/6700
-        $isStringType = $this->nodeTypeResolver->getNativeType($variable) instanceof StringType;
+        $isStringType = $this->nodeTypeResolver->getNativeType($variable)->isString()->yes();
         if (!$isStringType) {
             return new Identical(new Expr\Cast\String_($variable), new String_(''));
         }

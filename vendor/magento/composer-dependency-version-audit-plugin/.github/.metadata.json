@@ -1,0 +1,33 @@
+{
+  "templateVersion": "0.1",
+  "product": {
+    "name": "Composer Dependency Confusion Plugin",
+    "description": "Plugin for composer that validates package versions"
+  },
+  "contacts": {
+    "team": {
+      "name": "CIA",
+      "DL": "magento-commerce-team-cia",
+      "slackChannel": "cia-team"
+    }
+  },
+  "ticketTracker": {
+    "functionalJiraQueue": {
+      "projectKey": "AC",
+      "component": ""
+    },
+    "securityJiraQueue": {
+      "projectKey": "MAGREQ",
+      "component": "Commerce M2"
+    }
+  },
+  "staticScan": {
+    "enable": true,
+    "frequency": "monthly",
+    "customName": "",
+    "branchesToScan": [
+      "main"
+    ]
+  }
+}
+

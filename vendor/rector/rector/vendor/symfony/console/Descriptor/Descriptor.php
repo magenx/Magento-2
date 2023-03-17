@@ -8,15 +8,15 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202208\Symfony\Component\Console\Descriptor;
+namespace RectorPrefix202303\Symfony\Component\Console\Descriptor;
 
-use RectorPrefix202208\Symfony\Component\Console\Application;
-use RectorPrefix202208\Symfony\Component\Console\Command\Command;
-use RectorPrefix202208\Symfony\Component\Console\Exception\InvalidArgumentException;
-use RectorPrefix202208\Symfony\Component\Console\Input\InputArgument;
-use RectorPrefix202208\Symfony\Component\Console\Input\InputDefinition;
-use RectorPrefix202208\Symfony\Component\Console\Input\InputOption;
-use RectorPrefix202208\Symfony\Component\Console\Output\OutputInterface;
+use RectorPrefix202303\Symfony\Component\Console\Application;
+use RectorPrefix202303\Symfony\Component\Console\Command\Command;
+use RectorPrefix202303\Symfony\Component\Console\Exception\InvalidArgumentException;
+use RectorPrefix202303\Symfony\Component\Console\Input\InputArgument;
+use RectorPrefix202303\Symfony\Component\Console\Input\InputDefinition;
+use RectorPrefix202303\Symfony\Component\Console\Input\InputOption;
+use RectorPrefix202303\Symfony\Component\Console\Output\OutputInterface;
 /**
  * @author Jean-François Simon <jeanfrancois.simon@sensiolabs.com>
  *
@@ -28,9 +28,6 @@ abstract class Descriptor implements DescriptorInterface
      * @var OutputInterface
      */
     protected $output;
-    /**
-     * {@inheritdoc}
-     */
     public function describe(OutputInterface $output, object $object, array $options = [])
     {
         $this->output = $output;

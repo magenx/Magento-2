@@ -45,6 +45,7 @@ final class NodeRemover
         $this->rectorChangeCollector->notifyNodeFileInfo($node);
     }
     /**
+     * @api used in rector-doctrine
      * @param \PhpParser\Node\Stmt\Class_|\PhpParser\Node\Stmt\ClassMethod|\PhpParser\Node\Stmt\Function_ $nodeWithStatements
      */
     public function removeNodeFromStatements($nodeWithStatements, Node $toBeRemovedNode) : void
@@ -53,6 +54,7 @@ final class NodeRemover
             if ($toBeRemovedNode !== $stmt) {
                 continue;
             }
+            $this->removeNode($stmt);
             unset($nodeWithStatements->stmts[$key]);
             break;
         }
@@ -67,18 +69,6 @@ final class NodeRemover
         }
     }
     /**
-     * @param \PhpParser\Node\Expr\Closure|\PhpParser\Node\Stmt\ClassMethod|\PhpParser\Node\Stmt\Function_ $functionLike
-     */
-    public function removeStmt($functionLike, int $key) : void
-    {
-        if ($functionLike->stmts === null) {
-            throw new ShouldNotHappenException();
-        }
-        // notify about remove node
-        $this->rectorChangeCollector->notifyNodeFileInfo($functionLike->stmts[$key]);
-        unset($functionLike->stmts[$key]);
-    }
-    /**
      * @param int|\PhpParser\Node\Param $keyOrParam
      */
     public function removeParam(ClassMethod $classMethod, $keyOrParam) : void
@@ -91,8 +81,7 @@ final class NodeRemover
         if (!isset($classMethod->params[$key])) {
             return;
         }
-        // notify about remove node
-        $this->rectorChangeCollector->notifyNodeFileInfo($classMethod->params[$key]);
+        $this->removeNode($classMethod->params[$key]);
         unset($classMethod->params[$key]);
     }
     /**
@@ -100,24 +89,30 @@ final class NodeRemover
      */
     public function removeArg($node, int $key) : void
     {
-        if ($node->args === null) {
+        if ($node->getArgs() === []) {
             throw new ShouldNotHappenException();
         }
         // already removed
         if (!isset($node->args[$key])) {
             return;
         }
-        // notify about remove node
-        $this->rectorChangeCollector->notifyNodeFileInfo($node->args[$key]);
+        $this->removeNode($node->args[$key]);
         unset($node->args[$key]);
     }
-    public function removeImplements(Class_ $class, int $key) : void
+    /**
+     * @api phpunit
+     * @param \PhpParser\Node\Expr\Closure|\PhpParser\Node\Stmt\ClassMethod|\PhpParser\Node\Stmt\Function_ $functionLike
+     */
+    public function removeStmt($functionLike, int $key) : void
     {
-        if ($class->implements === null) {
+        if ($functionLike->stmts === null) {
             throw new ShouldNotHappenException();
         }
-        // notify about remove node
-        $this->rectorChangeCollector->notifyNodeFileInfo($class->implements[$key]);
-        unset($class->implements[$key]);
+        // already removed
+        if (!isset($functionLike->stmts[$key])) {
+            return;
+        }
+        $this->removeNode($functionLike->stmts[$key]);
+        unset($functionLike->stmts[$key]);
     }
 }

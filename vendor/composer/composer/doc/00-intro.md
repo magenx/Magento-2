@@ -33,9 +33,11 @@ dependencies.
 
 ## System Requirements
 
-Composer requires PHP 5.3.2+ to run. A few sensitive php settings and compile
-flags are also required, but when using the installer you will be warned about
-any incompatibilities.
+Composer in its latest version requires PHP 7.2.5 to run. A long-term-support
+version (2.2.x) still offers support for PHP 5.3.2+ in case you are stuck with
+a legacy PHP version. A few sensitive php settings and compile flags are also
+required, but when using the installer you will be warned about any
+incompatibilities.
 
 To install packages from sources instead of plain zip archives, you will need
 git, svn, fossil or hg depending on how the package is version-controlled.
@@ -74,7 +76,7 @@ running the installer when following
 [the Download page instructions](https://getcomposer.org/download/) add the
 following parameters:
 
-```sh
+```shell
 php composer-setup.php --install-dir=bin --filename=composer
 ```
 
@@ -90,7 +92,7 @@ interpreter.
 After running the installer following [the Download page instructions](https://getcomposer.org/download/)
 you can run this to move composer.phar to a directory that is in your path:
 
-```sh
+```shell
 mv composer.phar /usr/local/bin/composer
 ```
 
@@ -136,13 +138,13 @@ Create a new `composer.bat` file alongside `composer.phar`:
 
 Using cmd.exe:
 
-```sh
+```shell
 C:\bin> echo @php "%~dp0composer.phar" %*>composer.bat
 ```
 
 Using PowerShell:
 
-```sh
+```shell
 PS C:\bin> Set-Content composer.bat '@php "%~dp0composer.phar" %*'
 ```
 
@@ -153,10 +155,39 @@ use your search engine of choice.
 
 Close your current terminal. Test usage with a new terminal:
 
-```sh
+```shell
 C:\Users\username>composer -V
-Composer version 2.0.12 2021-04-01 10:14:59
 ```
+```text
+Composer version 2.4.0 2022-08-16 16:10:48
+```
+
+## Docker Image
+
+Composer is published as Docker container in a few places, see the list in the [composer/docker README](https://github.com/composer/docker).
+
+Example usage:
+
+```shell
+docker pull composer/composer
+docker run --rm -it -v "$(pwd):/app" composer/composer install
+```
+
+To add Composer to an existing **Dockerfile** you can simply copy binary file from pre-built, low-size images:
+
+```Dockerfile
+# Latest release
+COPY --from=composer/composer:latest-bin /composer /usr/bin/composer
+
+# Specific release
+COPY --from=composer/composer:2-bin /composer /usr/bin/composer
+```
+
+Read the [image description](https://hub.docker.com/r/composer/composer) for further usage information.
+
+**Note:** Docker specific issues should be filed [on the composer/docker repository](https://github.com/composer/docker/issues).
+
+**Note:** You may also use `composer` instead of `composer/composer` as image name above. It is shorter and is a Docker official image but is not published directly by us and thus usually receives new releases with a delay of a few days. **Important**: short-aliased images don't have binary-only equivalents, so for `COPY --from` approach it's better to use `composer/composer` ones.
 
 ## Using Composer
 

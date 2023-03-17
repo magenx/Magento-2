@@ -17,7 +17,8 @@ class TransactionSubmitForPartialSettlement extends AbstractTransaction
     {
         return  $this->adapter->submitForPartialSettlement(
             $data[CaptureDataBuilder::TRANSACTION_ID],
-            $data[PaymentDataBuilder::AMOUNT]
+            $data[PaymentDataBuilder::AMOUNT],
+            [PaymentDataBuilder::ORDER_ID => $data[PaymentDataBuilder::ORDER_ID]]
         );
     }
 }

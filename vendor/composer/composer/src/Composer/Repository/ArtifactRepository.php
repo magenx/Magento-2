@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 /*
  * This file is part of Composer.
@@ -68,12 +68,7 @@ class ArtifactRepository extends ArrayRepository implements ConfigurableReposito
         $this->scanDirectory($this->lookup);
     }
 
-    /**
-     * @param string $path
-     *
-     * @return void
-     */
-    private function scanDirectory($path)
+    private function scanDirectory(string $path): void
     {
         $io = $this->io;
 
@@ -102,12 +97,12 @@ class ArtifactRepository extends ArrayRepository implements ConfigurableReposito
     /**
      * @return ?BasePackage
      */
-    private function getComposerInformation(\SplFileInfo $file)
+    private function getComposerInformation(\SplFileInfo $file): ?BasePackage
     {
         $json = null;
         $fileType = null;
         $fileExtension = pathinfo($file->getPathname(), PATHINFO_EXTENSION);
-        if (in_array($fileExtension, array('gz', 'tar', 'tgz'), true)) {
+        if (in_array($fileExtension, ['gz', 'tar', 'tgz'], true)) {
             $fileType = 'tar';
         } elseif ($fileExtension === 'zip') {
             $fileType = 'zip';
@@ -130,11 +125,11 @@ class ArtifactRepository extends ArrayRepository implements ConfigurableReposito
         }
 
         $package = JsonFile::parseJson($json, $file->getPathname().'#composer.json');
-        $package['dist'] = array(
+        $package['dist'] = [
             'type' => $fileType,
             'url' => strtr($file->getPathname(), '\\', '/'),
             'shasum' => sha1_file($file->getRealPath()),
-        );
+        ];
 
         try {
             $package = $this->loader->load($package);

@@ -38,15 +38,12 @@ final class OperatorLinebreakFixer extends AbstractFixer implements Configurable
 {
     private const BOOLEAN_OPERATORS = [[T_BOOLEAN_AND], [T_BOOLEAN_OR], [T_LOGICAL_AND], [T_LOGICAL_OR], [T_LOGICAL_XOR]];
 
-    /**
-     * @var string
-     */
-    private $position = 'beginning';
+    private string $position = 'beginning';
 
     /**
      * @var array<array<int|string>|string>
      */
-    private $operators = [];
+    private array $operators = [];
 
     /**
      * {@inheritdoc}
@@ -171,23 +168,22 @@ function foo() {
      */
     private function getExcludedIndices(Tokens $tokens): array
     {
-        $colonIndexes = [];
+        $colonIndices = [];
 
+        /** @var SwitchAnalysis $analysis */
         foreach (ControlCaseStructuresAnalyzer::findControlStructures($tokens, [T_SWITCH]) as $analysis) {
             foreach ($analysis->getCases() as $case) {
-                $colonIndexes[] = $case->getColonIndex();
+                $colonIndices[] = $case->getColonIndex();
             }
 
-            if ($analysis instanceof SwitchAnalysis) {
-                $defaultAnalysis = $analysis->getDefaultAnalysis();
+            $defaultAnalysis = $analysis->getDefaultAnalysis();
 
-                if (null !== $defaultAnalysis) {
-                    $colonIndexes[] = $defaultAnalysis->getColonIndex();
-                }
+            if (null !== $defaultAnalysis) {
+                $colonIndices[] = $defaultAnalysis->getColonIndex();
             }
         }
 
-        return $colonIndexes;
+        return $colonIndices;
     }
 
     /**
@@ -317,7 +313,7 @@ function foo() {
                 [T_POW_EQUAL], [T_SL], [T_SL_EQUAL], [T_SR], [T_SR_EQUAL], [T_XOR_EQUAL],
                 [T_COALESCE], [T_SPACESHIP],
             ],
-            array_map(static function ($id): array { return [$id]; }, Token::getObjectOperatorKinds())
+            array_map(static fn (int $id): array => [$id], Token::getObjectOperatorKinds()),
         );
     }
 }

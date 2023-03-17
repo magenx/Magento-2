@@ -5,7 +5,7 @@
  * Copyright (c) 2004 David Grudl (https://davidgrudl.com)
  */
 declare (strict_types=1);
-namespace RectorPrefix202208\Tracy;
+namespace RectorPrefix202303\Tracy;
 
 use ErrorException;
 /**
@@ -65,8 +65,9 @@ final class DevelopmentStrategy
         }
         if ((\is_bool(Debugger::$strictMode) ? Debugger::$strictMode : Debugger::$strictMode & $severity) && !isset($_GET['_tracy_skip_error'])) {
             $e = new ErrorException($message, 0, $severity, $file, $line);
-            $e->context = $context;
-            $e->skippable = \true;
+            @($e->context = $context);
+            // dynamic properties are deprecated since PHP 8.2
+            @($e->skippable = \true);
             Debugger::exceptionHandler($e);
             exit(255);
         }

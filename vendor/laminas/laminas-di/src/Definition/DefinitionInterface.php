@@ -14,7 +14,7 @@ interface DefinitionInterface
     /**
      * All class names in this definition
      *
-     * @return string[]
+     * @return list<string>
      */
     public function getClasses(): array;
 
@@ -24,6 +24,7 @@ interface DefinitionInterface
     public function hasClass(string $class): bool;
 
     /**
+     * @param class-string $class
      * @throws ClassNotFoundException
      */
     public function getClassDefinition(string $class): ClassDefinitionInterface;

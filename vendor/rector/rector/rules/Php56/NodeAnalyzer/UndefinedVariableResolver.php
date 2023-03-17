@@ -17,6 +17,7 @@ use PhpParser\Node\Expr\Isset_;
 use PhpParser\Node\Expr\List_;
 use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\FunctionLike;
+use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Case_;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Foreach_;
@@ -30,12 +31,12 @@ use Rector\Core\PhpParser\Comparing\NodeComparator;
 use Rector\Core\PhpParser\Node\BetterNodeFinder;
 use Rector\NodeNameResolver\NodeNameResolver;
 use Rector\NodeTypeResolver\Node\AttributeKey;
-use RectorPrefix202208\Symplify\Astral\NodeTraverser\SimpleCallableNodeTraverser;
+use Rector\PhpDocParser\NodeTraverser\SimpleCallableNodeTraverser;
 final class UndefinedVariableResolver
 {
     /**
      * @readonly
-     * @var \Symplify\Astral\NodeTraverser\SimpleCallableNodeTraverser
+     * @var \Rector\PhpDocParser\NodeTraverser\SimpleCallableNodeTraverser
      */
     private $simpleCallableNodeTraverser;
     /**
@@ -82,6 +83,13 @@ final class UndefinedVariableResolver
                 // handled above
                 return NodeTraverser::DONT_TRAVERSE_CURRENT_AND_CHILDREN;
             }
+            /**
+             * The Stmt that doesn't have origNode attribute yet
+             * means the Stmt is a replacement below other changed node
+             */
+            if ($node instanceof Stmt && !$node->hasAttribute(AttributeKey::ORIGINAL_NODE)) {
+                return NodeTraverser::DONT_TRAVERSE_CURRENT_AND_CHILDREN;
+            }
             if (!$node instanceof Variable) {
                 return null;
             }
@@ -93,19 +101,28 @@ final class UndefinedVariableResolver
                 return null;
             }
             $variableName = $this->nodeNameResolver->getName($node);
-            if (!\is_string($variableName)) {
+            if ($this->hasVariableTypeOrCurrentStmtUnreachable($node, $variableName)) {
                 return null;
             }
-            // defined 100 %
-            /** @var Scope $scope */
-            $scope = $node->getAttribute(AttributeKey::SCOPE);
-            if ($scope->hasVariableType($variableName)->yes()) {
-                return null;
-            }
+            /** @var string $variableName */
             $undefinedVariables[] = $variableName;
             return null;
         });
         return \array_unique($undefinedVariables);
+    }
+    private function hasVariableTypeOrCurrentStmtUnreachable(Variable $variable, ?string $variableName) : bool
+    {
+        if (!\is_string($variableName)) {
+            return \true;
+        }
+        // defined 100 %
+        /** @var Scope $scope */
+        $scope = $variable->getAttribute(AttributeKey::SCOPE);
+        if ($scope->hasVariableType($variableName)->yes()) {
+            return \true;
+        }
+        $currentStmt = $this->betterNodeFinder->resolveCurrentStatement($variable);
+        return $currentStmt instanceof Stmt && $currentStmt->getAttribute(AttributeKey::IS_UNREACHABLE) === \true;
     }
     private function issetOrUnsetOrEmptyParent(Node $parentNode) : bool
     {
@@ -170,8 +187,8 @@ final class UndefinedVariableResolver
         if (!$previousSwitch instanceof Switch_) {
             return \false;
         }
-        $parentSwitch = $previousSwitch->getAttribute(AttributeKey::PARENT_NODE);
-        return $parentSwitch instanceof Case_;
+        $parentNode = $previousSwitch->getAttribute(AttributeKey::PARENT_NODE);
+        return $parentNode instanceof Case_;
     }
     private function isDifferentWithOriginalNodeOrNoScope(Variable $variable) : bool
     {

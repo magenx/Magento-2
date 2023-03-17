@@ -38,32 +38,31 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 class Cm_Cache_Backend_Redis extends Zend_Cache_Backend implements Zend_Cache_Backend_ExtendedInterface
 {
+    public const SET_IDS         = 'zc:ids';
+    public const SET_TAGS        = 'zc:tags';
 
-    const SET_IDS         = 'zc:ids';
-    const SET_TAGS        = 'zc:tags';
+    public const PREFIX_KEY      = 'zc:k:';
+    public const PREFIX_TAG_IDS  = 'zc:ti:';
 
-    const PREFIX_KEY      = 'zc:k:';
-    const PREFIX_TAG_IDS  = 'zc:ti:';
+    public const FIELD_DATA      = 'd';
+    public const FIELD_MTIME     = 'm';
+    public const FIELD_TAGS      = 't';
+    public const FIELD_INF       = 'i';
 
-    const FIELD_DATA      = 'd';
-    const FIELD_MTIME     = 'm';
-    const FIELD_TAGS      = 't';
-    const FIELD_INF       = 'i';
+    public const MAX_LIFETIME    = 2592000; /* Redis backend limit */
+    public const COMPRESS_PREFIX = ":\x1f\x8b";
+    public const DEFAULT_CONNECT_TIMEOUT = 2.5;
+    public const DEFAULT_CONNECT_RETRIES = 1;
 
-    const MAX_LIFETIME    = 2592000; /* Redis backend limit */
-    const COMPRESS_PREFIX = ":\x1f\x8b";
-    const DEFAULT_CONNECT_TIMEOUT = 2.5;
-    const DEFAULT_CONNECT_RETRIES = 1;
-
-    const LUA_SAVE_SH1 = '1617c9fb2bda7d790bb1aaa320c1099d81825e64';
-    const LUA_CLEAN_SH1 = 'a6d92d0d20e5c8fa3d1a4cf7417191b66676ce43';
-    const LUA_GC_SH1 = 'c00416b970f1aa6363b44965d4cf60ee99a6f065';
+    public const LUA_SAVE_SH1 = '1617c9fb2bda7d790bb1aaa320c1099d81825e64';
+    public const LUA_CLEAN_SH1 = '39383dcf36d2e71364a666b2a806bc8219cd332d';
+    public const LUA_GC_SH1 = '6990147f5d1999b936dac3b6f7e5d2071908bcf3';
 
     /** @var Credis_Client */
     protected $_redis;
 
     /** @var bool */
-    protected $_notMatchingTags = FALSE;
+    protected $_notMatchingTags = false;
 
     /** @var int */
     protected $_lifetimelimit = self::MAX_LIFETIME; /* Redis backend limit */
@@ -145,11 +144,12 @@ class Cm_Cache_Backend_Redis extends Zend_Cache_Backend implements Zend_Cache_Ba
         $clientOptions = new stdClass();
         $clientOptions->forceStandalone = isset($options['force_standalone']) && $options['force_standalone'];
         $clientOptions->connectRetries = isset($options['connect_retries']) ? (int) $options['connect_retries'] : self::DEFAULT_CONNECT_RETRIES;
-        $clientOptions->readTimeout = isset($options['read_timeout']) ? (float) $options['read_timeout'] : NULL;
-        $clientOptions->password = isset($options['password']) ? $options['password'] : NULL;
+        $clientOptions->readTimeout = isset($options['read_timeout']) ? (float) $options['read_timeout'] : null;
+        $clientOptions->password = $options['password'] ?? null;
+        $clientOptions->username = $options['username'] ?? null;
         $clientOptions->database = isset($options['database']) ? (int) $options['database'] : 0;
-        $clientOptions->persistent = isset($options['persistent']) ? $options['persistent'] : '';
-        $clientOptions->timeout = isset($options['timeout']) ? $options['timeout'] : self::DEFAULT_CONNECT_TIMEOUT;
+        $clientOptions->persistent = $options['persistent'] ?? '';
+        $clientOptions->timeout = $options['timeout'] ?? self::DEFAULT_CONNECT_TIMEOUT;
         return $clientOptions;
     }
 
@@ -157,85 +157,88 @@ class Cm_Cache_Backend_Redis extends Zend_Cache_Backend implements Zend_Cache_Ba
      * Construct Zend_Cache Redis backend
      * @param array $options
      * @throws Zend_Cache_Exception
+     * @throws CredisException
+     * @noinspection PhpMissingParentConstructorInspection
      */
     public function __construct($options = array())
     {
-        if ( empty($options['server']) && empty($options['cluster'])) {
+        if (empty($options['server']) && empty($options['cluster'])) {
             Zend_Cache::throwException('Redis \'server\' not specified.');
         }
 
         $this->_clientOptions = $this->getClientOptions($options);
 
         // If 'sentinel_master' is specified then server is actually sentinel and master address should be fetched from server.
-        $sentinelMaster =  empty($options['sentinel_master']) ? NULL : $options['sentinel_master'];
+        $sentinelMaster =  empty($options['sentinel_master']) ? null : $options['sentinel_master'];
         if ($sentinelMaster) {
             $sentinelClientOptions = isset($options['sentinel']) && is_array($options['sentinel'])
                                      ? $this->getClientOptions($options['sentinel'] + $options)
                                      : $this->_clientOptions;
-            $servers = preg_split('/\s*,\s*/', trim($options['server']), NULL, PREG_SPLIT_NO_EMPTY);
-            $sentinel = NULL;
-            $exception = NULL;
-            for ($i = 0; $i <= $sentinelClientOptions->connectRetries; $i++) // Try each sentinel in round-robin fashion
-            foreach ($servers as $server) {
-                try {
-                    $sentinelClient = new Credis_Client($server, NULL, $sentinelClientOptions->timeout, $sentinelClientOptions->persistent);
-                    $sentinelClient->forceStandalone();
-                    $sentinelClient->setMaxConnectRetries(0);
-                    if ($sentinelClientOptions->readTimeout) {
-                        $sentinelClient->setReadTimeout($sentinelClientOptions->readTimeout);
-                    }
-                    if ($sentinelClientOptions->password) {
-                        $sentinelClient->auth($sentinelClientOptions->password) or Zend_Cache::throwException('Unable to authenticate with the redis sentinel.');
-                    }
-                    $sentinel = new Credis_Sentinel($sentinelClient);
-                    $sentinel
-                        ->setClientTimeout($this->_clientOptions->timeout)
-                        ->setClientPersistent($this->_clientOptions->persistent);
-                    $redisMaster = $sentinel->getMasterClient($sentinelMaster);
-                    $this->_applyClientOptions($redisMaster);
+            $servers = preg_split('/\s*,\s*/', trim($options['server']), -1, PREG_SPLIT_NO_EMPTY);
+            $sentinel = null;
+            $exception = null;
+            for ($i = 0; $i <= $sentinelClientOptions->connectRetries; $i++) { // Try each sentinel in round-robin fashion
+                foreach ($servers as $server) {
+                    try {
+                        $sentinelClient = new Credis_Client($server, null, $sentinelClientOptions->timeout, $sentinelClientOptions->persistent);
+                        $sentinelClient->forceStandalone();
+                        $sentinelClient->setMaxConnectRetries(0);
+                        if ($sentinelClientOptions->readTimeout) {
+                            $sentinelClient->setReadTimeout($sentinelClientOptions->readTimeout);
+                        }
+                        if ($sentinelClientOptions->password) {
+                            $sentinelClient->auth($sentinelClientOptions->password) or Zend_Cache::throwException('Unable to authenticate with the redis sentinel.');
+                        }
+                        $sentinel = new Credis_Sentinel($sentinelClient);
+                        $sentinel
+                            ->setClientTimeout($this->_clientOptions->timeout)
+                            ->setClientPersistent($this->_clientOptions->persistent);
+                        $redisMaster = $sentinel->getMasterClient($sentinelMaster);
+                        $this->_applyClientOptions($redisMaster);
 
-                    // Verify connected server is actually master as per Sentinel client spec
-                    if ( ! empty($options['sentinel_master_verify'])) {
-                        $roleData = $redisMaster->role();
-                        if ( ! $roleData || $roleData[0] != 'master') {
-                            usleep(100000); // Sleep 100ms and try again
-                            $redisMaster = $sentinel->getMasterClient($sentinelMaster);
-                            $this->_applyClientOptions($redisMaster);
+                        // Verify connected server is actually master as per Sentinel client spec
+                        if (! empty($options['sentinel_master_verify'])) {
                             $roleData = $redisMaster->role();
-                            if ( ! $roleData || $roleData[0] != 'master') {
-                                Zend_Cache::throwException('Unable to determine master redis server.');
+                            if (! $roleData || $roleData[0] != 'master') {
+                                usleep(100000); // Sleep 100ms and try again
+                                $redisMaster = $sentinel->getMasterClient($sentinelMaster);
+                                $this->_applyClientOptions($redisMaster);
+                                $roleData = $redisMaster->role();
+                                if (! $roleData || $roleData[0] != 'master') {
+                                    Zend_Cache::throwException('Unable to determine master redis server.');
+                                }
                             }
                         }
-                    }
 
-                    $this->_redis = $redisMaster;
-                    break 2;
-                } catch (Exception $e) {
-                    unset($sentinelClient);
-                    $exception = $e;
+                        $this->_redis = $redisMaster;
+                        break 2;
+                    } catch (Exception $e) {
+                        unset($sentinelClient);
+                        $exception = $e;
+                    }
                 }
             }
-            if ( ! $this->_redis) {
+            if (! $this->_redis) {
                 Zend_Cache::throwException('Unable to connect to a redis sentinel: '.$exception->getMessage(), $exception);
             }
 
             // Optionally use read slaves - will only be used for 'load' operation
-            if ( ! empty($options['load_from_slaves'])) {
+            if (! empty($options['load_from_slaves'])) {
                 $slaves = $sentinel->getSlaveClients($sentinelMaster);
                 if ($slaves) {
                     if ($options['load_from_slaves'] == 2) {
-                        array_push($slaves, $this->_redis); // Also send reads to the master
+                        $slaves[] = $this->_redis; // Also send reads to the master
                     }
                     $slaveSelect = isset($options['slave_select_callable']) && is_callable($options['slave_select_callable']) ? $options['slave_select_callable'] : null;
                     if ($slaveSelect) {
                         $slave = $slaveSelect($slaves, $this->_redis);
                     } else {
-                        $slaveKey = array_rand($slaves, 1);
+                        $slaveKey = array_rand($slaves);
                         $slave = $slaves[$slaveKey]; /* @var $slave Credis_Client */
                     }
-                    if ($slave instanceof Credis_Client && $slave != $this->_redis) {
+                    if ($slave instanceof Credis_Client && $slave !== $this->_redis) {
                         try {
-                            $this->_applyClientOptions($slave, TRUE);
+                            $this->_applyClientOptions($slave, true);
                             $this->_slave = $slave;
                         } catch (Exception $e) {
                             // If there is a problem with first slave then skip 'load_from_slaves' option
@@ -248,13 +251,13 @@ class Cm_Cache_Backend_Redis extends Zend_Cache_Backend implements Zend_Cache_Ba
 
         // Instantiate Credis_Cluster
         // DEPRECATED
-        else if ( ! empty($options['cluster'])) {
+        elseif (! empty($options['cluster'])) {
             $this->_setupReadWriteCluster($options);
         }
 
         // Direct connection to single Redis server and optional slaves
         else {
-            $port = isset($options['port']) ? $options['port'] : 6379;
+            $port = $options['port'] ?? 6379;
             $this->_redis = new Credis_Client($options['server'], $port, $this->_clientOptions->timeout, $this->_clientOptions->persistent);
             $this->_applyClientOptions($this->_redis);
 
@@ -267,7 +270,7 @@ class Cm_Cache_Backend_Redis extends Zend_Cache_Backend implements Zend_Cache_Ba
                         $clientOptions = $this->getClientOptions($options['load_from_slave'] + $options);
                         $totalServers = 2;
                     } else {  // Multiple slaves
-                        $slaveKey = array_rand($options['load_from_slave'], 1);
+                        $slaveKey = array_rand($options['load_from_slave']);
                         $slave = $options['load_from_slave'][$slaveKey];
                         $server = $slave['server'];
                         $port = $slave['port'];
@@ -280,22 +283,22 @@ class Cm_Cache_Backend_Redis extends Zend_Cache_Backend implements Zend_Cache_Ba
                     $clientOptions = $this->_clientOptions;
 
                     // If multiple addresses are given, split and choose a random one
-                    if (strpos($server, ',') !== FALSE) {
+                    if (strpos($server, ',') !== false) {
                         $slaves = preg_split('/\s*,\s*/', $server, -1, PREG_SPLIT_NO_EMPTY);
-                        $slaveKey = array_rand($slaves, 1);
+                        $slaveKey = array_rand($slaves);
                         $server = $slaves[$slaveKey];
-                        $port = NULL;
+                        $port = null;
                         $totalServers = count($slaves) + 1;
                     } else {
                         $totalServers = 2;
                     }
                 }
-                // Skip setting up slave if master is not write only and it is randomly chosen to be the read server
-                $masterWriteOnly = isset($options['master_write_only']) ? (int) $options['master_write_only'] : FALSE;
-                if (is_string($server) && $server && ! (!$masterWriteOnly && rand(1,$totalServers) === 1)) {
+                // Skip setting up slave if master is not write only, and it is randomly chosen to be the read server
+                $masterWriteOnly = isset($options['master_write_only']) ? (int) $options['master_write_only'] : false;
+                if (is_string($server) && $server && ! (!$masterWriteOnly && rand(1, $totalServers) === 1)) {
                     try {
                         $slave = new Credis_Client($server, $port, $clientOptions->timeout, $clientOptions->persistent);
-                        $this->_applyClientOptions($slave, TRUE, $clientOptions);
+                        $this->_applyClientOptions($slave, true, $clientOptions);
                         $this->_slave = $slave;
                     } catch (Exception $e) {
                         // Slave will not be used
@@ -304,72 +307,65 @@ class Cm_Cache_Backend_Redis extends Zend_Cache_Backend implements Zend_Cache_Ba
             }
         }
 
-        if ( isset($options['notMatchingTags']) ) {
+        if (isset($options['notMatchingTags'])) {
             $this->_notMatchingTags = (bool) $options['notMatchingTags'];
         }
 
-        if ( isset($options['compress_tags'])) {
+        if (isset($options['compress_tags'])) {
             $this->_compressTags = (int) $options['compress_tags'];
         }
 
-        if ( isset($options['compress_data'])) {
+        if (isset($options['compress_data'])) {
             $this->_compressData = (int) $options['compress_data'];
         }
 
-        if ( isset($options['lifetimelimit'])) {
+        if (isset($options['lifetimelimit'])) {
             $this->_lifetimelimit = (int) min($options['lifetimelimit'], self::MAX_LIFETIME);
         }
 
-        if ( isset($options['compress_threshold'])) {
+        if (isset($options['compress_threshold'])) {
             $this->_compressThreshold = (int) $options['compress_threshold'];
             if ($this->_compressThreshold < 1) {
                 $this->_compressThreshold = 1;
             }
         }
 
-        if ( isset($options['automatic_cleaning_factor']) ) {
+        if (isset($options['automatic_cleaning_factor'])) {
             $this->_options['automatic_cleaning_factor'] = (int) $options['automatic_cleaning_factor'];
         } else {
             $this->_options['automatic_cleaning_factor'] = 0;
         }
 
-        if ( isset($options['compression_lib']) ) {
+        if (isset($options['compression_lib'])) {
             $this->_compressionLib = (string) $options['compression_lib'];
-        }
-        else if ( function_exists('snappy_compress') ) {
+        } elseif (function_exists('snappy_compress')) {
             $this->_compressionLib = 'snappy';
-        }
-        else if ( function_exists('lz4_compress')) {
+        } elseif (function_exists('lz4_compress')) {
             $version = phpversion("lz4");
-            if (version_compare($version, "0.3.0") < 0)
-            {
-                $this->_compressTags = $this->_compressTags > 1 ? true : false;
-                $this->_compressData = $this->_compressData > 1 ? true : false;
+            if (version_compare($version, "0.3.0") < 0) {
+                $this->_compressTags = $this->_compressTags > 1;
+                $this->_compressData = $this->_compressData > 1;
             }
             $this->_compressionLib = 'l4z';
-        }
-        else if ( function_exists('zstd_compress')) {
+        } elseif (function_exists('zstd_compress')) {
             $version = phpversion("zstd");
-            if (version_compare($version, "0.4.13") < 0)
-            {
-                $this->_compressTags = $this->_compressTags > 1 ? true : false;
-                $this->_compressData = $this->_compressData > 1 ? true : false;
+            if (version_compare($version, "0.4.13") < 0) {
+                $this->_compressTags = $this->_compressTags > 1;
+                $this->_compressData = $this->_compressData > 1;
             }
             $this->_compressionLib = 'zstd';
-        }
-        else if ( function_exists('lzf_compress') ) {
+        } elseif (function_exists('lzf_compress')) {
             $this->_compressionLib = 'lzf';
-        }
-        else {
+        } else {
             $this->_compressionLib = 'gzip';
         }
-        $this->_compressPrefix = substr($this->_compressionLib,0,2).self::COMPRESS_PREFIX;
+        $this->_compressPrefix = substr($this->_compressionLib, 0, 2).self::COMPRESS_PREFIX;
 
-        if ( isset($options['sunion_chunk_size']) && $options['sunion_chunk_size'] > 0) {
+        if (isset($options['sunion_chunk_size']) && $options['sunion_chunk_size'] > 0) {
             $this->_sunionChunkSize = (int) $options['sunion_chunk_size'];
         }
 
-        if ( isset($options['remove_chunk_size']) && $options['remove_chunk_size'] > 0) {
+        if (isset($options['remove_chunk_size']) && $options['remove_chunk_size'] > 0) {
             $this->_removeChunkSize = (int) $options['remove_chunk_size'];
         }
 
@@ -402,8 +398,12 @@ class Cm_Cache_Backend_Redis extends Zend_Cache_Backend implements Zend_Cache_Ba
      * Apply common configuration to client instances.
      *
      * @param Credis_Client $client
+     * @param bool $forceSelect
+     * @param null|stdClass $clientOptions
+     * @throws CredisException
+     * @throws Zend_Cache_Exception
      */
-    protected function _applyClientOptions(Credis_Client $client, $forceSelect = FALSE, $clientOptions = null)
+    protected function _applyClientOptions(Credis_Client $client, $forceSelect = false, $clientOptions = null)
     {
         if ($clientOptions === null) {
             $clientOptions = $this->_clientOptions;
@@ -420,7 +420,11 @@ class Cm_Cache_Backend_Redis extends Zend_Cache_Backend implements Zend_Cache_Ba
         }
 
         if ($clientOptions->password) {
-            $client->auth($clientOptions->password) or Zend_Cache::throwException('Unable to authenticate with the redis server.');
+            if ($clientOptions->username) {
+                $client->auth($clientOptions->password, $clientOptions->username) or Zend_Cache::throwException('Unable to authenticate with the redis server.');
+            } else {
+                $client->auth($clientOptions->password) or Zend_Cache::throwException('Unable to authenticate with the redis server.');
+            }
         }
 
         // Always select database when persistent is used in case connection is re-used by other clients
@@ -430,8 +434,10 @@ class Cm_Cache_Backend_Redis extends Zend_Cache_Backend implements Zend_Cache_Ba
     }
 
     /**
-     * @deprecated - Previously this setup an instance of Credis_Cluster but this class was not complete or flawed
      * @param $options
+     * @throws CredisException
+     * @throws Zend_Cache_Exception
+     * @deprecated - Previously this setup an instance of Credis_Cluster but this class was not complete or flawed
      */
     protected function _setupReadWriteCluster($options)
     {
@@ -444,8 +450,8 @@ class Cm_Cache_Backend_Redis extends Zend_Cache_Backend implements Zend_Cache_Ba
                 $this->_redis = new Credis_Client(
                     $masterNode['host'],
                     $masterNode['port'],
-                    isset($masterNode['timeout']) ? $masterNode['timeout'] : 2.5,
-                    isset($masterNode['persistent']) ? $masterNode['persistent'] : ''
+                    $masterNode['timeout'] ?? 2.5,
+                    $masterNode['persistent'] ?? ''
                 );
                 $this->_applyClientOptions($this->_redis);
                 break;
@@ -453,15 +459,15 @@ class Cm_Cache_Backend_Redis extends Zend_Cache_Backend implements Zend_Cache_Ba
         }
 
         if (!empty($options['cluster']['slave'])) {
-            $slaveKey = array_rand($options['cluster']['slave'], 1);
+            $slaveKey = array_rand($options['cluster']['slave']);
             $slave = $options['cluster']['slave'][$slaveKey];
             $this->_slave = new Credis_Client(
                 $slave['host'],
                 $slave['port'],
-                isset($slave['timeout']) ? $slave['timeout'] : 2.5,
-                isset($slave['persistent']) ? $slave['persistent'] : ''
+                $slave['timeout'] ?? 2.5,
+                $slave['persistent'] ?? ''
             );
-            $this->_applyClientOptions($this->_redis, TRUE);
+            $this->_applyClientOptions($this->_redis, true);
         }
     }
 
@@ -471,21 +477,41 @@ class Cm_Cache_Backend_Redis extends Zend_Cache_Backend implements Zend_Cache_Ba
      * @param  string  $id                     Cache id
      * @param  boolean $doNotTestCacheValidity If set to true, the cache validity won't be tested
      * @return bool|string
+     * @throws CredisException
      */
     public function load($id, $doNotTestCacheValidity = false)
     {
         if ($this->_slave) {
-            $data = $this->_slave->hGet(self::PREFIX_KEY.$id, self::FIELD_DATA);
+            try {
+                $data = $this->_slave->hGet(self::PREFIX_KEY.$id, self::FIELD_DATA);
 
-            // Prevent compounded effect of cache flood on asynchronously replicating master/slave setup
-            if ($this->_retryReadsOnMaster && $data === false) {
-                $data = $this->_redis->hGet(self::PREFIX_KEY.$id, self::FIELD_DATA);
+                // Prevent compounded effect of cache flood on asynchronously replicating master/slave setup
+                if ($this->_retryReadsOnMaster && $data === false) {
+                    $data = $this->_redis->hGet(self::PREFIX_KEY.$id, self::FIELD_DATA);
+                }
+            } catch (CredisException $e) {
+                // Always retry reads on master when dataset is loading on slave
+                if ($e->getMessage() === 'LOADING Redis is loading the dataset in memory') {
+                    $data = $this->_redis->hGet(self::PREFIX_KEY.$id, self::FIELD_DATA);
+                } else {
+                    throw $e;
+                }
             }
         } else {
-            $data = $this->_redis->hGet(self::PREFIX_KEY.$id, self::FIELD_DATA);
+            try {
+                $data = $this->_redis->hGet(self::PREFIX_KEY.$id, self::FIELD_DATA);
+            } catch (CredisException $e) {
+                // Retry once after 1 second when dataset is loading
+                if ($e->getMessage() === 'LOADING Redis is loading the dataset in memory') {
+                    sleep(1);
+                    $data = $this->_redis->hGet(self::PREFIX_KEY.$id, self::FIELD_DATA);
+                } else {
+                    throw $e;
+                }
+            }
         }
-        if ($data === NULL || is_object($data)) {
-            return FALSE;
+        if ($data === null || $data === false || is_object($data)) {
+            return false;
         }
 
         $decoded = $this->_decodeData($data);
@@ -514,17 +540,17 @@ class Cm_Cache_Backend_Redis extends Zend_Cache_Backend implements Zend_Cache_Ba
     {
         // Don't use slave for this since `test` is usually used for locking
         $mtime = $this->_redis->hGet(self::PREFIX_KEY.$id, self::FIELD_MTIME);
-        return ($mtime ? $mtime : FALSE);
+        return ($mtime ? (int)$mtime : false);
     }
 
     /**
-     * Get the life time
+     * Get the lifetime
      *
-     * if $specificLifetime is not false, the given specific life time is used
+     * if $specificLifetime is not false, the given specific lifetime is used
      * else, the global lifetime is used
      *
      * @param  int $specificLifetime
-     * @return int Cache life time
+     * @return int Cache lifetime
      */
     public function getLifetime($specificLifetime)
     {
@@ -551,10 +577,11 @@ class Cm_Cache_Backend_Redis extends Zend_Cache_Backend implements Zend_Cache_Ba
      */
     public function save($data, $id, $tags = array(), $specificLifetime = false)
     {
-        if(!is_array($tags))
+        if (!is_array($tags)) {
             $tags = $tags ? array($tags) : array();
-        else
+        } else {
             $tags = array_flip(array_flip($tags));
+        }
 
         $lifetime = $this->_getAutoExpiringLifetime($this->getLifetime($specificLifetime), $id);
         $lifetime = $lifetime === null ? $lifetime : (int) $lifetime;
@@ -571,7 +598,7 @@ class Cm_Cache_Backend_Redis extends Zend_Cache_Backend implements Zend_Cache_Ba
                 self::SET_IDS,
                 $id,
                 $this->_encodeData($data, $this->_compressData),
-                $this->_encodeData(implode(',',$tags), $this->_compressTags),
+                $this->_encodeData(implode(',', $tags), $this->_compressTags),
                 time(),
                 $lifetime ? 0 : 1,
                 min($lifetime, self::MAX_LIFETIME),
@@ -606,17 +633,15 @@ class Cm_Cache_Backend_Redis extends Zend_Cache_Backend implements Zend_Cache_Ba
             // Process removed tags if cache entry already existed
             if ($res) {
                 $oldTags = explode(',', $this->_decodeData($res));
-                if ($remTags = ($oldTags ? array_diff($oldTags, $tags) : FALSE))
-                {
+                if ($remTags = ($oldTags ? array_diff($oldTags, $tags) : false)) {
                     // Update the id list for each tag
-                    foreach($remTags as $tag)
-                    {
+                    foreach ($remTags as $tag) {
                         $this->_redis->sRem(self::PREFIX_TAG_IDS . $tag, $id);
                     }
                 }
             }
 
-            return TRUE;
+            return true;
         }
 
         // Get list of tags previously assigned
@@ -628,50 +653,46 @@ class Cm_Cache_Backend_Redis extends Zend_Cache_Backend implements Zend_Cache_Ba
         // Set the data
         $result = $this->_redis->hMSet(self::PREFIX_KEY.$id, array(
           self::FIELD_DATA => $this->_encodeData($data, $this->_compressData),
-          self::FIELD_TAGS => $this->_encodeData(implode(',',$tags), $this->_compressTags),
+          self::FIELD_TAGS => $this->_encodeData(implode(',', $tags), $this->_compressTags),
           self::FIELD_MTIME => time(),
           self::FIELD_INF => is_null($lifetime) ? 1 : 0,
         ));
-        if( ! $result) {
+        if (! $result) {
             throw new CredisException("Could not set cache key $id");
         }
 
         // Set expiration if specified
         if ($lifetime !== false && !is_null($lifetime)) {
-          $this->_redis->expire(self::PREFIX_KEY.$id, min($lifetime, self::MAX_LIFETIME));
+            $this->_redis->expire(self::PREFIX_KEY.$id, min($lifetime, self::MAX_LIFETIME));
         }
 
         // Process added tags
-        if ($tags)
-        {
+        if ($tags) {
             // Update the list with all the tags
-            $this->_redis->sAdd( self::SET_TAGS, $tags);
+            $this->_redis->sAdd(self::SET_TAGS, $tags);
 
             // Update the id list for each tag
-            foreach($tags as $tag)
-            {
+            foreach ($tags as $tag) {
                 $this->_redis->sAdd(self::PREFIX_TAG_IDS . $tag, $id);
             }
         }
 
         // Process removed tags
-        if ($remTags = ($oldTags ? array_diff($oldTags, $tags) : FALSE))
-        {
+        if ($remTags = ($oldTags ? array_diff($oldTags, $tags) : false)) {
             // Update the id list for each tag
-            foreach($remTags as $tag)
-            {
+            foreach ($remTags as $tag) {
                 $this->_redis->sRem(self::PREFIX_TAG_IDS . $tag, $id);
             }
         }
 
         // Update the list with all the ids
-        if($this->_notMatchingTags) {
+        if ($this->_notMatchingTags) {
             $this->_redis->sAdd(self::SET_IDS, $id);
         }
 
         $this->_redis->exec();
 
-        return TRUE;
+        return true;
     }
 
     /**
@@ -688,46 +709,31 @@ class Cm_Cache_Backend_Redis extends Zend_Cache_Backend implements Zend_Cache_Ba
         $this->_redis->pipeline()->multi();
 
         // Remove data
-        $this->_redis->del(self::PREFIX_KEY.$id);
+        $this->_redis->unlink(self::PREFIX_KEY.$id);
 
         // Remove id from list of all ids
-        if($this->_notMatchingTags) {
-            $this->_redis->sRem( self::SET_IDS, $id );
+        if ($this->_notMatchingTags) {
+            $this->_redis->sRem(self::SET_IDS, $id);
         }
 
         // Update the id list for each tag
-        foreach($tags as $tag) {
+        foreach ($tags as $tag) {
             $this->_redis->sRem(self::PREFIX_TAG_IDS . $tag, $id);
         }
 
         $result = $this->_redis->exec();
 
-        return (bool) $result[0];
+        return isset($result[0]) && (bool)$result[0];
     }
 
     /**
      * @param array $tags
+     * @throws Zend_Cache_Exception
      */
     protected function _removeByNotMatchingTags($tags)
     {
         $ids = $this->getIdsNotMatchingTags($tags);
-        if($ids)
-        {
-            $ids = array_chunk($ids, $this->_removeChunkSize);
-            foreach ($ids as $idsChunk) {
-                $this->_redis->pipeline()->multi();
-
-                // Remove data
-                $this->_redis->del($this->_preprocessIds($idsChunk));
-
-                // Remove ids from list of all ids
-                if ($this->_notMatchingTags) {
-                    $this->_redis->sRem(self::SET_IDS, $idsChunk);
-                }
-
-                $this->_redis->exec();
-            }
-        }
+        $this->_removeByIds($ids);
     }
 
     /**
@@ -736,18 +742,25 @@ class Cm_Cache_Backend_Redis extends Zend_Cache_Backend implements Zend_Cache_Ba
     protected function _removeByMatchingTags($tags)
     {
         $ids = $this->getIdsMatchingTags($tags);
-        if($ids)
-        {
+        $this->_removeByIds($ids);
+    }
+
+    /**
+     * @param array $ids
+     */
+    protected function _removeByIds($ids)
+    {
+        if ($ids) {
             $ids = array_chunk($ids, $this->_removeChunkSize);
             foreach ($ids as $idsChunk) {
                 $this->_redis->pipeline()->multi();
 
                 // Remove data
-                $this->_redis->del($this->_preprocessIds($idsChunk));
+                $this->_redis->unlink($this->_preprocessIds($idsChunk));
 
                 // Remove ids from list of all ids
-                if($this->_notMatchingTags) {
-                    $this->_redis->sRem( self::SET_IDS, $idsChunk);
+                if ($this->_notMatchingTags) {
+                    $this->_redis->sRem(self::SET_IDS, $idsChunk);
                 }
 
                 $this->_redis->exec();
@@ -764,7 +777,7 @@ class Cm_Cache_Backend_Redis extends Zend_Cache_Backend implements Zend_Cache_Ba
             $tags = array_chunk($tags, $this->_sunionChunkSize);
             foreach ($tags as $chunk) {
                 $args = array(self::PREFIX_TAG_IDS, self::PREFIX_KEY, self::SET_TAGS, self::SET_IDS, ($this->_notMatchingTags ? 1 : 0), (int) $this->_luaMaxCStack);
-                if ( ! $this->_redis->evalSha(self::LUA_CLEAN_SH1, $chunk, $args)) {
+                if (! $this->_redis->evalSha(self::LUA_CLEAN_SH1, $chunk, $args)) {
                     $script =
                         "for i = 1, #KEYS, ARGV[6] do " .
                             "local prefixedTags = {} " .
@@ -773,12 +786,12 @@ class Cm_Cache_Backend_Redis extends Zend_Cache_Backend implements Zend_Cache_Ba
                             "end " .
                             "local keysToDel = redis.call('SUNION', unpack(prefixedTags, i, math.min(#prefixedTags, i + ARGV[6] - 1))) " .
                             "for _, keyname in ipairs(keysToDel) do " .
-                                "redis.call('DEL', ARGV[2]..keyname) " .
+                                "redis.call('UNLINK', ARGV[2]..keyname) " .
                                 "if (ARGV[5] == '1') then " .
                                     "redis.call('SREM', ARGV[4], keyname) " .
                                 "end " .
                             "end " .
-                            "redis.call('DEL', unpack(prefixedTags, i, math.min(#prefixedTags, i + ARGV[6] - 1))) " .
+                            "redis.call('UNLINK', unpack(prefixedTags, i, math.min(#prefixedTags, i + ARGV[6] - 1))) " .
                             "redis.call('SREM', ARGV[3], unpack(KEYS, i, math.min(#KEYS, i + ARGV[6] - 1))) " .
                         "end " .
                         "return true";
@@ -792,12 +805,11 @@ class Cm_Cache_Backend_Redis extends Zend_Cache_Backend implements Zend_Cache_Ba
 
         $this->_redis->pipeline()->multi();
 
-        if($ids)
-        {
+        if ($ids) {
             $ids = array_chunk($ids, $this->_removeChunkSize);
-            foreach ($ids as $index => $idsChunk) {
+            foreach ($ids as $idsChunk) {
                 // Remove data
-                $this->_redis->del($this->_preprocessIds($idsChunk));
+                $this->_redis->unlink($this->_preprocessIds($idsChunk));
 
                 // Remove ids from list of all ids
                 if ($this->_notMatchingTags) {
@@ -813,10 +825,10 @@ class Cm_Cache_Backend_Redis extends Zend_Cache_Backend implements Zend_Cache_Ba
         }
 
         // Remove tag id lists
-        $this->_redis->del( $this->_preprocessTagIds($tags));
+        $this->_redis->unlink($this->_preprocessTagIds($tags));
 
         // Remove tags from list of tags
-        $this->_redis->sRem( self::SET_TAGS, $tags);
+        $this->_redis->sRem(self::SET_TAGS, $tags);
 
         $this->_redis->exec();
     }
@@ -837,8 +849,8 @@ class Cm_Cache_Backend_Redis extends Zend_Cache_Backend implements Zend_Cache_Ba
             foreach ($allTags as $tag) {
                 $tagsBatch[] = $tag;
                 $counter++;
-                if (count($tagsBatch) == 10 || $counter == $tagsCount ) {
-                    if ( ! $this->_redis->evalSha(self::LUA_GC_SH1, $tagsBatch, $sArgs)) {
+                if (count($tagsBatch) == 10 || $counter == $tagsCount) {
+                    if (! $this->_redis->evalSha(self::LUA_GC_SH1, $tagsBatch, $sArgs)) {
                         $script =
                             "local tagKeys = {} ".
                             "local expired = {} ".
@@ -870,7 +882,7 @@ class Cm_Cache_Backend_Redis extends Zend_Cache_Backend implements Zend_Cache_Ba
                                     "end ".
                                 "end ".
                                 "if (notExpiredCount == 0) then ".
-                                    "redis.call ('DEL', ARGV[4]..tagName) ".
+                                    "redis.call ('UNLINK', ARGV[4]..tagName) ".
                                     "redis.call ('SREM', ARGV[2], tagName) ".
                                 "end ".
                                 "expired = {} ".
@@ -890,57 +902,57 @@ class Cm_Cache_Backend_Redis extends Zend_Cache_Backend implements Zend_Cache_Ba
 
         $exists = array();
         $tags = (array) $this->_redis->sMembers(self::SET_TAGS);
-        foreach($tags as $tag)
-        {
+        foreach ($tags as $tag) {
             // Get list of expired ids for each tag
             $tagMembers = $this->_redis->sMembers(self::PREFIX_TAG_IDS . $tag);
             $numTagMembers = count($tagMembers);
             $expired = array();
             $numExpired = $numNotExpired = 0;
-            if($numTagMembers) {
+            if ($numTagMembers) {
                 while ($id = array_pop($tagMembers)) {
-                    if( ! isset($exists[$id])) {
+                    if (! isset($exists[$id])) {
                         $exists[$id] = $this->_redis->exists(self::PREFIX_KEY.$id);
                     }
                     if ($exists[$id]) {
                         $numNotExpired++;
-                    }
-                    else {
+                    } else {
                         $numExpired++;
                         $expired[] = $id;
 
                         // Remove incrementally to reduce memory usage
                         if (count($expired) % 100 == 0 && $numNotExpired > 0) {
-                            $this->_redis->sRem( self::PREFIX_TAG_IDS . $tag, $expired);
-                            if($this->_notMatchingTags) { // Clean up expired ids from ids set
-                                $this->_redis->sRem( self::SET_IDS, $expired);
+                            $this->_redis->sRem(self::PREFIX_TAG_IDS . $tag, $expired);
+                            if ($this->_notMatchingTags) { // Clean up expired ids from ids set
+                                $this->_redis->sRem(self::SET_IDS, $expired);
                             }
                             $expired = array();
                         }
                     }
                 }
-                if( ! count($expired)) continue;
+                if (! count($expired)) {
+                    continue;
+                }
             }
 
             // Remove empty tags or completely expired tags
             if ($numExpired == $numTagMembers) {
-                $this->_redis->del(self::PREFIX_TAG_IDS . $tag);
+                $this->_redis->unlink(self::PREFIX_TAG_IDS . $tag);
                 $this->_redis->sRem(self::SET_TAGS, $tag);
             }
             // Clean up expired ids from tag ids set
-            else if (count($expired)) {
-                $this->_redis->sRem( self::PREFIX_TAG_IDS . $tag, $expired);
-                if($this->_notMatchingTags) { // Clean up expired ids from ids set
-                    $this->_redis->sRem( self::SET_IDS, $expired);
+            elseif (count($expired)) {
+                $this->_redis->sRem(self::PREFIX_TAG_IDS . $tag, $expired);
+                if ($this->_notMatchingTags) { // Clean up expired ids from ids set
+                    $this->_redis->sRem(self::SET_IDS, $expired);
                 }
             }
             unset($expired);
         }
 
+        // TODO
         // Clean up global list of ids for ids with no tag
-        if($this->_notMatchingTags) {
-            // TODO
-        }
+//        if ($this->_notMatchingTags) {
+//        }
     }
 
     /**
@@ -960,7 +972,7 @@ class Cm_Cache_Backend_Redis extends Zend_Cache_Backend implements Zend_Cache_Ba
      */
     public function clean($mode = Zend_Cache::CLEANING_MODE_ALL, $tags = array())
     {
-        if( $tags && ! is_array($tags)) {
+        if ($tags && ! is_array($tags)) {
             $tags = array($tags);
         }
 
@@ -970,13 +982,12 @@ class Cm_Cache_Backend_Redis extends Zend_Cache_Backend implements Zend_Cache_Ba
             }
             if ($mode == Zend_Cache::CLEANING_MODE_OLD) {
                 $this->_collectGarbage();
-                return TRUE;
+                return true;
             }
-            if ( ! count($tags)) {
-                return TRUE;
+            if (! count($tags)) {
+                return true;
             }
-            switch ($mode)
-            {
+            switch ($mode) {
                 case Zend_Cache::CLEANING_MODE_MATCHING_TAG:
 
                     $this->_removeByMatchingTags($tags);
@@ -998,7 +1009,7 @@ class Cm_Cache_Backend_Redis extends Zend_Cache_Backend implements Zend_Cache_Ba
         } catch (CredisException $e) {
             Zend_Cache::throwException('Error cleaning cache by mode '.$mode.': '.$e->getMessage(), $e);
         }
-        return TRUE;
+        return true;
     }
 
     /**
@@ -1008,7 +1019,7 @@ class Cm_Cache_Backend_Redis extends Zend_Cache_Backend implements Zend_Cache_Ba
      */
     public function isAutomaticCleaningAvailable()
     {
-        return TRUE;
+        return true;
     }
 
     /**
@@ -1033,9 +1044,9 @@ class Cm_Cache_Backend_Redis extends Zend_Cache_Backend implements Zend_Cache_Ba
      * Mainly a workaround for the issues that arise due to the fact that
      * Magento's Enterprise_PageCache module doesn't set any expiry.
      *
-     * @param  int $specificLifetime
-     * @param  string $id
-     * @return int Cache life time
+     * @param int $lifetime
+     * @param string $id
+     * @return int Cache lifetime
      */
     protected function _getAutoExpiringLifetime($lifetime, $id)
     {
@@ -1074,12 +1085,12 @@ class Cm_Cache_Backend_Redis extends Zend_Cache_Backend implements Zend_Cache_Ba
      */
     public function getIds()
     {
-        if($this->_notMatchingTags) {
+        if ($this->_notMatchingTags) {
             return (array) $this->_redis->sMembers(self::SET_IDS);
         } else {
             $keys = $this->_redis->keys(self::PREFIX_KEY . '*');
             $prefixLen = strlen(self::PREFIX_KEY);
-            foreach($keys as $index => $key) {
+            foreach ($keys as $index => $key) {
                 $keys[$index] = substr($key, $prefixLen);
             }
             return $keys;
@@ -1107,7 +1118,7 @@ class Cm_Cache_Backend_Redis extends Zend_Cache_Backend implements Zend_Cache_Ba
     public function getIdsMatchingTags($tags = array())
     {
         if ($tags) {
-            return (array) $this->_redis->sInter( $this->_preprocessTagIds($tags) );
+            return (array) $this->_redis->sInter($this->_preprocessTagIds($tags));
         }
         return array();
     }
@@ -1119,16 +1130,17 @@ class Cm_Cache_Backend_Redis extends Zend_Cache_Backend implements Zend_Cache_Ba
      *
      * @param array $tags array of tags
      * @return array array of not matching cache ids (string)
+     * @throws Zend_Cache_Exception
      */
     public function getIdsNotMatchingTags($tags = array())
     {
-        if( ! $this->_notMatchingTags) {
+        if (! $this->_notMatchingTags) {
             Zend_Cache::throwException("notMatchingTags is currently disabled.");
         }
         if ($tags) {
-            return (array) $this->_redis->sDiff( self::SET_IDS, $this->_preprocessTagIds($tags) );
+            return (array) $this->_redis->sDiff(self::SET_IDS, $this->_preprocessTagIds($tags));
         }
-        return (array) $this->_redis->sMembers( self::SET_IDS );
+        return (array) $this->_redis->sMembers(self::SET_IDS);
     }
 
     /**
@@ -1145,7 +1157,7 @@ class Cm_Cache_Backend_Redis extends Zend_Cache_Backend implements Zend_Cache_Ba
         if ($tags) {
             $chunks = array_chunk($tags, $this->_sunionChunkSize);
             foreach ($chunks as $chunk) {
-                $result = array_merge($result, (array) $this->_redis->sUnion( $this->_preprocessTagIds($chunk)));
+                $result = array_merge($result, (array) $this->_redis->sUnion($this->_preprocessTagIds($chunk)));
             }
             if (count($chunks) > 1) {
                 $result = array_unique($result);    // since we are chunking requests, we must de-duplicate member names
@@ -1172,15 +1184,17 @@ class Cm_Cache_Backend_Redis extends Zend_Cache_Backend implements Zend_Cache_Ba
      */
     public function getFillingPercentage()
     {
-        $maxMem = $this->_redis->config('GET','maxmemory');
+        try {
+            $maxMem = $this->_redis->config('GET', 'maxmemory');
+        } catch (CredisException $e) {
+            throw new Zend_Cache_Exception($e->getMessage(), 0, $e);
+        }
         if (0 == (int) $maxMem['maxmemory']) {
             return 1;
         }
         $info = $this->_redis->info();
         return (int) round(
             ($info['used_memory']/$maxMem['maxmemory']*100)
-            ,0
-            ,PHP_ROUND_HALF_UP
         );
     }
 
@@ -1192,13 +1206,18 @@ class Cm_Cache_Backend_Redis extends Zend_Cache_Backend implements Zend_Cache_Ba
      */
     public function getHitMissPercentage()
     {
-        $info = $this->_redis->info();
+        try {
+            $info = $this->_redis->info();
+        } catch (CredisException $e) {
+            throw new Zend_Cache_Exception($e->getMessage(), 0, $e);
+        }
         $hits = $info['keyspace_hits'];
         $misses = $info['keyspace_misses'];
         $total = $misses+$hits;
         $percentage = 0;
-        if ($total > 0)
-            $percentage = round($hits*100/$total, 0);
+        if ($total > 0) {
+            $percentage = round($hits*100/$total);
+        }
         return $percentage;
     }
 
@@ -1211,18 +1230,18 @@ class Cm_Cache_Backend_Redis extends Zend_Cache_Backend implements Zend_Cache_Ba
      * - mtime : timestamp of last modification time
      *
      * @param string $id cache id
-     * @return array array of metadatas (false if the cache id is not found)
+     * @return array|bool array of metadatas (false if the cache id is not found)
      */
     public function getMetadatas($id)
     {
         list($tags, $mtime, $inf) = array_values(
             $this->_redis->hMGet(self::PREFIX_KEY.$id, array(self::FIELD_TAGS, self::FIELD_MTIME, self::FIELD_INF))
         );
-        if( ! $mtime) {
-          return FALSE;
+        if (! $mtime) {
+            return false;
         }
         $tags = explode(',', $this->_decodeData($tags));
-        $expire = $inf === '1' ? FALSE : time() + $this->_redis->ttl(self::PREFIX_KEY.$id);
+        $expire = $inf === '1' ? false : time() + $this->_redis->ttl(self::PREFIX_KEY.$id);
 
         return array(
             'expire' => $expire,
@@ -1240,7 +1259,7 @@ class Cm_Cache_Backend_Redis extends Zend_Cache_Backend implements Zend_Cache_Ba
      */
     public function touch($id, $extraLifetime)
     {
-        list($inf) = $this->_redis->hGet(self::PREFIX_KEY.$id, self::FIELD_INF);
+        $inf = $this->_redis->hGet(self::PREFIX_KEY.$id, self::FIELD_INF);
         if ($inf === '0') {
             $expireAt = time() + $this->_redis->ttl(self::PREFIX_KEY.$id) + $extraLifetime;
             return (bool) $this->_redis->expireAt(self::PREFIX_KEY.$id, $expireAt);
@@ -1284,14 +1303,19 @@ class Cm_Cache_Backend_Redis extends Zend_Cache_Backend implements Zend_Cache_Ba
     {
         if ($this->_compressionLib && $level !== 0 && strlen($data) >= $this->_compressThreshold) {
             switch($this->_compressionLib) {
-                case 'snappy': $data = snappy_compress($data); break;
-                case 'lzf':    $data = lzf_compress($data); break;
-                case 'l4z':    $data = lz4_compress($data, $level); break;
-                case 'zstd':   $data = zstd_compress($data, $level); break;
-                case 'gzip':   $data = gzcompress($data, $level); break;
+                case 'snappy': $data = snappy_compress($data);
+                    break;
+                case 'lzf':    $data = lzf_compress($data);
+                    break;
+                case 'l4z':    $data = lz4_compress($data, $level);
+                    break;
+                case 'zstd':   $data = zstd_compress($data, $level);
+                    break;
+                case 'gzip':   $data = gzcompress($data, $level);
+                    break;
                 default:       throw new CredisException("Unrecognized 'compression_lib'.");
             }
-            if( ! $data) {
+            if (! $data) {
                 throw new CredisException("Could not compress cache data.");
             }
             return $this->_compressPrefix.$data;
@@ -1306,13 +1330,13 @@ class Cm_Cache_Backend_Redis extends Zend_Cache_Backend implements Zend_Cache_Ba
     protected function _decodeData($data)
     {
         try {
-            if (substr($data,2,3) == self::COMPRESS_PREFIX) {
-                switch(substr($data,0,2)) {
-                    case 'sn': return snappy_uncompress(substr($data,5));
-                    case 'lz': return lzf_decompress(substr($data,5));
-                    case 'l4': return lz4_uncompress(substr($data,5));
-                    case 'zs': return zstd_uncompress(substr($data,5));
-                    case 'gz': case 'zc': return gzuncompress(substr($data,5));
+            if (substr($data, 2, 3) == self::COMPRESS_PREFIX) {
+                switch(substr($data, 0, 2)) {
+                    case 'sn': return snappy_uncompress(substr($data, 5));
+                    case 'lz': return lzf_decompress(substr($data, 5));
+                    case 'l4': return lz4_uncompress(substr($data, 5));
+                    case 'zs': return zstd_uncompress(substr($data, 5));
+                    case 'gz': case 'zc': return gzuncompress(substr($data, 5));
                 }
             }
         } catch(Exception $e) {
@@ -1360,7 +1384,7 @@ class Cm_Cache_Backend_Redis extends Zend_Cache_Backend implements Zend_Cache_Ba
      */
     public function ___expire($id)
     {
-        $this->_redis->del(self::PREFIX_KEY.$id);
+        $this->_redis->unlink(self::PREFIX_KEY.$id);
     }
 
     /**
@@ -1371,4 +1395,22 @@ class Cm_Cache_Backend_Redis extends Zend_Cache_Backend implements Zend_Cache_Ba
         $this->_redis->script('flush');
     }
 
+    /**
+     * @return array
+     */
+    public function ___checkScriptsExist()
+    {
+        $scripts = [];
+        $result = $this->_redis->script('exists', self::LUA_SAVE_SH1, self::LUA_CLEAN_SH1, self::LUA_GC_SH1);
+        if ($result[0] ?? false) {
+            $scripts[] = 'save';
+        }
+        if ($result[1] ?? false) {
+            $scripts[] = 'clean';
+        }
+        if ($result[2] ?? false) {
+            $scripts[] = 'garbage';
+        }
+        return $scripts;
+    }
 }

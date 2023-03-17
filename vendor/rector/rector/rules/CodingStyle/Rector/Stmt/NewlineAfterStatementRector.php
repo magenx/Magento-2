@@ -86,11 +86,16 @@ CODE_SAMPLE
         if (!$nextNode instanceof Node) {
             return null;
         }
+        $parentCurrentNode = $node->getAttribute(AttributeKey::PARENT_NODE);
+        $parentNextNode = $nextNode->getAttribute(AttributeKey::PARENT_NODE);
+        if ($parentNextNode !== $parentCurrentNode) {
+            return null;
+        }
         if ($this->shouldSkip($nextNode)) {
             return null;
         }
         $endLine = $node->getEndLine();
-        $line = $nextNode->getLine();
+        $line = $nextNode->getStartLine();
         $rangeLine = $line - $endLine;
         if ($rangeLine > 1) {
             /** @var Comment[]|null $comments */
@@ -103,11 +108,15 @@ CODE_SAMPLE
                 return null;
             }
             /** @var Comment[] $comments */
-            $line = $comments[0]->getLine();
+            $line = $comments[0]->getStartLine();
             $rangeLine = $line - $endLine;
             if ($rangeLine > 1) {
                 return null;
             }
+        }
+        // skip same line or < 0 that cause infinite loop or crash
+        if ($rangeLine <= 0) {
+            return null;
         }
         return [$node, new Nop()];
     }

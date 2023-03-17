@@ -32,8 +32,6 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     public const KEY_BUTTON_COLOR = 'color';
     public const KEY_BUTTON_SHAPE = 'shape';
     public const KEY_BUTTON_SIZE = 'size';
-    public const KEY_BUTTON_LAYOUT = 'layout';
-    public const KEY_BUTTON_TAGLINE = 'tagline';
     public const KEY_BUTTON_LABEL = 'label';
 
     /**
@@ -219,36 +217,6 @@ class Config extends \Magento\Payment\Gateway\Config\Config
         $value = $this->getButtonStyle($area, self::KEY_BUTTON_SIZE, $type);
         $options = $this->sizeConfigSource->toRawValues();
         return $options[$value];
-    }
-
-    /**
-     * Get button layout mapped to the value expected by the PayPal API
-     *
-     * @param string $area
-     * @param string $type
-     * @return string
-     */
-    public function getButtonLayout(string $area = self::BUTTON_AREA_CART, string $type = 'paypal')
-    {
-        return $this->getButtonStyle($area, self::KEY_BUTTON_LAYOUT, $type);
-    }
-
-    /**
-     * Get button tagline mapped to the value expected by the PayPal API
-     *
-     * @param string $area
-     * @param string $type
-     * @return string
-     */
-    public function getButtonTagline(string $area = self::BUTTON_AREA_CART, string $type = 'paypal')
-    {
-        $value = $this->getButtonStyle($area, self::KEY_BUTTON_TAGLINE, $type);
-        if ($value == 1) {
-
-            return 'true';
-        }
-
-        return 'false';
     }
 
     /**

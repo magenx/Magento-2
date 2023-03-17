@@ -75,6 +75,7 @@ use PDepend\Source\AST\ASTDeclareStatement;
 use PDepend\Source\AST\ASTDoWhileStatement;
 use PDepend\Source\AST\ASTEchoStatement;
 use PDepend\Source\AST\ASTElseIfStatement;
+use PDepend\Source\AST\ASTEnum;
 use PDepend\Source\AST\ASTEvalExpression;
 use PDepend\Source\AST\ASTExitExpression;
 use PDepend\Source\AST\ASTExpression;
@@ -96,6 +97,7 @@ use PDepend\Source\AST\ASTIfStatement;
 use PDepend\Source\AST\ASTIncludeExpression;
 use PDepend\Source\AST\ASTInstanceOfExpression;
 use PDepend\Source\AST\ASTInterface;
+use PDepend\Source\AST\ASTIntersectionType;
 use PDepend\Source\AST\ASTIssetExpression;
 use PDepend\Source\AST\ASTLabelStatement;
 use PDepend\Source\AST\ASTListExpression;
@@ -282,6 +284,15 @@ interface Builder extends IteratorAggregate
      * @since  0.10.0
      */
     public function restoreClass(ASTClass $class);
+
+    /**
+     * Restores an enum within the internal type scope.
+     *
+     * @return void
+     *
+     * @since  2.11.0
+     */
+    public function restoreEnum(ASTEnum $enum);
 
     /**
      * Builds a new code type reference instance.
@@ -1210,6 +1221,13 @@ interface Builder extends IteratorAggregate
      * @since  2.9.0
      */
     public function buildAstUnionType();
+
+    /**
+     * Builds a new node for the intersection type.
+     *
+     * @return ASTIntersectionType
+     */
+    public function buildAstIntersectionType();
 
     /**
      * Builds a new literal node.

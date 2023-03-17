@@ -30,14 +30,15 @@ try {
                     '<?= $block->getClientToken() ?>',
                     '<?= $block->escapeHtmlAttr($block->getCurrency()) ?>',
                     '<?= $block->escapeHtmlAttr($block->getEnvironment()) ?>',
-                    '<?= $block->escapeHtmlAttr($block->getMerchantCountry()) ?>'
+                    '<?= $block->escapeHtmlAttr($block->getMerchantCountry()) ?>',
+                    '<?= json_encode($block->getCartLineItems()) ?>'
                 );
             })
         })
     </script>
 
     <?php if ($block->showPayPalButton('paypal', 'productpage')):?>
-        <div class="paypal checkout paypal-logo braintree-paypal-logo <?= $block->escapeHtmlAttr($block->getContainerId()) ?>-container">
+        <div class="paypal product-page paypal-logo braintree-paypal-logo <?= $block->escapeHtmlAttr($block->getContainerId()) ?>-container">
             <div data-currency="<?= $block->escapeHtmlAttr($block->getCurrency()) ?>"
                  data-locale="<?= $block->escapeHtmlAttr($block->getLocale()) ?>"
                  data-amount="<?= $block->escapeHtmlAttr($block->getAmount()) ?>"
@@ -50,8 +51,6 @@ try {
                  data-shape="<?= $block->getButtonShape('paypal') ?>"
                  data-size="<?= $block->getButtonSize('paypal') ?>"
                  data-color="<?= $block->getButtonColor('paypal') ?>"
-                 data-layout="<?= $block->getButtonLayout('paypal') ?>"
-                 data-tagline="<?= $block->getButtonTagline('paypal') ?>"
                  data-label="<?= $block->getButtonLabel('paypal') ?>"
                  data-location="<?= $block->getLocation() ?>"
                  data-requiredbillingaddress="<?= $block->isRequiredBillingAddress() ?>"
@@ -59,7 +58,7 @@ try {
         </div>
     <?php endif;?>
     <?php if ($block->isCreditActive() && $block->showPayPalButton('credit', 'productpage')): ?>
-        <div class="paypal checkout paypal-logo braintree-paypal-logo <?= $block->escapeHtmlAttr($block->getContainerId()) ?>-container">
+        <div class="paypal-credit product-page paypal-logo braintree-paypal-logo <?= $block->escapeHtmlAttr($block->getContainerId()) ?>-container">
             <div data-currency="<?= $block->escapeHtmlAttr($block->getCurrency()) ?>"
                  data-locale="<?= $block->escapeHtmlAttr($block->getLocale()) ?>"
                  data-amount="<?= $block->escapeHtmlAttr($block->getAmount()) ?>"
@@ -72,8 +71,6 @@ try {
                  data-shape="<?= $block->getButtonShape('credit') ?>"
                  data-size="<?= $block->getButtonSize('credit') ?>"
                  data-color="<?= $block->getButtonColor('credit') ?>"
-                 data-layout="<?= $block->getButtonLayout('credit') ?>"
-                 data-tagline="<?= $block->getButtonTagline('credit') ?>"
                  data-label="<?= $block->getButtonLabel('credit') ?>"
                  data-location="<?= $block->getLocation() ?>"
                  data-requiredbillingaddress="<?= $block->isRequiredBillingAddress() ?>"
@@ -81,7 +78,7 @@ try {
         </div>
     <?php endif; ?>
     <?php if ($block->isPayLaterActive() && $block->showPayPalButton('paylater', 'productpage')): ?>
-            <div class="paypal checkout paypal-logo braintree-paypal-logo <?= $block->escapeHtmlAttr($block->getContainerId()) ?>-container">
+            <div class="paypal-paylater product-page paypal-logo braintree-paypal-logo <?= $block->escapeHtmlAttr($block->getContainerId()) ?>-container">
                 <div data-currency="<?= $block->escapeHtmlAttr($block->getCurrency()) ?>"
                      data-locale="<?= $block->escapeHtmlAttr($block->getLocale()) ?>"
                      data-amount="<?= $block->escapeHtmlAttr($block->getAmount()) ?>"
@@ -94,15 +91,13 @@ try {
                      data-shape="<?= $block->getButtonShape('paylater') ?>"
                      data-size="<?= $block->getButtonSize('paylater') ?>"
                      data-color="<?= $block->getButtonColor('paylater') ?>"
-                     data-layout="<?= $block->getButtonLayout('paylater') ?>"
-                     data-tagline="<?= $block->getButtonTagline('paylater') ?>"
                      data-label="<?= $block->getButtonLabel('paylater') ?>"
                      data-location="<?= $block->getLocation() ?>"
                      data-requiredbillingaddress="<?= $block->isRequiredBillingAddress() ?>"
                      class="action-braintree-paypal-logo"></div>
             </div>
     <?php endif; ?>
-    <?php if ($block->showPayPalButton('messaging', 'productpage') && !$block->isPayPalVaultActive()): ?>
+    <?php if ($block->showPayPalButton('messaging', 'productpage')): ?>
         <div class="action-braintree-paypal-message"
              id="<?= $block->escapeHtmlAttr($paypalPaylaterId) ?>-message"
              data-pp-amount="<?= $block->escapeHtmlAttr($block->getAmount()) ?>"

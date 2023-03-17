@@ -1,3 +1,42 @@
+# Changelog
+
+## 6.11.1
+* Resolved various dynamic property warnings for PHP 8.2 (thanks to @mvoelker & @markdavidsonEE)
+
+## 6.11.0 
+* Add `preDisputeProgram` to `Dispute` and `DisputeSearch`
+* Add `AUTO_ACCEPTED` Dispute Status
+* Add `DISPUTE_AUTO_ACCEPTED` WebhookNotification
+* Add `EXCESSIVE_RETRY` to `GatewayRejectionReason`
+
+## 6.10.0
+* Add `SEPADirectDebitAccount` payment method
+* Add `SEPADirectDebitAccountDetails` to transaction object
+* Add `SEPA_DIRECT_DEBIT_ACCOUNT` to payment instrument type
+* Add SEPA Direct Debit specific error codes
+* Add SEPA Direct Debit array to customer object
+* Deprecate `chargebackProtectionLevel` and add `protectionLevel` to `Dispute` and `DisputeSearch`
+
+## 6.9.1
+* Address PHP 8.2 deprecation warnings due to string interpolation patterns. (thanks @Ayesh)
+
+## 6.9.0
+* Add `TRANSACTION_REASON_CODE` to search for transaction that have any ach return response with reason code associated.
+* Add `reasonCode` criteria to `TransactionSearch`
+* Add `achReturnResponsesCreatedAt` criteria to `TransactionSearch`
+* Add `LiabilityShift` class and `liabilityShift` to RiskData
+* Add support for `ExchangeRateQuoteAPI`
+* Fix various PHP 8.1 `null` warnings (thanks @simoheinonen & @robbieaverill)
+
+## 6.8.0
+* Add `retried` to `Transaction`
+
+## 6.7.0
+* Fix lint errors on unit test
+
+## 6.6.0
+* Add `PaymentMethodCustomerDataUpdated` webhook notification support
+
 ## 6.5.1
 * Address PHP 8.1 Deprecation warnings
 

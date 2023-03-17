@@ -6,11 +6,15 @@ namespace Rector\PhpAttribute\AnnotationToAttributeMapper;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\Array_;
 use PhpParser\Node\Expr\ArrayItem;
+use PhpParser\Node\Expr\ClassConstFetch;
+use PhpParser\Node\Name;
+use PhpParser\Node\Scalar\String_;
+use Rector\Core\PhpParser\Node\Value\ValueResolver;
 use Rector\PhpAttribute\AnnotationToAttributeMapper;
 use Rector\PhpAttribute\Contract\AnnotationToAttributeMapperInterface;
 use Rector\PhpAttribute\Enum\DocTagNodeState;
-use RectorPrefix202208\Symfony\Contracts\Service\Attribute\Required;
-use RectorPrefix202208\Webmozart\Assert\Assert;
+use RectorPrefix202303\Symfony\Contracts\Service\Attribute\Required;
+use RectorPrefix202303\Webmozart\Assert\Assert;
 /**
  * @implements AnnotationToAttributeMapperInterface<mixed[]>
  */
@@ -20,6 +24,15 @@ final class ArrayAnnotationToAttributeMapper implements AnnotationToAttributeMap
      * @var \Rector\PhpAttribute\AnnotationToAttributeMapper
      */
     private $annotationToAttributeMapper;
+    /**
+     * @readonly
+     * @var \Rector\Core\PhpParser\Node\Value\ValueResolver
+     */
+    private $valueResolver;
+    public function __construct(ValueResolver $valueResolver)
+    {
+        $this->valueResolver = $valueResolver;
+    }
     /**
      * Avoid circular reference
      * @required
@@ -47,19 +60,31 @@ final class ArrayAnnotationToAttributeMapper implements AnnotationToAttributeMap
             if ($valueExpr === DocTagNodeState::REMOVE_ARRAY) {
                 continue;
             }
-            Assert::isInstanceOf($valueExpr, Expr::class);
             // remove value
             if ($this->isRemoveArrayPlaceholder($singleValue)) {
                 continue;
             }
-            $keyExpr = null;
-            if (!\is_int($key)) {
-                $keyExpr = $this->annotationToAttributeMapper->map($key);
-                Assert::isInstanceOf($keyExpr, Expr::class);
+            if ($valueExpr instanceof ArrayItem) {
+                $valueExpr = $this->resolveValueExprWithSingleQuoteHandling($valueExpr);
+                $arrayItems[] = $this->resolveValueExprWithSingleQuoteHandling($valueExpr);
+            } else {
+                $keyExpr = null;
+                if (!\is_int($key)) {
+                    $keyExpr = $this->annotationToAttributeMapper->map($key);
+                    Assert::isInstanceOf($keyExpr, Expr::class);
+                }
+                $arrayItems[] = new ArrayItem($valueExpr, $keyExpr);
             }
-            $arrayItems[] = new ArrayItem($valueExpr, $keyExpr);
         }
         return new Array_($arrayItems);
+    }
+    private function resolveValueExprWithSingleQuoteHandling(ArrayItem $arrayItem) : ArrayItem
+    {
+        if ($arrayItem->key === null && $arrayItem->value instanceof ClassConstFetch && $arrayItem->value->class instanceof Name && \strpos((string) $arrayItem->value->class, "'") !== \false) {
+            $arrayItem->value = new String_($this->valueResolver->getValue($arrayItem->value));
+            return $arrayItem;
+        }
+        return $arrayItem;
     }
     /**
      * @param mixed $value

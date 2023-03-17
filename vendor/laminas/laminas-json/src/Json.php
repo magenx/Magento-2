@@ -90,12 +90,11 @@ class Json
      *
      * @see Laminas\Json\Expr
      *
-     * @param  mixed $valueToEncode
      * @param  bool $cycleCheck Optional; whether or not to check for object recursion; off by default
      * @param  array $options Additional options used during encoding
      * @return string JSON encoded object
      */
-    public static function encode($valueToEncode, $cycleCheck = false, array $options = [])
+    public static function encode(mixed $valueToEncode, $cycleCheck = false, array $options = [])
     {
         if (is_object($valueToEncode)) {
             if (method_exists($valueToEncode, 'toJson')) {
@@ -143,7 +142,7 @@ class Json
      * @return mixed
      */
     protected static function recursiveJsonExprFinder(
-        $value,
+        mixed $value,
         SplQueue $javascriptExpressions,
         $currentKey = null
     ) {
@@ -337,13 +336,12 @@ class Json
      * Encoder component, based on availability of the built-in and/or whether
      * or not the component encoder is requested.
      *
-     * @param mixed $valueToEncode
      * @param bool $cycleCheck
      * @param array $options
      * @param bool $prettyPrint
      * @return string
      */
-    private static function encodeValue($valueToEncode, $cycleCheck, array $options, $prettyPrint)
+    private static function encodeValue(mixed $valueToEncode, $cycleCheck, array $options, $prettyPrint)
     {
         if (function_exists('json_encode') && static::$useBuiltinEncoderDecoder !== true) {
             return self::encodeViaPhpBuiltIn($valueToEncode, $prettyPrint);
@@ -364,12 +362,11 @@ class Json
      *
      * If $prettyPrint is boolean true, also uses JSON_PRETTY_PRINT.
      *
-     * @param mixed $valueToEncode
      * @param bool $prettyPrint
      * @return string|false Boolean false return value if json_encode is not
      *     available, or the $useBuiltinEncoderDecoder flag is enabled.
      */
-    private static function encodeViaPhpBuiltIn($valueToEncode, $prettyPrint = false)
+    private static function encodeViaPhpBuiltIn(mixed $valueToEncode, $prettyPrint = false)
     {
         if (! function_exists('json_encode') || static::$useBuiltinEncoderDecoder === true) {
             return false;
@@ -393,13 +390,12 @@ class Json
      * and, if so, returns the result of that operation, otherwise returning
      * the encoded value.
      *
-     * @param mixed $valueToEncode
      * @param bool $cycleCheck
      * @param array $options
      * @param bool $prettyPrint
      * @return string
      */
-    private static function encodeViaEncoder($valueToEncode, $cycleCheck, array $options, $prettyPrint)
+    private static function encodeViaEncoder(mixed $valueToEncode, $cycleCheck, array $options, $prettyPrint)
     {
         $encodedResult = Encoder::encode($valueToEncode, $cycleCheck, $options);
 

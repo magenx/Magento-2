@@ -9,7 +9,10 @@ use Laminas\Di\ConfigInterface;
 use Laminas\Di\Definition\RuntimeDefinition;
 use Laminas\Di\Resolver\DependencyResolver;
 use Psr\Container\ContainerInterface;
-use Zend\Di\ConfigInterface as LegacyConfigInterace;
+use Psr\Log\LoggerInterface;
+
+use function assert;
+use function is_string;
 
 class GeneratorFactory
 {
@@ -19,13 +22,18 @@ class GeneratorFactory
             return $container->get(ConfigInterface::class);
         }
 
-        if ($container->has(LegacyConfigInterace::class)) {
-            return $container->get(LegacyConfigInterace::class);
+        if ($container->has('Zend\Di\ConfigInterface')) {
+            /** @psalm-var ConfigInterface */
+            return $container->get('Zend\Di\ConfigInterface');
         }
 
         return (new ConfigFactory())->create($container);
     }
 
+    /**
+     * @psalm-suppress MixedAssignment
+     * @psalm-suppress MixedArrayAccess
+     */
     public function create(ContainerInterface $container): InjectorGenerator
     {
         $diConfig = $this->getConfig($container);
@@ -38,13 +46,16 @@ class GeneratorFactory
         $logger    = null;
 
         if (isset($aotConfig['logger'])) {
-            $logger = $container->get($aotConfig['logger']);
+            $logger = $container->get((string) $aotConfig['logger']);
+            assert($logger instanceof LoggerInterface);
         }
+
+        assert($namespace === null || is_string($namespace));
 
         $generator = new InjectorGenerator($diConfig, $resolver, $namespace, $logger);
 
         if (isset($aotConfig['directory'])) {
-            $generator->setOutputDirectory($aotConfig['directory']);
+            $generator->setOutputDirectory((string) $aotConfig['directory']);
         }
 
         return $generator;

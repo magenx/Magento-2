@@ -4,15 +4,15 @@ declare (strict_types=1);
 namespace Rector\Core\Configuration;
 
 use Rector\ChangesReporting\Output\ConsoleOutputFormatter;
+use Rector\Core\Configuration\Parameter\ParameterProvider;
 use Rector\Core\Contract\Console\OutputStyleInterface;
 use Rector\Core\ValueObject\Configuration;
-use RectorPrefix202208\Symfony\Component\Console\Input\InputInterface;
-use RectorPrefix202208\Symplify\PackageBuilder\Parameter\ParameterProvider;
+use RectorPrefix202303\Symfony\Component\Console\Input\InputInterface;
 final class ConfigurationFactory
 {
     /**
      * @readonly
-     * @var \Symplify\PackageBuilder\Parameter\ParameterProvider
+     * @var \Rector\Core\Configuration\Parameter\ParameterProvider
      */
     private $parameterProvider;
     /**
@@ -26,6 +26,7 @@ final class ConfigurationFactory
         $this->rectorOutputStyle = $rectorOutputStyle;
     }
     /**
+     * @api used in tests
      * @param string[] $paths
      */
     public function createForTests(array $paths) : Configuration

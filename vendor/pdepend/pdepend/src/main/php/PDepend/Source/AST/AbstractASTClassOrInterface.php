@@ -177,25 +177,7 @@ abstract class AbstractASTClassOrInterface extends AbstractASTType
      */
     public function getInterfaces()
     {
-        $stack = $this->getParentClasses();
-        array_unshift($stack, $this);
-
-        $interfaces = array();
-
-        while (($top = array_pop($stack)) !== null) {
-            foreach ($top->interfaceReferences as $interfaceReference) {
-                $interface = $interfaceReference->getType();
-
-                if (in_array($interface, $interfaces, true) === true) {
-                    continue;
-                }
-
-                $interfaces[] = $interface;
-                $stack[] = $interface;
-            }
-        }
-
-        return new ASTArtifactList($interfaces);
+        return new ASTArtifactList($this->getInterfacesClasses());
     }
 
     /**
@@ -274,6 +256,8 @@ abstract class AbstractASTClassOrInterface extends AbstractASTType
      *
      * @param string $name Name of the searched constant.
      *
+     * @return mixed
+     *
      * @since  0.9.6
      */
     public function getConstant($name)
@@ -346,6 +330,34 @@ abstract class AbstractASTClassOrInterface extends AbstractASTType
      * @return int
      */
     abstract public function getModifiers();
+
+    /**
+     * Returns an array with all implemented interfaces.
+     *
+     * @return AbstractASTClassOrInterface[]
+     */
+    protected function getInterfacesClasses()
+    {
+        $stack = $this->getParentClasses();
+        array_unshift($stack, $this);
+
+        $interfaces = array();
+
+        while (($top = array_pop($stack)) !== null) {
+            foreach ($top->interfaceReferences as $interfaceReference) {
+                $interface = $interfaceReference->getType();
+
+                if (in_array($interface, $interfaces, true)) {
+                    continue;
+                }
+
+                $interfaces[] = $interface;
+                $stack[] = $interface;
+            }
+        }
+
+        return $interfaces;
+    }
 
     /**
      * This method initializes the constants defined in this class or interface.

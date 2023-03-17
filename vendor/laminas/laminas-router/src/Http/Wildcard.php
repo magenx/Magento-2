@@ -80,7 +80,7 @@ class Wildcard implements RouteInterface
      *
      * @see    \Laminas\Router\RouteInterface::factory()
      *
-     * @param  array|Traversable $options
+     * @param  iterable $options
      * @return Wildcard
      * @throws Exception\InvalidArgumentException
      */

@@ -20,11 +20,15 @@ namespace Laminas\Di;
  *      ]
  *  ];
  * </code>
+ *
+ * @psalm-import-type DependencyConfigArray from ConfigProvider
  */
 class Module
 {
     /**
      * Returns the configuration for laminas-mvc
+     *
+     * @return array{service_manager: DependencyConfigArray}
      */
     public function getConfig(): array
     {

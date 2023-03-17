@@ -7,7 +7,6 @@ use PhpParser\Node\Stmt;
 use Rector\ChangesReporting\ValueObject\RectorWithLineChange;
 use Rector\Core\Exception\ShouldNotHappenException;
 use Rector\Core\ValueObject\Reporting\FileDiff;
-use RectorPrefix202208\Symplify\SmartFileSystem\SmartFileInfo;
 /**
  * @see \Rector\Core\ValueObjectFactory\Application\FileFactory
  */
@@ -44,26 +43,22 @@ final class File
     private $rectorWithLineChanges = [];
     /**
      * @readonly
-     * @var \Symplify\SmartFileSystem\SmartFileInfo
+     * @var string
      */
-    private $smartFileInfo;
+    private $filePath;
     /**
      * @var string
      */
     private $fileContent;
-    public function __construct(SmartFileInfo $smartFileInfo, string $fileContent)
+    public function __construct(string $filePath, string $fileContent)
     {
-        $this->smartFileInfo = $smartFileInfo;
+        $this->filePath = $filePath;
         $this->fileContent = $fileContent;
         $this->originalFileContent = $fileContent;
     }
     public function getFilePath() : string
     {
-        return $this->smartFileInfo->getRealPath();
-    }
-    public function getSmartFileInfo() : SmartFileInfo
-    {
-        return $this->smartFileInfo;
+        return $this->filePath;
     }
     public function getFileContent() : string
     {
@@ -76,10 +71,6 @@ final class File
         }
         $this->fileContent = $newFileContent;
         $this->hasChanged = \true;
-    }
-    public function hasContentChanged() : bool
-    {
-        return $this->fileContent !== $this->originalFileContent;
     }
     public function getOriginalFileContent() : string
     {
@@ -153,9 +144,5 @@ final class File
     public function getRectorWithLineChanges() : array
     {
         return $this->rectorWithLineChanges;
-    }
-    public function getRelativeFilePath() : string
-    {
-        return $this->smartFileInfo->getRelativeFilePathFromCwd();
     }
 }

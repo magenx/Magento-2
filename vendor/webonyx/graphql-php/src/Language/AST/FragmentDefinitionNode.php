@@ -1,31 +1,38 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 namespace GraphQL\Language\AST;
 
 class FragmentDefinitionNode extends Node implements ExecutableDefinitionNode, HasSelectionSet
 {
-    /** @var string */
-    public $kind = NodeKind::FRAGMENT_DEFINITION;
+    public string $kind = NodeKind::FRAGMENT_DEFINITION;
 
-    /** @var NameNode */
-    public $name;
+    public NameNode $name;
 
     /**
      * Note: fragment variable definitions are experimental and may be changed
      * or removed in the future.
      *
-     * @var NodeList<VariableDefinitionNode>
+     * Thus, this property is the single exception where this is not always a NodeList but may be null.
+     *
+     * @var NodeList<VariableDefinitionNode>|null
      */
-    public $variableDefinitions;
+    public ?NodeList $variableDefinitions = null;
 
-    /** @var NamedTypeNode */
-    public $typeCondition;
+    public NamedTypeNode $typeCondition;
 
     /** @var NodeList<DirectiveNode> */
-    public $directives;
+    public NodeList $directives;
 
-    /** @var SelectionSetNode */
-    public $selectionSet;
+    public SelectionSetNode $selectionSet;
+
+    public function __construct(array $vars)
+    {
+        parent::__construct($vars);
+        $this->directives ??= new NodeList([]);
+    }
+
+    public function getSelectionSet(): SelectionSetNode
+    {
+        return $this->selectionSet;
+    }
 }

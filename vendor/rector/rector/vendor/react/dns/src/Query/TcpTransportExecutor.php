@@ -1,13 +1,13 @@
 <?php
 
-namespace RectorPrefix202208\React\Dns\Query;
+namespace RectorPrefix202303\React\Dns\Query;
 
-use RectorPrefix202208\React\Dns\Model\Message;
-use RectorPrefix202208\React\Dns\Protocol\BinaryDumper;
-use RectorPrefix202208\React\Dns\Protocol\Parser;
-use RectorPrefix202208\React\EventLoop\Loop;
-use RectorPrefix202208\React\EventLoop\LoopInterface;
-use RectorPrefix202208\React\Promise\Deferred;
+use RectorPrefix202303\React\Dns\Model\Message;
+use RectorPrefix202303\React\Dns\Protocol\BinaryDumper;
+use RectorPrefix202303\React\Dns\Protocol\Parser;
+use RectorPrefix202303\React\EventLoop\Loop;
+use RectorPrefix202303\React\EventLoop\LoopInterface;
+use RectorPrefix202303\React\Promise\Deferred;
 /**
  * Send DNS queries over a TCP/IP stream transport.
  *
@@ -150,14 +150,14 @@ class TcpTransportExecutor implements ExecutorInterface
         $queryData = $this->dumper->toBinary($request);
         $length = \strlen($queryData);
         if ($length > 0xffff) {
-            return \RectorPrefix202208\React\Promise\reject(new \RuntimeException('DNS query for ' . $query->describe() . ' failed: Query too large for TCP transport'));
+            return \RectorPrefix202303\React\Promise\reject(new \RuntimeException('DNS query for ' . $query->describe() . ' failed: Query too large for TCP transport'));
         }
         $queryData = \pack('n', $length) . $queryData;
         if ($this->socket === null) {
             // create async TCP/IP connection (may take a while)
             $socket = @\stream_socket_client($this->nameserver, $errno, $errstr, 0, \STREAM_CLIENT_CONNECT | \STREAM_CLIENT_ASYNC_CONNECT);
             if ($socket === \false) {
-                return \RectorPrefix202208\React\Promise\reject(new \RuntimeException('DNS query for ' . $query->describe() . ' failed: Unable to connect to DNS server ' . $this->nameserver . ' (' . $errstr . ')', $errno));
+                return \RectorPrefix202303\React\Promise\reject(new \RuntimeException('DNS query for ' . $query->describe() . ' failed: Unable to connect to DNS server ' . $this->nameserver . ' (' . $errstr . ')', $errno));
             }
             // set socket to non-blocking and wait for it to become writable (connection success/rejected)
             \stream_set_blocking($socket, \false);
@@ -215,11 +215,19 @@ class TcpTransportExecutor implements ExecutorInterface
             $this->readPending = \true;
             $this->loop->addReadStream($this->socket, array($this, 'handleRead'));
         }
-        $written = @\fwrite($this->socket, $this->writeBuffer);
+        $errno = 0;
+        $errstr = '';
+        \set_error_handler(function ($_, $error) use(&$errno, &$errstr) {
+            // Match errstr from PHP's warning message.
+            // fwrite(): Send of 327712 bytes failed with errno=32 Broken pipe
+            \preg_match('/errno=(\\d+) (.+)/', $error, $m);
+            $errno = isset($m[1]) ? (int) $m[1] : 0;
+            $errstr = isset($m[2]) ? $m[2] : $error;
+        });
+        $written = \fwrite($this->socket, $this->writeBuffer);
+        \restore_error_handler();
         if ($written === \false || $written === 0) {
-            $error = \error_get_last();
-            \preg_match('/errno=(\\d+) (.+)/', $error['message'], $m);
-            $this->closeError('Unable to send query to DNS server ' . $this->nameserver . ' (' . (isset($m[2]) ? $m[2] : $error['message']) . ')', isset($m[1]) ? (int) $m[1] : 0);
+            $this->closeError('Unable to send query to DNS server ' . $this->nameserver . ' (' . $errstr . ')', $errno);
             return;
         }
         if (isset($this->writeBuffer[$written])) {

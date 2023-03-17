@@ -6,10 +6,13 @@ namespace Rector\Doctrine\Rector\Class_;
 use PhpParser\Node;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Stmt\Class_;
+use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Property;
+use Rector\BetterPhpDocParser\PhpDoc\ArrayItemNode;
 use Rector\BetterPhpDocParser\PhpDoc\DoctrineAnnotationTagValueNode;
 use Rector\BetterPhpDocParser\ValueObject\PhpDoc\DoctrineAnnotation\CurlyListNode;
 use Rector\Core\Rector\AbstractRector;
+use Rector\Core\ValueObject\MethodName;
 use Rector\Doctrine\NodeAnalyzer\ConstructorAssignPropertyAnalyzer;
 use Rector\Doctrine\NodeFactory\ValueAssignFactory;
 use Rector\Doctrine\NodeManipulator\ConstructorManipulator;
@@ -22,6 +25,10 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
  */
 final class MoveCurrentDateTimeDefaultInEntityToConstructorRector extends AbstractRector
 {
+    /**
+     * @var bool
+     */
+    private $hasChanged = \false;
     /**
      * @readonly
      * @var \Rector\Doctrine\NodeManipulator\ConstructorManipulator
@@ -96,42 +103,63 @@ CODE_SAMPLE
      */
     public function refactor(Node $node) : ?Node
     {
+        $this->hasChanged = \false;
         foreach ($node->getProperties() as $property) {
             $this->refactorProperty($property, $node);
         }
+        if (!$this->hasChanged) {
+            return null;
+        }
         return $node;
     }
-    private function refactorProperty(Property $property, Class_ $class) : ?Property
+    private function refactorProperty(Property $property, Class_ $class) : void
     {
         $phpDocInfo = $this->phpDocInfoFactory->createFromNodeOrEmpty($property);
         $doctrineAnnotationTagValueNode = $phpDocInfo->getByAnnotationClass('Doctrine\\ORM\\Mapping\\Column');
         if (!$doctrineAnnotationTagValueNode instanceof DoctrineAnnotationTagValueNode) {
-            return null;
+            return;
         }
-        $type = $doctrineAnnotationTagValueNode->getValueWithoutQuotes('type');
-        if ($type !== 'datetime') {
-            return null;
+        $typeArrayItemNode = $doctrineAnnotationTagValueNode->getValue('type');
+        if (!$typeArrayItemNode instanceof ArrayItemNode) {
+            return;
+        }
+        if ($typeArrayItemNode->value !== 'datetime') {
+            return;
         }
         $node = $this->constructorAssignPropertyAnalyzer->resolveConstructorAssign($property);
         // 0. already has default
         if ($node !== null) {
-            return null;
+            return;
         }
         // 1. remove default options from database level
-        $options = $doctrineAnnotationTagValueNode->getValue('options');
-        if ($options instanceof CurlyListNode) {
-            $options->removeValue('default');
+        $optionsArrayItemNode = $doctrineAnnotationTagValueNode->getValue('options');
+        if ($optionsArrayItemNode instanceof ArrayItemNode) {
+            if (!$optionsArrayItemNode->value instanceof CurlyListNode) {
+                return;
+            }
+            $optionsArrayItemNode->value->removeValue('default');
             // if empty, remove it completely
-            if ($options->getValues() === []) {
+            if ($optionsArrayItemNode->value->getValues() === []) {
                 $doctrineAnnotationTagValueNode->removeValue('options');
             }
+            $this->hasChanged = \true;
         }
-        $phpDocInfo->markAsChanged();
+        if ($this->hasChanged) {
+            $phpDocInfo->markAsChanged();
+        }
+        $this->refactorClassWithRemovalDefault($class, $property);
+    }
+    private function refactorClassWithRemovalDefault(Class_ $class, Property $property) : void
+    {
         $this->refactorClass($class, $property);
+        $classMethod = $class->getMethod(MethodName::CONSTRUCT);
+        if (!$classMethod instanceof ClassMethod && $property->type instanceof Node) {
+            return;
+        }
         // 3. remove default from property
         $onlyProperty = $property->props[0];
         $onlyProperty->default = null;
-        return $property;
+        $this->hasChanged = \true;
     }
     private function refactorClass(Class_ $class, Property $property) : void
     {

@@ -3,8 +3,8 @@
 declare (strict_types=1);
 namespace Rector\Naming;
 
-use RectorPrefix202208\Doctrine\Inflector\Inflector;
-use RectorPrefix202208\Nette\Utils\Strings;
+use RectorPrefix202303\Doctrine\Inflector\Inflector;
+use RectorPrefix202303\Nette\Utils\Strings;
 final class RectorNamingInflector
 {
     /**

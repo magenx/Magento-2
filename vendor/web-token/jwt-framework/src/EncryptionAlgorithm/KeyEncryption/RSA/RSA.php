@@ -2,15 +2,6 @@
 
 declare(strict_types=1);
 
-/*
- * The MIT License (MIT)
- *
- * Copyright (c) 2014-2020 Spomky-Labs
- *
- * This software may be modified and distributed under the terms
- * of the MIT license.  See the LICENSE file for details.
- */
-
 namespace Jose\Component\Encryption\Algorithm\KeyEncryption;
 
 use function in_array;
@@ -26,6 +17,10 @@ abstract class RSA implements KeyEncryption
         return ['RSA'];
     }
 
+    /**
+     * @param array<string, mixed> $completeHeader
+     * @param array<string, mixed> $additionalHeader
+     */
     public function encryptKey(JWK $key, string $cek, array $completeHeader, array &$additionalHeader): string
     {
         $this->checkKey($key);
@@ -35,12 +30,12 @@ abstract class RSA implements KeyEncryption
     }
 
     /**
-     * @throws InvalidArgumentException if the key is not private
+     * @param array<string, mixed> $header
      */
     public function decryptKey(JWK $key, string $encrypted_cek, array $header): string
     {
         $this->checkKey($key);
-        if (!$key->has('d')) {
+        if (! $key->has('d')) {
             throw new InvalidArgumentException('The key is not a private key');
         }
         $priv = RSAKey::createFromJWK($key);
@@ -53,12 +48,9 @@ abstract class RSA implements KeyEncryption
         return self::MODE_ENCRYPT;
     }
 
-    /**
-     * @throws InvalidArgumentException if the key type is not allowed
-     */
     protected function checkKey(JWK $key): void
     {
-        if (!in_array($key->get('kty'), $this->allowedKeyTypes(), true)) {
+        if (! in_array($key->get('kty'), $this->allowedKeyTypes(), true)) {
             throw new InvalidArgumentException('Wrong key type.');
         }
     }

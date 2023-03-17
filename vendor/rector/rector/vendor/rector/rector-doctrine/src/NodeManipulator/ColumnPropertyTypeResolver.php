@@ -13,6 +13,7 @@ use PHPStan\Type\NullType;
 use PHPStan\Type\ObjectType;
 use PHPStan\Type\StringType;
 use PHPStan\Type\Type;
+use Rector\BetterPhpDocParser\PhpDoc\ArrayItemNode;
 use Rector\BetterPhpDocParser\PhpDoc\DoctrineAnnotationTagValueNode;
 use Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfo;
 use Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfoFactory;
@@ -105,25 +106,22 @@ final class ColumnPropertyTypeResolver
         $phpDocInfo = $this->phpDocInfoFactory->createFromNodeOrEmpty($property);
         return $this->resolveFromPhpDocInfo($phpDocInfo, $isNullable);
     }
-    /**
-     * @return null|\PHPStan\Type\Type
-     */
-    private function resolveFromPhpDocInfo(PhpDocInfo $phpDocInfo, bool $isNullable)
+    private function resolveFromPhpDocInfo(PhpDocInfo $phpDocInfo, bool $isNullable) : ?\PHPStan\Type\Type
     {
         $doctrineAnnotationTagValueNode = $phpDocInfo->findOneByAnnotationClass(self::COLUMN_CLASS);
         if (!$doctrineAnnotationTagValueNode instanceof DoctrineAnnotationTagValueNode) {
             return null;
         }
-        $type = $doctrineAnnotationTagValueNode->getValueWithoutQuotes('type');
-        if (!\is_string($type)) {
+        $typeArrayItemNode = $doctrineAnnotationTagValueNode->getValue('type');
+        if (!$typeArrayItemNode instanceof ArrayItemNode) {
             return new MixedType();
         }
-        return $this->createPHPStanTypeFromDoctrineStringType($type, $isNullable);
+        if (!\is_string($typeArrayItemNode->value)) {
+            return null;
+        }
+        return $this->createPHPStanTypeFromDoctrineStringType($typeArrayItemNode->value, $isNullable);
     }
-    /**
-     * @return \PHPStan\Type\MixedType|\PHPStan\Type\Type
-     */
-    private function createPHPStanTypeFromDoctrineStringType(string $type, bool $isNullable)
+    private function createPHPStanTypeFromDoctrineStringType(string $type, bool $isNullable) : Type
     {
         $scalarType = $this->doctrineTypeToScalarType[$type] ?? null;
         if (!$scalarType instanceof Type) {

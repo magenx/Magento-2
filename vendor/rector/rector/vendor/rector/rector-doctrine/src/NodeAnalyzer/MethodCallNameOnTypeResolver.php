@@ -5,10 +5,11 @@ namespace Rector\Doctrine\NodeAnalyzer;
 
 use PhpParser\Node;
 use PhpParser\Node\Expr\MethodCall;
+use PhpParser\Node\Stmt\Class_;
 use PHPStan\Type\ObjectType;
 use Rector\NodeNameResolver\NodeNameResolver;
 use Rector\NodeTypeResolver\NodeTypeResolver;
-use RectorPrefix202208\Symplify\Astral\NodeTraverser\SimpleCallableNodeTraverser;
+use Rector\PhpDocParser\NodeTraverser\SimpleCallableNodeTraverser;
 final class MethodCallNameOnTypeResolver
 {
     /**
@@ -18,7 +19,7 @@ final class MethodCallNameOnTypeResolver
     private $nodeNameResolver;
     /**
      * @readonly
-     * @var \Symplify\Astral\NodeTraverser\SimpleCallableNodeTraverser
+     * @var \Rector\PhpDocParser\NodeTraverser\SimpleCallableNodeTraverser
      */
     private $simpleCallableNodeTraverser;
     /**
@@ -35,10 +36,10 @@ final class MethodCallNameOnTypeResolver
     /**
      * @return string[]
      */
-    public function resolve(Node $node, ObjectType $objectType) : array
+    public function resolve(Class_ $class, ObjectType $objectType) : array
     {
         $methodNames = [];
-        $this->simpleCallableNodeTraverser->traverseNodesWithCallable($node, function (Node $node) use(&$methodNames, $objectType) {
+        $this->simpleCallableNodeTraverser->traverseNodesWithCallable($class, function (Node $node) use(&$methodNames, $objectType) {
             if (!$node instanceof MethodCall) {
                 return null;
             }

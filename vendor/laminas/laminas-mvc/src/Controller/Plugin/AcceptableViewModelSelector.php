@@ -20,17 +20,17 @@ class AcceptableViewModelSelector extends AbstractPlugin
      *
      * @var string the Key to inject the name of a viewmodel with in an Accept Header
      */
-    const INJECT_VIEWMODEL_NAME = '_internalViewModel';
+    public const INJECT_VIEWMODEL_NAME = '_internalViewModel';
 
     /**
      *
-     * @var \Laminas\Mvc\MvcEvent
+     * @var MvcEvent
      */
     protected $event;
 
     /**
      *
-     * @var \Laminas\Http\Request
+     * @var Request
      */
     protected $request;
 
@@ -59,7 +59,7 @@ class AcceptableViewModelSelector extends AbstractPlugin
     public function __invoke(
         array $matchAgainst = null,
         $returnDefault = true,
-        & $resultReference = null
+        &$resultReference = null
     ) {
         return $this->getViewModel($matchAgainst, $returnDefault, $resultReference);
     }
@@ -76,7 +76,7 @@ class AcceptableViewModelSelector extends AbstractPlugin
     public function getViewModel(
         array $matchAgainst = null,
         $returnDefault = true,
-        & $resultReference = null
+        &$resultReference = null
     ) {
         $name = $this->getViewModelName($matchAgainst, $returnDefault, $resultReference);
 
@@ -102,7 +102,7 @@ class AcceptableViewModelSelector extends AbstractPlugin
     public function getViewModelName(
         array $matchAgainst = null,
         $returnDefault = true,
-        & $resultReference = null
+        &$resultReference = null
     ) {
         $res = $this->match($matchAgainst);
         if ($res) {
@@ -210,7 +210,6 @@ class AcceptableViewModelSelector extends AbstractPlugin
 
     /**
      * Extract the viewmodel name from a match
-     * @param AbstractFieldValuePart $res
      * @return string
      */
     protected function extractViewModelName(AbstractFieldValuePart $res)
@@ -259,7 +258,7 @@ class AcceptableViewModelSelector extends AbstractPlugin
         if (! $controller instanceof InjectApplicationEventInterface) {
             throw new DomainException(
                 'A controller that implements InjectApplicationEventInterface '
-                  . 'is required to use ' . __CLASS__
+                  . 'is required to use ' . self::class
             );
         }
 

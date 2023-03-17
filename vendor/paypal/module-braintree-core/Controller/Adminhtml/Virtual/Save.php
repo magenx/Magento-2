@@ -52,6 +52,7 @@ class Save extends Action
         $request = [
             'paymentMethodNonce' => $this->getRequest()->getParam('payment_method_nonce'),
             'amount' => $this->getRequest()->getParam('amount'),
+            'transactionSource' => 'moto',
             'options' => [
                 'submitForSettlement' => true
             ]

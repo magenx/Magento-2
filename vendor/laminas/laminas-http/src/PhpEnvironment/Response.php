@@ -16,6 +16,13 @@ use function headers_sent;
 class Response extends HttpResponse
 {
     /**
+     * @deprecated This property is deprecated, and will be removed
+     *
+     * @var bool
+     */
+    public $headersSent;
+
+    /**
      * The current used version
      * (The value will be detected on getVersion)
      *

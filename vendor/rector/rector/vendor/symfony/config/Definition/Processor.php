@@ -8,7 +8,7 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202208\Symfony\Component\Config\Definition;
+namespace RectorPrefix202303\Symfony\Component\Config\Definition;
 
 /**
  * This class is the entry point for config normalization/merging/finalization.
@@ -59,15 +59,13 @@ class Processor
      *
      * extensions: ['twig.extension.foo', 'twig.extension.bar']
      *
-     * @param array  $config A config array
-     * @param string $key    The key to normalize
-     * @param string $plural The plural form of the key if it is irregular
+     * @param array       $config A config array
+     * @param string      $key    The key to normalize
+     * @param string|null $plural The plural form of the key if it is irregular
      */
     public static function normalizeConfig(array $config, string $key, string $plural = null) : array
     {
-        if (null === $plural) {
-            $plural = $key . 's';
-        }
+        $plural = $plural ?? $key . 's';
         if (isset($config[$plural])) {
             return $config[$plural];
         }

@@ -2,19 +2,32 @@
 
 /**
  * @see       https://github.com/laminas/laminas-server for the canonical source repository
- * @copyright https://github.com/laminas/laminas-server/blob/master/COPYRIGHT.md
- * @license   https://github.com/laminas/laminas-server/blob/master/LICENSE.md New BSD License
  */
 
 namespace Laminas\Server\Reflection;
 
+use Laminas\Code\Reflection\DocBlock\Tag\ParamTag;
+use Laminas\Code\Reflection\DocBlock\Tag\ReturnTag;
 use Laminas\Code\Reflection\DocBlockReflection;
+use Laminas\Server\Reflection\Node;
 use ReflectionClass as PhpReflectionClass;
 use ReflectionFunction as PhpReflectionFunction;
 use ReflectionFunctionAbstract;
 use ReflectionMethod as PhpReflectionMethod;
 use ReflectionNamedType;
 use ReflectionParameter as PhpReflectionParameter;
+
+use function array_merge;
+use function array_shift;
+use function array_unshift;
+use function call_user_func_array;
+use function count;
+use function is_array;
+use function is_string;
+use function method_exists;
+use function preg_match;
+
+use const PHP_VERSION_ID;
 
 /**
  * Function/Method Reflection
@@ -28,13 +41,12 @@ use ReflectionParameter as PhpReflectionParameter;
  */
 abstract class AbstractFunction
 {
-    /**
-     * @var ReflectionFunctionAbstract
-     */
+    /** @var ReflectionFunctionAbstract */
     protected $reflection;
 
     /**
      * Additional arguments to pass to method on invocation
+     *
      * @var array
      */
     protected $argv = [];
@@ -44,42 +56,49 @@ abstract class AbstractFunction
      * server class, e.g., to indicate whether or not to instantiate a class).
      * Associative array; access is as properties via {@link __get()} and
      * {@link __set()}
+     *
      * @var array
      */
     protected $config = [];
 
     /**
      * Declaring class (needed for when serialization occurs)
+     *
      * @var string
      */
     protected $class;
 
     /**
      * Function name (needed for serialization)
+     *
      * @var string
      */
     protected $name;
 
     /**
      * Function/method description
+     *
      * @var string
      */
     protected $description = '';
 
     /**
      * Namespace with which to prefix function/method name
+     *
      * @var string
      */
     protected $namespace;
 
     /**
      * Prototypes
+     *
      * @var array
      */
     protected $prototypes = [];
 
     /**
      * Phpdoc comment
+     *
      * @var string
      */
     protected $docComment = '';
@@ -90,6 +109,7 @@ abstract class AbstractFunction
     /** @var string */
     protected $returnDesc;
 
+    /** @var array<int, string> */
     protected $paramDesc;
 
     /** @var array */
@@ -101,7 +121,6 @@ abstract class AbstractFunction
     /**
      * Constructor
      *
-     * @param ReflectionFunctionAbstract $r
      * @param null|string $namespace
      * @param null|array $argv
      * @throws Exception\InvalidArgumentException
@@ -139,7 +158,6 @@ abstract class AbstractFunction
      * each array in {@link $sigParams}, adding every value of the next level
      * to the current value (unless the current value is null).
      *
-     * @param \Laminas\Server\Reflection\Node $parent
      * @param int $level
      * @return void
      */
@@ -187,9 +205,7 @@ abstract class AbstractFunction
      * @param array $return Array of return types
      * @param string $returnDesc Return value description
      * @param array $paramTypes Array of arguments (each an array of types)
-     * @param array $paramDesc Array of parameter descriptions
-     *
-     * @return void
+     * @param array<int, string> $paramDesc Array of parameter descriptions
      */
     protected function buildSignatures($return, $returnDesc, $paramTypes, $paramDesc): void
     {
@@ -234,7 +250,7 @@ abstract class AbstractFunction
                 $param = new ReflectionParameter(
                     $params[$key],
                     $type,
-                    (isset($this->paramDesc[$key]) ? $this->paramDesc[$key] : null)
+                    $this->paramDesc[$key] ?? null
                 );
                 $param->setPosition($key);
                 $tmp[] = $param;
@@ -252,7 +268,6 @@ abstract class AbstractFunction
      * ReflectionFunction and parsing of DocBlock @param and @return values.
      *
      * @throws Exception\RuntimeException
-     *
      * @return void
      */
     protected function reflect()
@@ -265,11 +280,11 @@ abstract class AbstractFunction
             $this->docComment = $function->getDocComment();
         }
 
-        $scanner    = new DocBlockReflection(($this->docComment) ? : '/***/');
-        $helpText   = $scanner->getLongDescription();
-        /* @var \Laminas\Code\Reflection\DocBlock\Tag\ParamTag[] $paramTags */
+        $scanner  = new DocBlockReflection($this->docComment ? : '/***/');
+        $helpText = $scanner->getLongDescription();
+        /** @var ParamTag[] $paramTags */
         $paramTags = $scanner->getTags('param');
-        /* @var \Laminas\Code\Reflection\DocBlock\Tag\ReturnTag $returnTag */
+        /** @var ReturnTag $returnTag */
         $returnTag = $scanner->getTag('return');
 
         if (empty($helpText)) {
@@ -304,7 +319,7 @@ abstract class AbstractFunction
             $paramDesc = [];
             foreach ($paramTags as $paramTag) {
                 $paramTypesTmp[] = $paramTag->getTypes();
-                $paramDesc[]     = ($paramTag->getDescription()) ? : '';
+                $paramDesc[]     = $paramTag->getDescription() ? : '';
             }
         }
 
@@ -316,7 +331,7 @@ abstract class AbstractFunction
                 $paramTypesTmp[$i] = ['mixed'];
                 $paramDesc[$i]     = '';
             }
-        } elseif ($nParamTypesTmp != $paramCount) {
+        } elseif ($nParamTypesTmp !== $paramCount) {
             throw new Exception\RuntimeException(
                 'Variable number of arguments is not supported for services (except optional parameters). '
                 . 'Number of function arguments must correspond to actual number of arguments described in a docblock.'
@@ -366,7 +381,7 @@ abstract class AbstractFunction
             return $this->config[$key];
         }
 
-        return;
+        return null;
     }
 
     /**
@@ -468,7 +483,8 @@ abstract class AbstractFunction
     {
         $serializable = [];
         foreach ($this as $name => $value) {
-            if ($value instanceof PhpReflectionFunction
+            if (
+                $value instanceof PhpReflectionFunction
                 || $value instanceof PhpReflectionMethod
             ) {
                 continue;
@@ -491,7 +507,7 @@ abstract class AbstractFunction
     public function __wakeup()
     {
         if ($this->reflection instanceof PhpReflectionMethod) {
-            $class = new PhpReflectionClass($this->class);
+            $class            = new PhpReflectionClass($this->class);
             $this->reflection = new PhpReflectionMethod($class->newInstance(), $this->name);
         } else {
             $this->reflection = new PhpReflectionFunction($this->name);

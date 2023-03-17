@@ -20,7 +20,6 @@ use PhpCsFixer\Fixer\WhitespacesAwareFixerInterface;
 use PhpCsFixer\FixerConfiguration\FixerConfigurationResolver;
 use PhpCsFixer\FixerConfiguration\FixerConfigurationResolverInterface;
 use PhpCsFixer\FixerConfiguration\FixerOptionBuilder;
-use PhpCsFixer\FixerConfiguration\InvalidOptionsForEnvException;
 use PhpCsFixer\FixerDefinition\CodeSample;
 use PhpCsFixer\FixerDefinition\FixerDefinition;
 use PhpCsFixer\FixerDefinition\FixerDefinitionInterface;
@@ -30,7 +29,6 @@ use PhpCsFixer\Preg;
 use PhpCsFixer\Tokenizer\CT;
 use PhpCsFixer\Tokenizer\Token;
 use PhpCsFixer\Tokenizer\Tokens;
-use Symfony\Component\OptionsResolver\Options;
 
 /**
  * Fixer for rules defined in PSR2 ¶4.4, ¶4.6.
@@ -124,7 +122,7 @@ SAMPLE
      * {@inheritdoc}
      *
      * Must run before ArrayIndentationFixer.
-     * Must run after BracesFixer, CombineNestedDirnameFixer, FunctionDeclarationFixer, ImplodeCallFixer, MethodChainingIndentationFixer, NoMultilineWhitespaceAroundDoubleArrowFixer, NoUselessSprintfFixer, PowToExponentiationFixer, StrictParamFixer.
+     * Must run after CombineNestedDirnameFixer, FunctionDeclarationFixer, ImplodeCallFixer, LambdaNotUsedImportFixer, NoMultilineWhitespaceAroundDoubleArrowFixer, NoUselessSprintfFixer, PowToExponentiationFixer, StrictParamFixer.
      */
     public function getPriority(): int
     {
@@ -136,11 +134,7 @@ SAMPLE
      */
     protected function applyFix(\SplFileInfo $file, Tokens $tokens): void
     {
-        $expectedTokens = [T_LIST, T_FUNCTION, CT::T_USE_LAMBDA];
-
-        if (\PHP_VERSION_ID >= 70400) {
-            $expectedTokens[] = T_FN;
-        }
+        $expectedTokens = [T_LIST, T_FUNCTION, CT::T_USE_LAMBDA, T_FN, T_CLASS];
 
         for ($index = $tokens->count() - 1; $index > 0; --$index) {
             $token = $tokens[$index];
@@ -190,13 +184,6 @@ SAMPLE
             (new FixerOptionBuilder('after_heredoc', 'Whether the whitespace between heredoc end and comma should be removed.'))
                 ->setAllowedTypes(['bool'])
                 ->setDefault(false)
-                ->setNormalizer(static function (Options $options, $value) {
-                    if (\PHP_VERSION_ID < 70300 && $value) {
-                        throw new InvalidOptionsForEnvException('"after_heredoc" option can only be enabled with PHP 7.3+.');
-                    }
-
-                    return $value;
-                })
                 ->getOption(),
         ]);
     }
@@ -260,8 +247,6 @@ SAMPLE
                 $this->fixSpace($tokens, $index);
                 if (!$isMultiline && $this->isNewline($tokens[$index + 1])) {
                     $isMultiline = true;
-
-                    break;
                 }
             }
         }

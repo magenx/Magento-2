@@ -8,15 +8,15 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202208\Symfony\Component\DependencyInjection\Loader\Configurator;
+namespace RectorPrefix202303\Symfony\Component\DependencyInjection\Loader\Configurator;
 
-use RectorPrefix202208\Symfony\Component\DependencyInjection\Alias;
-use RectorPrefix202208\Symfony\Component\DependencyInjection\ChildDefinition;
-use RectorPrefix202208\Symfony\Component\DependencyInjection\ContainerBuilder;
-use RectorPrefix202208\Symfony\Component\DependencyInjection\Definition;
-use RectorPrefix202208\Symfony\Component\DependencyInjection\Exception\InvalidArgumentException;
-use RectorPrefix202208\Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
-use RectorPrefix202208\Symfony\Component\DependencyInjection\Loader\PhpFileLoader;
+use RectorPrefix202303\Symfony\Component\DependencyInjection\Alias;
+use RectorPrefix202303\Symfony\Component\DependencyInjection\ChildDefinition;
+use RectorPrefix202303\Symfony\Component\DependencyInjection\ContainerBuilder;
+use RectorPrefix202303\Symfony\Component\DependencyInjection\Definition;
+use RectorPrefix202303\Symfony\Component\DependencyInjection\Exception\InvalidArgumentException;
+use RectorPrefix202303\Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
+use RectorPrefix202303\Symfony\Component\DependencyInjection\Loader\PhpFileLoader;
 /**
  * @author Nicolas Grekas <p@tchwork.com>
  */
@@ -83,7 +83,7 @@ class ServicesConfigurator extends AbstractConfigurator
      * @param string|null $id    The service id, or null to create an anonymous service
      * @param string|null $class The class of the service, or null when $id is also the class name
      */
-    public function set(?string $id, string $class = null) : \Rector\Core\DependencyInjection\Loader\Configurator\RectorServiceConfigurator
+    public final function set(?string $id, string $class = null) : ServiceConfigurator
     {
         $defaults = $this->defaults;
         $definition = new Definition();
@@ -100,7 +100,7 @@ class ServicesConfigurator extends AbstractConfigurator
         // deep clone, to avoid multiple process of the same instance in the passes
         $definition->setBindings(\unserialize(\serialize($defaults->getBindings())));
         $definition->setChanges([]);
-        $configurator = new \Rector\Core\DependencyInjection\Loader\Configurator\RectorServiceConfigurator($this->container, $this->instanceof, \true, $this, $definition, $id, $defaults->getTags(), $this->path);
+        $configurator = new ServiceConfigurator($this->container, $this->instanceof, \true, $this, $definition, $id, $defaults->getTags(), $this->path);
         return null !== $class ? $configurator->class($class) : $configurator;
     }
     /**

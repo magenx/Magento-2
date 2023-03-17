@@ -6,21 +6,22 @@
 
 namespace PayPal\Braintree\Block\Paypal;
 
-use PayPal\Braintree\Gateway\Config\Config as BraintreeConfig;
-use PayPal\Braintree\Gateway\Config\PayPal\Config;
-use PayPal\Braintree\Gateway\Config\PayPalCredit\Config as PayPalCreditConfig;
-use PayPal\Braintree\Gateway\Config\PayPalPayLater\Config as PayPalPayLaterConfig;
-use PayPal\Braintree\Model\Ui\ConfigProvider;
 use Magento\Catalog\Model\Product;
 use Magento\Checkout\Model\Session;
 use Magento\ConfigurableProduct\Model\Product\Type\Configurable;
+use Magento\Directory\Model\Currency;
+use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Locale\ResolverInterface;
 use Magento\Framework\Registry;
 use Magento\Framework\View\Element\Template\Context;
 use Magento\GroupedProduct\Model\Product\Type\Grouped;
 use Magento\Payment\Model\MethodInterface;
-use Magento\Directory\Model\Currency;
+use PayPal\Braintree\Gateway\Config\Config as BraintreeConfig;
+use PayPal\Braintree\Gateway\Config\PayPal\Config;
+use PayPal\Braintree\Gateway\Config\PayPalCredit\Config as PayPalCreditConfig;
+use PayPal\Braintree\Gateway\Config\PayPalPayLater\Config as PayPalPayLaterConfig;
+use PayPal\Braintree\Model\Ui\ConfigProvider;
 
 /**
  * @api
@@ -32,12 +33,12 @@ class ProductPage extends Button
     /**
      * @var Registry
      */
-    protected $registry;
+    protected Registry $registry;
 
     /**
      * @var Currency
      */
-    protected $currency;
+    protected Currency $currency;
 
     /**
      * ProductPage constructor.
@@ -103,6 +104,7 @@ class ProductPage extends Button
      *
      * @return string
      * @throws NoSuchEntityException
+     * @throws LocalizedException
      */
     public function getCurrency(): string
     {
@@ -114,6 +116,7 @@ class ProductPage extends Button
      *
      * @return string
      * @throws NoSuchEntityException
+     * @throws LocalizedException
      */
     public function getCurrencySymbol(): string
     {
@@ -141,7 +144,7 @@ class ProductPage extends Button
             return $product->getPriceInfo()->getPrice('final_price')->getAmount()->getValue();
         }
 
-        return 100; // TODO There must be a better return value than this?
+        return 100.00; // TODO There must be a better return value than this?
     }
 
     /**
@@ -208,28 +211,6 @@ class ProductPage extends Button
     }
 
     /**
-     * Get button layout
-     *
-     * @param string $type
-     * @return string
-     */
-    public function getButtonLayout(string $type): string
-    {
-        return $this->config->getButtonLayout(Config::BUTTON_AREA_PDP, $type);
-    }
-
-    /**
-     * Get button tag line
-     *
-     * @param string $type
-     * @return string
-     */
-    public function getButtonTagline(string $type): string
-    {
-        return $this->config->getButtonTagline(Config::BUTTON_AREA_PDP, $type);
-    }
-
-    /**
      * Get button label
      *
      * @param string $type
@@ -293,5 +274,16 @@ class ProductPage extends Button
     public function getMessagingTextColor(string $type): string
     {
         return $this->config->getMessagingStyle(Config::BUTTON_AREA_PDP, $type, 'text_color');
+    }
+
+    /**
+     *
+     *
+     * @return array
+     */
+    public function getCartLineItems(): array
+    {
+        // @TODO manage line items request from PDP for the PayPal buttons
+        return [];
     }
 }

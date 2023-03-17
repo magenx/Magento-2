@@ -3,13 +3,13 @@
 declare (strict_types=1);
 namespace Rector\Renaming\Rector\FileWithoutNamespace;
 
-use RectorPrefix202208\Nette\Utils\Strings;
+use RectorPrefix202303\Nette\Utils\Strings;
 use PhpParser\Node;
 use PhpParser\Node\FunctionLike;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
 use PhpParser\Node\Stmt;
-use PhpParser\Node\Stmt\Class_;
+use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\Namespace_;
 use PhpParser\Node\Stmt\Property;
 use Rector\Core\Contract\Rector\ConfigurableRectorInterface;
@@ -21,7 +21,7 @@ use Rector\NodeTypeResolver\PhpDoc\PhpDocTypeRenamer;
 use Rector\Renaming\ValueObject\PseudoNamespaceToNamespace;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
-use RectorPrefix202208\Webmozart\Assert\Assert;
+use RectorPrefix202303\Webmozart\Assert\Assert;
 /**
  * @see \Rector\Tests\Renaming\Rector\FileWithoutNamespace\PseudoNamespaceToNamespaceRector\PseudoNamespaceToNamespaceRectorTest
  */
@@ -76,20 +76,21 @@ CODE_SAMPLE
      */
     public function refactor(Node $node) : ?Node
     {
+        $processNode = clone $node;
         $this->newNamespace = null;
-        if ($node instanceof FileWithoutNamespace) {
-            $changedStmts = $this->refactorStmts($node->stmts);
+        if ($processNode instanceof FileWithoutNamespace) {
+            $changedStmts = $this->refactorStmts($processNode->stmts);
             if ($changedStmts === null) {
                 return null;
             }
-            $node->stmts = $changedStmts;
+            $processNode->stmts = $changedStmts;
             // add a new namespace?
             if ($this->newNamespace !== null) {
                 return new Namespace_(new Name($this->newNamespace), $changedStmts);
             }
         }
-        if ($node instanceof Namespace_) {
-            return $this->refactorNamespace($node);
+        if ($processNode instanceof Namespace_) {
+            return $this->refactorNamespace($processNode);
         }
         return null;
     }
@@ -164,7 +165,7 @@ CODE_SAMPLE
     private function processIdentifier(Identifier $identifier) : ?Identifier
     {
         $parentNode = $identifier->getAttribute(AttributeKey::PARENT_NODE);
-        if (!$parentNode instanceof Class_) {
+        if (!$parentNode instanceof ClassLike) {
             return null;
         }
         $name = $this->getName($identifier);

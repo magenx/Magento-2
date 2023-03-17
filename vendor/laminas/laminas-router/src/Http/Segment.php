@@ -31,7 +31,7 @@ class Segment implements RouteInterface
     /**
      * Cache for the encode output.
      *
-     * @var array
+     * @var array<string, string>
      */
     protected static $cacheEncode = [];
 
@@ -45,7 +45,7 @@ class Segment implements RouteInterface
      * sub-delims    = "!" / "$" / "&" / "'" / "(" / ")"
      *               / "*" / "+" / "," / ";" / "="
      *
-     * @var array
+     * @var array<string, string>
      */
     protected static $urlencodeCorrectionMap = [
         '%21' => "!", // sub-delims
@@ -110,6 +110,14 @@ class Segment implements RouteInterface
     protected $translationKeys = [];
 
     /**
+     * @internal
+     * @deprecated Since 3.9.0 This property will be removed or made private in version 4.0
+     *
+     * @var int|null
+     */
+    public $priority;
+
+    /**
      * Create a new regex route.
      *
      * @param  string $route
@@ -128,7 +136,7 @@ class Segment implements RouteInterface
      *
      * @see    \Laminas\Router\RouteInterface::factory()
      *
-     * @param  array|Traversable $options
+     * @param  iterable $options
      * @return Segment
      * @throws Exception\InvalidArgumentException
      */

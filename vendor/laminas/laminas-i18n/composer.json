@@ -1,0 +1,89 @@
+{
+    "name": "laminas/laminas-i18n",
+    "description": "Provide translations for your application, and filter and validate internationalized values",
+    "license": "BSD-3-Clause",
+    "keywords": [
+        "laminas",
+        "i18n"
+    ],
+    "homepage": "https://laminas.dev",
+    "support": {
+        "docs": "https://docs.laminas.dev/laminas-i18n/",
+        "issues": "https://github.com/laminas/laminas-i18n/issues",
+        "source": "https://github.com/laminas/laminas-i18n",
+        "rss": "https://github.com/laminas/laminas-i18n/releases.atom",
+        "chat": "https://laminas.dev/chat",
+        "forum": "https://discourse.laminas.dev"
+    },
+    "config": {
+        "sort-packages": true,
+        "platform": {
+            "php": "8.0.99"
+        },
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true,
+            "composer/package-versions-deprecated": true
+        }
+    },
+    "extra": {
+        "laminas": {
+            "component": "Laminas\\I18n",
+            "config-provider": "Laminas\\I18n\\ConfigProvider"
+        }
+    },
+    "require": {
+        "php": "~8.0.0 || ~8.1.0 || ~8.2.0",
+        "ext-intl": "*",
+        "laminas/laminas-servicemanager": "^3.14.0",
+        "laminas/laminas-stdlib": "^2.7 || ^3.0"
+    },
+    "require-dev": {
+        "laminas/laminas-cache": "^3.8",
+        "laminas/laminas-cache-storage-adapter-memory": "^2.2.0",
+        "laminas/laminas-cache-storage-deprecated-factory": "^1.0.1",
+        "laminas/laminas-coding-standard": "~2.4.0",
+        "laminas/laminas-config": "^3.8.0",
+        "laminas/laminas-eventmanager": "^3.7",
+        "laminas/laminas-filter": "^2.28.1",
+        "laminas/laminas-validator": "^2.28",
+        "laminas/laminas-view": "^2.25",
+        "phpunit/phpunit": "^9.5.26",
+        "psalm/plugin-phpunit": "^0.18.3",
+        "vimeo/psalm": "^5.0.0"
+    },
+    "conflict": {
+        "laminas/laminas-view": "<2.20.0",
+        "phpspec/prophecy": "<1.9.0",
+        "zendframework/zend-i18n": "*"
+    },
+    "suggest": {
+        "laminas/laminas-cache": "You should install this package to cache the translations",
+        "laminas/laminas-config": "You should install this package to use the INI translation format",
+        "laminas/laminas-eventmanager": "You should install this package to use the events in the translator",
+        "laminas/laminas-filter": "You should install this package to use the provided filters",
+        "laminas/laminas-i18n-resources": "This package provides validator and captcha translations",
+        "laminas/laminas-validator": "You should install this package to use the provided validators",
+        "laminas/laminas-view": "You should install this package to use the provided view helpers"
+    },
+    "autoload": {
+        "psr-4": {
+            "Laminas\\I18n\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "LaminasTest\\I18n\\": "test/"
+        }
+    },
+    "scripts": {
+        "check": [
+            "@cs-check",
+            "@test"
+        ],
+        "cs-check": "phpcs",
+        "cs-fix": "phpcbf",
+        "static-analysis": "psalm --shepherd --stats",
+        "test": "phpunit --colors=always",
+        "test-coverage": "phpunit --colors=always --coverage-clover clover.xml"
+    }
+}

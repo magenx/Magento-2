@@ -8,6 +8,7 @@ use PhpParser\Node\Arg;
 use PhpParser\Node\AttributeGroup;
 use PhpParser\Node\Stmt\Class_;
 use PHPStan\Type\MixedType;
+use Rector\BetterPhpDocParser\PhpDoc\ArrayItemNode;
 use Rector\BetterPhpDocParser\PhpDoc\DoctrineAnnotationTagValueNode;
 use Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfo;
 use Rector\BetterPhpDocParser\PhpDocManipulator\PhpDocTagRemover;
@@ -18,13 +19,14 @@ use Rector\Core\ValueObject\PhpVersionFeature;
 use Rector\Php80\NodeAnalyzer\AnnotationTargetResolver;
 use Rector\Php80\NodeAnalyzer\PhpAttributeAnalyzer;
 use Rector\Php80\NodeFactory\AttributeFlagFactory;
+use Rector\Php81\Enum\AttributeName;
 use Rector\PhpAttribute\NodeFactory\PhpAttributeGroupFactory;
 use Rector\PostRector\Collector\PropertyToAddCollector;
 use Rector\PostRector\ValueObject\PropertyMetadata;
 use Rector\VersionBonding\Contract\MinPhpVersionInterface;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
-use RectorPrefix202208\Webmozart\Assert\Assert;
+use RectorPrefix202303\Webmozart\Assert\Assert;
 /**
  * @changelog https://php.watch/articles/php-attributes#syntax
  *
@@ -40,10 +42,6 @@ final class DoctrineAnnotationClassToAttributeRector extends AbstractRector impl
      * @var string
      */
     public const REMOVE_ANNOTATIONS = 'remove_annotations';
-    /**
-     * @var string
-     */
-    private const ATTRIBUTE = 'Attribute';
     /**
      * @var bool
      */
@@ -137,7 +135,7 @@ CODE_SAMPLE
             $this->phpDocTagRemover->removeByName($phpDocInfo, 'annotation');
             $this->phpDocTagRemover->removeByName($phpDocInfo, 'Annotation');
         }
-        $attributeGroup = $this->phpAttributeGroupFactory->createFromClass(self::ATTRIBUTE);
+        $attributeGroup = $this->phpAttributeGroupFactory->createFromClass(AttributeName::ATTRIBUTE);
         $this->decorateTarget($phpDocInfo, $attributeGroup);
         foreach ($node->getProperties() as $property) {
             $propertyPhpDocInfo = $this->phpDocInfoFactory->createFromNode($property);
@@ -180,12 +178,8 @@ CODE_SAMPLE
         if ($this->shouldRemoveAnnotations) {
             $this->phpDocTagRemover->removeTagValueFromNode($phpDocInfo, $targetDoctrineAnnotationTagValueNode);
         }
-        $targets = $targetDoctrineAnnotationTagValueNode->getSilentValue();
-        if ($targets instanceof CurlyListNode) {
-            $targetValues = $targets->getValuesWithExplicitSilentAndWithoutQuotes();
-        } elseif (\is_string($targets)) {
-            $targetValues = [$targets];
-        } else {
+        $targetValues = $this->resolveTargetValues($targetDoctrineAnnotationTagValueNode);
+        if ($targetValues === []) {
             return;
         }
         $flagClassConstFetches = $this->annotationTargetResolver->resolveFlagClassConstFetches($targetValues);
@@ -201,6 +195,20 @@ CODE_SAMPLE
             return \true;
         }
         // has attribute? skip it
-        return $this->phpAttributeAnalyzer->hasPhpAttribute($class, self::ATTRIBUTE);
+        return $this->phpAttributeAnalyzer->hasPhpAttribute($class, AttributeName::ATTRIBUTE);
+    }
+    /**
+     * @return ArrayItemNode[]
+     */
+    private function resolveTargetValues(DoctrineAnnotationTagValueNode $targetDoctrineAnnotationTagValueNode) : array
+    {
+        $silentTargetsArrayItemNode = $targetDoctrineAnnotationTagValueNode->getSilentValue();
+        if ($silentTargetsArrayItemNode instanceof ArrayItemNode) {
+            if ($silentTargetsArrayItemNode->value instanceof CurlyListNode) {
+                return $silentTargetsArrayItemNode->value->getValues();
+            }
+            return [$silentTargetsArrayItemNode];
+        }
+        return [];
     }
 }

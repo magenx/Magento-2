@@ -43,9 +43,9 @@ class Parser
      * Parses a YAML file into a PHP value.
      *
      * @param string $filename The path to the YAML file to be parsed
-     * @param int    $flags    A bit field of PARSE_* constants to customize the YAML parser behavior
+     * @param int    $flags    A bit field of Yaml::PARSE_* constants to customize the YAML parser behavior
      *
-     * @return mixed The YAML converted to a PHP value
+     * @return mixed
      *
      * @throws ParseException If the file could not be read or the YAML is not valid
      */
@@ -72,9 +72,9 @@ class Parser
      * Parses a YAML string to a PHP value.
      *
      * @param string $value A YAML string
-     * @param int    $flags A bit field of PARSE_* constants to customize the YAML parser behavior
+     * @param int    $flags A bit field of Yaml::PARSE_* constants to customize the YAML parser behavior
      *
-     * @return mixed A PHP value
+     * @return mixed
      *
      * @throws ParseException If the YAML is not valid
      */
@@ -88,7 +88,7 @@ class Parser
 
         $mbEncoding = null;
 
-        if (2 /* MB_OVERLOAD_STRING */ & (int) ini_get('mbstring.func_overload')) {
+        if (2 /* MB_OVERLOAD_STRING */ & (int) \ini_get('mbstring.func_overload')) {
             $mbEncoding = mb_internal_encoding();
             mb_internal_encoding('UTF-8');
         }
@@ -541,8 +541,6 @@ class Parser
      * Returns the current line number (takes the offset into account).
      *
      * @internal
-     *
-     * @return int The current line number
      */
     public function getRealCurrentLineNb(): int
     {
@@ -561,8 +559,6 @@ class Parser
 
     /**
      * Returns the current line indentation.
-     *
-     * @return int The current line indentation
      */
     private function getCurrentLineIndentation(): int
     {
@@ -578,8 +574,6 @@ class Parser
      *
      * @param int|null $indentation The indent level at which the block is to be read, or null for default
      * @param bool     $inSequence  True if the enclosing data structure is a sequence
-     *
-     * @return string A YAML string
      *
      * @throws ParseException When indentation problem are detected
      */
@@ -717,10 +711,10 @@ class Parser
      * Parses a YAML value.
      *
      * @param string $value   A YAML value
-     * @param int    $flags   A bit field of PARSE_* constants to customize the YAML parser behavior
+     * @param int    $flags   A bit field of Yaml::PARSE_* constants to customize the YAML parser behavior
      * @param string $context The parser context (either sequence or mapping)
      *
-     * @return mixed A PHP value
+     * @return mixed
      *
      * @throws ParseException When reference does not exist
      */
@@ -940,8 +934,6 @@ class Parser
 
     /**
      * Returns true if the next line is indented.
-     *
-     * @return bool Returns true if the next line is indented, false otherwise
      */
     private function isNextLineIndented(): bool
     {
@@ -971,8 +963,6 @@ class Parser
 
     /**
      * Returns true if the current line is blank or if it is a comment line.
-     *
-     * @return bool Returns true if the current line is empty or if it is a comment line, false otherwise
      */
     private function isCurrentLineEmpty(): bool
     {
@@ -981,8 +971,6 @@ class Parser
 
     /**
      * Returns true if the current line is blank.
-     *
-     * @return bool Returns true if the current line is blank, false otherwise
      */
     private function isCurrentLineBlank(): bool
     {
@@ -991,12 +979,10 @@ class Parser
 
     /**
      * Returns true if the current line is a comment line.
-     *
-     * @return bool Returns true if the current line is a comment line, false otherwise
      */
     private function isCurrentLineComment(): bool
     {
-        //checking explicitly the first char of the trim is faster than loops or strpos
+        // checking explicitly the first char of the trim is faster than loops or strpos
         $ltrimmedLine = '' !== $this->currentLine && ' ' === $this->currentLine[0] ? ltrim($this->currentLine, ' ') : $this->currentLine;
 
         return '' !== $ltrimmedLine && '#' === $ltrimmedLine[0];
@@ -1011,8 +997,6 @@ class Parser
      * Cleanups a YAML string to be parsed.
      *
      * @param string $value The input YAML string
-     *
-     * @return string A cleaned up YAML string
      */
     private function cleanup(string $value): string
     {
@@ -1047,8 +1031,6 @@ class Parser
 
     /**
      * Returns true if the next line starts unindented collection.
-     *
-     * @return bool Returns true if the next line starts unindented collection, false otherwise
      */
     private function isNextLineUnIndentedCollection(): bool
     {
@@ -1078,8 +1060,6 @@ class Parser
 
     /**
      * Returns true if the string is un-indented collection item.
-     *
-     * @return bool Returns true if the string is un-indented collection item, false otherwise
      */
     private function isStringUnIndentedCollectionItem(): bool
     {

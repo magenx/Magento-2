@@ -2,15 +2,6 @@
 
 declare(strict_types=1);
 
-/*
- * The MIT License (MIT)
- *
- * Copyright (c) 2014-2020 Spomky-Labs
- *
- * This software may be modified and distributed under the terms
- * of the MIT license.  See the LICENSE file for details.
- */
-
 namespace Jose\Bundle\JoseFramework\DependencyInjection\Source\Encryption;
 
 use Jose\Bundle\JoseFramework\DependencyInjection\Source\Source;
@@ -37,13 +28,12 @@ class JWESerializer implements Source
                 ->setFactory([new Reference(JWESerializerManagerFactory::class), 'create'])
                 ->setArguments([$itemConfig['serializers']])
                 ->addTag('jose.jwe_serializer_manager')
-                ->setPublic($itemConfig['is_public'])
-            ;
+                ->setPublic($itemConfig['is_public']);
             foreach ($itemConfig['tags'] as $id => $attributes) {
                 $definition->addTag($id, $attributes);
             }
             $container->setDefinition($service_id, $definition);
-            $container->registerAliasForArgument($service_id, JWESerializerManager::class, $name.'JweSerializer');
+            $container->registerAliasForArgument($service_id, JWESerializerManager::class, $name . 'JweSerializer');
         }
     }
 
@@ -63,7 +53,8 @@ class JWESerializer implements Source
             ->arrayNode('serializers')
             ->info('A list of JWE serializers aliases.')
             ->isRequired()
-            ->scalarPrototype()->end()
+            ->scalarPrototype()
+            ->end()
             ->treatNullLike([])
             ->treatFalseLike([])
             ->requiresAtLeastOneElement()
@@ -73,13 +64,13 @@ class JWESerializer implements Source
             ->useAttributeAsKey('name')
             ->treatNullLike([])
             ->treatFalseLike([])
-            ->variablePrototype()->end()
+            ->variablePrototype()
             ->end()
             ->end()
             ->end()
             ->end()
             ->end()
-        ;
+            ->end();
     }
 
     public function prepend(ContainerBuilder $container, array $config): array

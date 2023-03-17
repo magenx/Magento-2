@@ -5,15 +5,15 @@
  * Copyright (c) 2004 David Grudl (https://davidgrudl.com)
  */
 declare (strict_types=1);
-namespace RectorPrefix202208\Tracy\Dumper;
+namespace RectorPrefix202303\Tracy\Dumper;
 
 /**
  * @internal
  */
 final class Value implements \JsonSerializable
 {
-    public const TYPE_ARRAY = 'array', TYPE_BINARY_HTML = 'bin', TYPE_NUMBER = 'number', TYPE_OBJECT = 'object', TYPE_REF = 'ref', TYPE_RESOURCE = 'resource', TYPE_STRING_HTML = 'string', TYPE_TEXT = 'text';
-    public const PROP_PUBLIC = 0, PROP_PROTECTED = 1, PROP_PRIVATE = 2, PROP_DYNAMIC = 3, PROP_VIRTUAL = 4;
+    public const TypeArray = 'array', TypeBinaryHtml = 'bin', TypeNumber = 'number', TypeObject = 'object', TypeRef = 'ref', TypeResource = 'resource', TypeStringHtml = 'string', TypeText = 'text';
+    public const PropertyPublic = 0, PropertyProtected = 1, PropertyPrivate = 2, PropertyDynamic = 3, PropertyVirtual = 4;
     /** @var string */
     public $type;
     /** @var string|int */

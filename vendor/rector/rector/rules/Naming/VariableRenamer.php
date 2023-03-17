@@ -4,6 +4,7 @@ declare (strict_types=1);
 namespace Rector\Naming;
 
 use PhpParser\Node;
+use PhpParser\Node\Expr\ArrowFunction;
 use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\Closure;
 use PhpParser\Node\Expr\Variable;
@@ -16,12 +17,12 @@ use Rector\Core\PhpParser\Node\BetterNodeFinder;
 use Rector\Naming\PhpDoc\VarTagValueNodeRenamer;
 use Rector\NodeNameResolver\NodeNameResolver;
 use Rector\NodeTypeResolver\Node\AttributeKey;
-use RectorPrefix202208\Symplify\Astral\NodeTraverser\SimpleCallableNodeTraverser;
+use Rector\PhpDocParser\NodeTraverser\SimpleCallableNodeTraverser;
 final class VariableRenamer
 {
     /**
      * @readonly
-     * @var \Symplify\Astral\NodeTraverser\SimpleCallableNodeTraverser
+     * @var \Rector\PhpDocParser\NodeTraverser\SimpleCallableNodeTraverser
      */
     private $simpleCallableNodeTraverser;
     /**
@@ -53,7 +54,7 @@ final class VariableRenamer
         $this->betterNodeFinder = $betterNodeFinder;
     }
     /**
-     * @param \PhpParser\Node\Stmt\ClassMethod|\PhpParser\Node\Stmt\Function_|\PhpParser\Node\Expr\Closure $functionLike
+     * @param \PhpParser\Node\Stmt\ClassMethod|\PhpParser\Node\Stmt\Function_|\PhpParser\Node\Expr\Closure|\PhpParser\Node\Expr\ArrowFunction $functionLike
      */
     public function renameVariableInFunctionLike($functionLike, string $oldName, string $expectedName, ?Assign $assign = null) : void
     {
@@ -61,7 +62,7 @@ final class VariableRenamer
         if ($assign === null) {
             $isRenamingActive = \true;
         }
-        $this->simpleCallableNodeTraverser->traverseNodesWithCallable((array) $functionLike->stmts, function (Node $node) use($oldName, $expectedName, $assign, &$isRenamingActive) : ?Variable {
+        $this->simpleCallableNodeTraverser->traverseNodesWithCallable((array) $functionLike->getStmts(), function (Node $node) use($oldName, $expectedName, $assign, &$isRenamingActive) : ?Variable {
             if ($assign !== null && $node === $assign) {
                 $isRenamingActive = \true;
                 return null;
@@ -70,8 +71,8 @@ final class VariableRenamer
                 return null;
             }
             // skip param names
-            $parent = $node->getAttribute(AttributeKey::PARENT_NODE);
-            if ($parent instanceof Param) {
+            $parentNode = $node->getAttribute(AttributeKey::PARENT_NODE);
+            if ($parentNode instanceof Param) {
                 return null;
             }
             // TODO: Remove in next PR (with above param check?),

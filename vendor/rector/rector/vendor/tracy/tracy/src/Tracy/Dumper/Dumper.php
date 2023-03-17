@@ -5,12 +5,12 @@
  * Copyright (c) 2004 David Grudl (https://davidgrudl.com)
  */
 declare (strict_types=1);
-namespace RectorPrefix202208\Tracy;
+namespace RectorPrefix202303\Tracy;
 
-use RectorPrefix202208\Ds;
-use RectorPrefix202208\Tracy\Dumper\Describer;
-use RectorPrefix202208\Tracy\Dumper\Exposer;
-use RectorPrefix202208\Tracy\Dumper\Renderer;
+use RectorPrefix202303\Ds;
+use RectorPrefix202303\Tracy\Dumper\Describer;
+use RectorPrefix202303\Tracy\Dumper\Exposer;
+use RectorPrefix202303\Tracy\Dumper\Renderer;
 /**
  * Dumps a variable.
  */
@@ -20,7 +20,7 @@ class Dumper
     // show object and reference hashes (defaults to true)
     public const LOCATION_CLASS = 0b1, LOCATION_SOURCE = 0b11, LOCATION_LINK = self::LOCATION_SOURCE;
     // deprecated
-    public const HIDDEN_VALUE = Describer::HIDDEN_VALUE;
+    public const HIDDEN_VALUE = Describer::HiddenValue;
     /** @var Dumper\Value[] */
     public static $liveSnapshot = [];
     /** @var array */

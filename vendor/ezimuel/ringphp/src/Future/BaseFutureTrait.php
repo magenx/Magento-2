@@ -47,6 +47,9 @@ trait BaseFutureTrait
         $this->cancelfn = $cancel;
     }
 
+    /**
+     * @return mixed
+     */
     public function wait()
     {
         if (!$this->isRealized) {
@@ -66,11 +69,17 @@ trait BaseFutureTrait
         return $this->result;
     }
 
+    /**
+     * @return PromiseInterface
+     */
     public function promise()
     {
         return $this->wrappedPromise;
     }
 
+    /**
+     * @return PromiseInterface
+     */
     public function then(
         callable $onFulfilled = null,
         callable $onRejected = null,

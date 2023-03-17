@@ -23,7 +23,7 @@ final class CommentRemover
      * @param mixed[]|\PhpParser\Node|null $node
      * @return Node[]|null
      */
-    public function removeFromNode($node)
+    public function removeFromNode($node) : ?array
     {
         if ($node === null) {
             return null;

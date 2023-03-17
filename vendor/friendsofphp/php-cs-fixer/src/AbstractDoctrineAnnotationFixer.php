@@ -30,9 +30,9 @@ use PhpCsFixer\Tokenizer\TokensAnalyzer;
 abstract class AbstractDoctrineAnnotationFixer extends AbstractFixer implements ConfigurableFixerInterface
 {
     /**
-     * @var array
+     * @var array<int, array{classIndex: int, token: Token, type: string}>
      */
-    private $classyElements;
+    private array $classyElements;
 
     /**
      * {@inheritdoc}
@@ -47,7 +47,7 @@ abstract class AbstractDoctrineAnnotationFixer extends AbstractFixer implements 
      */
     protected function applyFix(\SplFileInfo $file, Tokens $tokens): void
     {
-        // fetch indexes one time, this is safe as we never add or remove a token during fixing
+        // fetch indices one time, this is safe as we never add or remove a token during fixing
         $analyzer = new TokensAnalyzer($tokens);
         $this->classyElements = $analyzer->getClassyElements();
 
@@ -61,6 +61,7 @@ abstract class AbstractDoctrineAnnotationFixer extends AbstractFixer implements 
                 $docCommentToken,
                 $this->configuration['ignored_tags']
             );
+
             $this->fixAnnotations($doctrineAnnotationTokens);
             $tokens[$index] = new Token([T_DOC_COMMENT, $doctrineAnnotationTokens->getCode()]);
         }
@@ -214,7 +215,7 @@ abstract class AbstractDoctrineAnnotationFixer extends AbstractFixer implements 
             }
         } while ($tokens[$index]->isGivenKind([T_ABSTRACT, T_FINAL]));
 
-        if ($tokens[$index]->isClassy()) {
+        if ($tokens[$index]->isGivenKind(T_CLASS)) {
             return true;
         }
 
@@ -228,6 +229,10 @@ abstract class AbstractDoctrineAnnotationFixer extends AbstractFixer implements 
             $index = $tokens->getNextMeaningfulToken($index);
         }
 
-        return isset($this->classyElements[$index]);
+        if (!isset($this->classyElements[$index])) {
+            return false;
+        }
+
+        return $tokens[$this->classyElements[$index]['classIndex']]->isGivenKind(T_CLASS); // interface, enums and traits cannot have doctrine annotations
     }
 }

@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 /*
  * This file is part of Composer.
@@ -15,54 +15,42 @@ namespace Composer\Platform;
 class Runtime
 {
     /**
-     * @param string $constant
      * @param class-string $class
-     *
-     * @return bool
      */
-    public function hasConstant($constant, $class = null)
+    public function hasConstant(string $constant, ?string $class = null): bool
     {
         return defined(ltrim($class.'::'.$constant, ':'));
     }
 
     /**
-     * @param string $constant
      * @param class-string $class
      *
      * @return mixed
      */
-    public function getConstant($constant, $class = null)
+    public function getConstant(string $constant, ?string $class = null)
     {
         return constant(ltrim($class.'::'.$constant, ':'));
     }
 
-    /**
-     * @param string $fn
-     *
-     * @return bool
-     */
-    public function hasFunction($fn)
+    public function hasFunction(string $fn): bool
     {
         return function_exists($fn);
     }
 
     /**
-     * @param callable $callable
      * @param mixed[] $arguments
      *
      * @return mixed
      */
-    public function invoke($callable, array $arguments = array())
+    public function invoke(callable $callable, array $arguments = [])
     {
-        return call_user_func_array($callable, $arguments);
+        return $callable(...$arguments);
     }
 
     /**
      * @param class-string $class
-     *
-     * @return bool
      */
-    public function hasClass($class)
+    public function hasClass(string $class): bool
     {
         return class_exists($class, false);
     }
@@ -71,10 +59,9 @@ class Runtime
      * @param class-string $class
      * @param mixed[] $arguments
      *
-     * @return object
      * @throws \ReflectionException
      */
-    public function construct($class, array $arguments = array())
+    public function construct(string $class, array $arguments = []): object
     {
         if (empty($arguments)) {
             return new $class;
@@ -86,28 +73,25 @@ class Runtime
     }
 
     /** @return string[] */
-    public function getExtensions()
+    public function getExtensions(): array
     {
         return get_loaded_extensions();
     }
 
-    /**
-     * @param string $extension
-     *
-     * @return string
-     */
-    public function getExtensionVersion($extension)
+    public function getExtensionVersion(string $extension): string
     {
-        return phpversion($extension);
+        $version = phpversion($extension);
+        if ($version === false) {
+            $version = '0';
+        }
+
+        return $version;
     }
 
     /**
-     * @param string $extension
-     *
-     * @return string
      * @throws \ReflectionException
      */
-    public function getExtensionInfo($extension)
+    public function getExtensionInfo(string $extension): string
     {
         $reflector = new \ReflectionExtension($extension);
 

@@ -36,7 +36,7 @@ final class SingleSpaceAfterConstructFixer extends AbstractFixer implements Conf
     /**
      * @var array<string, null|int>
      */
-    private static $tokenMap = [
+    private static array $tokenMap = [
         'abstract' => T_ABSTRACT,
         'as' => T_AS,
         'attribute' => CT::T_ATTRIBUTE_CLOSE,
@@ -90,6 +90,7 @@ final class SingleSpaceAfterConstructFixer extends AbstractFixer implements Conf
         'throw' => T_THROW,
         'trait' => T_TRAIT,
         'try' => T_TRY,
+        'type_colon' => CT::T_TYPE_COLON,
         'use' => T_USE,
         'use_lambda' => CT::T_USE_LAMBDA,
         'use_trait' => CT::T_USE_TRAIT,
@@ -102,7 +103,7 @@ final class SingleSpaceAfterConstructFixer extends AbstractFixer implements Conf
     /**
      * @var array<string, int>
      */
-    private $fixTokenMap = [];
+    private array $fixTokenMap = [];
 
     /**
      * {@inheritdoc}
@@ -231,7 +232,7 @@ yield  from  baz();
             }
 
             if ($token->isGivenKind(T_OPEN_TAG)) {
-                if ($tokens[$whitespaceTokenIndex]->equals([T_WHITESPACE]) && !str_contains($token->getContent(), "\n")) {
+                if ($tokens[$whitespaceTokenIndex]->equals([T_WHITESPACE]) && !str_contains($tokens[$whitespaceTokenIndex]->getContent(), "\n") && !str_contains($token->getContent(), "\n")) {
                     $tokens->clearAt($whitespaceTokenIndex);
                 }
 
@@ -247,6 +248,10 @@ yield  from  baz();
             }
 
             if ($token->isGivenKind(T_RETURN) && $this->isMultiLineReturn($tokens, $index)) {
+                continue;
+            }
+
+            if ($token->isGivenKind(T_CONST) && $this->isMultilineConstant($tokens, $index)) {
                 continue;
             }
 
@@ -273,13 +278,16 @@ yield  from  baz();
 
     protected function createConfigurationDefinition(): FixerConfigurationResolverInterface
     {
-        $tokens = array_keys(self::$tokenMap);
+        $defaults = self::$tokenMap;
+        $tokens = array_keys($defaults);
+
+        unset($defaults['type_colon']);
 
         return new FixerConfigurationResolver([
             (new FixerOptionBuilder('constructs', 'List of constructs which must be followed by a single space.'))
                 ->setAllowedTypes(['array'])
                 ->setAllowedValues([new AllowedValueSubset($tokens)])
-                ->setDefault($tokens)
+                ->setDefault(array_keys($defaults))
                 ->getOption(),
         ]);
     }
@@ -338,5 +346,13 @@ yield  from  baz();
         }
 
         return false;
+    }
+
+    private function isMultilineConstant(Tokens $tokens, int $index): bool
+    {
+        $scopeEnd = $tokens->getNextTokenOfKind($index, [';', [T_CLOSE_TAG]]) - 1;
+        $hasMoreThanOneConstant = null !== $tokens->findSequence([new Token(',')], $index + 1, $scopeEnd);
+
+        return $hasMoreThanOneConstant && $tokens->isPartialCodeMultiline($index, $scopeEnd);
     }
 }

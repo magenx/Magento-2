@@ -36,12 +36,12 @@ final class NonPrintableCharacterFixer extends AbstractFixer implements Configur
     /**
      * @var array<string, string[]>
      */
-    private $symbolsReplace;
+    private array $symbolsReplace;
 
     /**
      * @var int[]
      */
-    private static $tokens = [
+    private static array $tokens = [
         T_STRING_VARNAME,
         T_INLINE_HTML,
         T_VARIABLE,
@@ -165,7 +165,7 @@ final class NonPrintableCharacterFixer extends AbstractFixer implements Configur
 
                 if ($swapQuotes) {
                     $content = str_replace('"', '\"', $content);
-                    $content = Preg::replace('/^\'(.*)\'$/', '"$1"', $content);
+                    $content = Preg::replace('/^\'(.*)\'$/s', '"$1"', $content);
                 }
 
                 $tokens[$index] = new Token([$token->getId(), strtr($content, $escapeSequences)]);
@@ -174,7 +174,19 @@ final class NonPrintableCharacterFixer extends AbstractFixer implements Configur
             }
 
             if ($token->isGivenKind(self::$tokens)) {
-                $tokens[$index] = new Token([$token->getId(), strtr($content, $replacements)]);
+                $newContent = strtr($content, $replacements);
+
+                // variable name cannot contain space
+                if ($token->isGivenKind([T_STRING_VARNAME, T_VARIABLE]) && str_contains($newContent, ' ')) {
+                    continue;
+                }
+
+                // multiline comment must have "*/" only at the end
+                if ($token->isGivenKind([T_COMMENT, T_DOC_COMMENT]) && str_starts_with($newContent, '/*') && strpos($newContent, '*/') !== \strlen($newContent) - 2) {
+                    continue;
+                }
+
+                $tokens[$index] = new Token([$token->getId(), $newContent]);
             }
         }
     }

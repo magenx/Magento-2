@@ -38,8 +38,6 @@ class Version
             $bestCandidate = $this->findBestCandidateComposer1($composer, $packageName, $repository);
         } elseif ($composerMajorVersion === 2) {
             $bestCandidate = $this->findBestCandidateComposer2($composer, $packageName, $repository);
-        } else {
-            throw new Exception("Unrecognized Composer Version");
         }
 
         if($bestCandidate instanceof PackageInterface){

@@ -10,7 +10,7 @@ use JsonSerializable;
  * Braintree base class and initialization
  * Provides methods to child classes. This class cannot be instantiated.
  */
-abstract class Base implements JsonSerializable
+abstract class Base extends \stdClass implements JsonSerializable
 {
     protected $_attributes = [];
 
@@ -94,7 +94,7 @@ abstract class Base implements JsonSerializable
     {
         return array_map(function ($value) {
             if (!is_array($value)) {
-                return method_exists($value, 'toArray') ? $value->toArray() : $value;
+                return is_object($value) && method_exists($value, 'toArray') ? $value->toArray() : $value;
             } else {
                 return $value;
             }

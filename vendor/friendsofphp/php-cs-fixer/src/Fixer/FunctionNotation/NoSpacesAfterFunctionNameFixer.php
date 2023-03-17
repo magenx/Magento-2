@@ -43,7 +43,7 @@ final class NoSpacesAfterFunctionNameFixer extends AbstractFixer
     /**
      * {@inheritdoc}
      *
-     * Must run before FunctionToConstantFixer.
+     * Must run before FunctionToConstantFixer, GetClassToClassKeywordFixer.
      * Must run after PowToExponentiationFixer.
      */
     public function getPriority(): int
@@ -125,7 +125,7 @@ final class NoSpacesAfterFunctionNameFixer extends AbstractFixer
     }
 
     /**
-     * @return array<array|string>
+     * @return array<list<int>|string>
      */
     private function getBraceAfterVariableKinds(): array
     {

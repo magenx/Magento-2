@@ -8,9 +8,9 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202208\Symfony\Component\Config;
+namespace RectorPrefix202303\Symfony\Component\Config;
 
-use RectorPrefix202208\Symfony\Component\Config\Exception\FileLocatorFileNotFoundException;
+use RectorPrefix202303\Symfony\Component\Config\Exception\FileLocatorFileNotFoundException;
 /**
  * FileLocator uses an array of pre-defined paths to find files.
  *
@@ -26,9 +26,6 @@ class FileLocator implements FileLocatorInterface
     {
         $this->paths = (array) $paths;
     }
-    /**
-     * {@inheritdoc}
-     */
     public function locate(string $name, string $currentPath = null, bool $first = \true)
     {
         if ('' === $name) {

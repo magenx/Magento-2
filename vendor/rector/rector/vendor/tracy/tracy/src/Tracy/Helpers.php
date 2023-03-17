@@ -5,9 +5,9 @@
  * Copyright (c) 2004 David Grudl (https://davidgrudl.com)
  */
 declare (strict_types=1);
-namespace RectorPrefix202208\Tracy;
+namespace RectorPrefix202303\Tracy;
 
-use RectorPrefix202208\Nette;
+use RectorPrefix202303\Nette;
 /**
  * Rendering helpers for Debugger.
  */
@@ -152,7 +152,11 @@ class Helpers
             $ref = new \ReflectionProperty($e, 'message');
             $ref->setAccessible(\true);
             $ref->setValue($e, $message);
-            $e->tracyAction = ['link' => self::editorUri($loc['file'], $loc['line'], 'fix', $replace[0], $replace[1]), 'label' => 'fix it'];
+            @($e->tracyAction = [
+                // dynamic properties are deprecated since PHP 8.2
+                'link' => self::editorUri($loc['file'], $loc['line'], 'fix', $replace[0], $replace[1]),
+                'label' => 'fix it',
+            ]);
         }
     }
     /** @internal */
@@ -300,7 +304,7 @@ class Helpers
     /** @internal */
     public static function utf8Length(string $s) : int
     {
-        return \strlen(\utf8_decode($s));
+        return \function_exists('mb_strlen') ? \mb_strlen($s, 'UTF-8') : \strlen(\utf8_decode($s));
     }
     /** @internal */
     public static function isUtf8(string $s) : bool

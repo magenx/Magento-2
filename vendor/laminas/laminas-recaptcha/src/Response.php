@@ -10,9 +10,14 @@ use function array_key_exists;
 use function is_array;
 use function is_string;
 use function json_decode;
+use function trim;
+
+use const JSON_THROW_ON_ERROR;
 
 /**
  * Model responses from the ReCaptcha and MailHide APIs.
+ *
+ * @final This class should not be extended and will be marked final in version 4.0
  */
 class Response
 {
@@ -21,7 +26,7 @@ class Response
      *
      * true if the response is valid or false otherwise
      *
-     * @var boolean
+     * @var bool
      */
     protected $status;
 
@@ -38,7 +43,7 @@ class Response
     /**
      * Class constructor used to construct a response
      *
-     * @param string $status
+     * @param bool|null $status
      * @param array $errorCodes
      * @param null|HTTPResponse $httpResponse If this is set the content will override $status and $errorCode
      */
@@ -124,9 +129,8 @@ class Response
      */
     public function setFromHttpResponse(HTTPResponse $response)
     {
-        $body = $response->getBody();
-
-        $parts = json_decode($body, true);
+        $body  = $response->getBody();
+        $parts = '' !== trim($body) ? json_decode($body, true, 512, JSON_THROW_ON_ERROR) : [];
 
         $status     = false;
         $errorCodes = [];

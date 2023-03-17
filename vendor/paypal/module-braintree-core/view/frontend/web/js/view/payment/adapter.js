@@ -55,7 +55,11 @@ define([
          * @returns {String}
          */
         getCode: function () {
-            return this.code;
+            if (window.checkoutConfig.payment[this.code]) {
+                return this.code;
+            } else {
+                return 'braintree_paypal';
+            }
         },
 
         /**
@@ -98,13 +102,6 @@ define([
         /**
          * @returns {String}
          */
-        getLayout: function (paypalType = null) {
-            return window.checkoutConfig.payment[this.getCurrentCode(paypalType)].style.layout;
-        },
-
-        /**
-         * @returns {String}
-         */
         getSize: function (paypalType = null) {
             return window.checkoutConfig.payment[this.getCurrentCode(paypalType)].style.size;
         },
@@ -114,13 +111,6 @@ define([
          */
         getLabel: function (paypalType = null) {
             return window.checkoutConfig.payment[this.getCurrentCode(paypalType)].style.label;
-        },
-
-        /**
-         * @returns {String}
-         */
-        getTagline: function (paypalType = null) {
-            return window.checkoutConfig.payment[this.getCurrentCode(paypalType)].style.tagline;
         },
 
         /**

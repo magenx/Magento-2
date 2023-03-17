@@ -7,7 +7,9 @@ namespace Laminas\Di\CodeGenerator;
 use Laminas\Di\Exception\GenerateCodeException;
 use Laminas\Di\Exception\LogicException;
 
+use function assert;
 use function is_dir;
+use function is_string;
 use function mkdir;
 use function sprintf;
 
@@ -19,7 +21,7 @@ trait GeneratorTrait
     /** @var int */
     protected $mode = 0755;
 
-    /** @var string */
+    /** @var string|null */
     protected $outputDirectory;
 
     /**
@@ -28,9 +30,12 @@ trait GeneratorTrait
      * This will check the path at $dir if it exsits and if it is a directory
      *
      * @throws GenerateCodeException
+     * @return void
      */
     protected function ensureDirectory(string $dir)
     {
+        assert(is_string($this->outputDirectory));
+
         if (! is_dir($dir) && ! mkdir($dir, $this->mode, true)) {
             throw new GenerateCodeException(sprintf(
                 'Could not create output directory: %s',
@@ -44,6 +49,8 @@ trait GeneratorTrait
      *
      * @throws LogicException
      * @throws GenerateCodeException
+     * @return void
+     * @psalm-assert non-empty-string $this->outputDirectory
      */
     protected function ensureOutputDirectory()
     {

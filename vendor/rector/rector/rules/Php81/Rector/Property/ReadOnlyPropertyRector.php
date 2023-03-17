@@ -5,12 +5,20 @@ namespace Rector\Php81\Rector\Property;
 
 use PhpParser\Node;
 use PhpParser\Node\Expr;
+use PhpParser\Node\Expr\Assign;
+use PhpParser\Node\Expr\PropertyFetch;
+use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Param;
+use PhpParser\Node\Stmt\Class_;
+use PhpParser\Node\Stmt\ClassLike;
+use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Property;
+use PhpParser\NodeTraverser;
 use Rector\Core\NodeAnalyzer\ParamAnalyzer;
 use Rector\Core\NodeManipulator\PropertyFetchAssignManipulator;
 use Rector\Core\NodeManipulator\PropertyManipulator;
 use Rector\Core\Rector\AbstractRector;
+use Rector\Core\ValueObject\MethodName;
 use Rector\Core\ValueObject\PhpVersionFeature;
 use Rector\Core\ValueObject\Visibility;
 use Rector\NodeTypeResolver\Node\AttributeKey;
@@ -105,6 +113,17 @@ CODE_SAMPLE
     {
         return PhpVersionFeature::READONLY_PROPERTY;
     }
+    /**
+     * @param \PhpParser\Node\Stmt\Property|\PhpParser\Node\Param $node
+     */
+    private function shouldSkipInReadonlyClass($node) : bool
+    {
+        $class = $this->betterNodeFinder->findParentType($node, Class_::class);
+        if (!$class instanceof Class_) {
+            return \true;
+        }
+        return $class->isReadonly();
+    }
     private function refactorProperty(Property $property) : ?Property
     {
         // 1. is property read-only?
@@ -129,6 +148,9 @@ CODE_SAMPLE
         if ($this->propertyFetchAssignManipulator->isAssignedMultipleTimesInConstructor($property)) {
             return null;
         }
+        if ($this->shouldSkipInReadonlyClass($property)) {
+            return null;
+        }
         $this->visibilityManipulator->makeReadonly($property);
         $attributeGroups = $property->attrGroups;
         if ($attributeGroups !== []) {
@@ -136,10 +158,7 @@ CODE_SAMPLE
         }
         return $property;
     }
-    /**
-     * @return \PhpParser\Node\Param|null
-     */
-    private function refactorParam(Param $param)
+    private function refactorParam(Param $param) : ?\PhpParser\Node\Param
     {
         if (!$this->visibilityManipulator->hasVisibility($param, Visibility::PRIVATE)) {
             return null;
@@ -157,7 +176,38 @@ CODE_SAMPLE
         if ($this->paramAnalyzer->isParamReassign($param)) {
             return null;
         }
+        if ($this->isPromotedPropertyAssigned($param)) {
+            return null;
+        }
+        if ($this->shouldSkipInReadonlyClass($param)) {
+            return null;
+        }
         $this->visibilityManipulator->makeReadonly($param);
         return $param;
+    }
+    private function isPromotedPropertyAssigned(Param $param) : bool
+    {
+        $classLike = $this->betterNodeFinder->findParentType($param, ClassLike::class);
+        if (!$classLike instanceof Class_) {
+            return \false;
+        }
+        $constructClassMethod = $classLike->getMethod(MethodName::CONSTRUCT);
+        if (!$constructClassMethod instanceof ClassMethod) {
+            return \false;
+        }
+        if ($param->flags === 0) {
+            return \false;
+        }
+        $propertyFetch = new PropertyFetch(new Variable('this'), $this->getName($param));
+        $stmts = $classLike->stmts;
+        $isAssigned = \false;
+        $this->traverseNodesWithCallable($stmts, function (Node $node) use($propertyFetch, &$isAssigned) : ?int {
+            if ($node instanceof Assign && $this->nodeComparator->areNodesEqual($propertyFetch, $node->var)) {
+                $isAssigned = \true;
+                return NodeTraverser::STOP_TRAVERSAL;
+            }
+            return null;
+        });
+        return $isAssigned;
     }
 }

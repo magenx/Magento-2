@@ -6,16 +6,15 @@ namespace Laminas\Di\Definition\Reflection;
 
 use Laminas\Di\Definition\ClassDefinitionInterface;
 use ReflectionClass;
-use ReflectionParameter;
 
 class ClassDefinition implements ClassDefinitionInterface
 {
     private ReflectionClass $reflection;
 
-    /** @var array<string, Parameter> */
+    /** @var array<string, Parameter>|null */
     private ?array $parameters = null;
 
-    /** @var list<class-string> */
+    /** @var list<class-string>|null */
     private ?array $supertypes = null;
 
     /**
@@ -30,6 +29,9 @@ class ClassDefinition implements ClassDefinitionInterface
         $this->reflection = $class;
     }
 
+    /**
+     * @psalm-assert list<string> $this->supertypes
+     */
     private function reflectSupertypes(): void
     {
         $this->supertypes = [];
@@ -65,6 +67,9 @@ class ClassDefinition implements ClassDefinitionInterface
         return $this->reflection->getInterfaceNames();
     }
 
+    /**
+     * @psalm-assert array<string, Parameter> $this->parameters
+     */
     private function reflectParameters(): void
     {
         $this->parameters = [];
@@ -75,7 +80,6 @@ class ClassDefinition implements ClassDefinitionInterface
             return;
         }
 
-        /** @var ReflectionParameter $parameterReflection */
         foreach ($constructor->getParameters() as $parameterReflection) {
             $parameter                               = new Parameter($parameterReflection);
             $this->parameters[$parameter->getName()] = $parameter;

@@ -1,13 +1,13 @@
 <?php
 
-namespace RectorPrefix202208\React\Dns\Query;
+namespace RectorPrefix202303\React\Dns\Query;
 
-use RectorPrefix202208\React\Dns\Model\Message;
-use RectorPrefix202208\React\Dns\Protocol\BinaryDumper;
-use RectorPrefix202208\React\Dns\Protocol\Parser;
-use RectorPrefix202208\React\EventLoop\Loop;
-use RectorPrefix202208\React\EventLoop\LoopInterface;
-use RectorPrefix202208\React\Promise\Deferred;
+use RectorPrefix202303\React\Dns\Model\Message;
+use RectorPrefix202303\React\Dns\Protocol\BinaryDumper;
+use RectorPrefix202303\React\Dns\Protocol\Parser;
+use RectorPrefix202303\React\EventLoop\Loop;
+use RectorPrefix202303\React\EventLoop\LoopInterface;
+use RectorPrefix202303\React\Promise\Deferred;
 /**
  * Send DNS queries over a UDP transport.
  *
@@ -115,24 +115,30 @@ final class UdpTransportExecutor implements ExecutorInterface
         $request = Message::createRequestForQuery($query);
         $queryData = $this->dumper->toBinary($request);
         if (isset($queryData[$this->maxPacketSize])) {
-            return \RectorPrefix202208\React\Promise\reject(new \RuntimeException('DNS query for ' . $query->describe() . ' failed: Query too large for UDP transport', \defined('SOCKET_EMSGSIZE') ? \SOCKET_EMSGSIZE : 90));
+            return \RectorPrefix202303\React\Promise\reject(new \RuntimeException('DNS query for ' . $query->describe() . ' failed: Query too large for UDP transport', \defined('SOCKET_EMSGSIZE') ? \SOCKET_EMSGSIZE : 90));
         }
         // UDP connections are instant, so try connection without a loop or timeout
+        $errno = 0;
+        $errstr = '';
         $socket = @\stream_socket_client($this->nameserver, $errno, $errstr, 0);
         if ($socket === \false) {
-            return \RectorPrefix202208\React\Promise\reject(new \RuntimeException('DNS query for ' . $query->describe() . ' failed: Unable to connect to DNS server ' . $this->nameserver . ' (' . $errstr . ')', $errno));
+            return \RectorPrefix202303\React\Promise\reject(new \RuntimeException('DNS query for ' . $query->describe() . ' failed: Unable to connect to DNS server ' . $this->nameserver . ' (' . $errstr . ')', $errno));
         }
         // set socket to non-blocking and immediately try to send (fill write buffer)
         \stream_set_blocking($socket, \false);
-        $written = @\fwrite($socket, $queryData);
-        if ($written !== \strlen($queryData)) {
+        \set_error_handler(function ($_, $error) use(&$errno, &$errstr) {
             // Write may potentially fail, but most common errors are already caught by connection check above.
             // Among others, macOS is known to report here when trying to send to broadcast address.
             // This can also be reproduced by writing data exceeding `stream_set_chunk_size()` to a server refusing UDP data.
             // fwrite(): send of 8192 bytes failed with errno=111 Connection refused
-            $error = \error_get_last();
-            \preg_match('/errno=(\\d+) (.+)/', $error['message'], $m);
-            return \RectorPrefix202208\React\Promise\reject(new \RuntimeException('DNS query for ' . $query->describe() . ' failed: Unable to send query to DNS server ' . $this->nameserver . ' (' . (isset($m[2]) ? $m[2] : $error['message']) . ')', isset($m[1]) ? (int) $m[1] : 0));
+            \preg_match('/errno=(\\d+) (.+)/', $error, $m);
+            $errno = isset($m[1]) ? (int) $m[1] : 0;
+            $errstr = isset($m[2]) ? $m[2] : $error;
+        });
+        $written = \fwrite($socket, $queryData);
+        \restore_error_handler();
+        if ($written !== \strlen($queryData)) {
+            return \RectorPrefix202303\React\Promise\reject(new \RuntimeException('DNS query for ' . $query->describe() . ' failed: Unable to send query to DNS server ' . $this->nameserver . ' (' . $errstr . ')', $errno));
         }
         $loop = $this->loop;
         $deferred = new Deferred(function () use($loop, $socket, $query) {

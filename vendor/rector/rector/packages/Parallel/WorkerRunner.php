@@ -3,22 +3,24 @@
 declare (strict_types=1);
 namespace Rector\Parallel;
 
-use RectorPrefix202208\Clue\React\NDJson\Decoder;
-use RectorPrefix202208\Clue\React\NDJson\Encoder;
-use PHPStan\Analyser\NodeScopeResolver;
-use Rector\Core\Application\FileProcessor\PhpFileProcessor;
+use RectorPrefix202303\Clue\React\NDJson\Decoder;
+use RectorPrefix202303\Clue\React\NDJson\Encoder;
+use RectorPrefix202303\Nette\Utils\FileSystem;
+use Rector\Core\Application\ApplicationFileProcessor;
+use Rector\Core\Application\FileSystem\RemovedAndAddedFilesProcessor;
 use Rector\Core\Console\Style\RectorConsoleOutputStyle;
+use Rector\Core\Contract\Processor\FileProcessorInterface;
 use Rector\Core\Provider\CurrentFileProvider;
 use Rector\Core\StaticReflection\DynamicSourceLocatorDecorator;
+use Rector\Core\Util\ArrayParametersMerger;
 use Rector\Core\ValueObject\Application\File;
 use Rector\Core\ValueObject\Configuration;
 use Rector\Core\ValueObject\Error\SystemError;
+use Rector\Core\ValueObject\Reporting\FileDiff;
 use Rector\Parallel\ValueObject\Bridge;
-use RectorPrefix202208\Symplify\EasyParallel\Enum\Action;
-use RectorPrefix202208\Symplify\EasyParallel\Enum\ReactCommand;
-use RectorPrefix202208\Symplify\EasyParallel\Enum\ReactEvent;
-use RectorPrefix202208\Symplify\PackageBuilder\Yaml\ParametersMerger;
-use RectorPrefix202208\Symplify\SmartFileSystem\SmartFileInfo;
+use RectorPrefix202303\Symplify\EasyParallel\Enum\Action;
+use RectorPrefix202303\Symplify\EasyParallel\Enum\ReactCommand;
+use RectorPrefix202303\Symplify\EasyParallel\Enum\ReactEvent;
 use Throwable;
 final class WorkerRunner
 {
@@ -28,24 +30,14 @@ final class WorkerRunner
     private const RESULT = 'result';
     /**
      * @readonly
-     * @var \Symplify\PackageBuilder\Yaml\ParametersMerger
+     * @var \Rector\Core\Util\ArrayParametersMerger
      */
-    private $parametersMerger;
+    private $arrayParametersMerger;
     /**
      * @readonly
      * @var \Rector\Core\Provider\CurrentFileProvider
      */
     private $currentFileProvider;
-    /**
-     * @readonly
-     * @var \Rector\Core\Application\FileProcessor\PhpFileProcessor
-     */
-    private $phpFileProcessor;
-    /**
-     * @readonly
-     * @var \PHPStan\Analyser\NodeScopeResolver
-     */
-    private $nodeScopeResolver;
     /**
      * @readonly
      * @var \Rector\Core\StaticReflection\DynamicSourceLocatorDecorator
@@ -56,14 +48,33 @@ final class WorkerRunner
      * @var \Rector\Core\Console\Style\RectorConsoleOutputStyle
      */
     private $rectorConsoleOutputStyle;
-    public function __construct(ParametersMerger $parametersMerger, CurrentFileProvider $currentFileProvider, PhpFileProcessor $phpFileProcessor, NodeScopeResolver $nodeScopeResolver, DynamicSourceLocatorDecorator $dynamicSourceLocatorDecorator, RectorConsoleOutputStyle $rectorConsoleOutputStyle)
+    /**
+     * @readonly
+     * @var \Rector\Core\Application\FileSystem\RemovedAndAddedFilesProcessor
+     */
+    private $removedAndAddedFilesProcessor;
+    /**
+     * @readonly
+     * @var \Rector\Core\Application\ApplicationFileProcessor
+     */
+    private $applicationFileProcessor;
+    /**
+     * @var FileProcessorInterface[]
+     * @readonly
+     */
+    private $fileProcessors = [];
+    /**
+     * @param FileProcessorInterface[] $fileProcessors
+     */
+    public function __construct(ArrayParametersMerger $arrayParametersMerger, CurrentFileProvider $currentFileProvider, DynamicSourceLocatorDecorator $dynamicSourceLocatorDecorator, RectorConsoleOutputStyle $rectorConsoleOutputStyle, RemovedAndAddedFilesProcessor $removedAndAddedFilesProcessor, ApplicationFileProcessor $applicationFileProcessor, array $fileProcessors = [])
     {
-        $this->parametersMerger = $parametersMerger;
+        $this->arrayParametersMerger = $arrayParametersMerger;
         $this->currentFileProvider = $currentFileProvider;
-        $this->phpFileProcessor = $phpFileProcessor;
-        $this->nodeScopeResolver = $nodeScopeResolver;
         $this->dynamicSourceLocatorDecorator = $dynamicSourceLocatorDecorator;
         $this->rectorConsoleOutputStyle = $rectorConsoleOutputStyle;
+        $this->removedAndAddedFilesProcessor = $removedAndAddedFilesProcessor;
+        $this->applicationFileProcessor = $applicationFileProcessor;
+        $this->fileProcessors = $fileProcessors;
     }
     public function run(Encoder $encoder, Decoder $decoder, Configuration $configuration) : void
     {
@@ -87,28 +98,44 @@ final class WorkerRunner
             $errorAndFileDiffs = [];
             $systemErrors = [];
             // 1. allow PHPStan to work with static reflection on provided files
-            $this->nodeScopeResolver->setAnalysedFiles($filePaths);
+            $this->applicationFileProcessor->configurePHPStanNodeScopeResolver($filePaths);
             foreach ($filePaths as $filePath) {
                 try {
-                    $smartFileInfo = new SmartFileInfo($filePath);
-                    $file = new File($smartFileInfo, $smartFileInfo->getContents());
+                    $file = new File($filePath, FileSystem::read($filePath));
                     $this->currentFileProvider->setFile($file);
-                    if (!$this->phpFileProcessor->supports($file, $configuration)) {
+                    $errorAndFileDiffs = $this->processFiles($file, $configuration, $errorAndFileDiffs);
+                    // warn about deprecated @noRector annotation
+                    if (\substr_compare($file->getFilePath(), 'WorkerRunner.php', -\strlen('WorkerRunner.php')) !== 0 && (\strpos($file->getFileContent(), ' @noRector ') !== \false || \strpos($file->getFileContent(), ' @norector ') !== \false)) {
+                        $systemErrors[] = new SystemError('The @noRector annotation was deprecated and removed due to hiding fixed errors. Use more precise $rectorConfig->skip() method in the rector.php config.', $file->getFilePath());
                         continue;
                     }
-                    $currentErrorsAndFileDiffs = $this->phpFileProcessor->process($file, $configuration);
-                    $errorAndFileDiffs = $this->parametersMerger->merge($errorAndFileDiffs, $currentErrorsAndFileDiffs);
                 } catch (Throwable $throwable) {
                     ++$systemErrorsCount;
                     $systemErrors = $this->collectSystemErrors($systemErrors, $throwable, $filePath);
                 }
             }
+            $this->removedAndAddedFilesProcessor->run($configuration);
             /**
              * this invokes all listeners listening $decoder->on(...) @see \Symplify\EasyParallel\Enum\ReactEvent::DATA
              */
             $encoder->write([ReactCommand::ACTION => Action::RESULT, self::RESULT => [Bridge::FILE_DIFFS => $errorAndFileDiffs[Bridge::FILE_DIFFS] ?? [], Bridge::FILES_COUNT => \count($filePaths), Bridge::SYSTEM_ERRORS => $systemErrors, Bridge::SYSTEM_ERRORS_COUNT => $systemErrorsCount]]);
         });
         $decoder->on(ReactEvent::ERROR, $handleErrorCallback);
+    }
+    /**
+     * @param array{system_errors: SystemError[], file_diffs: FileDiff[]}|mixed[] $errorAndFileDiffs
+     * @return array{system_errors: SystemError[], file_diffs: FileDiff[]}
+     */
+    private function processFiles(File $file, Configuration $configuration, array $errorAndFileDiffs) : array
+    {
+        foreach ($this->fileProcessors as $fileProcessor) {
+            if (!$fileProcessor->supports($file, $configuration)) {
+                continue;
+            }
+            $currentErrorsAndFileDiffs = $fileProcessor->process($file, $configuration);
+            $errorAndFileDiffs = $this->arrayParametersMerger->merge($errorAndFileDiffs, $currentErrorsAndFileDiffs);
+        }
+        return $errorAndFileDiffs;
     }
     /**
      * @param SystemError[] $systemErrors

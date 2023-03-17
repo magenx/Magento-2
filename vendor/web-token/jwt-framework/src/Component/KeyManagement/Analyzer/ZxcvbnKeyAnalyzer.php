@@ -2,40 +2,45 @@
 
 declare(strict_types=1);
 
-/*
- * The MIT License (MIT)
- *
- * Copyright (c) 2014-2020 Spomky-Labs
- *
- * This software may be modified and distributed under the terms
- * of the MIT license.  See the LICENSE file for details.
- */
-
 namespace Jose\Component\KeyManagement\Analyzer;
 
-use Base64Url\Base64Url;
+use function is_string;
 use Jose\Component\Core\JWK;
+use ParagonIE\ConstantTime\Base64UrlSafe;
+use Throwable;
 use ZxcvbnPhp\Zxcvbn;
 
 final class ZxcvbnKeyAnalyzer implements KeyAnalyzer
 {
     public function analyze(JWK $jwk, MessageBag $bag): void
     {
-        if ('oct' !== $jwk->get('kty')) {
+        if ($jwk->get('kty') !== 'oct') {
             return;
         }
-        $k = Base64Url::decode($jwk->get('k'));
-        if (class_exists(Zxcvbn::class)) {
-            $zxcvbn = new Zxcvbn();
-            $strength = $zxcvbn->passwordStrength($k);
+        $k = $jwk->get('k');
+        if (! is_string($k)) {
+            $bag->add(Message::high('The key is not valid'));
 
+            return;
+        }
+        $k = Base64UrlSafe::decode($k);
+        if (! class_exists(Zxcvbn::class)) {
+            return;
+        }
+        $zxcvbn = new Zxcvbn();
+        try {
+            $strength = $zxcvbn->passwordStrength($k);
             switch (true) {
                 case $strength['score'] < 3:
-                    $bag->add(Message::high('The octet string is weak and easily guessable. Please change your key as soon as possible.'));
+                    $bag->add(
+                        Message::high(
+                            'The octet string is weak and easily guessable. Please change your key as soon as possible.'
+                        )
+                    );
 
                     break;
 
-                case 3 === $strength['score']:
+                case $strength['score'] === 3:
                     $bag->add(Message::medium('The octet string is safe, but a longer key is preferable.'));
 
                     break;
@@ -43,6 +48,8 @@ final class ZxcvbnKeyAnalyzer implements KeyAnalyzer
                 default:
                     break;
             }
+        } catch (Throwable) {
+            $bag->add(Message::medium('The test of the weakness cannot be performed.'));
         }
     }
 }

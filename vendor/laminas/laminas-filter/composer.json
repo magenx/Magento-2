@@ -1,0 +1,81 @@
+{
+    "name": "laminas/laminas-filter",
+    "description": "Programmatically filter and normalize data and files",
+    "license": "BSD-3-Clause",
+    "keywords": [
+        "laminas",
+        "filter"
+    ],
+    "homepage": "https://laminas.dev",
+    "support": {
+        "docs": "https://docs.laminas.dev/laminas-filter/",
+        "issues": "https://github.com/laminas/laminas-filter/issues",
+        "source": "https://github.com/laminas/laminas-filter",
+        "rss": "https://github.com/laminas/laminas-filter/releases.atom",
+        "chat": "https://laminas.dev/chat",
+        "forum": "https://discourse.laminas.dev"
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true,
+            "composer/package-versions-deprecated": true
+        },
+        "platform": {
+            "php": "8.0.99"
+        }
+    },
+    "extra": {
+        "laminas": {
+            "component": "Laminas\\Filter",
+            "config-provider": "Laminas\\Filter\\ConfigProvider"
+        }
+    },
+    "require": {
+        "php": "~8.0.0 || ~8.1.0 || ~8.2.0",
+        "ext-mbstring": "*",
+        "laminas/laminas-servicemanager": "^3.14.0",
+        "laminas/laminas-stdlib": "^3.13.0"
+    },
+    "require-dev": {
+        "laminas/laminas-coding-standard": "~2.5.0",
+        "laminas/laminas-crypt": "^3.9",
+        "laminas/laminas-uri": "^2.10",
+        "pear/archive_tar": "^1.4.14",
+        "phpunit/phpunit": "^9.5.27",
+        "psalm/plugin-phpunit": "^0.18.4",
+        "psr/http-factory": "^1.0.1",
+        "vimeo/psalm": "^5.3"
+    },
+    "conflict": {
+        "laminas/laminas-validator": "<2.10.1",
+        "zendframework/zend-filter": "*"
+    },
+    "suggest": {
+        "laminas/laminas-crypt": "Laminas\\Crypt component, for encryption filters",
+        "laminas/laminas-i18n": "Laminas\\I18n component for filters depending on i18n functionality",
+        "laminas/laminas-uri": "Laminas\\Uri component, for the UriNormalize filter",
+        "psr/http-factory-implementation": "psr/http-factory-implementation, for creating file upload instances when consuming PSR-7 in file upload filters"
+    },
+    "autoload": {
+        "psr-4": {
+            "Laminas\\Filter\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "LaminasTest\\Filter\\": "test/"
+        }
+    },
+    "scripts": {
+        "check": [
+            "@cs-check",
+            "@test"
+        ],
+        "cs-check": "phpcs",
+        "cs-fix": "phpcbf",
+        "test": "phpunit --colors=always",
+        "test-coverage": "phpunit --colors=always --coverage-clover clover.xml",
+        "static-analysis": "psalm --shepherd --stats"
+    }
+}

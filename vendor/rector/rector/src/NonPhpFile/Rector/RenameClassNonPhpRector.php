@@ -3,7 +3,7 @@
 declare (strict_types=1);
 namespace Rector\Core\NonPhpFile\Rector;
 
-use RectorPrefix202208\Nette\Utils\Strings;
+use RectorPrefix202303\Nette\Utils\Strings;
 use Rector\Core\Configuration\RenamedClassesDataCollector;
 use Rector\Core\Contract\Rector\ConfigurableRectorInterface;
 use Rector\Core\Contract\Rector\NonPhpRectorInterface;
@@ -11,7 +11,7 @@ use Rector\PostRector\Contract\Rector\ComplementaryRectorInterface;
 use Symplify\RuleDocGenerator\Contract\ConfigurableRuleInterface;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
-use RectorPrefix202208\Webmozart\Assert\Assert;
+use RectorPrefix202303\Webmozart\Assert\Assert;
 final class RenameClassNonPhpRector implements NonPhpRectorInterface, ConfigurableRuleInterface, ConfigurableRectorInterface, ComplementaryRectorInterface
 {
     /**
@@ -71,7 +71,7 @@ CODE_SAMPLE
      */
     private function renameClasses(string $newContent, array $classRenames) : string
     {
-        $classRenames = $this->addDoubleSlahed($classRenames);
+        $classRenames = $this->addDoubleSlashed($classRenames);
         foreach ($classRenames as $oldClass => $newClass) {
             // the old class is without slashes, it can make mess as similar to a word in the text, so we have to be more strict about it
             $oldClassRegex = $this->createOldClassRegex($oldClass);
@@ -87,7 +87,7 @@ CODE_SAMPLE
      * @param array<string, string> $classRenames
      * @return array<string, string>
      */
-    private function addDoubleSlahed(array $classRenames) : array
+    private function addDoubleSlashed(array $classRenames) : array
     {
         foreach ($classRenames as $oldClass => $newClass) {
             // to prevent no slash override

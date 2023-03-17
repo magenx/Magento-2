@@ -11,6 +11,7 @@ use PhpParser\Node\Stmt\Else_;
 use PhpParser\Node\Stmt\ElseIf_;
 use PhpParser\Node\Stmt\If_;
 use PhpParser\Node\Stmt\Switch_;
+use Rector\Core\NodeAnalyzer\ExprAnalyzer;
 use Rector\Core\Rector\AbstractRector;
 use Rector\Renaming\NodeManipulator\SwitchManipulator;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
@@ -25,9 +26,15 @@ final class BinarySwitchToIfElseRector extends AbstractRector
      * @var \Rector\Renaming\NodeManipulator\SwitchManipulator
      */
     private $switchManipulator;
-    public function __construct(SwitchManipulator $switchManipulator)
+    /**
+     * @readonly
+     * @var \Rector\Core\NodeAnalyzer\ExprAnalyzer
+     */
+    private $exprAnalyzer;
+    public function __construct(SwitchManipulator $switchManipulator, ExprAnalyzer $exprAnalyzer)
     {
         $this->switchManipulator = $switchManipulator;
+        $this->exprAnalyzer = $exprAnalyzer;
     }
     public function getRuleDefinition() : RuleDefinition
     {
@@ -65,12 +72,17 @@ CODE_SAMPLE
         if (\count($node->cases) > 2) {
             return null;
         }
+        // avoid removal of cases if it goes to be skipped next
+        $cases = $node->cases;
         /** @var Case_ $firstCase */
-        $firstCase = \array_shift($node->cases);
+        $firstCase = \array_shift($cases);
         if ($firstCase->cond === null) {
             return null;
         }
-        $secondCase = \array_shift($node->cases);
+        if ($this->exprAnalyzer->isDynamicExpr($firstCase->cond)) {
+            return null;
+        }
+        $secondCase = \array_shift($cases);
         // special case with empty first case → ||
         $isFirstCaseEmpty = $firstCase->stmts === [];
         if ($isFirstCaseEmpty && $secondCase !== null && $secondCase->cond !== null) {

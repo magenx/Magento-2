@@ -1,7 +1,7 @@
 <?php
 
 declare (strict_types=1);
-namespace RectorPrefix202208;
+namespace RectorPrefix202303;
 
 use Rector\CodeQuality\Rector\FunctionLike\SimplifyUselessVariableRector;
 use Rector\Config\RectorConfig;
@@ -12,12 +12,10 @@ use Rector\DeadCode\Rector\BinaryOp\RemoveDuplicatedInstanceOfRector;
 use Rector\DeadCode\Rector\BooleanAnd\RemoveAndTrueRector;
 use Rector\DeadCode\Rector\Cast\RecastingRemovalRector;
 use Rector\DeadCode\Rector\ClassConst\RemoveUnusedPrivateClassConstantRector;
-use Rector\DeadCode\Rector\ClassMethod\RemoveDeadConstructorRector;
 use Rector\DeadCode\Rector\ClassMethod\RemoveDelegatingParentCallRector;
 use Rector\DeadCode\Rector\ClassMethod\RemoveEmptyClassMethodRector;
 use Rector\DeadCode\Rector\ClassMethod\RemoveLastReturnRector;
 use Rector\DeadCode\Rector\ClassMethod\RemoveUnusedConstructorParamRector;
-use Rector\DeadCode\Rector\ClassMethod\RemoveUnusedParamInRequiredAutowireRector;
 use Rector\DeadCode\Rector\ClassMethod\RemoveUnusedPrivateMethodParameterRector;
 use Rector\DeadCode\Rector\ClassMethod\RemoveUnusedPrivateMethodRector;
 use Rector\DeadCode\Rector\ClassMethod\RemoveUnusedPromotedPropertyRector;
@@ -66,7 +64,6 @@ return static function (RectorConfig $rectorConfig) : void {
         RemoveUnusedPrivatePropertyRector::class,
         RemoveUnusedPrivateClassConstantRector::class,
         RemoveUnusedPrivateMethodRector::class,
-        RemoveDeadConstructorRector::class,
         RemoveDeadReturnRector::class,
         RemoveDeadContinueRector::class,
         RemoveDeadIfForeachForRector::class,
@@ -91,7 +88,6 @@ return static function (RectorConfig $rectorConfig) : void {
         RemoveDeadInstanceOfRector::class,
         RemoveDeadLoopRector::class,
         RemoveUnusedPrivateMethodParameterRector::class,
-        RemoveUnusedParamInRequiredAutowireRector::class,
         // docblock
         RemoveUselessParamTagRector::class,
         RemoveUselessReturnTagRector::class,

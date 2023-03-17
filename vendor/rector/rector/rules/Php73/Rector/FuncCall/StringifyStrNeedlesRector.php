@@ -8,10 +8,8 @@ use PhpParser\Node\Arg;
 use PhpParser\Node\Expr\Cast\String_;
 use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Scalar\Encapsed;
-use PHPStan\Type\StringType;
 use Rector\Core\Rector\AbstractRector;
 use Rector\Core\ValueObject\PhpVersionFeature;
-use Rector\Php73\NodeTypeAnalyzer\NodeTypeAnalyzer;
 use Rector\VersionBonding\Contract\MinPhpVersionInterface;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
@@ -25,15 +23,6 @@ final class StringifyStrNeedlesRector extends AbstractRector implements MinPhpVe
      * @var string[]
      */
     private const NEEDLE_STRING_SENSITIVE_FUNCTIONS = ['strpos', 'strrpos', 'stripos', 'strstr', 'stripos', 'strripos', 'strstr', 'strchr', 'strrchr', 'stristr'];
-    /**
-     * @readonly
-     * @var \Rector\Php73\NodeTypeAnalyzer\NodeTypeAnalyzer
-     */
-    private $nodeTypeAnalyzer;
-    public function __construct(NodeTypeAnalyzer $nodeTypeAnalyzer)
-    {
-        $this->nodeTypeAnalyzer = $nodeTypeAnalyzer;
-    }
     public function provideMinPhpVersion() : int
     {
         return PhpVersionFeature::DEPRECATE_INT_IN_STR_NEEDLES;
@@ -74,13 +63,7 @@ CODE_SAMPLE
         // is argument string?
         $needleArgValue = $node->args[1]->value;
         $needleType = $this->getType($needleArgValue);
-        if ($needleType instanceof StringType) {
-            return null;
-        }
-        if ($this->nodeTypeAnalyzer->isStringyType($needleType)) {
-            return null;
-        }
-        if ($needleArgValue instanceof String_) {
+        if ($needleType->isString()->yes()) {
             return null;
         }
         if ($needleArgValue instanceof Encapsed) {

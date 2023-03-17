@@ -2,34 +2,30 @@
 
 /**
  * @see       https://github.com/laminas/laminas-server for the canonical source repository
- * @copyright https://github.com/laminas/laminas-server/blob/master/COPYRIGHT.md
- * @license   https://github.com/laminas/laminas-server/blob/master/LICENSE.md New BSD License
  */
 
 namespace Laminas\Server;
 
 use ReflectionClass;
 
+use function call_user_func_array;
+use function is_object;
+
 /**
  * Abstract Server implementation
  */
 abstract class AbstractServer implements Server
 {
-    /**
-     * @var bool Flag; whether or not overwriting existing methods is allowed
-     */
+    /** @var bool Flag; whether or not overwriting existing methods is allowed */
     protected $overwriteExistingMethods = false;
 
-    /**
-     * @var Definition
-     */
+    /** @var Definition */
     protected $table;
 
     /**
      * Constructor
      *
      * Setup server description
-     *
      */
     public function __construct()
     {
@@ -52,7 +48,6 @@ abstract class AbstractServer implements Server
     /**
      * Build callback for method signature
      *
-     * @param  Reflection\AbstractFunction $reflection
      * @return Method\Callback
      */
     protected function buildCallback(Reflection\AbstractFunction $reflection)
@@ -74,7 +69,7 @@ abstract class AbstractServer implements Server
      *
      * @deprecated Since 2.7.0; method will be removed in 3.0, use
      *             buildCallback() instead.
-     * @param  Reflection\AbstractFunction $reflection
+     *
      * @return Method\Callback
      */
     // @codingStandardsIgnoreStart
@@ -87,16 +82,15 @@ abstract class AbstractServer implements Server
     /**
      * Build a method signature
      *
-     * @param  Reflection\AbstractFunction $reflection
      * @param  null|string|object $class
      * @return Method\Definition
-     * @throws Exception\RuntimeException on duplicate entry
+     * @throws Exception\RuntimeException On duplicate entry.
      */
     final protected function buildSignature(Reflection\AbstractFunction $reflection, $class = null)
     {
-        $ns         = $reflection->getNamespace();
-        $name       = $reflection->getName();
-        $method     = empty($ns) ? $name : $ns . '.' . $name;
+        $ns     = $reflection->getNamespace();
+        $name   = $reflection->getName();
+        $method = empty($ns) ? $name : $ns . '.' . $name;
 
         if (! $this->overwriteExistingMethods && $this->table->hasMethod($method)) {
             throw new Exception\RuntimeException('Duplicate method registered: ' . $method);
@@ -136,7 +130,7 @@ abstract class AbstractServer implements Server
      *
      * @deprecated Since 2.7.0; method will be removed in 3.0, use
      *             buildSignature() instead.
-     * @param  Reflection\AbstractFunction $reflection
+     *
      * @param  null|string|object $class
      * @return Method\Definition
      * @throws Exception\RuntimeException on duplicate entry
@@ -153,7 +147,7 @@ abstract class AbstractServer implements Server
      *
      * @deprecated Since 2.7.0; method will be renamed to remove underscore
      *     prefix in 3.0.
-     * @param  Method\Definition $invokable
+     *
      * @param  array $params
      * @return mixed
      */
@@ -164,7 +158,7 @@ abstract class AbstractServer implements Server
         $callback = $invokable->getCallback();
         $type     = $callback->getType();
 
-        if ('function' == $type) {
+        if ('function' === $type) {
             $function = $callback->getFunction();
             return call_user_func_array($function, $params);
         }
@@ -172,7 +166,7 @@ abstract class AbstractServer implements Server
         $class  = $callback->getClass();
         $method = $callback->getMethod();
 
-        if ('static' == $type) {
+        if ('static' === $type) {
             return call_user_func_array([$class, $method], $params);
         }
 
@@ -183,7 +177,7 @@ abstract class AbstractServer implements Server
                 $reflection = new ReflectionClass($class);
                 $object     = $reflection->newInstanceArgs($invokeArgs);
             } else {
-                $object = new $class;
+                $object = new $class();
             }
         }
         return call_user_func_array([$object, $method], $params);

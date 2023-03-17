@@ -2,22 +2,34 @@
 
 /**
  * @see       https://github.com/laminas/laminas-server for the canonical source repository
- * @copyright https://github.com/laminas/laminas-server/blob/master/COPYRIGHT.md
- * @license   https://github.com/laminas/laminas-server/blob/master/LICENSE.md New BSD License
  */
 
 namespace Laminas\Server;
 
+use Laminas\Server\Server;
 use Laminas\Stdlib\ErrorHandler;
+
+use function array_keys;
+use function dirname;
+use function file_exists;
+use function file_get_contents;
+use function file_put_contents;
+use function in_array;
+use function is_readable;
+use function is_string;
+use function is_writable;
+use function serialize;
+use function unlink;
+use function unserialize;
+
+use const E_NOTICE;
 
 /**
  * \Laminas\Server\Cache: cache server definitions
  */
 class Cache
 {
-    /**
-     * @var array Methods to skip when caching server
-     */
+    /** @var array Methods to skip when caching server */
     protected static $skipMethods = [];
 
     /**
@@ -30,7 +42,6 @@ class Cache
      * on success.
      *
      * @param  string $filename
-     * @param  \Laminas\Server\Server $server
      * @return bool
      */
     public static function save($filename, Server $server)
@@ -79,7 +90,6 @@ class Cache
      * </code>
      *
      * @param  string $filename
-     * @param  \Laminas\Server\Server $server
      * @return bool
      */
     public static function get($filename, Server $server)

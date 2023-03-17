@@ -18,6 +18,7 @@ class Nonces
     public static $transactable = "fake-valid-nonce";
     public static $consumed = "fake-consumed-nonce";
     public static $paypalOneTimePayment = "fake-paypal-one-time-nonce";
+    // NEXT_MAJOR_VERSION - no longer supported in the Gateway, remove this constant
     public static $paypalFuturePayment = "fake-paypal-future-nonce";
     public static $paypalBillingAgreement = "fake-paypal-billing-agreement-nonce";
     public static $applePayVisa = "fake-apple-pay-visa-nonce";
@@ -30,6 +31,7 @@ class Nonces
     public static $googlePayAmEx = "fake-android-pay-amex-nonce";
     public static $abstractTransactable = "fake-abstract-transactable-nonce";
     public static $europe = "fake-europe-bank-account-nonce";
+    public static $sepaDirectDebit = "fake-sepa-direct-debit-nonce";
     public static $transactableVisa = "fake-valid-visa-nonce";
     public static $transactableAmEx = "fake-valid-amex-nonce";
     public static $transactableMasterCard = "fake-valid-mastercard-nonce";

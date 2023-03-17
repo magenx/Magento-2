@@ -10,7 +10,7 @@
         <section id="payment">
             <group id="braintree_section" sortOrder="6" showInDefault="0" showInWebsite="1" showInStore="1">
                 <group id="braintree" translate="label comment" type="text" showInDefault="1" showInWebsite="1" showInStore="1">
-                    <label><![CDATA[Braintree Payments (by <a href="https://www.gene.co.uk/braintree-payments/" target="_blank" rel="noopener noreferrer">GENE Commerce</a> v 4.4.0)]]></label>
+                    <label><![CDATA[Braintree Payments (by <a href="https://www.gene.co.uk/gene-braintree-payments/" target="_blank" rel="noopener noreferrer">GENE Commerce</a> v4.5.0)]]></label>
                     <comment><![CDATA[Accept credit/debit cards and PayPal in your Magento store.<br />No setup or monthly fees and your customers never leave your store to complete the purchase.]]></comment>
                     <fieldset_css>complex braintree-section</fieldset_css>
                     <frontend_model>PayPal\Braintree\Block\System\Config\Form\Fieldset</frontend_model>
@@ -192,6 +192,34 @@
                             <label>Sort Order</label>
                             <frontend_class>validate-number</frontend_class>
                             <config_path>payment/braintree/sort_order</config_path>
+                        </field>
+                    </group>
+                    <group id="braintree_webhook" translate="label" showInDefault="1" showInWebsite="1" showInStore="0" sortOrder="25">
+                        <label>Braintree Webhooks</label>
+                        <frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
+                        <field id="enabled" translate="label" type="select" sortOrder="5" showInDefault="1" showInWebsite="1" showInStore="0">
+                            <label>Enabled Webhook</label>
+                            <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                            <config_path>payment/braintree_webhook/enabled</config_path>
+                        </field>
+                        <field id="fraud_protection_url" translate="label" sortOrder="10" showInDefault="1" showInWebsite="1">
+                            <label>Fraud Protection URL</label>
+                            <frontend_model>PayPal\Braintree\Model\Config\Source\FraudProtectionUrl</frontend_model>
+                            <config_path>payment/braintree_webhook/fraud_protection_url</config_path>
+                            <comment>
+                                You will need to add this URL into your Braintree Account as Webhook Destination URL.
+                                This URL must be secure and publicly accessible.
+                            </comment>
+                        </field>
+                        <field id="approve_order_status" translate="label" type="select" sortOrder="15" showInDefault="1" showInWebsite="1">
+                            <label>Fraud Protection Approve Order Status</label>
+                            <source_model>Magento\Sales\Model\ResourceModel\Order\Status\Collection</source_model>
+                            <config_path>payment/braintree_webhook/approve_order_status</config_path>
+                        </field>
+                        <field id="reject_order_status" translate="label" type="select" sortOrder="20" showInDefault="1" showInWebsite="1">
+                            <label>Fraud Protection Reject Order Status</label>
+                            <source_model>Magento\Sales\Model\ResourceModel\Order\Status\Collection</source_model>
+                            <config_path>payment/braintree_webhook/reject_order_status</config_path>
                         </field>
                     </group>
                     <group id="braintree_country_specific" translate="label" showInDefault="1" showInWebsite="1" sortOrder="30">
@@ -564,18 +592,6 @@
                                         <config_path>payment/braintree_paypal/button_location_cart_type_paypal_show</config_path>
                                         <frontend_class>cart-paypal-show</frontend_class>
                                     </field>
-                                    <field id="button_location_cart_type_paypal_layout" translate="label" type="select" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="0">
-                                        <label>Button Layout</label>
-                                        <source_model>PayPal\Braintree\Model\Config\Source\Layout</source_model>
-                                        <config_path>payment/braintree_paypal/button_location_cart_type_paypal_layout</config_path>
-                                        <frontend_class>cart-paypal-layout</frontend_class>
-                                    </field>
-                                    <field id="button_location_cart_type_paypal_tagline" translate="label" type="select" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="0">
-                                        <label>Tagline</label>
-                                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                                        <config_path>payment/braintree_paypal/button_location_cart_type_paypal_tagline</config_path>
-                                        <frontend_class>cart-paypal-tagline</frontend_class>
-                                    </field>
                                     <field id="button_location_cart_type_paypal_label" translate="label" type="select" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="0">
                                         <label>Button Label</label>
                                         <source_model>PayPal\Braintree\Model\Config\Source\Label</source_model>
@@ -609,18 +625,6 @@
                                         <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                                         <config_path>payment/braintree_paypal/button_location_cart_type_paylater_show</config_path>
                                         <frontend_class>cart-paylater-show</frontend_class>
-                                    </field>
-                                    <field id="button_location_cart_type_paylater_layout" translate="label" type="select" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="0">
-                                        <label>Button Layout</label>
-                                        <source_model>PayPal\Braintree\Model\Config\Source\Layout</source_model>
-                                        <config_path>payment/braintree_paypal/button_location_cart_type_paylater_layout</config_path>
-                                        <frontend_class>cart-paylater-layout</frontend_class>
-                                    </field>
-                                    <field id="button_location_cart_type_paylater_tagline" translate="label" type="select" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="0">
-                                        <label>Tagline</label>
-                                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                                        <config_path>payment/braintree_paypal/button_location_cart_type_paylater_tagline</config_path>
-                                        <frontend_class>cart-paylater-tagline</frontend_class>
                                     </field>
                                     <field id="button_location_cart_type_paylater_label" translate="label" type="select" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="0">
                                         <label>Button Label</label>
@@ -656,18 +660,6 @@
                                         <config_path>payment/braintree_paypal/button_location_cart_type_credit_show</config_path>
                                         <frontend_class>cart-credit-show</frontend_class>
                                         <comment>PayPal Credit is currently only available in the United States and United Kingdom. PayPal Credit will be disabled if the selected value for the Merchant Country field is not US or UK. This field only available if Merchant Country is US or UK.</comment>
-                                    </field>
-                                    <field id="button_location_cart_type_credit_layout" translate="label" type="select" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="0">
-                                        <label>Button Layout</label>
-                                        <source_model>PayPal\Braintree\Model\Config\Source\Layout</source_model>
-                                        <config_path>payment/braintree_paypal/button_location_cart_type_credit_layout</config_path>
-                                        <frontend_class>cart-credit-layout</frontend_class>
-                                    </field>
-                                    <field id="button_location_cart_type_credit_tagline" translate="label" type="select" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="0">
-                                        <label>Tagline</label>
-                                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                                        <config_path>payment/braintree_paypal/button_location_cart_type_credit_tagline</config_path>
-                                        <frontend_class>cart-credit-tagline</frontend_class>
                                     </field>
                                     <field id="button_location_cart_type_credit_label" translate="label" type="select" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="0">
                                         <label>Button Label</label>
@@ -748,18 +740,6 @@
                                         <config_path>payment/braintree_paypal/button_location_checkout_type_paypal_show</config_path>
                                         <frontend_class>checkout-paypal-show</frontend_class>
                                     </field>
-                                    <field id="button_location_checkout_type_paypal_layout" translate="label" type="select" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="0">
-                                        <label>Button Layout</label>
-                                        <source_model>PayPal\Braintree\Model\Config\Source\Layout</source_model>
-                                        <config_path>payment/braintree_paypal/button_location_checkout_type_paypal_layout</config_path>
-                                        <frontend_class>checkout-paypal-layout</frontend_class>
-                                    </field>
-                                    <field id="button_location_checkout_type_paypal_tagline" translate="label" type="select" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="0">
-                                        <label>Tagline</label>
-                                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                                        <config_path>payment/braintree_paypal/button_location_checkout_type_paypal_tagline</config_path>
-                                        <frontend_class>checkout-paypal-tagline</frontend_class>
-                                    </field>
                                     <field id="button_location_checkout_type_paypal_label" translate="label" type="select" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="0">
                                         <label>Button Label</label>
                                         <source_model>PayPal\Braintree\Model\Config\Source\Label</source_model>
@@ -793,18 +773,6 @@
                                         <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                                         <config_path>payment/braintree_paypal/button_location_checkout_type_paylater_show</config_path>
                                         <frontend_class>checkout-paylater-show</frontend_class>
-                                    </field>
-                                    <field id="button_location_checkout_type_paylater_layout" translate="label" type="select" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="0">
-                                        <label>Button Layout</label>
-                                        <source_model>PayPal\Braintree\Model\Config\Source\Layout</source_model>
-                                        <config_path>payment/braintree_paypal/button_location_checkout_type_paylater_layout</config_path>
-                                        <frontend_class>checkout-paylater-layout</frontend_class>
-                                    </field>
-                                    <field id="button_location_checkout_type_paylater_tagline" translate="label" type="select" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="0">
-                                        <label>Tagline</label>
-                                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                                        <config_path>payment/braintree_paypal/button_location_checkout_type_paylater_tagline</config_path>
-                                        <frontend_class>checkout-paylater-tagline</frontend_class>
                                     </field>
                                     <field id="button_location_checkout_type_paylater_label" translate="label" type="select" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="0">
                                         <label>Button Label</label>
@@ -840,18 +808,6 @@
                                         <config_path>payment/braintree_paypal/button_location_checkout_type_credit_show</config_path>
                                         <frontend_class>checkout-credit-show</frontend_class>
                                         <comment>PayPal Credit is currently only available in the United States and United Kingdom. PayPal Credit will be disabled if the selected value for the Merchant Country field is not US or UK. This field only available if Merchant Country is US or UK.</comment>
-                                    </field>
-                                    <field id="button_location_checkout_type_credit_layout" translate="label" type="select" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="0">
-                                        <label>Button Layout</label>
-                                        <source_model>PayPal\Braintree\Model\Config\Source\Layout</source_model>
-                                        <config_path>payment/braintree_paypal/button_location_checkout_type_credit_layout</config_path>
-                                        <frontend_class>checkout-credit-layout</frontend_class>
-                                    </field>
-                                    <field id="button_location_checkout_type_credit_tagline" translate="label" type="select" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="0">
-                                        <label>Tagline</label>
-                                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                                        <config_path>payment/braintree_paypal/button_location_checkout_type_credit_tagline</config_path>
-                                        <frontend_class>checkout-credit-tagline</frontend_class>
                                     </field>
                                     <field id="button_location_checkout_type_credit_label" translate="label" type="select" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="0">
                                         <label>Button Label</label>
@@ -932,18 +888,6 @@
                                         <config_path>payment/braintree_paypal/button_location_productpage_type_paypal_show</config_path>
                                         <frontend_class>productpage-paypal-show</frontend_class>
                                     </field>
-                                    <field id="button_location_productpage_type_paypal_layout" translate="label" type="select" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="0">
-                                        <label>Button Layout</label>
-                                        <source_model>PayPal\Braintree\Model\Config\Source\Layout</source_model>
-                                        <config_path>payment/braintree_paypal/button_location_productpage_type_paypal_layout</config_path>
-                                        <frontend_class>productpage-paypal-layout</frontend_class>
-                                    </field>
-                                    <field id="button_location_productpage_type_paypal_tagline" translate="label" type="select" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="0">
-                                        <label>Tagline</label>
-                                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                                        <config_path>payment/braintree_paypal/button_location_productpage_type_paypal_tagline</config_path>
-                                        <frontend_class>productpage-paypal-tagline</frontend_class>
-                                    </field>
                                     <field id="button_location_productpage_type_paypal_label" translate="label" type="select" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="0">
                                         <label>Button Label</label>
                                         <source_model>PayPal\Braintree\Model\Config\Source\Label</source_model>
@@ -977,18 +921,6 @@
                                         <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                                         <config_path>payment/braintree_paypal/button_location_productpage_type_paylater_show</config_path>
                                         <frontend_class>productpage-paylater-show</frontend_class>
-                                    </field>
-                                    <field id="button_location_productpage_type_paylater_layout" translate="label" type="select" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="0">
-                                        <label>Button Layout</label>
-                                        <source_model>PayPal\Braintree\Model\Config\Source\Layout</source_model>
-                                        <config_path>payment/braintree_paypal/button_location_productpage_type_paylater_layout</config_path>
-                                        <frontend_class>productpage-paylater-layout</frontend_class>
-                                    </field>
-                                    <field id="button_location_productpage_type_paylater_tagline" translate="label" type="select" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="0">
-                                        <label>Tagline</label>
-                                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                                        <config_path>payment/braintree_paypal/button_location_productpage_type_paylater_tagline</config_path>
-                                        <frontend_class>productpage-paylater-tagline</frontend_class>
                                     </field>
                                     <field id="button_location_productpage_type_paylater_label" translate="label" type="select" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="0">
                                         <label>Button Label</label>
@@ -1024,18 +956,6 @@
                                         <config_path>payment/braintree_paypal/button_location_productpage_type_credit_show</config_path>
                                         <frontend_class>productpage-credit-show</frontend_class>
                                         <comment>PayPal Credit is currently only available in the United States and United Kingdom. PayPal Credit will be disabled if the selected value for the Merchant Country field is not US or UK. This field only available if Merchant Country is US or UK.</comment>
-                                    </field>
-                                    <field id="button_location_productpage_type_credit_layout" translate="label" type="select" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="0">
-                                        <label>Button Layout</label>
-                                        <source_model>PayPal\Braintree\Model\Config\Source\Layout</source_model>
-                                        <config_path>payment/braintree_paypal/button_location_productpage_type_credit_layout</config_path>
-                                        <frontend_class>productpage-credit-layout</frontend_class>
-                                    </field>
-                                    <field id="button_location_productpage_type_credit_tagline" translate="label" type="select" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="0">
-                                        <label>Tagline</label>
-                                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                                        <config_path>payment/braintree_paypal/button_location_productpage_type_credit_tagline</config_path>
-                                        <frontend_class>productpage-credit-tagline</frontend_class>
                                     </field>
                                     <field id="button_location_productpage_type_credit_label" translate="label" type="select" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="0">
                                         <label>Button Label</label>

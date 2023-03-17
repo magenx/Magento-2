@@ -14,7 +14,6 @@ use PhpParser\Node\Param;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Function_;
 use PhpParser\Node\UnionType as PhpParserUnionType;
-use PHPStan\Type\ArrayType;
 use PHPStan\Type\MixedType;
 use PHPStan\Type\Type;
 use PHPStan\Type\UnionType;
@@ -122,8 +121,8 @@ CODE_SAMPLE
         $phpDocInfo = $this->phpDocInfoFactory->createFromNodeOrEmpty($node);
         $this->refactorParamTypes($node, $phpDocInfo);
         $this->refactorReturnType($node, $phpDocInfo);
-        $this->paramTagRemover->removeParamTagsIfUseless($phpDocInfo, $node);
-        if ($phpDocInfo->hasChanged()) {
+        $hasChanged = $this->paramTagRemover->removeParamTagsIfUseless($phpDocInfo, $node);
+        if ($hasChanged) {
             $this->hasChanged = \true;
         }
         $hasReturnChanged = $this->returnTagRemover->removeReturnTagIfUseless($phpDocInfo, $node);
@@ -180,7 +179,7 @@ CODE_SAMPLE
         if (!$this->unionTypeAnalyzer->hasObjectWithoutClassTypeWithOnlyFullyQualifiedObjectType($unionType)) {
             return;
         }
-        $param->type = new Name('object');
+        $param->type = new Identifier('object');
         $this->hasChanged = \true;
     }
     /**
@@ -220,7 +219,7 @@ CODE_SAMPLE
         $singleArrayTypes = [];
         $originalTypeCount = \count($unionType->getTypes());
         foreach ($unionType->getTypes() as $unionedType) {
-            if ($unionedType instanceof ArrayType) {
+            if ($unionedType->isArray()->yes()) {
                 if ($hasArrayType) {
                     continue;
                 }

@@ -57,6 +57,7 @@ class Form extends Cc
      * @param GatewayConfig $gatewayConfig
      * @param CcType $ccType
      * @param LoggerInterface $logger
+     * @param Data $paymentDataHelper
      * @param array $data
      */
     public function __construct(
@@ -66,14 +67,15 @@ class Form extends Cc
         GatewayConfig $gatewayConfig,
         CcType $ccType,
         LoggerInterface $logger,
+        Data $paymentDataHelper,
         array $data = []
     ) {
         parent::__construct($context, $paymentConfig, $data);
-
         $this->sessionQuote = $sessionQuote;
         $this->gatewayConfig = $gatewayConfig;
         $this->ccType = $ccType;
         $this->logger = $logger;
+        $this->paymentDataHelper = $paymentDataHelper;
     }
 
     /**

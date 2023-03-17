@@ -3,7 +3,7 @@
 declare (strict_types=1);
 namespace Rector\Php72\NodeFactory;
 
-use RectorPrefix202208\Nette\Utils\Strings;
+use RectorPrefix202303\Nette\Utils\Strings;
 use PhpParser\Node;
 use PhpParser\Node\ComplexType;
 use PhpParser\Node\Expr;
@@ -41,14 +41,14 @@ use Rector\Core\PhpParser\Node\BetterNodeFinder;
 use Rector\Core\PhpParser\Node\NodeFactory;
 use Rector\Core\PhpParser\Parser\InlineCodeParser;
 use Rector\Core\PhpParser\Parser\SimplePhpParser;
+use Rector\Core\Util\Reflection\PrivatesAccessor;
 use Rector\NodeNameResolver\NodeNameResolver;
 use Rector\NodeTypeResolver\Node\AttributeKey;
 use Rector\Php72\NodeManipulator\ClosureNestedUsesDecorator;
+use Rector\PhpDocParser\NodeTraverser\SimpleCallableNodeTraverser;
 use Rector\PHPStanStaticTypeMapper\Enum\TypeKind;
 use Rector\StaticTypeMapper\StaticTypeMapper;
 use ReflectionParameter;
-use RectorPrefix202208\Symplify\Astral\NodeTraverser\SimpleCallableNodeTraverser;
-use RectorPrefix202208\Symplify\PackageBuilder\Reflection\PrivatesAccessor;
 final class AnonymousFunctionFactory
 {
     /**
@@ -78,7 +78,7 @@ final class AnonymousFunctionFactory
     private $staticTypeMapper;
     /**
      * @readonly
-     * @var \Symplify\Astral\NodeTraverser\SimpleCallableNodeTraverser
+     * @var \Rector\PhpDocParser\NodeTraverser\SimpleCallableNodeTraverser
      */
     private $simpleCallableNodeTraverser;
     /**
@@ -98,7 +98,7 @@ final class AnonymousFunctionFactory
     private $astResolver;
     /**
      * @readonly
-     * @var \Symplify\PackageBuilder\Reflection\PrivatesAccessor
+     * @var \Rector\Core\Util\Reflection\PrivatesAccessor
      */
     private $privatesAccessor;
     /**
@@ -263,7 +263,7 @@ final class AnonymousFunctionFactory
         return $params;
     }
     /**
-     * @return \PhpParser\Node\Name|\PhpParser\Node\ComplexType|null
+     * @return \PhpParser\Node\Name|\PhpParser\Node\ComplexType|\PhpParser\Node\Identifier|null
      */
     private function resolveParamType(ParameterReflection $parameterReflection)
     {

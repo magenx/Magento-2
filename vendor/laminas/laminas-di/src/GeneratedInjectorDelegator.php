@@ -13,7 +13,10 @@ use function is_string;
 class GeneratedInjectorDelegator
 {
     /**
+     * @psalm-suppress MixedAssignment Laminas config is an untyped array - types should be ensured internally
+     * @psalm-suppress MixedArrayAccess Laminas config is an untyped array - types should be ensured internally
      * @param string $name
+     * @param callable():InjectorInterface $callback
      */
     public function __invoke(ContainerInterface $container, $name, callable $callback): InjectorInterface
     {
@@ -27,10 +30,11 @@ class GeneratedInjectorDelegator
             throw new InvalidServiceConfigException('Provided namespace is not a string.');
         }
 
-        $injector = $callback();
-
+        $injector          = $callback();
         $generatedInjector = $namespace . '\\GeneratedInjector';
+
         if (class_exists($generatedInjector)) {
+            /** @psalm-var class-string<InjectorInterface> $generatedInjector */
             return new $generatedInjector($injector);
         }
 

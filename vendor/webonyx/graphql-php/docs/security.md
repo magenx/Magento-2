@@ -1,31 +1,31 @@
-# Query Complexity Analysis
+## Query Complexity Analysis
 
-This is a PHP port of [Query Complexity Analysis](http://sangria-graphql.org/learn/#query-complexity-analysis) in Sangria implementation.
+This is a PHP port of [Query Complexity Analysis](https://sangria-graphql.github.io/learn/#query-complexity-analysis) in Sangria implementation.
 
 Complexity analysis is a separate validation rule which calculates query complexity score before execution.
-Every field in the query gets a default score 1 (including ObjectType nodes). Total complexity of the 
+Every field in the query gets a default score 1 (including ObjectType nodes). Total complexity of the
 query is the sum of all field scores. For example, the complexity of introspection query is **109**.
 
 If this score exceeds a threshold, a query is not executed and an error is returned instead.
 
-Complexity analysis is disabled by default. To enabled it, add validation rule:
+Complexity analysis is disabled by default. You may enable it by setting a maximum query complexity:
 
 ```php
-<?php
 use GraphQL\GraphQL;
 use GraphQL\Validator\Rules\QueryComplexity;
 use GraphQL\Validator\DocumentValidator;
 
-$rule = new QueryComplexity($maxQueryComplexity = 100);
+$rule = new QueryComplexity(100);
 DocumentValidator::addRule($rule);
 
 GraphQL::executeQuery(/*...*/);
 ```
+
 This will set the rule globally. Alternatively, you can provide validation rules [per execution](executing-queries.md#custom-validation-rules).
 
 To customize field score add **complexity** function to field definition:
+
 ```php
-<?php
 use GraphQL\Type\Definition\Type;
 use GraphQL\Type\Definition\ObjectType;
 
@@ -40,28 +40,25 @@ $type = new ObjectType([
                     'defaultValue' => 10
                 ]
             ],
-            'complexity' => function($childrenComplexity, $args) {
-                return $childrenComplexity * $args['limit'];
-            }
+            'complexity' => fn (int $childrenComplexity, array $args): int => $childrenComplexity * $args['limit'],
         ]
     ]
 ]);
 ```
 
-# Limiting Query Depth
+## Limiting Query Depth
 
-This is a PHP port of [Limiting Query Depth](http://sangria-graphql.org/learn/#limiting-query-depth) in Sangria implementation.
+This is a PHP port of [Limiting Query Depth](https://sangria-graphql.github.io/learn/#limiting-query-depth) in Sangria implementation.
 For example, max depth of the introspection query is **7**.
 
-It is disabled by default. To enable it, add following validation rule:
+It is disabled by default. You may enable it by setting a maximum query depth:
 
 ```php
-<?php
 use GraphQL\GraphQL;
 use GraphQL\Validator\Rules\QueryDepth;
 use GraphQL\Validator\DocumentValidator;
 
-$rule = new QueryDepth($maxDepth = 10);
+$rule = new QueryDepth(10);
 DocumentValidator::addRule($rule);
 
 GraphQL::executeQuery(/*...*/);
@@ -69,26 +66,28 @@ GraphQL::executeQuery(/*...*/);
 
 This will set the rule globally. Alternatively, you can provide validation rules [per execution](executing-queries.md#custom-validation-rules).
 
-# Disabling Introspection
-[Introspection](http://graphql.org/learn/introspection/) is a mechanism for fetching schema structure.
+## Disabling Introspection
+
+[Introspection](https://graphql.org/learn/introspection/) is a mechanism for fetching schema structure.
 It is used by tools like GraphiQL for auto-completion, query validation, etc.
 
-Introspection is enabled by default. It means that anybody can get a full description of your schema by 
-sending a special query containing meta fields **__type** and **__schema** .
+Introspection is enabled by default. It means that anybody can get a full description of your schema by
+sending a special query containing meta fields **\_\_type** and **\_\_schema** .
 
 If you are not planning to expose your API to the general public, it makes sense to disable this feature.
 
-GraphQL PHP provides you separate validation rule which prohibits queries that contain 
-**__type** or **__schema** fields. To disable introspection, add following rule:
+GraphQL PHP provides you separate validation rule which prohibits queries that contain
+**\_\_type** or **\_\_schema** fields. To disable introspection, add following rule:
 
 ```php
-<?php
 use GraphQL\GraphQL;
 use GraphQL\Validator\Rules\DisableIntrospection;
 use GraphQL\Validator\DocumentValidator;
 
-DocumentValidator::addRule(new DisableIntrospection());
+$rule = new DisableIntrospection(DisableIntrospection::ENABLED);
+DocumentValidator::addRule($rule);
 
 GraphQL::executeQuery(/*...*/);
 ```
+
 This will set the rule globally. Alternatively, you can provide validation rules [per execution](executing-queries.md#custom-validation-rules).

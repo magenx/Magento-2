@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 /*
  * This file is part of Composer.
@@ -17,16 +17,16 @@ namespace Composer\Package\Loader;
  */
 class InvalidPackageException extends \Exception
 {
-    /** @var string[] */
+    /** @var list<string> */
     private $errors;
-    /** @var string[] */
+    /** @var list<string> */
     private $warnings;
     /** @var mixed[] package config */
     private $data;
 
     /**
-     * @param string[] $errors
-     * @param string[] $warnings
+     * @param list<string> $errors
+     * @param list<string> $warnings
      * @param mixed[]  $data
      */
     public function __construct(array $errors, array $warnings, array $data)
@@ -40,23 +40,23 @@ class InvalidPackageException extends \Exception
     /**
      * @return mixed[]
      */
-    public function getData()
+    public function getData(): array
     {
         return $this->data;
     }
 
     /**
-     * @return string[]
+     * @return list<string>
      */
-    public function getErrors()
+    public function getErrors(): array
     {
         return $this->errors;
     }
 
     /**
-     * @return string[]
+     * @return list<string>
      */
-    public function getWarnings()
+    public function getWarnings(): array
     {
         return $this->warnings;
     }

@@ -1,13 +1,14 @@
 <?php
 
 declare (strict_types=1);
-namespace RectorPrefix202208\Symplify\EasyParallel\CommandLine;
+namespace RectorPrefix202303\Symplify\EasyParallel\CommandLine;
 
-use RectorPrefix202208\Symfony\Component\Console\Command\Command;
-use RectorPrefix202208\Symfony\Component\Console\Input\InputInterface;
-use RectorPrefix202208\Symplify\EasyParallel\Exception\ParallelShouldNotHappenException;
-use RectorPrefix202208\Symplify\EasyParallel\Reflection\CommandFromReflectionFactory;
+use RectorPrefix202303\Symfony\Component\Console\Command\Command;
+use RectorPrefix202303\Symfony\Component\Console\Input\InputInterface;
+use RectorPrefix202303\Symplify\EasyParallel\Exception\ParallelShouldNotHappenException;
+use RectorPrefix202303\Symplify\EasyParallel\Reflection\CommandFromReflectionFactory;
 /**
+ * @api
  * @see \Symplify\EasyParallel\Tests\CommandLine\WorkerCommandLineFactoryTest
  */
 final class WorkerCommandLineFactory
@@ -23,6 +24,7 @@ final class WorkerCommandLineFactory
      */
     private const EXCLUDED_OPTION_NAMES = ['output-format'];
     /**
+     * @readonly
      * @var \Symplify\EasyParallel\Reflection\CommandFromReflectionFactory
      */
     private $commandFromReflectionFactory;
@@ -49,7 +51,7 @@ final class WorkerCommandLineFactory
             if ($arg === $mainCommandName) {
                 break;
             }
-            $processCommandArray[] = \escapeshellarg($arg);
+            $processCommandArray[] = \escapeshellarg((string) $arg);
         }
         $processCommandArray[] = $workerCommandName;
         if ($projectConfigFile !== null) {

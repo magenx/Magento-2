@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 /*
  * This file is part of Composer.
@@ -12,6 +12,7 @@
 
 namespace Composer\Downloader;
 
+use React\Promise\PromiseInterface;
 use Composer\Package\PackageInterface;
 use Composer\Repository\VcsRepository;
 use Composer\Util\Perforce;
@@ -27,15 +28,15 @@ class PerforceDownloader extends VcsDownloader
     /**
      * @inheritDoc
      */
-    protected function doDownload(PackageInterface $package, $path, $url, PackageInterface $prevPackage = null)
+    protected function doDownload(PackageInterface $package, string $path, string $url, ?PackageInterface $prevPackage = null): PromiseInterface
     {
-        return \React\Promise\resolve();
+        return \React\Promise\resolve(null);
     }
 
     /**
      * @inheritDoc
      */
-    public function doInstall(PackageInterface $package, $path, $url)
+    public function doInstall(PackageInterface $package, string $path, string $url): PromiseInterface
     {
         $ref = $package->getSourceReference();
         $label = $this->getLabelFromSourceReference((string) $ref);
@@ -49,15 +50,10 @@ class PerforceDownloader extends VcsDownloader
         $this->perforce->syncCodeBase($label);
         $this->perforce->cleanupClientSpec();
 
-        return \React\Promise\resolve();
+        return \React\Promise\resolve(null);
     }
 
-    /**
-     * @param string $ref
-     *
-     * @return string|null
-     */
-    private function getLabelFromSourceReference($ref)
+    private function getLabelFromSourceReference(string $ref): ?string
     {
         $pos = strpos($ref, '@');
         if (false !== $pos) {
@@ -67,13 +63,7 @@ class PerforceDownloader extends VcsDownloader
         return null;
     }
 
-    /**
-     * @param string $path
-     * @param string $url
-     *
-     * @return void
-     */
-    public function initPerforce(PackageInterface $package, $path, $url)
+    public function initPerforce(PackageInterface $package, string $path, string $url): void
     {
         if (!empty($this->perforce)) {
             $this->perforce->initializePath($path);
@@ -92,7 +82,7 @@ class PerforceDownloader extends VcsDownloader
     /**
      * @return array<string, mixed>
      */
-    private function getRepoConfig(VcsRepository $repository)
+    private function getRepoConfig(VcsRepository $repository): array
     {
         return $repository->getRepoConfig();
     }
@@ -100,7 +90,7 @@ class PerforceDownloader extends VcsDownloader
     /**
      * @inheritDoc
      */
-    protected function doUpdate(PackageInterface $initial, PackageInterface $target, $path, $url)
+    protected function doUpdate(PackageInterface $initial, PackageInterface $target, string $path, string $url): PromiseInterface
     {
         return $this->doInstall($target, $path, $url);
     }
@@ -108,7 +98,7 @@ class PerforceDownloader extends VcsDownloader
     /**
      * @inheritDoc
      */
-    public function getLocalChanges(PackageInterface $package, $path)
+    public function getLocalChanges(PackageInterface $package, string $path): ?string
     {
         $this->io->writeError('Perforce driver does not check for local changes before overriding');
 
@@ -118,15 +108,12 @@ class PerforceDownloader extends VcsDownloader
     /**
      * @inheritDoc
      */
-    protected function getCommitLogs($fromReference, $toReference, $path)
+    protected function getCommitLogs(string $fromReference, string $toReference, string $path): string
     {
         return $this->perforce->getCommitLogs($fromReference, $toReference);
     }
 
-    /**
-     * @return void
-     */
-    public function setPerforce(Perforce $perforce)
+    public function setPerforce(Perforce $perforce): void
     {
         $this->perforce = $perforce;
     }
@@ -134,7 +121,7 @@ class PerforceDownloader extends VcsDownloader
     /**
      * @inheritDoc
      */
-    protected function hasMetadataRepository($path)
+    protected function hasMetadataRepository(string $path): bool
     {
         return true;
     }

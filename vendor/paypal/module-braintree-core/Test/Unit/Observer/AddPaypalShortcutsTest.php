@@ -6,7 +6,7 @@
 namespace PayPal\Braintree\Test\Unit\Observer;
 
 use PayPal\Braintree\Block\Paypal\Button;
-use PayPal\Braintree\Gateway\Config\Config;
+use PayPal\Braintree\Gateway\Config\PayPal\Config;
 use Magento\Catalog\Block\ShortcutButtons;
 use Magento\Framework\Event;
 use Magento\Framework\Event\Observer;

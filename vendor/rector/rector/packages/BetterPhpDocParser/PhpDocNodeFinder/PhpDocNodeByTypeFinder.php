@@ -6,7 +6,7 @@ namespace Rector\BetterPhpDocParser\PhpDocNodeFinder;
 use PHPStan\PhpDocParser\Ast\Node;
 use PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocNode;
 use Rector\BetterPhpDocParser\PhpDoc\DoctrineAnnotationTagValueNode;
-use RectorPrefix202208\Symplify\Astral\PhpDocParser\PhpDocNodeTraverser;
+use Rector\PhpDocParser\PhpDocParser\PhpDocNodeTraverser;
 /**
  * @template TNode as \PHPStan\PhpDocParser\Ast\Node
  */
@@ -21,7 +21,7 @@ final class PhpDocNodeByTypeFinder
         $phpDocNodeTraverser = new PhpDocNodeTraverser();
         $foundNodes = [];
         $phpDocNodeTraverser->traverseWithCallable($phpDocNode, '', static function (Node $node) use(&$foundNodes, $desiredType) : Node {
-            if (!\is_a($node, $desiredType, \true)) {
+            if (!$node instanceof $desiredType) {
                 return $node;
             }
             /** @var TNode $node */
@@ -31,7 +31,7 @@ final class PhpDocNodeByTypeFinder
         return $foundNodes;
     }
     /**
-     * @param class-string[] $classes
+     * @param string[] $classes
      * @return DoctrineAnnotationTagValueNode[]
      */
     public function findDoctrineAnnotationsByClasses(PhpDocNode $phpDocNode, array $classes) : array

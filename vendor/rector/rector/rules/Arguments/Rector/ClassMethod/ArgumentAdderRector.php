@@ -29,7 +29,7 @@ use Rector\Core\Rector\AbstractRector;
 use Rector\PHPStanStaticTypeMapper\Enum\TypeKind;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
-use RectorPrefix202208\Webmozart\Assert\Assert;
+use RectorPrefix202303\Webmozart\Assert\Assert;
 /**
  * @see \Rector\Tests\Arguments\Rector\ClassMethod\ArgumentAdderRector\ArgumentAdderRectorTest
  */
@@ -202,7 +202,7 @@ CODE_SAMPLE
         for ($index = $lastPosition + 1; $index < $position; ++$index) {
             $param = $classMethod->params[$index];
             if (!$param->default instanceof Expr) {
-                throw new ShouldNotHappenException('Previous position does not has default value');
+                throw new ShouldNotHappenException('Previous position does not have default value');
             }
             $default = $this->nodePrinter->print($param->default);
             $node->args[$index] = new Arg(new ConstFetch(new Name($default)));

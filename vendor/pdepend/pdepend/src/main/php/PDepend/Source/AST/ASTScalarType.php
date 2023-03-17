@@ -89,13 +89,12 @@ class ASTScalarType extends ASTType
     }
 
     /**
-     * Accept method of the visitor design pattern. This method will be called
-     * by a visitor during tree traversal.
+     * This method will return <b>true</b> when this type is exactly false.
      *
-     * @since  0.9.12
+     * @return bool
      */
-    public function accept(ASTVisitor $visitor, $data = null)
+    public function isTrue()
     {
-        return $visitor->visitScalarType($this, $data);
+        return $this->getImage() === 'true';
     }
 }

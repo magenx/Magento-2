@@ -83,8 +83,6 @@ class NPathComplexityAnalyzer extends AbstractCachingAnalyzer implements Analyze
     /**
      * Processes all {@link ASTNamespace} code nodes.
      *
-     * @param ASTNamespace[] $namespaces
-     *
      * @return void
      */
     public function analyze($namespaces)
@@ -248,7 +246,7 @@ class NPathComplexityAnalyzer extends AbstractCachingAnalyzer implements Analyze
      */
     public function visitDoWhileStatement($node, $data)
     {
-        $stmt = $node->getChild(0)->accept($this, 1);
+        $stmt = $node->getChild(0)->accept($this, '1');
         $expr = $this->sumComplexity($node->getChild(1));
 
         $npath = MathUtil::add($expr, $stmt);
@@ -290,7 +288,7 @@ class NPathComplexityAnalyzer extends AbstractCachingAnalyzer implements Analyze
         $npath = $this->sumComplexity($node->getChild(0));
         foreach ($node->getChildren() as $child) {
             if ($child instanceof ASTStatement) {
-                $expr  = $child->accept($this, 1);
+                $expr  = $child->accept($this, '1');
                 $npath = MathUtil::add($npath, $expr);
             }
         }
@@ -326,7 +324,7 @@ class NPathComplexityAnalyzer extends AbstractCachingAnalyzer implements Analyze
         $npath = '1';
         foreach ($node->getChildren() as $child) {
             if ($child instanceof ASTStatement) {
-                $stmt  = $child->accept($this, 1);
+                $stmt  = $child->accept($this, '1');
                 $npath = MathUtil::add($npath, $stmt);
             } elseif ($child instanceof ASTExpression) {
                 $expr  = $this->sumComplexity($child);
@@ -363,7 +361,7 @@ class NPathComplexityAnalyzer extends AbstractCachingAnalyzer implements Analyze
 
         foreach ($node->getChildren() as $child) {
             if ($child instanceof ASTStatement) {
-                $stmt  = $child->accept($this, 1);
+                $stmt  = $child->accept($this, '1');
                 $npath = MathUtil::add($npath, $stmt);
             }
         }
@@ -405,7 +403,7 @@ class NPathComplexityAnalyzer extends AbstractCachingAnalyzer implements Analyze
 
         foreach ($node->getChildren() as $child) {
             if ($child instanceof ASTStatement) {
-                $stmt  = $child->accept($this, 1);
+                $stmt  = $child->accept($this, '1');
                 $npath = MathUtil::add($npath, $stmt);
             }
         }
@@ -468,7 +466,7 @@ class NPathComplexityAnalyzer extends AbstractCachingAnalyzer implements Analyze
         $npath = $this->sumComplexity($node->getChild(0));
         foreach ($node->getChildren() as $child) {
             if ($child instanceof ASTSwitchLabel) {
-                $label = $child->accept($this, 1);
+                $label = $child->accept($this, '1');
                 $npath = MathUtil::add($npath, $label);
             }
         }
@@ -511,7 +509,7 @@ class NPathComplexityAnalyzer extends AbstractCachingAnalyzer implements Analyze
         $npath = '0';
         foreach ($node->getChildren() as $child) {
             if ($child instanceof ASTStatement) {
-                $stmt  = $child->accept($this, 1);
+                $stmt  = $child->accept($this, '1');
                 $npath = MathUtil::add($npath, $stmt);
             }
         }
@@ -540,7 +538,7 @@ class NPathComplexityAnalyzer extends AbstractCachingAnalyzer implements Analyze
     public function visitWhileStatement($node, $data)
     {
         $expr = $this->sumComplexity($node->getChild(0));
-        $stmt = $node->getChild(1)->accept($this, 1);
+        $stmt = $node->getChild(1)->accept($this, '1');
 
         $npath = MathUtil::add($expr, $stmt);
         $npath = MathUtil::add($npath, '1');
@@ -565,7 +563,7 @@ class NPathComplexityAnalyzer extends AbstractCachingAnalyzer implements Analyze
     {
         $sum = '0';
         if ($node instanceof ASTConditionalExpression) {
-            $sum = MathUtil::add($sum, $node->accept($this, 1));
+            $sum = MathUtil::add($sum, $node->accept($this, '1'));
         } elseif ($node instanceof ASTBooleanAndExpression
             || $node instanceof ASTBooleanOrExpression
             || $node instanceof ASTLogicalAndExpression

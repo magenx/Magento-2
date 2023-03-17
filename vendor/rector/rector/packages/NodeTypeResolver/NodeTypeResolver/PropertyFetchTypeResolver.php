@@ -16,7 +16,7 @@ use Rector\NodeNameResolver\NodeNameResolver;
 use Rector\NodeTypeResolver\Contract\NodeTypeResolverInterface;
 use Rector\NodeTypeResolver\Node\AttributeKey;
 use Rector\NodeTypeResolver\NodeTypeResolver;
-use RectorPrefix202208\Symfony\Contracts\Service\Attribute\Required;
+use RectorPrefix202303\Symfony\Contracts\Service\Attribute\Required;
 /**
  * @see \Rector\Tests\NodeTypeResolver\PerNodeTypeResolver\PropertyFetchTypeResolver\PropertyFetchTypeResolverTest
  *
@@ -105,7 +105,7 @@ final class PropertyFetchTypeResolver implements NodeTypeResolverInterface
             return new MixedType();
         }
         $propertyFetchScope = $propertyFetch->getAttribute(AttributeKey::SCOPE);
-        if ($propertyFetchScope === null) {
+        if (!$propertyFetchScope instanceof Scope) {
             return new MixedType();
         }
         $propertyReflection = $classReflection->getProperty($propertyName, $propertyFetchScope);

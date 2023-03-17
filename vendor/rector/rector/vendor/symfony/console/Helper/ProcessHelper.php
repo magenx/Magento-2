@@ -8,12 +8,12 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202208\Symfony\Component\Console\Helper;
+namespace RectorPrefix202303\Symfony\Component\Console\Helper;
 
-use RectorPrefix202208\Symfony\Component\Console\Output\ConsoleOutputInterface;
-use RectorPrefix202208\Symfony\Component\Console\Output\OutputInterface;
-use RectorPrefix202208\Symfony\Component\Process\Exception\ProcessFailedException;
-use RectorPrefix202208\Symfony\Component\Process\Process;
+use RectorPrefix202303\Symfony\Component\Console\Output\ConsoleOutputInterface;
+use RectorPrefix202303\Symfony\Component\Console\Output\OutputInterface;
+use RectorPrefix202303\Symfony\Component\Process\Exception\ProcessFailedException;
+use RectorPrefix202303\Symfony\Component\Process\Process;
 /**
  * The ProcessHelper class provides helpers to run external processes.
  *
@@ -26,7 +26,7 @@ class ProcessHelper extends Helper
     /**
      * Runs an external process.
      *
-     * @param mixed[]|\Symfony\Component\Process\Process $cmd An instance of Process or an array of the command and arguments
+     * @param array|Process $cmd      An instance of Process or an array of the command and arguments
      * @param callable|null $callback A PHP callback to run whenever there is some
      *                                output available on STDOUT or STDERR
      */
@@ -73,7 +73,7 @@ class ProcessHelper extends Helper
      * This is identical to run() except that an exception is thrown if the process
      * exits with a non-zero exit code.
      *
-     * @param mixed[]|\Symfony\Component\Process\Process $cmd An instance of Process or a command to run
+     * @param array|Process $cmd      An instance of Process or a command to run
      * @param callable|null $callback A PHP callback to run whenever there is some
      *                                output available on STDOUT or STDERR
      *
@@ -109,9 +109,6 @@ class ProcessHelper extends Helper
     {
         return \str_replace('<', '\\<', $str);
     }
-    /**
-     * {@inheritdoc}
-     */
     public function getName() : string
     {
         return 'process';

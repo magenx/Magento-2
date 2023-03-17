@@ -8,9 +8,9 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202208\Symfony\Component\Config\Definition;
+namespace RectorPrefix202303\Symfony\Component\Config\Definition;
 
-use RectorPrefix202208\Symfony\Component\Config\Definition\Exception\InvalidTypeException;
+use RectorPrefix202303\Symfony\Component\Config\Definition\Exception\InvalidTypeException;
 /**
  * This node represents a float value in the config tree.
  *
@@ -19,7 +19,6 @@ use RectorPrefix202208\Symfony\Component\Config\Definition\Exception\InvalidType
 class FloatNode extends NumericNode
 {
     /**
-     * {@inheritdoc}
      * @param mixed $value
      */
     protected function validateType($value)
@@ -37,9 +36,6 @@ class FloatNode extends NumericNode
             throw $ex;
         }
     }
-    /**
-     * {@inheritdoc}
-     */
     protected function getValidPlaceholderTypes() : array
     {
         return ['float'];

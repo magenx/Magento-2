@@ -25,7 +25,9 @@ use PhpCsFixer\Tokenizer\Tokens;
 final class ControlCaseStructuresAnalyzer
 {
     /**
-     * @param int[] $types Token types of interest of which analyzes must be returned
+     * @param list<int> $types Token types of interest of which analyzes must be returned
+     *
+     * @return \Generator<int, AbstractControlCaseStructuresAnalysis>
      */
     public static function findControlStructures(Tokens $tokens, array $types): \Generator
     {
@@ -46,6 +48,17 @@ final class ControlCaseStructuresAnalyzer
         }
 
         $depth = -1;
+
+        /**
+         * @var list<array{
+         *     kind: int|null,
+         *     index: int,
+         *     brace_count: int,
+         *     cases: list<array{index: int, open: int}>,
+         *     default: array{index: int, open: int}|null,
+         *     alternative_syntax: bool,
+         * }> $stack
+         */
         $stack = [];
         $isTypeOfInterest = false;
 
@@ -87,13 +100,13 @@ final class ControlCaseStructuresAnalyzer
             }
 
             if ($token->equals('{')) {
-                ++$stack[$depth]['brace_count']; // @phpstan-ignore-line
+                ++$stack[$depth]['brace_count'];
 
                 continue;
             }
 
             if ($token->equals('}')) {
-                --$stack[$depth]['brace_count']; // @phpstan-ignore-line
+                --$stack[$depth]['brace_count'];
 
                 if (0 === $stack[$depth]['brace_count']) {
                     if ($stack[$depth]['alternative_syntax']) {
@@ -170,6 +183,16 @@ final class ControlCaseStructuresAnalyzer
         }
     }
 
+    /**
+     * @param array{
+     *     kind: int,
+     *     index: int,
+     *     open: int,
+     *     end: int,
+     *     cases: list<array{index: int, open: int}>,
+     *     default: null|array{index: int, open: int},
+     * } $analysis
+     */
     private static function buildControlCaseStructureAnalysis(array $analysis): AbstractControlCaseStructuresAnalysis
     {
         $default = null === $analysis['default']
@@ -267,6 +290,9 @@ final class ControlCaseStructuresAnalyzer
         throw new \InvalidArgumentException(sprintf('Unexpected default for type "%d".', $kind));
     }
 
+    /**
+     * @return list<int>
+     */
     private static function getTypesWithCaseOrDefault(): array
     {
         $supportedTypes = [T_SWITCH];

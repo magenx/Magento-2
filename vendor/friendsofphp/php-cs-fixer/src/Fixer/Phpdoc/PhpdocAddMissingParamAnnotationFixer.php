@@ -82,7 +82,7 @@ function f9(string $foo, $bar, $baz) {}
     /**
      * {@inheritdoc}
      *
-     * Must run before NoEmptyPhpdocFixer, NoSuperfluousPhpdocTagsFixer, PhpdocAlignFixer, PhpdocAlignFixer, PhpdocOrderFixer.
+     * Must run before NoEmptyPhpdocFixer, NoSuperfluousPhpdocTagsFixer, PhpdocAlignFixer, PhpdocOrderFixer.
      * Must run after AlignMultilineCommentFixer, CommentToPhpdocFixer, GeneralPhpdocTagRenameFixer, PhpdocIndentFixer, PhpdocNoAliasTagFixer, PhpdocScalarFixer, PhpdocToCommentFixer, PhpdocTypesFixer.
      */
     public function getPriority(): int
@@ -228,6 +228,9 @@ function f9(string $foo, $bar, $baz) {}
         ]);
     }
 
+    /**
+     * @return array{default: string, name: string, type: string}
+     */
     private function prepareArgumentInformation(Tokens $tokens, int $start, int $end): array
     {
         $info = [

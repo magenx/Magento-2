@@ -2,8 +2,6 @@
 
 /**
  * @see       https://github.com/laminas/laminas-server for the canonical source repository
- * @copyright https://github.com/laminas/laminas-server/blob/master/COPYRIGHT.md
- * @license   https://github.com/laminas/laminas-server/blob/master/LICENSE.md New BSD License
  */
 
 namespace Laminas\Server\Reflection;
@@ -19,9 +17,16 @@ class Prototype
     protected $params;
 
     /**
+     * @deprecated This property was previously undeclared therefore it requires public access to maintain BC.
+     *             It will be declared private in the next major version of this component.
+     *
+     * @var ReflectionReturnValue
+     */
+    public $return;
+
+    /**
      * Constructor
      *
-     * @param ReflectionReturnValue $return
      * @param ReflectionParameter[] $params
      * @throws Exception\InvalidArgumentException
      */
@@ -51,7 +56,7 @@ class Prototype
     /**
      * Retrieve the return value object
      *
-     * @return \Laminas\Server\Reflection\ReflectionReturnValue
+     * @return ReflectionReturnValue
      */
     public function getReturnValue()
     {

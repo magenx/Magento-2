@@ -16,15 +16,11 @@ namespace PhpCsFixer\FixerConfiguration;
 
 final class FixerOption implements FixerOptionInterface
 {
-    /**
-     * @var string
-     */
-    private $name;
+    private string $name;
 
-    /**
-     * @var string
-     */
-    private $description;
+    private string $description;
+
+    private bool $isRequired;
 
     /**
      * @var mixed
@@ -32,17 +28,12 @@ final class FixerOption implements FixerOptionInterface
     private $default;
 
     /**
-     * @var bool
-     */
-    private $isRequired;
-
-    /**
-     * @var null|string[]
+     * @var null|list<string>
      */
     private $allowedTypes;
 
     /**
-     * @var null|array
+     * @var null|list<(callable(mixed): bool)|null|scalar>
      */
     private $allowedValues;
 
@@ -52,8 +43,9 @@ final class FixerOption implements FixerOptionInterface
     private $normalizer;
 
     /**
-     * @param mixed         $default
-     * @param null|string[] $allowedTypes
+     * @param mixed             $default
+     * @param null|list<string> $allowedTypes
+     * @param null|list<(callable(mixed): bool)|null|scalar> $allowedValues
      */
     public function __construct(
         string $name,
@@ -82,6 +74,7 @@ final class FixerOption implements FixerOptionInterface
         $this->default = $default;
         $this->allowedTypes = $allowedTypes;
         $this->allowedValues = $allowedValues;
+
         if (null !== $normalizer) {
             $this->normalizer = $this->unbind($normalizer);
         }

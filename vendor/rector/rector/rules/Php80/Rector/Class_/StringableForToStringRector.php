@@ -6,13 +6,12 @@ namespace Rector\Php80\Rector\Class_;
 use PhpParser\Node;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\Cast\String_ as CastString_;
-use PhpParser\Node\Name;
+use PhpParser\Node\Identifier;
 use PhpParser\Node\Name\FullyQualified;
 use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Return_;
-use PHPStan\Type\StringType;
 use Rector\Core\NodeAnalyzer\ClassAnalyzer;
 use Rector\Core\Rector\AbstractRector;
 use Rector\Core\ValueObject\MethodName;
@@ -106,14 +105,14 @@ CODE_SAMPLE
             return null;
         }
         $returnType = $this->returnTypeInferer->inferFunctionLike($toStringClassMethod);
-        if (!$returnType instanceof StringType) {
+        if (!$returnType->isString()->yes()) {
             $this->processNotStringType($toStringClassMethod);
         }
         // add interface
         $node->implements[] = new FullyQualified(self::STRINGABLE);
         // add return type
         if ($toStringClassMethod->returnType === null) {
-            $toStringClassMethod->returnType = new Name('string');
+            $toStringClassMethod->returnType = new Identifier('string');
         }
         return $node;
     }
@@ -140,7 +139,7 @@ CODE_SAMPLE
                 return null;
             }
             $type = $this->nodeTypeResolver->getType($subNode->expr);
-            if ($type instanceof StringType) {
+            if ($type->isString()->yes()) {
                 return null;
             }
             $subNode->expr = new CastString_($subNode->expr);

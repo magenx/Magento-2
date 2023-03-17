@@ -8,11 +8,11 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202208\Symfony\Component\String;
+namespace RectorPrefix202303\Symfony\Component\String;
 
-use RectorPrefix202208\Symfony\Component\String\Exception\ExceptionInterface;
-use RectorPrefix202208\Symfony\Component\String\Exception\InvalidArgumentException;
-use RectorPrefix202208\Symfony\Component\String\Exception\RuntimeException;
+use RectorPrefix202303\Symfony\Component\String\Exception\ExceptionInterface;
+use RectorPrefix202303\Symfony\Component\String\Exception\InvalidArgumentException;
+use RectorPrefix202303\Symfony\Component\String\Exception\RuntimeException;
 /**
  * Represents a binary-safe string of bytes.
  *
@@ -95,7 +95,9 @@ class ByteString extends AbstractString
     public function camel()
     {
         $str = clone $this;
-        $str->string = \lcfirst(\str_replace(' ', '', \ucwords(\preg_replace('/[^a-zA-Z0-9\\x7f-\\xff]++/', ' ', $this->string))));
+        $parts = \explode(' ', \trim(\ucwords(\preg_replace('/[^a-zA-Z0-9\\x7f-\\xff]++/', ' ', $this->string))));
+        $parts[0] = 1 !== \strlen($parts[0]) && \ctype_upper($parts[0]) ? $parts[0] : \lcfirst($parts[0]);
+        $str->string = \implode('', $parts);
         return $str;
     }
     public function chunk(int $length = 1) : array
@@ -220,13 +222,7 @@ class ByteString extends AbstractString
         });
         try {
             if (\false === $match($regexp, $this->string, $matches, $flags | \PREG_UNMATCHED_AS_NULL, $offset)) {
-                $lastError = \preg_last_error();
-                foreach (\get_defined_constants(\true)['pcre'] as $k => $v) {
-                    if ($lastError === $v && \substr_compare($k, '_ERROR', -\strlen('_ERROR')) === 0) {
-                        throw new RuntimeException('Matching failed with ' . $k . '.');
-                    }
-                }
-                throw new RuntimeException('Matching failed with unknown error code.');
+                throw new RuntimeException('Matching failed with error: ' . \preg_last_error_msg());
             }
         } finally {
             \restore_error_handler();
@@ -333,7 +329,7 @@ class ByteString extends AbstractString
      */
     public function snake()
     {
-        $str = $this->camel()->title();
+        $str = $this->camel();
         $str->string = \strtolower(\preg_replace(['/([A-Z]+)([A-Z][a-z])/', '/([a-z\\d])([A-Z])/'], '\1_\2', $str->string));
         return $str;
     }

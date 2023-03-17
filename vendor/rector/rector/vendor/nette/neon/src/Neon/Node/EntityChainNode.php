@@ -5,17 +5,20 @@
  * Copyright (c) 2004 David Grudl (https://davidgrudl.com)
  */
 declare (strict_types=1);
-namespace RectorPrefix202208\Nette\Neon\Node;
+namespace RectorPrefix202303\Nette\Neon\Node;
 
-use RectorPrefix202208\Nette\Neon;
-use RectorPrefix202208\Nette\Neon\Node;
+use RectorPrefix202303\Nette\Neon;
+use RectorPrefix202303\Nette\Neon\Node;
 /** @internal */
 final class EntityChainNode extends Node
 {
-    /** @var EntityNode[] */
+    /**
+     * @var mixed[]
+     */
     public $chain = [];
     public function __construct(array $chain = [])
     {
+        /** @var EntityNode[] */
         $this->chain = $chain;
     }
     public function toValue() : Neon\Entity

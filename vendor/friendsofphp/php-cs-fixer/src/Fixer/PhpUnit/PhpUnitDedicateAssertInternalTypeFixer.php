@@ -32,9 +32,9 @@ use PhpCsFixer\Tokenizer\TokensAnalyzer;
 final class PhpUnitDedicateAssertInternalTypeFixer extends AbstractPhpUnitFixer implements ConfigurableFixerInterface
 {
     /**
-     * @var array
+     * @var array<string, string>
      */
-    private $typeToDedicatedAssertMap = [
+    private array $typeToDedicatedAssertMap = [
         'array' => 'assertIsArray',
         'boolean' => 'assertIsBool',
         'bool' => 'assertIsBool',
@@ -103,7 +103,7 @@ final class MyTest extends \PHPUnit\Framework\TestCase
     /**
      * {@inheritdoc}
      *
-     * Must run after PhpUnitDedicateAssertFixer.
+     * Must run after NoBinaryStringFixer, NoUselessConcatOperatorFixer, PhpUnitDedicateAssertFixer.
      */
     public function getPriority(): int
     {
@@ -129,22 +129,23 @@ final class MyTest extends \PHPUnit\Framework\TestCase
      */
     protected function applyPhpUnitClassFix(Tokens $tokens, int $startIndex, int $endIndex): void
     {
-        $anonymousClassIndexes = [];
+        $anonymousClassIndices = [];
         $tokenAnalyzer = new TokensAnalyzer($tokens);
+
         for ($index = $startIndex; $index < $endIndex; ++$index) {
-            if (!$tokens[$index]->isClassy() || !$tokenAnalyzer->isAnonymousClass($index)) {
+            if (!$tokens[$index]->isGivenKind(T_CLASS) || !$tokenAnalyzer->isAnonymousClass($index)) {
                 continue;
             }
 
             $openingBraceIndex = $tokens->getNextTokenOfKind($index, ['{']);
             $closingBraceIndex = $tokens->findBlockEnd(Tokens::BLOCK_TYPE_CURLY_BRACE, $openingBraceIndex);
 
-            $anonymousClassIndexes[$closingBraceIndex] = $openingBraceIndex;
+            $anonymousClassIndices[$closingBraceIndex] = $openingBraceIndex;
         }
 
         for ($index = $endIndex - 1; $index > $startIndex; --$index) {
-            if (isset($anonymousClassIndexes[$index])) {
-                $index = $anonymousClassIndexes[$index];
+            if (isset($anonymousClassIndices[$index])) {
+                $index = $anonymousClassIndices[$index];
 
                 continue;
             }
@@ -168,7 +169,7 @@ final class MyTest extends \PHPUnit\Framework\TestCase
             $expectedTypeTokenIndex = $tokens->getNextMeaningfulToken($bracketTokenIndex);
             $expectedTypeToken = $tokens[$expectedTypeTokenIndex];
 
-            if (!$expectedTypeToken->equals([T_CONSTANT_ENCAPSED_STRING])) {
+            if (!$expectedTypeToken->isGivenKind(T_CONSTANT_ENCAPSED_STRING)) {
                 continue;
             }
 

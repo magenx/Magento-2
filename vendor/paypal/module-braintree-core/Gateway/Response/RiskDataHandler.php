@@ -32,12 +32,13 @@ class RiskDataHandler implements HandlerInterface
     private $subjectReader;
 
     /**
-     * Constructor
+     * RiskDataHandler Constructor
      *
      * @param SubjectReader $subjectReader
      */
-    public function __construct(SubjectReader $subjectReader)
-    {
+    public function __construct(
+        SubjectReader $subjectReader
+    ) {
         $this->subjectReader = $subjectReader;
     }
 

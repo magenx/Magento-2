@@ -2,11 +2,13 @@
 
 /**
  * @see       https://github.com/laminas/laminas-server for the canonical source repository
- * @copyright https://github.com/laminas/laminas-server/blob/master/COPYRIGHT.md
- * @license   https://github.com/laminas/laminas-server/blob/master/LICENSE.md New BSD License
  */
 
 namespace Laminas\Server\Reflection;
+
+use function call_user_func_array;
+use function is_string;
+use function method_exists;
 
 /**
  * Parameter Reflection
@@ -15,37 +17,40 @@ namespace Laminas\Server\Reflection;
  */
 class ReflectionParameter
 {
-    /**
-     * @var \ReflectionParameter
-     */
+    /** @var \ReflectionParameter */
     protected $reflection;
 
     /**
      * Parameter position
+     *
      * @var int
      */
     protected $position;
 
     /**
      * Parameter type
+     *
      * @var string
      */
     protected $type;
 
     /**
      * Parameter description
+     *
      * @var string
      */
     protected $description;
 
     /**
      * Parameter name (needed for serialization)
+     *
      * @var string
      */
     protected $name;
 
     /**
      * Declaring function name (needed for serialization)
+     *
      * @var string
      */
     protected $functionName;
@@ -53,7 +58,6 @@ class ReflectionParameter
     /**
      * Constructor
      *
-     * @param \ReflectionParameter $r
      * @param string $type Parameter type
      * @param string $description Parameter description
      */
@@ -62,7 +66,7 @@ class ReflectionParameter
         $this->reflection = $r;
 
         // Store parameters needed for (un)serialization
-        $this->name = $r->getName();
+        $this->name         = $r->getName();
         $this->functionName = $r->getDeclaringClass()
             ? [$r->getDeclaringClass()->getName(), $r->getDeclaringFunction()->getName()]
             : $r->getDeclaringFunction()->getName();

@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 /*
  * This file is part of Composer.
@@ -21,7 +21,7 @@ use Composer\Pcre\Preg;
  *
  * @author Jordi Boggiano <j.boggiano@seld.be>
  */
-class FilterRepository implements RepositoryInterface
+class FilterRepository implements RepositoryInterface, AdvisoryProviderInterface
 {
     /** @var ?string */
     private $only = null;
@@ -62,17 +62,15 @@ class FilterRepository implements RepositoryInterface
         $this->repo = $repo;
     }
 
-    public function getRepoName()
+    public function getRepoName(): string
     {
         return $this->repo->getRepoName();
     }
 
     /**
      * Returns the wrapped repositories
-     *
-     * @return RepositoryInterface
      */
-    public function getRepository()
+    public function getRepository(): RepositoryInterface
     {
         return $this->repo;
     }
@@ -80,7 +78,7 @@ class FilterRepository implements RepositoryInterface
     /**
      * @inheritDoc
      */
-    public function hasPackage(PackageInterface $package)
+    public function hasPackage(PackageInterface $package): bool
     {
         return $this->repo->hasPackage($package);
     }
@@ -88,7 +86,7 @@ class FilterRepository implements RepositoryInterface
     /**
      * @inheritDoc
      */
-    public function findPackage($name, $constraint)
+    public function findPackage($name, $constraint): ?BasePackage
     {
         if (!$this->isAllowed($name)) {
             return null;
@@ -100,10 +98,10 @@ class FilterRepository implements RepositoryInterface
     /**
      * @inheritDoc
      */
-    public function findPackages($name, $constraint = null)
+    public function findPackages($name, $constraint = null): array
     {
         if (!$this->isAllowed($name)) {
-            return array();
+            return [];
         }
 
         return $this->repo->findPackages($name, $constraint);
@@ -112,21 +110,21 @@ class FilterRepository implements RepositoryInterface
     /**
      * @inheritDoc
      */
-    public function loadPackages(array $packageMap, array $acceptableStabilities, array $stabilityFlags, array $alreadyLoaded = array())
+    public function loadPackages(array $packageNameMap, array $acceptableStabilities, array $stabilityFlags, array $alreadyLoaded = []): array
     {
-        foreach ($packageMap as $name => $constraint) {
+        foreach ($packageNameMap as $name => $constraint) {
             if (!$this->isAllowed($name)) {
-                unset($packageMap[$name]);
+                unset($packageNameMap[$name]);
             }
         }
 
-        if (!$packageMap) {
-            return array('namesFound' => array(), 'packages' => array());
+        if (!$packageNameMap) {
+            return ['namesFound' => [], 'packages' => []];
         }
 
-        $result = $this->repo->loadPackages($packageMap, $acceptableStabilities, $stabilityFlags, $alreadyLoaded);
+        $result = $this->repo->loadPackages($packageNameMap, $acceptableStabilities, $stabilityFlags, $alreadyLoaded);
         if (!$this->canonical) {
-            $result['namesFound'] = array();
+            $result['namesFound'] = [];
         }
 
         return $result;
@@ -135,9 +133,9 @@ class FilterRepository implements RepositoryInterface
     /**
      * @inheritDoc
      */
-    public function search($query, $mode = 0, $type = null)
+    public function search(string $query, int $mode = 0, ?string $type = null): array
     {
-        $result = array();
+        $result = [];
 
         foreach ($this->repo->search($query, $mode, $type) as $package) {
             if ($this->isAllowed($package['name'])) {
@@ -151,9 +149,9 @@ class FilterRepository implements RepositoryInterface
     /**
      * @inheritDoc
      */
-    public function getPackages()
+    public function getPackages(): array
     {
-        $result = array();
+        $result = [];
         foreach ($this->repo->getPackages() as $package) {
             if ($this->isAllowed($package->getName())) {
                 $result[] = $package;
@@ -166,9 +164,9 @@ class FilterRepository implements RepositoryInterface
     /**
      * @inheritDoc
      */
-    public function getProviders($packageName)
+    public function getProviders($packageName): array
     {
-        $result = array();
+        $result = [];
         foreach ($this->repo->getProviders($packageName) as $name => $provider) {
             if ($this->isAllowed($provider['name'])) {
                 $result[$name] = $provider;
@@ -181,8 +179,7 @@ class FilterRepository implements RepositoryInterface
     /**
      * @inheritDoc
      */
-    #[\ReturnTypeWillChange]
-    public function count()
+    public function count(): int
     {
         if ($this->repo->count() > 0) {
             return count($this->getPackages());
@@ -191,12 +188,34 @@ class FilterRepository implements RepositoryInterface
         return 0;
     }
 
+    public function hasSecurityAdvisories(): bool
+    {
+        if (!$this->repo instanceof AdvisoryProviderInterface) {
+            return false;
+        }
+
+        return $this->repo->hasSecurityAdvisories();
+    }
+
     /**
-     * @param string $name
-     *
-     * @return bool
+     * @inheritDoc
      */
-    private function isAllowed($name)
+    public function getSecurityAdvisories(array $packageConstraintMap, bool $allowPartialAdvisories = false): array
+    {
+        if (!$this->repo instanceof AdvisoryProviderInterface) {
+            return ['namesFound' => [], 'advisories' => []];
+        }
+
+        foreach ($packageConstraintMap as $name => $constraint) {
+            if (!$this->isAllowed($name)) {
+                unset($packageConstraintMap[$name]);
+            }
+        }
+
+        return $this->repo->getSecurityAdvisories($packageConstraintMap, $allowPartialAdvisories);
+    }
+
+    private function isAllowed(string $name): bool
     {
         if (!$this->only && !$this->exclude) {
             return true;

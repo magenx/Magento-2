@@ -31,13 +31,13 @@
     },
     "autoload": {
         "psr-4": {
-            "RectorPrefix202208\\Symfony\\Contracts\\Cache\\": ""
+            "RectorPrefix202303\\Symfony\\Contracts\\Cache\\": ""
         }
     },
     "minimum-stability": "dev",
     "extra": {
         "branch-alias": {
-            "dev-main": "3.1-dev"
+            "dev-main": "3.3-dev"
         },
         "thanks": {
             "name": "symfony\/contracts",

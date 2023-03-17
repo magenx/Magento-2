@@ -1,15 +1,24 @@
 <?php
 
 declare (strict_types=1);
-namespace RectorPrefix202208;
+namespace RectorPrefix202303;
 
 use Rector\Config\RectorConfig;
 use Rector\Php80\Rector\Class_\AnnotationToAttributeRector;
+use Rector\Php80\Rector\Property\NestedAnnotationToAttributeRector;
+use Rector\Php80\ValueObject\AnnotationPropertyToAttributeClass;
 use Rector\Php80\ValueObject\AnnotationToAttribute;
+use Rector\Php80\ValueObject\NestedAnnotationToAttribute;
 return static function (RectorConfig $rectorConfig) : void {
+    $rectorConfig->ruleWithConfiguration(NestedAnnotationToAttributeRector::class, [
+        /** @see https://www.doctrine-project.org/projects/doctrine-orm/en/2.13/reference/attributes-reference.html#joincolumn-inversejoincolumn */
+        new NestedAnnotationToAttribute('Doctrine\\ORM\\Mapping\\JoinTable', [new AnnotationPropertyToAttributeClass('Doctrine\\ORM\\Mapping\\JoinColumn', 'joinColumns'), new AnnotationPropertyToAttributeClass('Doctrine\\ORM\\Mapping\\InverseJoinColumn', 'inverseJoinColumns', \true)]),
+        /** @see https://www.doctrine-project.org/projects/doctrine-orm/en/latest/reference/annotations-reference.html#joincolumns */
+        new NestedAnnotationToAttribute('Doctrine\\ORM\\Mapping\\JoinColumns', [new AnnotationPropertyToAttributeClass('Doctrine\\ORM\\Mapping\\JoinColumn')], \true),
+        new NestedAnnotationToAttribute('Doctrine\\ORM\\Mapping\\Table', [new AnnotationPropertyToAttributeClass('Doctrine\\ORM\\Mapping\\Index', 'indexes', \true), new AnnotationPropertyToAttributeClass('Doctrine\\ORM\\Mapping\\UniqueConstraint', 'uniqueConstraints', \true)]),
+    ]);
     $rectorConfig->ruleWithConfiguration(AnnotationToAttributeRector::class, [
         // class
-        new AnnotationToAttribute('Doctrine\\ORM\\Mapping\\Table'),
         new AnnotationToAttribute('Doctrine\\ORM\\Mapping\\Entity'),
         new AnnotationToAttribute('Doctrine\\ORM\\Mapping\\Column'),
         new AnnotationToAttribute('Doctrine\\ORM\\Mapping\\UniqueConstraint'),
@@ -25,11 +34,8 @@ return static function (RectorConfig $rectorConfig) : void {
         new AnnotationToAttribute('Doctrine\\ORM\\Mapping\\ManyToMany'),
         new AnnotationToAttribute('Doctrine\\ORM\\Mapping\\JoinTable'),
         new AnnotationToAttribute('Doctrine\\ORM\\Mapping\\ManyToOne'),
-        // join columns
-        new AnnotationToAttribute('Doctrine\\ORM\\Mapping\\JoinColumns'),
-        new AnnotationToAttribute('Doctrine\\ORM\\Mapping\\JoinColumn'),
-        new AnnotationToAttribute('Doctrine\\ORM\\Mapping\\InverseJoinColumn'),
         new AnnotationToAttribute('Doctrine\\ORM\\Mapping\\OrderBy'),
+        new AnnotationToAttribute('Doctrine\\ORM\\Mapping\\JoinColumn'),
         // embed
         new AnnotationToAttribute('Doctrine\\ORM\\Mapping\\Embeddable'),
         new AnnotationToAttribute('Doctrine\\ORM\\Mapping\\Embedded'),
@@ -52,5 +58,10 @@ return static function (RectorConfig $rectorConfig) : void {
         new AnnotationToAttribute('Doctrine\\ORM\\Mapping\\PreUpdate'),
         new AnnotationToAttribute('Doctrine\\ORM\\Mapping\\Cache'),
         new AnnotationToAttribute('Doctrine\\ORM\\Mapping\\EntityListeners'),
+        // Overrides
+        new AnnotationToAttribute('Doctrine\\ORM\\Mapping\\AssociationOverrides'),
+        new AnnotationToAttribute('Doctrine\\ORM\\Mapping\\AssociationOverride'),
+        new AnnotationToAttribute('Doctrine\\ORM\\Mapping\\AttributeOverrides'),
+        new AnnotationToAttribute('Doctrine\\ORM\\Mapping\\AttributeOverride'),
     ]);
 };

@@ -49,7 +49,8 @@ class CaptureDataBuilder implements BuilderInterface
 
         return [
             self::TRANSACTION_ID => $transactionId,
-            PaymentDataBuilder::AMOUNT => $this->formatPrice($this->subjectReader->readAmount($buildSubject))
+            PaymentDataBuilder::AMOUNT => $this->formatPrice($this->subjectReader->readAmount($buildSubject)),
+            PaymentDataBuilder::ORDER_ID => $paymentDO->getOrder()->getOrderIncrementId()
         ];
     }
 }

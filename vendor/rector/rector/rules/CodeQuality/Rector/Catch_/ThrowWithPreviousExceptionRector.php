@@ -136,7 +136,7 @@ CODE_SAMPLE
         // null the node, to fix broken format preserving printers, see https://github.com/rectorphp/rector/issues/5576
         $new->setAttribute(AttributeKey::ORIGINAL_NODE, null);
         // nothing more to add
-        return NodeTraverser::DONT_TRAVERSE_CHILDREN;
+        return NodeTraverser::DONT_TRAVERSE_CURRENT_AND_CHILDREN;
     }
     private function resolveExceptionArgumentPosition(Name $exceptionName) : ?int
     {
@@ -154,9 +154,9 @@ CODE_SAMPLE
             return self::DEFAULT_EXCEPTION_ARGUMENT_POSITION;
         }
         $extendedMethodReflection = $classReflection->getConstructor();
-        $parametersAcceptor = ParametersAcceptorSelector::selectSingle($extendedMethodReflection->getVariants());
-        foreach ($parametersAcceptor->getParameters() as $position => $parameterReflection) {
-            $parameterType = $parameterReflection->getType();
+        $parametersAcceptorWithPhpDocs = ParametersAcceptorSelector::selectSingle($extendedMethodReflection->getVariants());
+        foreach ($parametersAcceptorWithPhpDocs->getParameters() as $position => $parameterReflectionWithPhpDoc) {
+            $parameterType = $parameterReflectionWithPhpDoc->getType();
             if (!$parameterType instanceof TypeWithClassName) {
                 continue;
             }

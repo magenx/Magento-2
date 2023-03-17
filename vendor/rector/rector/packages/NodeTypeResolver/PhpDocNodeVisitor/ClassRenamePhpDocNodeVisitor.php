@@ -15,16 +15,17 @@ use PHPStan\Type\ObjectType;
 use PHPStan\Type\Type;
 use Rector\BetterPhpDocParser\ValueObject\PhpDocAttributeKey;
 use Rector\Core\Configuration\CurrentNodeProvider;
+use Rector\Core\Configuration\RectorConfigProvider;
 use Rector\Core\Exception\ShouldNotHappenException;
 use Rector\Core\PhpParser\Node\BetterNodeFinder;
 use Rector\Naming\Naming\UseImportsResolver;
 use Rector\NodeNameResolver\NodeNameResolver;
 use Rector\NodeTypeResolver\Node\AttributeKey;
 use Rector\NodeTypeResolver\ValueObject\OldToNewType;
+use Rector\PhpDocParser\PhpDocParser\PhpDocNodeVisitor\AbstractPhpDocNodeVisitor;
 use Rector\PHPStanStaticTypeMapper\Enum\TypeKind;
 use Rector\StaticTypeMapper\StaticTypeMapper;
 use Rector\StaticTypeMapper\ValueObject\Type\ShortenedObjectType;
-use RectorPrefix202208\Symplify\Astral\PhpDocParser\PhpDocNodeVisitor\AbstractPhpDocNodeVisitor;
 final class ClassRenamePhpDocNodeVisitor extends AbstractPhpDocNodeVisitor
 {
     /**
@@ -56,13 +57,19 @@ final class ClassRenamePhpDocNodeVisitor extends AbstractPhpDocNodeVisitor
      * @var \Rector\NodeNameResolver\NodeNameResolver
      */
     private $nodeNameResolver;
-    public function __construct(StaticTypeMapper $staticTypeMapper, CurrentNodeProvider $currentNodeProvider, UseImportsResolver $useImportsResolver, BetterNodeFinder $betterNodeFinder, NodeNameResolver $nodeNameResolver)
+    /**
+     * @readonly
+     * @var \Rector\Core\Configuration\RectorConfigProvider
+     */
+    private $rectorConfigProvider;
+    public function __construct(StaticTypeMapper $staticTypeMapper, CurrentNodeProvider $currentNodeProvider, UseImportsResolver $useImportsResolver, BetterNodeFinder $betterNodeFinder, NodeNameResolver $nodeNameResolver, RectorConfigProvider $rectorConfigProvider)
     {
         $this->staticTypeMapper = $staticTypeMapper;
         $this->currentNodeProvider = $currentNodeProvider;
         $this->useImportsResolver = $useImportsResolver;
         $this->betterNodeFinder = $betterNodeFinder;
         $this->nodeNameResolver = $nodeNameResolver;
+        $this->rectorConfigProvider = $rectorConfigProvider;
     }
     public function beforeTraverse(Node $node) : void
     {
@@ -86,6 +93,12 @@ final class ClassRenamePhpDocNodeVisitor extends AbstractPhpDocNodeVisitor
         $identifier = clone $node;
         $identifier->name = $this->resolveNamespacedName($identifier, $phpParserNode, $node->name);
         $staticType = $this->staticTypeMapper->mapPHPStanPhpDocTypeNodeToPHPStanType($identifier, $phpParserNode);
+        $shouldImport = $this->rectorConfigProvider->shouldImportNames();
+        $isNoNamespacedName = \strncmp($identifier->name, '\\', \strlen('\\')) !== 0 && \substr_count($identifier->name, '\\') === 0;
+        // tweak overlapped import + rename
+        if ($shouldImport && $isNoNamespacedName) {
+            return null;
+        }
         // make sure to compare FQNs
         $objectType = $this->expandShortenedObjectType($staticType);
         foreach ($this->oldToNewTypes as $oldToNewType) {

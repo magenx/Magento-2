@@ -52,28 +52,31 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [Property::class];
+        return [Class_::class];
     }
     /**
-     * @param Property $node
+     * @param Class_ $node
      */
     public function refactor(Node $node) : ?Node
     {
-        $classLike = $this->betterNodeFinder->findParentType($node, Class_::class);
-        if (!$classLike instanceof Class_) {
+        if (!$node->isFinal()) {
             return null;
         }
-        if (!$classLike->isFinal()) {
-            return null;
+        $hasChanged = \false;
+        foreach ($node->getProperties() as $property) {
+            if ($this->shouldSkipProperty($property)) {
+                continue;
+            }
+            if (!$this->parentPropertyLookupGuard->isLegal($property, $node)) {
+                continue;
+            }
+            $this->visibilityManipulator->makePrivate($property);
+            $hasChanged = \true;
         }
-        if ($this->shouldSkipProperty($node)) {
-            return null;
+        if ($hasChanged) {
+            return $node;
         }
-        if (!$this->parentPropertyLookupGuard->isLegal($node)) {
-            return null;
-        }
-        $this->visibilityManipulator->makePrivate($node);
-        return $node;
+        return null;
     }
     private function shouldSkipProperty(Property $property) : bool
     {

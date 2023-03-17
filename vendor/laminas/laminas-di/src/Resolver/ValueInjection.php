@@ -22,19 +22,12 @@ use const E_USER_DEPRECATED;
  */
 class ValueInjection implements InjectionInterface
 {
-    /**
-     * Holds the value to inject
-     *
-     * @var mixed
-     */
-    protected $value;
-
-    /**
-     * @param mixed $value
-     */
-    public function __construct($value)
-    {
-        $this->value = $value;
+    public function __construct(
+        /**
+         * Holds the value to inject
+         */
+        protected mixed $value
+    ) {
     }
 
     public static function __set_state(array $state): self
@@ -71,16 +64,15 @@ class ValueInjection implements InjectionInterface
     /**
      * Check if the provided value is exportable.
      * For arrays it uses recursion.
-     *
-     * @param mixed $value
      */
-    private function isExportableRecursive($value): bool
+    private function isExportableRecursive(mixed $value): bool
     {
         if (is_scalar($value) || $value === null) {
             return true;
         }
 
         if (is_array($value)) {
+            /** @var mixed $item */
             foreach ($value as $item) {
                 if (! $this->isExportableRecursive($item)) {
                     return false;

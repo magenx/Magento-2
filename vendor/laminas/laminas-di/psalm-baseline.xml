@@ -1,0 +1,424 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<files psalm-version="5.4.0@62db5d4f6a7ae0a20f7cc5a4952d730272fc0863">
+  <file src="src/CodeGenerator/AbstractInjector.php">
+    <InvalidReturnStatement occurrences="1">
+      <code>$this-&gt;injector-&gt;create($name, $options)</code>
+    </InvalidReturnStatement>
+    <MixedInferredReturnType occurrences="1">
+      <code>T</code>
+    </MixedInferredReturnType>
+    <MixedReturnStatement occurrences="1">
+      <code>$this-&gt;getFactory($name)-&gt;create($this-&gt;container, $options)</code>
+    </MixedReturnStatement>
+  </file>
+  <file src="src/CodeGenerator/InjectorGenerator.php">
+    <PossiblyUnusedProperty occurrences="1">
+      <code>$definition</code>
+    </PossiblyUnusedProperty>
+  </file>
+  <file src="src/Config.php">
+    <MixedArrayAccess occurrences="1">
+      <code>$this-&gt;types[$context]['preferences'][$type]</code>
+    </MixedArrayAccess>
+  </file>
+  <file src="src/ConfigInterface.php">
+    <PossiblyUnusedReturnValue occurrences="1">
+      <code>mixed</code>
+    </PossiblyUnusedReturnValue>
+  </file>
+  <file src="src/Container/AutowireFactory.php">
+    <InvalidReturnStatement occurrences="2">
+      <code>$this-&gt;create($container, (string) $requestedName, $options)</code>
+      <code>$this-&gt;getInjector($container)-&gt;create($requestedName, $options ?: [])</code>
+    </InvalidReturnStatement>
+    <InvalidReturnType occurrences="2">
+      <code>T</code>
+      <code>T</code>
+    </InvalidReturnType>
+  </file>
+  <file src="src/Exception/InvalidParamNameException.php">
+    <UnusedClass occurrences="1">
+      <code>InvalidParamNameException</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Exception/InvalidPositionException.php">
+    <UnusedClass occurrences="1">
+      <code>InvalidPositionException</code>
+    </UnusedClass>
+  </file>
+  <file src="src/GeneratedInjectorDelegator.php">
+    <PossiblyUnusedParam occurrences="1">
+      <code>$name</code>
+    </PossiblyUnusedParam>
+  </file>
+  <file src="src/Injector.php">
+    <InvalidReturnStatement occurrences="1">
+      <code>$instance</code>
+    </InvalidReturnStatement>
+    <InvalidReturnType occurrences="1">
+      <code>T</code>
+    </InvalidReturnType>
+    <MixedArgumentTypeCoercion occurrences="1">
+      <code>$params</code>
+    </MixedArgumentTypeCoercion>
+    <MixedAssignment occurrences="1">
+      <code>$foundParams[]</code>
+    </MixedAssignment>
+    <RedundantCast occurrences="1">
+      <code>(int) $containerException-&gt;getCode()</code>
+    </RedundantCast>
+  </file>
+  <file src="src/Resolver/AbstractInjection.php">
+    <PossiblyUnusedMethod occurrences="4">
+      <code>export</code>
+      <code>getParameterName</code>
+      <code>isExportable</code>
+      <code>setParameterName</code>
+    </PossiblyUnusedMethod>
+  </file>
+  <file src="src/Resolver/DependencyResolver.php">
+    <ArgumentTypeCoercion occurrences="2">
+      <code>$type</code>
+      <code>$type</code>
+    </ArgumentTypeCoercion>
+  </file>
+  <file src="src/Resolver/DependencyResolverInterface.php">
+    <PossiblyUnusedReturnValue occurrences="1">
+      <code>self</code>
+    </PossiblyUnusedReturnValue>
+  </file>
+  <file src="test/CodeGenerator/AbstractInjectorTest.php">
+    <ArgumentTypeCoercion occurrences="1">
+      <code>$provider</code>
+    </ArgumentTypeCoercion>
+    <InvalidArgument occurrences="1">
+      <code>$invokable</code>
+    </InvalidArgument>
+  </file>
+  <file src="test/CodeGenerator/AutoloadGeneratorTest.php">
+    <MissingReturnType occurrences="3">
+      <code>testGenerateCreatesFiles</code>
+      <code>testGeneratedAutoloadFile</code>
+      <code>testGeneratedAutoloaderClass</code>
+    </MissingReturnType>
+  </file>
+  <file src="test/CodeGenerator/GeneratorTestTrait.php">
+    <MissingConstructor occurrences="6">
+      <code>$dir</code>
+      <code>$dir</code>
+      <code>$dir</code>
+      <code>$root</code>
+      <code>$root</code>
+      <code>$root</code>
+    </MissingConstructor>
+  </file>
+  <file src="test/CodeGenerator/InjectorGeneratorTest.php">
+    <ArgumentTypeCoercion occurrences="1"/>
+    <UndefinedClass occurrences="1"/>
+  </file>
+  <file src="test/ConfigTest.php">
+    <MixedAssignment occurrences="1">
+      <code>$this-&gt;fixture</code>
+    </MixedAssignment>
+  </file>
+  <file src="test/Container/AutowireFactoryTest.php">
+    <MissingReturnType occurrences="6">
+      <code>testCanCreateReturnsFalseWithoutInjector</code>
+      <code>testCanCreateUsesInjector</code>
+      <code>testCreateUsesInjector</code>
+      <code>testCreateWithInvalidInjectorThrowsException</code>
+      <code>testCreateWithoutInjectorThrowsException</code>
+      <code>testInstanceIsInvokable</code>
+    </MissingReturnType>
+  </file>
+  <file src="test/Container/ConfigFactoryTest.php">
+    <MissingReturnType occurrences="4">
+      <code>testCreateRequestsContainerForConfigServiceGracefully</code>
+      <code>testCreateUsesConfigFromContainer</code>
+      <code>testInvokeCreatesConfigInstance</code>
+      <code>testLegacyConfigIsRespected</code>
+    </MissingReturnType>
+    <PossiblyNullPropertyAssignmentValue occurrences="1">
+      <code>null</code>
+    </PossiblyNullPropertyAssignmentValue>
+  </file>
+  <file src="test/Container/GeneratorFactoryTest.php">
+    <DeprecatedMethod occurrences="1">
+      <code>setMethods</code>
+    </DeprecatedMethod>
+    <InvalidFunctionCall occurrences="1">
+      <code>$mock($container)</code>
+    </InvalidFunctionCall>
+    <MissingClosureParamType occurrences="1">
+      <code>$type</code>
+    </MissingClosureParamType>
+  </file>
+  <file src="test/Container/InjectorFactoryTest.php">
+    <MissingReturnType occurrences="4">
+      <code>testCreateWillReturnAnInjectorInstance</code>
+      <code>testFactoryIsInvokable</code>
+      <code>testInvokeWillReturnAnInjectorInstance</code>
+      <code>testUsesConfigServiceFromContainer</code>
+    </MissingReturnType>
+  </file>
+  <file src="test/Container/ServiceManager/AutowireFactoryTest.php">
+    <MissingReturnType occurrences="2">
+      <code>testCanCreateIsPassedToGenericFactory</code>
+      <code>testInvokeIsPassedToGenericFactory</code>
+    </MissingReturnType>
+  </file>
+  <file src="test/Definition/Reflection/ClassDefinitionTest.php">
+    <RedundantCondition occurrences="7">
+      <code>assertIsArray</code>
+      <code>assertIsArray</code>
+      <code>assertIsArray</code>
+      <code>assertIsArray</code>
+      <code>assertIsArray</code>
+      <code>assertIsArray</code>
+      <code>assertIsArray</code>
+    </RedundantCondition>
+  </file>
+  <file src="test/Definition/Reflection/ParameterTest.php">
+    <MissingReturnType occurrences="6">
+      <code>testBuiltinTypehintedParameters</code>
+      <code>testIterablePseudoType</code>
+      <code>testParamterReflectedCorrectly</code>
+      <code>testScalarTypehintedParameters</code>
+      <code>testTypehintedParameter</code>
+      <code>testTypelessParamter</code>
+    </MissingReturnType>
+    <MixedInferredReturnType occurrences="2">
+      <code>array</code>
+      <code>array</code>
+    </MixedInferredReturnType>
+  </file>
+  <file src="test/Definition/Reflection/ParameterTestTrait.php">
+    <ArgumentTypeCoercion occurrences="1">
+      <code>$classname</code>
+    </ArgumentTypeCoercion>
+    <MixedInferredReturnType occurrences="3">
+      <code>array</code>
+      <code>array</code>
+      <code>array</code>
+    </MixedInferredReturnType>
+  </file>
+  <file src="test/Definition/RuntimeDefinitionTest.php">
+    <ArgumentTypeCoercion occurrences="2">
+      <code>$class</code>
+      <code>[$class]</code>
+    </ArgumentTypeCoercion>
+    <MissingReturnType occurrences="6">
+      <code>testAddExplicitClass</code>
+      <code>testAddInvalidExplicitClassThrowsException</code>
+      <code>testHasClassReturnsFalseForInvalidClasses</code>
+      <code>testSetExplicitClasses</code>
+      <code>testSetExplicitClassesViaConstructor</code>
+      <code>testSetInvalidExplicitClassThrowsException</code>
+    </MissingReturnType>
+    <MixedInferredReturnType occurrences="1">
+      <code>array</code>
+    </MixedInferredReturnType>
+  </file>
+  <file src="test/LegacyConfigTest.php">
+    <InvalidArgument occurrences="1">
+      <code>new stdClass()</code>
+    </InvalidArgument>
+    <UnresolvableInclude occurrences="1">
+      <code>include $file-&gt;getPathname()</code>
+    </UnresolvableInclude>
+  </file>
+  <file src="test/Resolver/DependencyResolverTest.php">
+    <InternalMethod occurrences="2">
+      <code>toValue</code>
+      <code>toValue</code>
+    </InternalMethod>
+    <InvalidCast occurrences="1">
+      <code>$result['p']</code>
+    </InvalidCast>
+    <MissingClosureParamType occurrences="1">
+      <code>$class</code>
+    </MissingClosureParamType>
+    <MissingReturnType occurrences="16">
+      <code>testConfiguredExtendedInterfaceParameterSatisfiesRequiredInterfaceType</code>
+      <code>testConfiguredInvokableAliasParameterSatisfiesCallable</code>
+      <code>testConfiguredInvokableTypeParameterSatisfiesCallable</code>
+      <code>testConfiguredTraversableTypeParameterSatisfiesIterable</code>
+      <code>testParametresResolverShouldNotCheckTheTypeForString</code>
+      <code>testResolvePreferenceFallsBackToGlobalPreferenceWhenNotSuitableForClassRequirement</code>
+      <code>testResolvePreferenceFallsBackToGlobalPreferenceWhenNotSuitableForInterfaceRequirement</code>
+      <code>testResolvePreferenceReturnsNullWhenNothingIsSuitableForClassRequirement</code>
+      <code>testResolvePreferenceReturnsNullWhenNothingIsSuitableForInterfaceRequirement</code>
+      <code>testResolvePreferenceUsesDefinedClassForInterfaceRequirements</code>
+      <code>testResolvePreferenceUsesInterfaces</code>
+      <code>testResolvePreferenceUsesSupertypes</code>
+      <code>testResolveSucceedsWithoutContainer</code>
+      <code>testResolveWithContainerFailsWhenMissing</code>
+      <code>testResolveWithoutConfig</code>
+      <code>testUsableConfigParametersAreAccepted</code>
+    </MissingReturnType>
+    <MissingTemplateParam occurrences="1">
+      <code>IteratorAggregate</code>
+    </MissingTemplateParam>
+    <MixedArgument occurrences="6">
+      <code>$config</code>
+      <code>$options</code>
+      <code>$options</code>
+      <code>$options['interfaces']</code>
+      <code>$options['parameters']</code>
+      <code>$options['supertypes']</code>
+    </MixedArgument>
+    <MixedArgumentTypeCoercion occurrences="2">
+      <code>$class</code>
+      <code>$name</code>
+    </MixedArgumentTypeCoercion>
+    <MixedArrayAccess occurrences="4">
+      <code>$config['expect']</code>
+      <code>$context</code>
+      <code>$expectedResult</code>
+      <code>$requested</code>
+    </MixedArrayAccess>
+    <MixedArrayOffset occurrences="1">
+      <code>$definition[$class]</code>
+    </MixedArrayOffset>
+    <MixedAssignment occurrences="6">
+      <code>$config</code>
+      <code>$expectation</code>
+      <code>$key</code>
+      <code>$options</code>
+      <code>$options</code>
+      <code>[$requested, $expectedResult, $context]</code>
+    </MixedAssignment>
+    <MixedInferredReturnType occurrences="6">
+      <code>PHPUnit_Framework_MockObject_MockObject|ContainerInterface</code>
+      <code>array</code>
+      <code>array</code>
+      <code>array</code>
+      <code>array</code>
+      <code>array</code>
+    </MixedInferredReturnType>
+    <MixedOperand occurrences="1">
+      <code>$key</code>
+    </MixedOperand>
+    <PossiblyInvalidArgument occurrences="1">
+      <code>$this-&gt;getEmptyContainerMock()</code>
+    </PossiblyInvalidArgument>
+    <RedundantCondition occurrences="4">
+      <code>assertIsArray</code>
+      <code>assertIsArray</code>
+      <code>assertIsArray</code>
+      <code>assertIsArray</code>
+    </RedundantCondition>
+    <UndefinedDocblockClass occurrences="1">
+      <code>PHPUnit_Framework_MockObject_MockObject|ContainerInterface</code>
+    </UndefinedDocblockClass>
+    <UnresolvableInclude occurrences="1">
+      <code>include $configFile</code>
+    </UnresolvableInclude>
+    <UnusedParam occurrences="1">
+      <code>$name</code>
+    </UnusedParam>
+  </file>
+  <file src="test/Resolver/TypeInjectionTest.php">
+    <DeprecatedMethod occurrences="1">
+      <code>getType</code>
+    </DeprecatedMethod>
+    <MissingReturnType occurrences="5">
+      <code>testExport</code>
+      <code>testGetTypeIsDeprectaed</code>
+      <code>testImplementsContract</code>
+      <code>testIsExportableIsAlwaysTrue</code>
+      <code>testToValueUsesContainer</code>
+    </MissingReturnType>
+    <MixedInferredReturnType occurrences="1">
+      <code>iterable</code>
+    </MixedInferredReturnType>
+  </file>
+  <file src="test/Resolver/ValueInjectionTest.php">
+    <DeprecatedMethod occurrences="1">
+      <code>getValue</code>
+    </DeprecatedMethod>
+    <InvalidPropertyAssignmentValue occurrences="1">
+      <code>$this-&gt;streamFixture</code>
+    </InvalidPropertyAssignmentValue>
+    <MissingReturnType occurrences="8">
+      <code>testExportThrowsExceptionForUnexportable</code>
+      <code>testExportWithExportableValues</code>
+      <code>testGetValueTriggersDeprecatedNotice</code>
+      <code>testImplementsContract</code>
+      <code>testIsExportableReturnsFalseForUnexportable</code>
+      <code>testIsExportableReturnsTrueForExportableValues</code>
+      <code>testSetStateConstructsInstance</code>
+      <code>testToValueBypassesContainer</code>
+    </MissingReturnType>
+    <MixedInferredReturnType occurrences="3">
+      <code>array</code>
+      <code>array</code>
+      <code>array</code>
+    </MixedInferredReturnType>
+    <PossiblyNullPropertyAssignmentValue occurrences="1">
+      <code>null</code>
+    </PossiblyNullPropertyAssignmentValue>
+    <RedundantCondition occurrences="1">
+      <code>assertIsString</code>
+    </RedundantCondition>
+  </file>
+  <file src="test/TestAsset/BuiltinTypehintParameters.php">
+    <MissingReturnType occurrences="2">
+      <code>arrayType</code>
+      <code>callableType</code>
+    </MissingReturnType>
+  </file>
+  <file src="test/TestAsset/Constructor/ManyArguments.php">
+    <MissingParamType occurrences="6">
+      <code>$a</code>
+      <code>$b</code>
+      <code>$c</code>
+      <code>$d</code>
+      <code>$e</code>
+      <code>$f</code>
+    </MissingParamType>
+    <MissingPropertyType occurrences="1">
+      <code>$result</code>
+    </MissingPropertyType>
+  </file>
+  <file src="test/TestAsset/GeneratedInjector.php">
+    <InvalidReturnStatement occurrences="1">
+      <code>$this-&gt;injector-&gt;create($name, $options)</code>
+    </InvalidReturnStatement>
+    <InvalidReturnType occurrences="1">
+      <code>T</code>
+    </InvalidReturnType>
+  </file>
+  <file src="test/TestAsset/InvokableInterface.php">
+    <MissingReturnType occurrences="1">
+      <code>__invoke</code>
+    </MissingReturnType>
+  </file>
+  <file src="test/TestAsset/Parameters.php">
+    <MissingReturnType occurrences="5">
+      <code>general</code>
+      <code>typehintOptional</code>
+      <code>typehintRequired</code>
+      <code>typelessOptional</code>
+      <code>typelessRequired</code>
+    </MissingReturnType>
+  </file>
+  <file src="test/TestAsset/Pseudotypes/IteratorAggregateImplementation.php">
+    <InvalidReturnType occurrences="1">
+      <code>Traversable</code>
+    </InvalidReturnType>
+  </file>
+  <file src="test/TestAsset/Pseudotypes/IteratorImplementation.php">
+    <InvalidReturnType occurrences="1">
+      <code>bool</code>
+    </InvalidReturnType>
+  </file>
+  <file src="test/TestAsset/ScalarTypehintParameters.php">
+    <MissingReturnType occurrences="4">
+      <code>boolType</code>
+      <code>floatType</code>
+      <code>intType</code>
+      <code>stringType</code>
+    </MissingReturnType>
+  </file>
+</files>

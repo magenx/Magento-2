@@ -18,9 +18,9 @@ PHPStan focuses on finding errors in your code without actually running it. It c
 even before you write tests for the code. It moves PHP closer to compiled languages in the sense that the correctness of each line of the code
 can be checked before you run the actual line.
 
-**[Read more about PHPStan in an introductory article »](https://phpstan.org/blog/find-bugs-in-your-code-without-writing-tests)**
+**[Read more about PHPStan »](https://phpstan.org/)**
 
-**[Try out PHPStan on the on-line playground! »](https://phpstan.org/)**
+**[Try out PHPStan on the on-line playground! »](https://phpstan.org/try)**
 
 ## Sponsors
 
@@ -46,7 +46,7 @@ can be checked before you run the actual line.
 <br>
 <a href="https://zol.fr?utm_source=phpstan"><img src="https://i.imgur.com/dzDgd4s.png" alt="ZOL" width="283" height="64"></a>
 &nbsp;&nbsp;&nbsp;
-<a href="https://kocourek.uk/"><img src="https://i.imgur.com/EX29z98.png" alt="Stepan Kocourek" width="294" height="64"></a>
+<a href="https://www.psyonix.com/"><img src="https://i.imgur.com/p8svxQZ.png" alt="Psyonix" width="254" height="65"></a>
 <br>
 <a href="https://www.shopware.com/en/"><img src="https://i.imgur.com/L4X5w9s.png" alt="Shopware" width="284" height="64"></a>
 &nbsp;&nbsp;&nbsp;
@@ -60,7 +60,8 @@ can be checked before you run the actual line.
 &nbsp;&nbsp;&nbsp;
 <a href="https://inviqa.com/"><img src="https://i.imgur.com/G99rj45.png" alt="Inviqa" width="254" height="65"></a>
 <br>
-<a href="https://www.psyonix.com/"><img src="https://i.imgur.com/p8svxQZ.png" alt="Psyonix" width="254" height="65"></a>
+<a href="https://www.cdn77.com/"><img src="https://i.imgur.com/Oo3wA3m.png" alt="CDN77" width="283" height="64"></a>
+
 
 [**You can now sponsor my open-source work on PHPStan through GitHub Sponsors.**](https://github.com/sponsors/ondrejmirtes)
 
@@ -85,7 +86,6 @@ PHPStan Pro is a paid add-on on top of open-source PHPStan Static Analysis Tool 
 
 * Web UI for browsing found errors, you can click and open your editor of choice on the offending line.
 * Continuous analysis (watch mode): scans changed files in the background, refreshes the UI automatically.
-* Interactive fixer: lets you choose the right fix for found errors :blush:
 
 Try it on PHPStan 0.12.45 or later by running it with the `--pro` option. You can create an account either by following the on-screen instructions, or by visiting [account.phpstan.com](https://account.phpstan.com/).
 

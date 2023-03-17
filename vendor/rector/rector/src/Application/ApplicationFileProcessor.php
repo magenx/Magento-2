@@ -7,8 +7,10 @@ use PHPStan\Analyser\NodeScopeResolver;
 use Rector\Core\Application\FileDecorator\FileDiffFileDecorator;
 use Rector\Core\Application\FileSystem\RemovedAndAddedFilesProcessor;
 use Rector\Core\Configuration\Option;
+use Rector\Core\Configuration\Parameter\ParameterProvider;
 use Rector\Core\Contract\Console\OutputStyleInterface;
 use Rector\Core\Contract\Processor\FileProcessorInterface;
+use Rector\Core\Util\ArrayParametersMerger;
 use Rector\Core\ValueObject\Application\File;
 use Rector\Core\ValueObject\Configuration;
 use Rector\Core\ValueObject\Error\SystemError;
@@ -16,16 +18,11 @@ use Rector\Core\ValueObject\Reporting\FileDiff;
 use Rector\Core\ValueObjectFactory\Application\FileFactory;
 use Rector\Parallel\Application\ParallelFileProcessor;
 use Rector\Parallel\ValueObject\Bridge;
-use RectorPrefix202208\Symfony\Component\Console\Input\InputInterface;
-use RectorPrefix202208\Symplify\EasyParallel\CpuCoreCountProvider;
-use RectorPrefix202208\Symplify\EasyParallel\Exception\ParallelShouldNotHappenException;
-use RectorPrefix202208\Symplify\EasyParallel\FileSystem\FilePathNormalizer;
-use RectorPrefix202208\Symplify\EasyParallel\ScheduleFactory;
-use RectorPrefix202208\Symplify\PackageBuilder\Parameter\ParameterProvider;
-use RectorPrefix202208\Symplify\PackageBuilder\Yaml\ParametersMerger;
-use RectorPrefix202208\Symplify\SmartFileSystem\SmartFileInfo;
-use RectorPrefix202208\Symplify\SmartFileSystem\SmartFileSystem;
-use RectorPrefix202208\Webmozart\Assert\Assert;
+use RectorPrefix202303\Symfony\Component\Console\Input\InputInterface;
+use RectorPrefix202303\Symfony\Component\Filesystem\Filesystem;
+use RectorPrefix202303\Symplify\EasyParallel\CpuCoreCountProvider;
+use RectorPrefix202303\Symplify\EasyParallel\Exception\ParallelShouldNotHappenException;
+use RectorPrefix202303\Symplify\EasyParallel\ScheduleFactory;
 final class ApplicationFileProcessor
 {
     /**
@@ -38,9 +35,9 @@ final class ApplicationFileProcessor
     private $systemErrors = [];
     /**
      * @readonly
-     * @var \Symplify\SmartFileSystem\SmartFileSystem
+     * @var \Symfony\Component\Filesystem\Filesystem
      */
-    private $smartFileSystem;
+    private $filesystem;
     /**
      * @readonly
      * @var \Rector\Core\Application\FileDecorator\FileDiffFileDecorator
@@ -68,9 +65,9 @@ final class ApplicationFileProcessor
     private $nodeScopeResolver;
     /**
      * @readonly
-     * @var \Symplify\PackageBuilder\Yaml\ParametersMerger
+     * @var \Rector\Core\Util\ArrayParametersMerger
      */
-    private $parametersMerger;
+    private $arrayParametersMerger;
     /**
      * @readonly
      * @var \Rector\Parallel\Application\ParallelFileProcessor
@@ -78,7 +75,7 @@ final class ApplicationFileProcessor
     private $parallelFileProcessor;
     /**
      * @readonly
-     * @var \Symplify\PackageBuilder\Parameter\ParameterProvider
+     * @var \Rector\Core\Configuration\Parameter\ParameterProvider
      */
     private $parameterProvider;
     /**
@@ -86,11 +83,6 @@ final class ApplicationFileProcessor
      * @var \Symplify\EasyParallel\ScheduleFactory
      */
     private $scheduleFactory;
-    /**
-     * @readonly
-     * @var \Symplify\EasyParallel\FileSystem\FilePathNormalizer
-     */
-    private $filePathNormalizer;
     /**
      * @readonly
      * @var \Symplify\EasyParallel\CpuCoreCountProvider
@@ -104,19 +96,18 @@ final class ApplicationFileProcessor
     /**
      * @param FileProcessorInterface[] $fileProcessors
      */
-    public function __construct(SmartFileSystem $smartFileSystem, FileDiffFileDecorator $fileDiffFileDecorator, RemovedAndAddedFilesProcessor $removedAndAddedFilesProcessor, OutputStyleInterface $rectorOutputStyle, FileFactory $fileFactory, NodeScopeResolver $nodeScopeResolver, ParametersMerger $parametersMerger, ParallelFileProcessor $parallelFileProcessor, ParameterProvider $parameterProvider, ScheduleFactory $scheduleFactory, FilePathNormalizer $filePathNormalizer, CpuCoreCountProvider $cpuCoreCountProvider, array $fileProcessors = [])
+    public function __construct(Filesystem $filesystem, FileDiffFileDecorator $fileDiffFileDecorator, RemovedAndAddedFilesProcessor $removedAndAddedFilesProcessor, OutputStyleInterface $rectorOutputStyle, FileFactory $fileFactory, NodeScopeResolver $nodeScopeResolver, ArrayParametersMerger $arrayParametersMerger, ParallelFileProcessor $parallelFileProcessor, ParameterProvider $parameterProvider, ScheduleFactory $scheduleFactory, CpuCoreCountProvider $cpuCoreCountProvider, array $fileProcessors = [])
     {
-        $this->smartFileSystem = $smartFileSystem;
+        $this->filesystem = $filesystem;
         $this->fileDiffFileDecorator = $fileDiffFileDecorator;
         $this->removedAndAddedFilesProcessor = $removedAndAddedFilesProcessor;
         $this->rectorOutputStyle = $rectorOutputStyle;
         $this->fileFactory = $fileFactory;
         $this->nodeScopeResolver = $nodeScopeResolver;
-        $this->parametersMerger = $parametersMerger;
+        $this->arrayParametersMerger = $arrayParametersMerger;
         $this->parallelFileProcessor = $parallelFileProcessor;
         $this->parameterProvider = $parameterProvider;
         $this->scheduleFactory = $scheduleFactory;
-        $this->filePathNormalizer = $filePathNormalizer;
         $this->cpuCoreCountProvider = $cpuCoreCountProvider;
         $this->fileProcessors = $fileProcessors;
     }
@@ -125,19 +116,19 @@ final class ApplicationFileProcessor
      */
     public function run(Configuration $configuration, InputInterface $input) : array
     {
-        $fileInfos = $this->fileFactory->createFileInfosFromPaths($configuration->getPaths(), $configuration);
+        $filePaths = $this->fileFactory->findFilesInPaths($configuration->getPaths(), $configuration);
         // no files found
-        if ($fileInfos === []) {
+        if ($filePaths === []) {
             return [Bridge::SYSTEM_ERRORS => [], Bridge::FILE_DIFFS => []];
         }
         $this->configureCustomErrorHandler();
         if ($configuration->isParallel()) {
-            $systemErrorsAndFileDiffs = $this->runParallel($fileInfos, $configuration, $input);
+            $systemErrorsAndFileDiffs = $this->runParallel($filePaths, $configuration, $input);
         } else {
             // 1. collect all files from files+dirs provided paths
-            $files = $this->fileFactory->createFromPaths($configuration->getPaths(), $configuration);
+            $files = $this->fileFactory->createFromPaths($filePaths);
             // 2. PHPStan has to know about all files too
-            $this->configurePHPStanNodeScopeResolver($files);
+            $this->configurePHPStanNodeScopeResolver($filePaths);
             $systemErrorsAndFileDiffs = $this->processFiles($files, $configuration);
             $this->fileDiffFileDecorator->decorate($files);
             $this->printFiles($files, $configuration);
@@ -147,7 +138,7 @@ final class ApplicationFileProcessor
         return $systemErrorsAndFileDiffs;
     }
     /**
-     * @internal Use only for tests
+     * @api use only for tests
      *
      * @param File[] $files
      * @return array{system_errors: SystemError[], file_diffs: FileDiff[]}
@@ -166,7 +157,7 @@ final class ApplicationFileProcessor
                     continue;
                 }
                 $result = $fileProcessor->process($file, $configuration);
-                $systemErrorsAndFileDiffs = $this->parametersMerger->merge($systemErrorsAndFileDiffs, $result);
+                $systemErrorsAndFileDiffs = $this->arrayParametersMerger->merge($systemErrorsAndFileDiffs, $result);
             }
             // progress bar +1
             if ($shouldShowProgressBar) {
@@ -175,6 +166,17 @@ final class ApplicationFileProcessor
         }
         $this->removedAndAddedFilesProcessor->run($configuration);
         return $systemErrorsAndFileDiffs;
+    }
+    /**
+     * @param string[] $filePaths
+     */
+    public function configurePHPStanNodeScopeResolver(array $filePaths) : void
+    {
+        $phpFilter = static function (string $filePath) : bool {
+            return \substr_compare($filePath, '.php', -\strlen('.php')) === 0;
+        };
+        $phpFilePaths = \array_filter($filePaths, $phpFilter);
+        $this->nodeScopeResolver->setAnalysedFiles($phpFilePaths);
     }
     /**
      * @param File[] $files
@@ -193,9 +195,10 @@ final class ApplicationFileProcessor
     }
     private function printFile(File $file) : void
     {
-        $smartFileInfo = $file->getSmartFileInfo();
-        $this->smartFileSystem->dumpFile($smartFileInfo->getPathname(), $file->getFileContent());
-        $this->smartFileSystem->chmod($smartFileInfo->getRealPath(), $smartFileInfo->getPerms());
+        $filePath = $file->getFilePath();
+        $this->filesystem->dumpFile($filePath, $file->getFileContent());
+        // @todo how to keep original chmod rights?
+        // $this->filesystem->chmod($filePath, $smartFileInfo->getPerms());
     }
     /**
      * Inspired by @see https://github.com/phpstan/phpstan-src/blob/89af4e7db257750cdee5d4259ad312941b6b25e8/src/Analyser/Analyser.php#L134
@@ -221,13 +224,14 @@ final class ApplicationFileProcessor
         \restore_error_handler();
     }
     /**
-     * @param SmartFileInfo[] $fileInfos
+     * @param string[] $filePaths
      * @return array{system_errors: SystemError[], file_diffs: FileDiff[]}
      */
-    private function runParallel(array $fileInfos, Configuration $configuration, InputInterface $input) : array
+    private function runParallel(array $filePaths, Configuration $configuration, InputInterface $input) : array
     {
+        // @todo possibly relative paths?
         // must be a string, otherwise the serialization returns empty arrays
-        $filePaths = $this->filePathNormalizer->resolveFilePathsFromFileInfos($fileInfos);
+        // $filePaths // = $this->filePathNormalizer->resolveFilePathsFromFileInfos($filePaths);
         $schedule = $this->scheduleFactory->create($this->cpuCoreCountProvider->provide(), $this->parameterProvider->provideIntParameter(Option::PARALLEL_JOB_SIZE), $this->parameterProvider->provideIntParameter(Option::PARALLEL_MAX_NUMBER_OF_PROCESSES), $filePaths);
         // for progress bar
         $isProgressBarStarted = \false;
@@ -264,30 +268,5 @@ final class ApplicationFileProcessor
             return null;
         }
         return $potentialEcsBinaryPath;
-    }
-    /**
-     * @param File[] $files
-     */
-    private function configurePHPStanNodeScopeResolver(array $files) : void
-    {
-        $filePaths = $this->resolvePhpFilePaths($files);
-        $this->nodeScopeResolver->setAnalysedFiles($filePaths);
-    }
-    /**
-     * @param File[] $files
-     * @return string[]
-     */
-    private function resolvePhpFilePaths(array $files) : array
-    {
-        Assert::allIsAOf($files, File::class);
-        $filePaths = [];
-        foreach ($files as $file) {
-            $smartFileInfo = $file->getSmartFileInfo();
-            $pathname = $smartFileInfo->getPathname();
-            if (\substr_compare($pathname, '.php', -\strlen('.php')) === 0) {
-                $filePaths[] = $pathname;
-            }
-        }
-        return $filePaths;
     }
 }

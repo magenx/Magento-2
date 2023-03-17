@@ -8,12 +8,14 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202208\Symfony\Contracts\Translation;
+namespace RectorPrefix202303\Symfony\Contracts\Translation;
 
 interface LocaleAwareInterface
 {
     /**
      * Sets the current locale.
+     *
+     * @return void
      *
      * @throws \InvalidArgumentException If the locale contains invalid characters
      */

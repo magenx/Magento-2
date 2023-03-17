@@ -10,7 +10,6 @@ use PayPal\Braintree\Observer\DataAssignObserver;
 use Magento\Framework\App\Area;
 use Magento\Framework\App\State;
 use Magento\Framework\Exception\LocalizedException;
-use Magento\Payment\Gateway\Helper\ContextHelper;
 use PayPal\Braintree\Gateway\Helper\SubjectReader;
 use Magento\Payment\Gateway\Response\HandlerInterface;
 use Magento\Sales\Api\Data\OrderPaymentInterface;
@@ -18,17 +17,11 @@ use Magento\Sales\Api\Data\OrderPaymentInterface;
 class PaymentDetailsHandler implements HandlerInterface
 {
     public const AVS_POSTAL_RESPONSE_CODE = 'avsPostalCodeResponseCode';
-
     public const AVS_STREET_ADDRESS_RESPONSE_CODE = 'avsStreetAddressResponseCode';
-
     public const CVV_RESPONSE_CODE = 'cvvResponseCode';
-
     public const PROCESSOR_AUTHORIZATION_CODE = 'processorAuthorizationCode';
-
     public const PROCESSOR_RESPONSE_CODE = 'processorResponseCode';
-
     public const PROCESSOR_RESPONSE_TEXT = 'processorResponseText';
-
     public const TRANSACTION_SOURCE = 'transactionSource';
 
     /**
@@ -56,7 +49,7 @@ class PaymentDetailsHandler implements HandlerInterface
     private $state;
 
     /**
-     * Constructor
+     * PaymentDetailsHandler Constructor
      *
      * @param SubjectReader $subjectReader
      * @param State $state

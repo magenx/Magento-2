@@ -44,6 +44,11 @@
                 <paymentInfoKeys>cc_type,cc_number,avsPostalCodeResponseCode,avsStreetAddressResponseCode,cvvResponseCode,processorAuthorizationCode,processorResponseCode,processorResponseText,liabilityShifted,liabilityShiftPossible,eciFlag,riskDataId,riskDataDecision,transactionSource</paymentInfoKeys>
                 <group>braintree_group</group>
             </braintree>
+            <braintree_webhook>
+                <enabled>0</enabled>
+                <approve_order_status>processing</approve_order_status>
+                <reject_order_status>canceled</reject_order_status>
+            </braintree_webhook>
             <braintree_paypal>
                 <model>BraintreePayPalFacade</model>
                 <title>PayPal</title>
@@ -79,64 +84,46 @@
                 <group>braintree_group</group>
                 <payment_location>cart</payment_location>
                 <button_location_cart_type_paypal_show>1</button_location_cart_type_paypal_show>
-                <button_location_cart_type_paypal_layout>horizontal</button_location_cart_type_paypal_layout>
-                <button_location_cart_type_paypal_tagline>0</button_location_cart_type_paypal_tagline>
                 <button_location_cart_type_paypal_label>paypal</button_location_cart_type_paypal_label>
                 <button_location_cart_type_paypal_color>gold</button_location_cart_type_paypal_color>
                 <button_location_cart_type_paypal_shape>rect</button_location_cart_type_paypal_shape>
                 <button_location_cart_type_paypal_size>responsive</button_location_cart_type_paypal_size>
                 <button_location_cart_type_paylater_show>1</button_location_cart_type_paylater_show>
-                <button_location_cart_type_paylater_layout>horizontal</button_location_cart_type_paylater_layout>
-                <button_location_cart_type_paylater_tagline>0</button_location_cart_type_paylater_tagline>
                 <button_location_cart_type_paylater_label>paypal</button_location_cart_type_paylater_label>
                 <button_location_cart_type_paylater_color>gold</button_location_cart_type_paylater_color>
                 <button_location_cart_type_paylater_shape>rect</button_location_cart_type_paylater_shape>
                 <button_location_cart_type_paylater_size>responsive</button_location_cart_type_paylater_size>
                 <button_location_cart_type_credit_show>1</button_location_cart_type_credit_show>
-                <button_location_cart_type_credit_layout>horizontal</button_location_cart_type_credit_layout>
-                <button_location_cart_type_credit_tagline>0</button_location_cart_type_credit_tagline>
                 <button_location_cart_type_credit_label>paypal</button_location_cart_type_credit_label>
                 <button_location_cart_type_credit_color>gold</button_location_cart_type_credit_color>
                 <button_location_cart_type_credit_shape>rect</button_location_cart_type_credit_shape>
                 <button_location_cart_type_credit_size>responsive</button_location_cart_type_credit_size>
                 <button_location_checkout_type_paypal_show>1</button_location_checkout_type_paypal_show>
-                <button_location_checkout_type_paypal_layout>horizontal</button_location_checkout_type_paypal_layout>
-                <button_location_checkout_type_paypal_tagline>0</button_location_checkout_type_paypal_tagline>
                 <button_location_checkout_type_paypal_label>paypal</button_location_checkout_type_paypal_label>
                 <button_location_checkout_type_paypal_color>gold</button_location_checkout_type_paypal_color>
                 <button_location_checkout_type_paypal_shape>rect</button_location_checkout_type_paypal_shape>
                 <button_location_checkout_type_paypal_size>responsive</button_location_checkout_type_paypal_size>
                 <button_location_checkout_type_credit_show>1</button_location_checkout_type_credit_show>
-                <button_location_checkout_type_credit_layout>horizontal</button_location_checkout_type_credit_layout>
-                <button_location_checkout_type_credit_tagline>0</button_location_checkout_type_credit_tagline>
                 <button_location_checkout_type_credit_label>paypal</button_location_checkout_type_credit_label>
                 <button_location_checkout_type_credit_color>gold</button_location_checkout_type_credit_color>
                 <button_location_checkout_type_credit_shape>rect</button_location_checkout_type_credit_shape>
                 <button_location_checkout_type_credit_size>responsive</button_location_checkout_type_credit_size>
                 <button_location_checkout_type_paylater_show>1</button_location_checkout_type_paylater_show>
-                <button_location_checkout_type_paylater_layout>horizontal</button_location_checkout_type_paylater_layout>
-                <button_location_checkout_type_paylater_tagline>0</button_location_checkout_type_paylater_tagline>
                 <button_location_checkout_type_paylater_label>paypal</button_location_checkout_type_paylater_label>
                 <button_location_checkout_type_paylater_color>gold</button_location_checkout_type_paylater_color>
                 <button_location_checkout_type_paylater_shape>rect</button_location_checkout_type_paylater_shape>
                 <button_location_checkout_type_paylater_size>responsive</button_location_checkout_type_paylater_size>
                 <button_location_productpage_type_paypal_show>1</button_location_productpage_type_paypal_show>
-                <button_location_productpage_type_paypal_layout>horizontal</button_location_productpage_type_paypal_layout>
-                <button_location_productpage_type_paypal_tagline>0</button_location_productpage_type_paypal_tagline>
                 <button_location_productpage_type_paypal_label>paypal</button_location_productpage_type_paypal_label>
                 <button_location_productpage_type_paypal_color>gold</button_location_productpage_type_paypal_color>
                 <button_location_productpage_type_paypal_shape>rect</button_location_productpage_type_paypal_shape>
                 <button_location_productpage_type_paypal_size>responsive</button_location_productpage_type_paypal_size>
                 <button_location_productpage_type_paylater_show>1</button_location_productpage_type_paylater_show>
-                <button_location_productpage_type_paylater_layout>horizontal</button_location_productpage_type_paylater_layout>
-                <button_location_productpage_type_paylater_tagline>0</button_location_productpage_type_paylater_tagline>
                 <button_location_productpage_type_paylater_label>paypal</button_location_productpage_type_paylater_label>
                 <button_location_productpage_type_paylater_color>gold</button_location_productpage_type_paylater_color>
                 <button_location_productpage_type_paylater_shape>rect</button_location_productpage_type_paylater_shape>
                 <button_location_productpage_type_paylater_size>responsive</button_location_productpage_type_paylater_size>
                 <button_location_productpage_type_credit_show>1</button_location_productpage_type_credit_show>
-                <button_location_productpage_type_credit_layout>horizontal</button_location_productpage_type_credit_layout>
-                <button_location_productpage_type_credit_tagline>0</button_location_productpage_type_credit_tagline>
                 <button_location_productpage_type_credit_label>paypal</button_location_productpage_type_credit_label>
                 <button_location_productpage_type_credit_color>gold</button_location_productpage_type_credit_color>
                 <button_location_productpage_type_credit_shape>rect</button_location_productpage_type_credit_shape>
@@ -279,8 +266,8 @@
                 <model>BraintreeLpm</model>
                 <order_status>processing</order_status>
                 <payment_action>authorize_capture</payment_action>
-                <paymentInfoKeys>processorAuthorizationCode,processorResponseCode,processorResponseText</paymentInfoKeys>
-                <privateInfoKeys>processorAuthorizationCode,processorResponseCode,processorResponseText</privateInfoKeys>
+                <paymentInfoKeys>processorAuthorizationCode,processorResponseCode,processorResponseText,paymentId,fundingSource</paymentInfoKeys>
+                <privateInfoKeys>processorAuthorizationCode,processorResponseCode,processorResponseText,paymentId,fundingSource</privateInfoKeys>
                 <title>Local Payments</title>
                 <allowed_methods>bancontact,eps,giropay,ideal,sofort,mybank,p24,sepa</allowed_methods>
                 <group>braintree_group</group>

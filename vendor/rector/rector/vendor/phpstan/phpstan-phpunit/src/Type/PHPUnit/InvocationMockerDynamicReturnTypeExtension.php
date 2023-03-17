@@ -8,7 +8,7 @@ use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\MethodReflection;
 use PHPStan\Type\DynamicMethodReturnTypeExtension;
 use PHPStan\Type\Type;
-use RectorPrefix202208\PHPUnit\Framework\MockObject\Builder\InvocationMocker;
+use RectorPrefix202303\PHPUnit\Framework\MockObject\Builder\InvocationMocker;
 class InvocationMockerDynamicReturnTypeExtension implements DynamicMethodReturnTypeExtension
 {
     public function getClass() : string
@@ -19,7 +19,7 @@ class InvocationMockerDynamicReturnTypeExtension implements DynamicMethodReturnT
     {
         return $methodReflection->getName() !== 'getMatcher';
     }
-    public function getTypeFromMethodCall(MethodReflection $methodReflection, MethodCall $methodCall, Scope $scope) : ?\PHPStan\Type\Type
+    public function getTypeFromMethodCall(MethodReflection $methodReflection, MethodCall $methodCall, Scope $scope) : Type
     {
         return $scope->getType($methodCall->var);
     }

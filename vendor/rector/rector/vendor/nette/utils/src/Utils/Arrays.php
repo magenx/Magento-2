@@ -5,9 +5,10 @@
  * Copyright (c) 2004 David Grudl (https://davidgrudl.com)
  */
 declare (strict_types=1);
-namespace RectorPrefix202208\Nette\Utils;
+namespace RectorPrefix202303\Nette\Utils;
 
-use RectorPrefix202208\Nette;
+use RectorPrefix202303\JetBrains\PhpStorm\Language;
+use RectorPrefix202303\Nette;
 use function is_array, is_int, is_object, count;
 /**
  * Array tools library.
@@ -166,7 +167,14 @@ class Arrays
      * @param  string[]  $array
      * @return string[]
      */
-    public static function grep(array $array, string $pattern, int $flags = 0) : array
+    public static function grep(
+        array $array,
+        /**
+         * @language
+         */
+        string $pattern,
+        int $flags = 0
+    ) : array
     {
         return Strings::pcre('preg_grep', [$pattern, $array, $flags]);
     }

@@ -8,27 +8,28 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202208\Symfony\Component\Console\Command;
+namespace RectorPrefix202303\Symfony\Component\Console\Command;
 
-use RectorPrefix202208\Symfony\Component\Console\Attribute\AsCommand;
-use RectorPrefix202208\Symfony\Component\Console\Completion\CompletionInput;
-use RectorPrefix202208\Symfony\Component\Console\Completion\CompletionSuggestions;
-use RectorPrefix202208\Symfony\Component\Console\Completion\Output\BashCompletionOutput;
-use RectorPrefix202208\Symfony\Component\Console\Completion\Output\CompletionOutputInterface;
-use RectorPrefix202208\Symfony\Component\Console\Completion\Output\FishCompletionOutput;
-use RectorPrefix202208\Symfony\Component\Console\Exception\CommandNotFoundException;
-use RectorPrefix202208\Symfony\Component\Console\Exception\ExceptionInterface;
-use RectorPrefix202208\Symfony\Component\Console\Input\InputInterface;
-use RectorPrefix202208\Symfony\Component\Console\Input\InputOption;
-use RectorPrefix202208\Symfony\Component\Console\Output\OutputInterface;
+use RectorPrefix202303\Symfony\Component\Console\Attribute\AsCommand;
+use RectorPrefix202303\Symfony\Component\Console\Completion\CompletionInput;
+use RectorPrefix202303\Symfony\Component\Console\Completion\CompletionSuggestions;
+use RectorPrefix202303\Symfony\Component\Console\Completion\Output\BashCompletionOutput;
+use RectorPrefix202303\Symfony\Component\Console\Completion\Output\CompletionOutputInterface;
+use RectorPrefix202303\Symfony\Component\Console\Completion\Output\FishCompletionOutput;
+use RectorPrefix202303\Symfony\Component\Console\Completion\Output\ZshCompletionOutput;
+use RectorPrefix202303\Symfony\Component\Console\Exception\CommandNotFoundException;
+use RectorPrefix202303\Symfony\Component\Console\Exception\ExceptionInterface;
+use RectorPrefix202303\Symfony\Component\Console\Input\InputInterface;
+use RectorPrefix202303\Symfony\Component\Console\Input\InputOption;
+use RectorPrefix202303\Symfony\Component\Console\Output\OutputInterface;
 /**
  * Responsible for providing the values to the shell completion.
  *
  * @author Wouter de Jong <wouter@wouterj.nl>
  */
-#[\Symfony\Component\Console\Attribute\AsCommand(name: '|_complete', description: 'Internal command to provide shell completion suggestions')]
 final class CompleteCommand extends Command
 {
+    public const COMPLETION_API_VERSION = '1';
     /**
      * @deprecated since Symfony 6.1
      */
@@ -45,28 +46,28 @@ final class CompleteCommand extends Command
     public function __construct(array $completionOutputs = [])
     {
         // must be set before the parent constructor, as the property value is used in configure()
-        $this->completionOutputs = $completionOutputs + ['bash' => BashCompletionOutput::class, 'fish' => FishCompletionOutput::class];
+        $this->completionOutputs = $completionOutputs + ['bash' => BashCompletionOutput::class, 'fish' => FishCompletionOutput::class, 'zsh' => ZshCompletionOutput::class];
         parent::__construct();
     }
     protected function configure() : void
     {
-        $this->addOption('shell', 's', InputOption::VALUE_REQUIRED, 'The shell type ("' . \implode('", "', \array_keys($this->completionOutputs)) . '")')->addOption('input', 'i', InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'An array of input tokens (e.g. COMP_WORDS or argv)')->addOption('current', 'c', InputOption::VALUE_REQUIRED, 'The index of the "input" array that the cursor is in (e.g. COMP_CWORD)')->addOption('symfony', 'S', InputOption::VALUE_REQUIRED, 'The version of the completion script');
+        $this->addOption('shell', 's', InputOption::VALUE_REQUIRED, 'The shell type ("' . \implode('", "', \array_keys($this->completionOutputs)) . '")')->addOption('input', 'i', InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'An array of input tokens (e.g. COMP_WORDS or argv)')->addOption('current', 'c', InputOption::VALUE_REQUIRED, 'The index of the "input" array that the cursor is in (e.g. COMP_CWORD)')->addOption('api-version', 'a', InputOption::VALUE_REQUIRED, 'The API version of the completion script')->addOption('symfony', 'S', InputOption::VALUE_REQUIRED, 'deprecated');
     }
     protected function initialize(InputInterface $input, OutputInterface $output)
     {
-        $this->isDebug = \filter_var(\getenv('SYMFONY_COMPLETION_DEBUG'), \FILTER_VALIDATE_BOOLEAN);
+        $this->isDebug = \filter_var(\getenv('SYMFONY_COMPLETION_DEBUG'), \FILTER_VALIDATE_BOOL);
     }
     protected function execute(InputInterface $input, OutputInterface $output) : int
     {
         try {
-            // uncomment when a bugfix or BC break has been introduced in the shell completion scripts
-            // $version = $input->getOption('symfony');
-            // if ($version && version_compare($version, 'x.y', '>=')) {
-            //    $message = sprintf('Completion script version is not supported ("%s" given, ">=x.y" required).', $version);
-            //    $this->log($message);
-            //    $output->writeln($message.' Install the Symfony completion script again by using the "completion" command.');
-            //    return 126;
-            // }
+            // "symfony" must be kept for compat with the shell scripts generated by Symfony Console 5.4 - 6.1
+            $version = $input->getOption('symfony') ? '1' : $input->getOption('api-version');
+            if ($version && \version_compare($version, self::COMPLETION_API_VERSION, '<')) {
+                $message = \sprintf('Completion script version is not supported ("%s" given, ">=%s" required).', $version, self::COMPLETION_API_VERSION);
+                $this->log($message);
+                $output->writeln($message . ' Install the Symfony completion script again by using the "completion" command.');
+                return 126;
+            }
             $shell = $input->getOption('shell');
             if (!$shell) {
                 throw new \RuntimeException('The "--shell" option must be set.');

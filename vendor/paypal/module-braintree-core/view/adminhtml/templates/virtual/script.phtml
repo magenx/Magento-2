@@ -16,6 +16,7 @@ $code = $block->escapeHtml($block->getCode());
         [
             'PayPal_Braintree/js/virtual',
             'jquery',
+            'mage/backend/validation',
             'domReady!'
         ], function(Braintree, $) {
             let config = <?= /* @noEscape */ $block->getPaymentConfig() ?>,

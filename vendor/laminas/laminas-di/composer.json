@@ -19,7 +19,7 @@
     "config": {
         "sort-packages": true,
         "platform": {
-            "php": "7.4.99"
+            "php": "8.0.99"
         },
         "allow-plugins": {
             "dealerdirect/phpcodesniffer-composer-installer": true
@@ -32,25 +32,25 @@
         }
     },
     "require": {
-        "php": ">=7.4, <8.2",
+        "php": "~8.0.0 || ~8.1.0 || ~8.2.0",
         "laminas/laminas-stdlib": "^3.6",
         "psr/container": "^1.1.1",
         "psr/log": "^1.1.4 || ^3.0.0"
     },
     "require-dev": {
-        "laminas/laminas-coding-standard": "~2.3.0",
+        "laminas/laminas-coding-standard": "~2.4.0",
         "laminas/laminas-servicemanager": "^3.12",
-        "mikey179/vfsstream": "^1.6.10@alpha",
-        "phpbench/phpbench": "^1.2",
-        "phpspec/prophecy-phpunit": "^2.0",
-        "phpunit/phpunit": "^9.5.5",
-        "squizlabs/php_codesniffer": "^3.6"
+        "mikey179/vfsstream": "^1.6.11@alpha",
+        "phpbench/phpbench": "^1.2.7",
+        "phpunit/phpunit": "^9.5.26",
+        "psalm/plugin-phpunit": "^0.18.0",
+        "squizlabs/php_codesniffer": "^3.7.1",
+        "vimeo/psalm": "^5.0"
     },
     "conflict": {
         "zendframework/zend-di": "*",
         "laminas/laminas-servicemanager-di": "*",
-        "laminas/laminas-servicemanager": "<3.13.0",
-        "phpspec/prophecy": "<1.9.0"
+        "laminas/laminas-servicemanager": "<3.13.0"
     },
     "suggest": {
         "laminas/laminas-servicemanager": "An IoC container without auto wiring capabilities"
@@ -70,11 +70,11 @@
         "benchmark": "phpbench run --revs=2 --iterations=2 --report=aggregate",
         "check": [
             "@cs-check",
-            "@analyse",
             "@test"
         ],
         "cs-check": "phpcs",
         "cs-fix": "phpcbf",
+        "analyse": "psalm --shepherd --stats",
         "test": "phpunit --colors=always",
         "test-coverage": "phpunit --colors=always --coverage-clover clover.xml"
     }

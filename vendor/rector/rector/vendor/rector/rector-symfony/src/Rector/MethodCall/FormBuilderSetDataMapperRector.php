@@ -30,7 +30,7 @@ final class FormBuilderSetDataMapperRector extends AbstractRector
      * @readonly
      * @var \PHPStan\Type\ObjectType
      */
-    private $dataMapperInterface;
+    private $objectType;
     /**
      * @readonly
      * @var \PHPStan\Type\ObjectType
@@ -38,7 +38,7 @@ final class FormBuilderSetDataMapperRector extends AbstractRector
     private $dataMapperObjectType;
     public function __construct()
     {
-        $this->dataMapperInterface = new ObjectType(self::DATAMAPPER_INTERFACE);
+        $this->objectType = new ObjectType(self::DATAMAPPER_INTERFACE);
         $this->dataMapperObjectType = new ObjectType(self::DATAMAPPER_CLASS);
     }
     public function getRuleDefinition() : RuleDefinition
@@ -89,13 +89,15 @@ CODE_SAMPLE
         if (!$this->isName($node->name, 'setDataMapper')) {
             return null;
         }
-        $argumentValue = $node->getArgs()[0]->value;
-        if ($this->isObjectType($argumentValue, $this->dataMapperInterface) || $this->isObjectType($argumentValue, $this->dataMapperObjectType)) {
+        $args = $node->getArgs();
+        $firstArg = $args[0];
+        $argumentValue = $firstArg->value;
+        if ($this->isObjectType($argumentValue, $this->objectType) || $this->isObjectType($argumentValue, $this->dataMapperObjectType)) {
             return null;
         }
         $propertyPathAccessor = new New_(new FullyQualified('Symfony\\Component\\Form\\Extension\\Core\\DataAccessor\\PropertyPathAccessor'));
         $newArgumentValue = new New_(new FullyQualified(self::DATAMAPPER_CLASS), [new Arg($propertyPathAccessor)]);
-        $node->getArgs()[0]->value = $newArgumentValue;
+        $firstArg->value = $newArgumentValue;
         return $node;
     }
 }

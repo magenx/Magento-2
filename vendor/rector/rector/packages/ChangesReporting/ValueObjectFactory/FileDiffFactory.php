@@ -3,10 +3,11 @@
 declare (strict_types=1);
 namespace Rector\ChangesReporting\ValueObjectFactory;
 
+use Rector\Core\Console\Formatter\ConsoleDiffer;
 use Rector\Core\Differ\DefaultDiffer;
+use Rector\Core\FileSystem\FilePathHelper;
 use Rector\Core\ValueObject\Application\File;
 use Rector\Core\ValueObject\Reporting\FileDiff;
-use RectorPrefix202208\Symplify\PackageBuilder\Console\Output\ConsoleDiffer;
 final class FileDiffFactory
 {
     /**
@@ -16,17 +17,24 @@ final class FileDiffFactory
     private $defaultDiffer;
     /**
      * @readonly
-     * @var \Symplify\PackageBuilder\Console\Output\ConsoleDiffer
+     * @var \Rector\Core\Console\Formatter\ConsoleDiffer
      */
     private $consoleDiffer;
-    public function __construct(DefaultDiffer $defaultDiffer, ConsoleDiffer $consoleDiffer)
+    /**
+     * @readonly
+     * @var \Rector\Core\FileSystem\FilePathHelper
+     */
+    private $filePathHelper;
+    public function __construct(DefaultDiffer $defaultDiffer, ConsoleDiffer $consoleDiffer, FilePathHelper $filePathHelper)
     {
         $this->defaultDiffer = $defaultDiffer;
         $this->consoleDiffer = $consoleDiffer;
+        $this->filePathHelper = $filePathHelper;
     }
     public function createFileDiff(File $file, string $oldContent, string $newContent) : FileDiff
     {
+        $relativeFilePath = $this->filePathHelper->relativePath($file->getFilePath());
         // always keep the most recent diff
-        return new FileDiff($file->getRelativeFilePath(), $this->defaultDiffer->diff($oldContent, $newContent), $this->consoleDiffer->diff($oldContent, $newContent), $file->getRectorWithLineChanges());
+        return new FileDiff($relativeFilePath, $this->defaultDiffer->diff($oldContent, $newContent), $this->consoleDiffer->diff($oldContent, $newContent), $file->getRectorWithLineChanges());
     }
 }

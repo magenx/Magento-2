@@ -5,6 +5,8 @@
  */
 namespace PayPal\Braintree\Gateway\Command;
 
+use Magento\Framework\Exception\InputException;
+use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Phrase;
 use Magento\Payment\Gateway\CommandInterface;
 use Magento\Payment\Gateway\Http\ClientException;
@@ -14,8 +16,9 @@ use Magento\Payment\Gateway\Http\TransferFactoryInterface;
 use Magento\Payment\Gateway\Request\BuilderInterface;
 use Magento\Payment\Gateway\Response\HandlerInterface;
 use Magento\Payment\Gateway\Validator\ValidatorInterface;
-use Magento\ReCaptchaUi\Model\IsCaptchaEnabledInterface;
-use PayPal\Braintree\Model\Recaptcha\ReCaptchaValidation;
+use Magento\Sales\Api\OrderRepositoryInterface;
+use Magento\Sales\Model\Order;
+use PayPal\Braintree\Gateway\Helper\SubjectReader;
 use Psr\Log\LoggerInterface;
 use Magento\Payment\Gateway\Command\CommandException;
 
@@ -56,34 +59,34 @@ class GatewayCommand implements CommandInterface
     private $logger;
 
     /**
-     * @var ReCaptchaValidation
+     * @var SubjectReader
      */
-    private $reCaptchaValidation;
+    private SubjectReader $subjectReader;
 
     /**
-     * @var IsCaptchaEnabledInterface
+     * @var OrderRepositoryInterface
      */
-    private $isCaptchaEnabled;
+    private OrderRepositoryInterface $orderRepository;
 
     /**
      * @param BuilderInterface $requestBuilder
      * @param TransferFactoryInterface $transferFactory
      * @param ClientInterface $client
      * @param LoggerInterface $logger
+     * @param SubjectReader $subjectReader
+     * @param OrderRepositoryInterface $orderRepository
      * @param HandlerInterface|null $handler
      * @param ValidatorInterface|null $validator
-     * @param ReCaptchaValidation $reCaptchaValidation
-     * @param IsCaptchaEnabledInterface $isCaptchaEnabled
      */
     public function __construct(
         BuilderInterface $requestBuilder,
         TransferFactoryInterface $transferFactory,
         ClientInterface $client,
         LoggerInterface $logger,
+        SubjectReader $subjectReader,
+        OrderRepositoryInterface $orderRepository,
         HandlerInterface $handler = null,
-        ValidatorInterface $validator = null,
-        ReCaptchaValidation $reCaptchaValidation,
-        IsCaptchaEnabledInterface $isCaptchaEnabled
+        ValidatorInterface $validator = null
     ) {
         $this->requestBuilder = $requestBuilder;
         $this->transferFactory = $transferFactory;
@@ -91,8 +94,8 @@ class GatewayCommand implements CommandInterface
         $this->handler = $handler;
         $this->validator = $validator;
         $this->logger = $logger;
-        $this->reCaptchaValidation = $reCaptchaValidation;
-        $this->isCaptchaEnabled = $isCaptchaEnabled;
+        $this->subjectReader = $subjectReader;
+        $this->orderRepository = $orderRepository;
     }
 
     /**
@@ -100,30 +103,38 @@ class GatewayCommand implements CommandInterface
      *
      * @param array $commandSubject
      * @return void
-     * @throws CommandException
      * @throws ClientException
+     * @throws CommandException
      * @throws ConverterException
+     * @throws LocalizedException
      */
-    public function execute(array $commandSubject)
+    public function execute(array $commandSubject): void
     {
         // @TODO implement exceptions catching
         $transferO = $this->transferFactory->create(
             $this->requestBuilder->build($commandSubject)
         );
 
-        $key = 'braintree';
-        if ($this->isCaptchaEnabled->isCaptchaEnabledFor($key) && isset($transferO->getBody()['paymentMethodNonce'])) {
-            $this->reCaptchaValidation->validate($commandSubject);
-        }
-
         $response = $this->client->placeRequest($transferO);
         if (null !== $this->validator) {
             $result = $this->validator->validate(
                 array_merge($commandSubject, ['response' => $response])
             );
+
             if (!$result->isValid()) {
                 // TODO attempt to cancel Braintree Transaction
                 $this->logExceptions($result->getFailsDescription());
+                if ($response['object']->message === 'Transaction can only be voided if status is authorized, submitted_for_settlement, or - for PayPal - settlement_pending.') {
+                    $paymentDO = $this->subjectReader->readPayment($commandSubject);
+                    $order = $this->orderRepository->get($paymentDO->getOrder()->getId());
+
+                    $order->setState(Order::STATE_CANCELED);
+                    $order->setStatus(Order::STATE_CANCELED);
+
+                    $this->orderRepository->save($order);
+
+                    throw new CommandException(__("Order has been cancelled but Braintree Transaction hasn't been voided as Authorization has expired for this transaction."));
+                }
                 throw new CommandException($this->getExceptionMessage($response));
             }
         }
@@ -162,7 +173,7 @@ class GatewayCommand implements CommandInterface
      * @param Phrase[] $fails
      * @return void
      */
-    private function logExceptions(array $fails)
+    private function logExceptions(array $fails): void
     {
         foreach ($fails as $failPhrase) {
             if (is_array($failPhrase)) {

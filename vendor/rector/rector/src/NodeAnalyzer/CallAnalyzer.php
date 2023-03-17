@@ -16,7 +16,7 @@ use PhpParser\Node\Expr\StaticCall;
 use PhpParser\Node\Stmt\If_;
 use Rector\Core\PhpParser\Comparing\NodeComparator;
 use Rector\Core\PhpParser\Node\BetterNodeFinder;
-use RectorPrefix202208\Symfony\Contracts\Service\Attribute\Required;
+use RectorPrefix202303\Symfony\Contracts\Service\Attribute\Required;
 final class CallAnalyzer
 {
     /**
@@ -54,7 +54,7 @@ final class CallAnalyzer
             return $isObjectCallLeft || $isObjectCallRight;
         }
         foreach (self::OBJECT_CALL_TYPES as $objectCallType) {
-            if (\is_a($expr, $objectCallType, \true)) {
+            if ($expr instanceof $objectCallType) {
                 return \true;
             }
         }

@@ -46,7 +46,7 @@ class PaymentType implements OptionSourceInterface
             PaymentInstrumentType::PAYPAL_ACCOUNT => __(PaymentInstrumentType::PAYPAL_ACCOUNT),
             PaymentInstrumentType::CREDIT_CARD => __(PaymentInstrumentType::CREDIT_CARD),
             PaymentInstrumentType::APPLE_PAY_CARD => __(PaymentInstrumentType::APPLE_PAY_CARD),
-            PaymentInstrumentType::ANDROID_PAY_CARD => __(PaymentInstrumentType::ANDROID_PAY_CARD)
+            PaymentInstrumentType::GOOGLE_PAY_CARD => __(PaymentInstrumentType::GOOGLE_PAY_CARD)
         ];
         // @codingStandardsIgnoreEnd
     }

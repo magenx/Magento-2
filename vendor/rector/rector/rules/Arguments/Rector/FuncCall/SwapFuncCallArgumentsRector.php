@@ -11,7 +11,7 @@ use Rector\Core\Contract\Rector\ConfigurableRectorInterface;
 use Rector\Core\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
-use RectorPrefix202208\Webmozart\Assert\Assert;
+use RectorPrefix202303\Webmozart\Assert\Assert;
 /**
  * @see \Rector\Tests\Arguments\Rector\FuncCall\SwapFuncCallArgumentsRector\SwapFuncCallArgumentsRectorTest
  */
@@ -27,25 +27,25 @@ final class SwapFuncCallArgumentsRector extends AbstractRector implements Config
     private $functionArgumentSwaps = [];
     public function getRuleDefinition() : RuleDefinition
     {
-        return new RuleDefinition('Swap arguments in function calls', [new ConfiguredCodeSample(<<<'CODE_SAMPLE'
+        return new RuleDefinition('Reorder arguments in function calls', [new ConfiguredCodeSample(<<<'CODE_SAMPLE'
 final class SomeClass
 {
-    public function run($one, $two)
+    public function run()
     {
-        return some_function($one, $two);
+        return some_function('one', 'two', 'three');
     }
 }
 CODE_SAMPLE
 , <<<'CODE_SAMPLE'
 final class SomeClass
 {
-    public function run($one, $two)
+    public function run()
     {
-        return some_function($two, $one);
+        return some_function('three', 'two', 'one');
     }
 }
 CODE_SAMPLE
-, [new SwapFuncCallArguments('some_function', [1, 0])])]);
+, [new SwapFuncCallArguments('some_function', [2, 1, 0])])]);
     }
     /**
      * @return array<class-string<Node>>

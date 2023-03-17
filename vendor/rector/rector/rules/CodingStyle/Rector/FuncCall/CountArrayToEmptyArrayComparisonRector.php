@@ -16,7 +16,6 @@ use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Scalar\LNumber;
 use PhpParser\Node\Stmt\ElseIf_;
 use PhpParser\Node\Stmt\If_;
-use PHPStan\Type\ArrayType;
 use Rector\Core\Rector\AbstractRector;
 use Rector\NodeTypeResolver\Node\AttributeKey;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
@@ -70,19 +69,19 @@ CODE_SAMPLE
         if (!$this->isArray($expr)) {
             return null;
         }
-        $parent = $node->getAttribute(AttributeKey::PARENT_NODE);
-        if (!$parent instanceof Node) {
+        $parentNode = $node->getAttribute(AttributeKey::PARENT_NODE);
+        if (!$parentNode instanceof Node) {
             return null;
         }
-        $processIdentical = $this->processIdenticalOrNotIdentical($parent, $node, $expr);
+        $processIdentical = $this->processIdenticalOrNotIdentical($parentNode, $node, $expr);
         if ($processIdentical !== null) {
             return $processIdentical;
         }
-        $processGreaterOrSmaller = $this->processGreaterOrSmaller($parent, $node, $expr);
+        $processGreaterOrSmaller = $this->processGreaterOrSmaller($parentNode, $node, $expr);
         if ($processGreaterOrSmaller !== null) {
             return $processGreaterOrSmaller;
         }
-        return $this->processMarkTruthy($parent, $node, $expr);
+        return $this->processMarkTruthy($parentNode, $node, $expr);
     }
     private function processMarkTruthyNegation(BooleanNot $booleanNot) : ?Identical
     {
@@ -108,7 +107,7 @@ CODE_SAMPLE
     }
     private function isArray(Expr $expr) : bool
     {
-        return $this->getType($expr) instanceof ArrayType;
+        return $this->getType($expr)->isArray()->yes();
     }
     private function processIdenticalOrNotIdentical(Node $node, FuncCall $funcCall, Expr $expr) : ?Expr
     {

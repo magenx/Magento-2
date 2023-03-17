@@ -59,7 +59,7 @@ class Literal implements RouteInterface
      *
      * @see    \Laminas\Router\RouteInterface::factory()
      *
-     * @param  array|Traversable $options
+     * @param  iterable $options
      * @return Literal
      * @throws Exception\InvalidArgumentException
      */

@@ -286,7 +286,7 @@ abstract class PHPParserVersion70 extends PHPParserVersion56
     }
 
     /**
-     * Tests if the given image is a PHP 7 type hint.
+     * Tests if the given image is a PHP 7.0 type hint.
      *
      * @param string $image
      *
@@ -611,6 +611,8 @@ abstract class PHPParserVersion70 extends PHPParserVersion56
     /**
      * use Foo\Bar\{TestA, TestB} is allowed since PHP 7.0
      * use Foo\Bar\{TestA, TestB,} but trailing comma isn't
+     *
+     * @return bool
      */
     protected function allowUseGroupDeclarationTrailingComma()
     {

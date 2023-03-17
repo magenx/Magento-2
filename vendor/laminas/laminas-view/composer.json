@@ -18,18 +18,17 @@
     "config": {
         "sort-packages": true,
         "platform": {
-            "php": "7.4"
+            "php": "8.0.99"
         },
         "allow-plugins": {
             "dealerdirect/phpcodesniffer-composer-installer": true
         }
     },
     "require": {
-        "php": "^7.4 || ~8.0.0 || ~8.1.0",
+        "php": "~8.0.0 || ~8.1.0 || ~8.2.0",
         "ext-dom": "*",
         "ext-filter": "*",
         "ext-json": "*",
-        "container-interop/container-interop": "^1.2",
         "laminas/laminas-escaper": "^2.5",
         "laminas/laminas-eventmanager": "^3.4",
         "laminas/laminas-json": "^3.3",
@@ -38,38 +37,33 @@
         "psr/container": "^1 || ^2"
     },
     "require-dev": {
-        "laminas/laminas-authentication": "^2.5",
-        "laminas/laminas-coding-standard": "~2.3.0",
-        "laminas/laminas-console": "^2.6",
-        "laminas/laminas-feed": "^2.15",
-        "laminas/laminas-filter": "^2.13.0",
-        "laminas/laminas-http": "^2.15",
-        "laminas/laminas-i18n": "^2.6",
-        "laminas/laminas-modulemanager": "^2.7.1",
-        "laminas/laminas-mvc": "^3.0",
-        "laminas/laminas-mvc-i18n": "^1.1",
-        "laminas/laminas-mvc-plugin-flashmessenger": "^1.5.0",
-        "laminas/laminas-navigation": "^2.13.1",
-        "laminas/laminas-paginator": "^2.11.0",
-        "laminas/laminas-permissions-acl": "^2.6",
-        "laminas/laminas-router": "^3.0.1",
-        "laminas/laminas-uri": "^2.5",
-        "phpspec/prophecy": "^1.12",
-        "phpspec/prophecy-phpunit": "^2.0",
-        "phpunit/phpunit": "^9.5.5",
-        "psalm/plugin-phpunit": "^0.17.0",
-        "vimeo/psalm": "^4.10"
+        "laminas/laminas-authentication": "^2.13",
+        "laminas/laminas-coding-standard": "~2.5.0",
+        "laminas/laminas-feed": "^2.20",
+        "laminas/laminas-filter": "^2.31",
+        "laminas/laminas-http": "^2.18",
+        "laminas/laminas-i18n": "^2.21",
+        "laminas/laminas-modulemanager": "^2.14",
+        "laminas/laminas-mvc": "^3.6",
+        "laminas/laminas-mvc-i18n": "^1.7",
+        "laminas/laminas-mvc-plugin-flashmessenger": "^1.9",
+        "laminas/laminas-navigation": "^2.18.1",
+        "laminas/laminas-paginator": "^2.17",
+        "laminas/laminas-permissions-acl": "^2.13",
+        "laminas/laminas-router": "^3.11.1",
+        "laminas/laminas-uri": "^2.10",
+        "phpunit/phpunit": "^9.5.28",
+        "psalm/plugin-phpunit": "^0.18.4",
+        "vimeo/psalm": "^5.4"
     },
     "conflict": {
         "container-interop/container-interop": "<1.2",
-        "laminas/laminas-servicemanager": "<3.3",
         "laminas/laminas-session": "<2.12",
         "laminas/laminas-router": "<3.0.1",
         "zendframework/zend-view": "*"
     },
     "suggest": {
         "laminas/laminas-authentication": "Laminas\\Authentication component",
-        "laminas/laminas-escaper": "Laminas\\Escaper component",
         "laminas/laminas-feed": "Laminas\\Feed component",
         "laminas/laminas-filter": "Laminas\\Filter component",
         "laminas/laminas-http": "Laminas\\Http component",
@@ -79,7 +73,6 @@
         "laminas/laminas-navigation": "Laminas\\Navigation component",
         "laminas/laminas-paginator": "Laminas\\Paginator component",
         "laminas/laminas-permissions-acl": "Laminas\\Permissions\\Acl component",
-        "laminas/laminas-servicemanager": "Laminas\\ServiceManager component",
         "laminas/laminas-uri": "Laminas\\Uri component"
     },
     "autoload": {

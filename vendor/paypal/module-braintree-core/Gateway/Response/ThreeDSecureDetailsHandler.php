@@ -8,18 +8,15 @@ namespace PayPal\Braintree\Gateway\Response;
 use Braintree\ThreeDSecureInfo;
 use Braintree\Transaction;
 use Magento\Payment\Gateway\Helper\ContextHelper;
-use PayPal\Braintree\Gateway\Helper\SubjectReader;
 use Magento\Payment\Gateway\Response\HandlerInterface;
 use Magento\Sales\Api\Data\OrderPaymentInterface;
+use PayPal\Braintree\Gateway\Helper\SubjectReader;
 
 class ThreeDSecureDetailsHandler implements HandlerInterface
 {
     private const LIABILITY_SHIFTED = 'liabilityShifted';
-
     private const LIABILITY_SHIFT_POSSIBLE = 'liabilityShiftPossible';
-
     private const ECI_FLAG = 'eciFlag';
-
     private const ECI_ACCEPTED_VALUES = [
         '00' => 'Failed',
         '01' => 'Attempted',
@@ -35,7 +32,7 @@ class ThreeDSecureDetailsHandler implements HandlerInterface
     private $subjectReader;
 
     /**
-     * Constructor
+     * ThreeDSecureDetailsHandler Constructor
      *
      * @param SubjectReader $subjectReader
      */

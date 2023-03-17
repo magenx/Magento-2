@@ -5,15 +5,19 @@
  * Copyright (c) 2004 David Grudl (https://davidgrudl.com)
  */
 declare (strict_types=1);
-namespace RectorPrefix202208\Nette\Neon\Node;
+namespace RectorPrefix202303\Nette\Neon\Node;
 
-use RectorPrefix202208\Nette\Neon\Node;
+use RectorPrefix202303\Nette\Neon\Node;
 /** @internal */
 final class ArrayItemNode extends Node
 {
-    /** @var ?Node */
+    /**
+     * @var \Nette\Neon\Node|null
+     */
     public $key;
-    /** @var Node */
+    /**
+     * @var \Nette\Neon\Node
+     */
     public $value;
     /**
      * @param  self[]  $items
@@ -50,6 +54,9 @@ final class ArrayItemNode extends Node
         }
         return $res;
     }
+    /**
+     * @return mixed
+     */
     public function toValue()
     {
         throw new \LogicException();

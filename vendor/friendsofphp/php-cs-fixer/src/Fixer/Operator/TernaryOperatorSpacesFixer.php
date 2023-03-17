@@ -18,6 +18,7 @@ use PhpCsFixer\AbstractFixer;
 use PhpCsFixer\FixerDefinition\CodeSample;
 use PhpCsFixer\FixerDefinition\FixerDefinition;
 use PhpCsFixer\FixerDefinition\FixerDefinitionInterface;
+use PhpCsFixer\Tokenizer\Analyzer\AlternativeSyntaxAnalyzer;
 use PhpCsFixer\Tokenizer\Analyzer\Analysis\SwitchAnalysis;
 use PhpCsFixer\Tokenizer\Analyzer\ControlCaseStructuresAnalyzer;
 use PhpCsFixer\Tokenizer\Analyzer\GotoLabelAnalyzer;
@@ -63,6 +64,7 @@ final class TernaryOperatorSpacesFixer extends AbstractFixer
      */
     protected function applyFix(\SplFileInfo $file, Tokens $tokens): void
     {
+        $alternativeSyntaxAnalyzer = new AlternativeSyntaxAnalyzer();
         $gotoLabelAnalyzer = new GotoLabelAnalyzer();
         $ternaryOperatorIndices = [];
         $excludedIndices = $this->getColonIndicesForSwitch($tokens);
@@ -76,7 +78,7 @@ final class TernaryOperatorSpacesFixer extends AbstractFixer
                 continue;
             }
 
-            if ($this->belongsToAlternativeSyntax($tokens, $index)) {
+            if ($alternativeSyntaxAnalyzer->belongsToAlternativeSyntax($tokens, $index)) {
                 continue;
             }
 
@@ -121,49 +123,27 @@ final class TernaryOperatorSpacesFixer extends AbstractFixer
         }
     }
 
-    private function belongsToAlternativeSyntax(Tokens $tokens, int $index): bool
-    {
-        if (!$tokens[$index]->equals(':')) {
-            return false;
-        }
-
-        $closeParenthesisIndex = $tokens->getPrevMeaningfulToken($index);
-        if ($tokens[$closeParenthesisIndex]->isGivenKind(T_ELSE)) {
-            return true;
-        }
-        if (!$tokens[$closeParenthesisIndex]->equals(')')) {
-            return false;
-        }
-
-        $openParenthesisIndex = $tokens->findBlockStart(Tokens::BLOCK_TYPE_PARENTHESIS_BRACE, $closeParenthesisIndex);
-
-        $alternativeControlStructureIndex = $tokens->getPrevMeaningfulToken($openParenthesisIndex);
-
-        return $tokens[$alternativeControlStructureIndex]->isGivenKind([T_DECLARE, T_ELSEIF, T_FOR, T_FOREACH, T_IF, T_SWITCH, T_WHILE]);
-    }
-
     /**
      * @return int[]
      */
     private function getColonIndicesForSwitch(Tokens $tokens): array
     {
-        $colonIndexes = [];
+        $colonIndices = [];
 
+        /** @var SwitchAnalysis $analysis */
         foreach (ControlCaseStructuresAnalyzer::findControlStructures($tokens, [T_SWITCH]) as $analysis) {
             foreach ($analysis->getCases() as $case) {
-                $colonIndexes[] = $case->getColonIndex();
+                $colonIndices[] = $case->getColonIndex();
             }
 
-            if ($analysis instanceof SwitchAnalysis) {
-                $defaultAnalysis = $analysis->getDefaultAnalysis();
+            $defaultAnalysis = $analysis->getDefaultAnalysis();
 
-                if (null !== $defaultAnalysis) {
-                    $colonIndexes[] = $defaultAnalysis->getColonIndex();
-                }
+            if (null !== $defaultAnalysis) {
+                $colonIndices[] = $defaultAnalysis->getColonIndex();
             }
         }
 
-        return $colonIndexes;
+        return $colonIndices;
     }
 
     private function ensureWhitespaceExistence(Tokens $tokens, int $index, bool $after): void

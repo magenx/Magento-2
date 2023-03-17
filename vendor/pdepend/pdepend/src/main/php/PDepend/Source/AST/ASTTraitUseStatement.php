@@ -202,18 +202,6 @@ class ASTTraitUseStatement extends ASTStatement
      */
     private function getAliases()
     {
-        /** @var ASTTraitAdaptationAlias[] */
-        $result = array();
-
-        return $this->findChildrenOfType('PDepend\\Source\\AST\\ASTTraitAdaptationAlias', $result);
-    }
-
-    /**
-     * Accept method of the visitor design pattern. This method will be called
-     * by a visitor during tree traversal.
-     */
-    public function accept(ASTVisitor $visitor, $data = null)
-    {
-        return $visitor->visitTraitUseStatement($this, $data);
+        return $this->findChildrenOfType('PDepend\\Source\\AST\\ASTTraitAdaptationAlias');
     }
 }

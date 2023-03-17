@@ -83,7 +83,7 @@ CODE_SAMPLE
             }
             return \array_merge([$if, $node], $nodesToReturnAfterNode);
         }
-        if ($node->else !== null) {
+        if ($node->else instanceof Else_) {
             $stmts = $node->else->stmts;
             $node->else = null;
             return \array_merge([$node], $stmts);
@@ -111,6 +111,9 @@ CODE_SAMPLE
     private function doesLastStatementBreakFlow($node) : bool
     {
         $lastStmt = \end($node->stmts);
+        if ($lastStmt instanceof If_ && $lastStmt->else instanceof Else_) {
+            return $this->doesLastStatementBreakFlow($lastStmt);
+        }
         return !($lastStmt instanceof Return_ || $lastStmt instanceof Throw_ || $lastStmt instanceof Continue_ || $lastStmt instanceof Expression && $lastStmt->expr instanceof Exit_);
     }
 }

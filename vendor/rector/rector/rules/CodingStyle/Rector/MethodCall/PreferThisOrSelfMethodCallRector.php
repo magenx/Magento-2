@@ -16,7 +16,7 @@ use Rector\Core\PhpParser\AstResolver;
 use Rector\Core\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
-use RectorPrefix202208\Webmozart\Assert\Assert;
+use RectorPrefix202303\Webmozart\Assert\Assert;
 /**
  * @see \Rector\Tests\CodingStyle\Rector\MethodCall\PreferThisOrSelfMethodCallRector\PreferThisOrSelfMethodCallRectorTest
  */
@@ -103,7 +103,8 @@ CODE_SAMPLE
      */
     private function processToSelf($node) : ?StaticCall
     {
-        if ($node instanceof StaticCall && !$this->isNames($node->class, [ObjectReference::SELF, ObjectReference::STATIC])) {
+        // class is already "self", let's skip it
+        if ($node instanceof StaticCall && $this->isName($node->class, ObjectReference::SELF)) {
             return null;
         }
         if ($node instanceof MethodCall && !$this->isName($node->var, self::THIS)) {

@@ -13,9 +13,9 @@ final class ClassAnalyzer
 {
     /**
      * @var string
-     * @see https://regex101.com/r/FQH6RT/1
+     * @see https://regex101.com/r/FQH6RT/2
      */
-    private const ANONYMOUS_CLASS_REGEX = '#AnonymousClass\\w+$#';
+    private const ANONYMOUS_CLASS_REGEX = '#^AnonymousClass\\w+$#';
     /**
      * @readonly
      * @var \Rector\NodeNameResolver\NodeNameResolver
@@ -25,13 +25,17 @@ final class ClassAnalyzer
     {
         $this->nodeNameResolver = $nodeNameResolver;
     }
+    public function isAnonymousClassName(string $className) : bool
+    {
+        return StringUtils::isMatch($className, self::ANONYMOUS_CLASS_REGEX);
+    }
     public function isAnonymousClass(Node $node) : bool
     {
         if (!$node instanceof Class_) {
             return \false;
         }
-        $parent = $node->getAttribute(AttributeKey::PARENT_NODE);
-        if (!$parent instanceof New_) {
+        $parentNode = $node->getAttribute(AttributeKey::PARENT_NODE);
+        if (!$parentNode instanceof New_) {
             return \false;
         }
         if ($node->isAnonymous()) {

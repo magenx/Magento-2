@@ -3,7 +3,7 @@
 declare (strict_types=1);
 namespace Rector\DeadCode\SideEffect;
 
-use RectorPrefix202208\Nette\Utils\Strings;
+use RectorPrefix202303\Nette\Utils\Strings;
 use PhpParser\Node;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\ArrayDimFetch;
@@ -57,7 +57,7 @@ final class SideEffectNodeDetector
             return \false;
         }
         foreach (self::SIDE_EFFECT_NODE_TYPES as $sideEffectNodeType) {
-            if (\is_a($expr, $sideEffectNodeType, \true)) {
+            if ($expr instanceof $sideEffectNodeType) {
                 return \false;
             }
         }

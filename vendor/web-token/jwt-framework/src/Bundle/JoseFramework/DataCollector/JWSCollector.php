@@ -2,15 +2,6 @@
 
 declare(strict_types=1);
 
-/*
- * The MIT License (MIT)
- *
- * Copyright (c) 2014-2020 Spomky-Labs
- *
- * This software may be modified and distributed under the terms
- * of the MIT license.  See the LICENSE file for details.
- */
-
 namespace Jose\Bundle\JoseFramework\DataCollector;
 
 use Jose\Bundle\JoseFramework\Event\JWSBuiltFailureEvent;
@@ -24,56 +15,55 @@ use Jose\Component\Signature\Serializer\JWSSerializerManagerFactory;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\VarDumper\Cloner\Data;
 use Symfony\Component\VarDumper\Cloner\VarCloner;
 use Throwable;
 
 class JWSCollector implements Collector, EventSubscriberInterface
 {
     /**
-     * @var null|JWSSerializerManagerFactory
+     * @var array<JWSBuilder>
      */
-    private $jwsSerializerManagerFactory;
-
-    /**
-     * @var JWSBuilder[]
-     */
-    private $jwsBuilders = [];
+    private array $jwsBuilders = [];
 
     /**
      * @var JWSVerifier[]
      */
-    private $jwsVerifiers = [];
+    private array $jwsVerifiers = [];
 
     /**
      * @var JWSLoader[]
      */
-    private $jwsLoaders = [];
+    private array $jwsLoaders = [];
 
     /**
-     * @var array
+     * @var array<Data>
      */
-    private $jwsVerificationSuccesses = [];
+    private array $jwsVerificationSuccesses = [];
 
     /**
-     * @var array
+     * @var array<Data>
      */
-    private $jwsVerificationFailures = [];
+    private array $jwsVerificationFailures = [];
 
     /**
-     * @var array
+     * @var array<Data>
      */
-    private $jwsBuiltSuccesses = [];
+    private array $jwsBuiltSuccesses = [];
 
     /**
-     * @var array
+     * @var array<Data>
      */
-    private $jwsBuiltFailures = [];
+    private array $jwsBuiltFailures = [];
 
-    public function __construct(?JWSSerializerManagerFactory $jwsSerializerManagerFactory = null)
-    {
-        $this->jwsSerializerManagerFactory = $jwsSerializerManagerFactory;
+    public function __construct(
+        private readonly ?JWSSerializerManagerFactory $jwsSerializerManagerFactory = null
+    ) {
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     public function collect(array &$data, Request $request, Response $response, ?Throwable $exception = null): void
     {
         $this->collectSupportedJWSSerializations($data);
@@ -98,7 +88,7 @@ class JWSCollector implements Collector, EventSubscriberInterface
         $this->jwsLoaders[$id] = $jwsLoader;
     }
 
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
         return [
             JWSVerificationSuccessEvent::class => ['catchJwsVerificationSuccess'],
@@ -132,10 +122,13 @@ class JWSCollector implements Collector, EventSubscriberInterface
         $this->jwsBuiltFailures[] = $cloner->cloneVar($event);
     }
 
+    /**
+     * @param array<string, array<string, mixed>> $data
+     */
     private function collectSupportedJWSSerializations(array &$data): void
     {
         $data['jws']['jws_serialization'] = [];
-        if (null === $this->jwsSerializerManagerFactory) {
+        if ($this->jwsSerializerManagerFactory === null) {
             return;
         }
         $serializers = $this->jwsSerializerManagerFactory->all();
@@ -144,37 +137,54 @@ class JWSCollector implements Collector, EventSubscriberInterface
         }
     }
 
+    /**
+     * @param array<string, array<string, mixed>> $data
+     */
     private function collectSupportedJWSBuilders(array &$data): void
     {
         $data['jws']['jws_builders'] = [];
         foreach ($this->jwsBuilders as $id => $jwsBuilder) {
             $data['jws']['jws_builders'][$id] = [
-                'signature_algorithms' => $jwsBuilder->getSignatureAlgorithmManager()->list(),
+                'signature_algorithms' => $jwsBuilder->getSignatureAlgorithmManager()
+                    ->list(),
             ];
         }
     }
 
+    /**
+     * @param array<string, array<string, mixed>> $data
+     */
     private function collectSupportedJWSVerifiers(array &$data): void
     {
         $data['jws']['jws_verifiers'] = [];
         foreach ($this->jwsVerifiers as $id => $jwsVerifier) {
             $data['jws']['jws_verifiers'][$id] = [
-                'signature_algorithms' => $jwsVerifier->getSignatureAlgorithmManager()->list(),
+                'signature_algorithms' => $jwsVerifier->getSignatureAlgorithmManager()
+                    ->list(),
             ];
         }
     }
 
+    /**
+     * @param array<string, array<string, mixed>> $data
+     */
     private function collectSupportedJWSLoaders(array &$data): void
     {
         $data['jws']['jws_loaders'] = [];
         foreach ($this->jwsLoaders as $id => $jwsLoader) {
             $data['jws']['jws_loaders'][$id] = [
-                'serializers' => $jwsLoader->getSerializerManager()->list(),
-                'signature_algorithms' => $jwsLoader->getJwsVerifier()->getSignatureAlgorithmManager()->list(),
+                'serializers' => $jwsLoader->getSerializerManager()
+                    ->list(),
+                'signature_algorithms' => $jwsLoader->getJwsVerifier()
+                    ->getSignatureAlgorithmManager()
+                    ->list(),
             ];
         }
     }
 
+    /**
+     * @param array<string, array<string, mixed>> $data
+     */
     private function collectEvents(array &$data): void
     {
         $data['jws']['events'] = [

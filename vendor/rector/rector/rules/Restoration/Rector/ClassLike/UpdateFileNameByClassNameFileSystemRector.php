@@ -57,13 +57,13 @@ CODE_SAMPLE
             return null;
         }
         $classShortName = $this->nodeNameResolver->getShortName($className);
-        $smartFileInfo = $this->file->getSmartFileInfo();
-        // matches
-        if ($classShortName === $smartFileInfo->getBasenameWithoutSuffix()) {
+        $filePath = $this->file->getFilePath();
+        $basename = \pathinfo($filePath, \PATHINFO_FILENAME);
+        if ($classShortName === $basename) {
             return null;
         }
         // no match → rename file
-        $newFileLocation = $smartFileInfo->getPath() . \DIRECTORY_SEPARATOR . $classShortName . '.php';
+        $newFileLocation = \dirname($filePath) . \DIRECTORY_SEPARATOR . $classShortName . '.php';
         $this->removedAndAddedFilesCollector->addMovedFile($this->file, $newFileLocation);
         return null;
     }

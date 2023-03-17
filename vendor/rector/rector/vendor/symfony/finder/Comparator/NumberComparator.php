@@ -8,7 +8,7 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202208\Symfony\Component\Finder\Comparator;
+namespace RectorPrefix202303\Symfony\Component\Finder\Comparator;
 
 /**
  * NumberComparator compiles a simple comparison to an anonymous
@@ -34,7 +34,7 @@ namespace RectorPrefix202208\Symfony\Component\Finder\Comparator;
 class NumberComparator extends Comparator
 {
     /**
-     * @param string|int $test A comparison string or an integer
+     * @param string|null $test A comparison string or null
      *
      * @throws \InvalidArgumentException If the test is not understood
      */

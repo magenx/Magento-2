@@ -4,9 +4,7 @@ declare (strict_types=1);
 namespace Rector\TypeDeclaration\TypeInferer\PropertyTypeInferer;
 
 use PhpParser\Node\Stmt\Class_;
-use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\Property;
-use PHPStan\Type\ArrayType;
 use PHPStan\Type\MixedType;
 use PHPStan\Type\Type;
 use Rector\Core\PhpParser\Node\BetterNodeFinder;
@@ -30,34 +28,23 @@ final class GetterTypeDeclarationPropertyTypeInferer
      * @var \Rector\NodeNameResolver\NodeNameResolver
      */
     private $nodeNameResolver;
-    /**
-     * @readonly
-     * @var \Rector\Core\PhpParser\Node\BetterNodeFinder
-     */
-    private $betterNodeFinder;
-    public function __construct(FunctionLikeReturnTypeResolver $functionLikeReturnTypeResolver, ClassMethodAndPropertyAnalyzer $classMethodAndPropertyAnalyzer, NodeNameResolver $nodeNameResolver, BetterNodeFinder $betterNodeFinder)
+    public function __construct(FunctionLikeReturnTypeResolver $functionLikeReturnTypeResolver, ClassMethodAndPropertyAnalyzer $classMethodAndPropertyAnalyzer, NodeNameResolver $nodeNameResolver)
     {
         $this->functionLikeReturnTypeResolver = $functionLikeReturnTypeResolver;
         $this->classMethodAndPropertyAnalyzer = $classMethodAndPropertyAnalyzer;
         $this->nodeNameResolver = $nodeNameResolver;
-        $this->betterNodeFinder = $betterNodeFinder;
     }
-    public function inferProperty(Property $property) : ?Type
+    public function inferProperty(Property $property, Class_ $class) : ?Type
     {
-        $classLike = $this->betterNodeFinder->findParentType($property, ClassLike::class);
-        if (!$classLike instanceof Class_) {
-            // anonymous class
-            return null;
-        }
         /** @var string $propertyName */
         $propertyName = $this->nodeNameResolver->getName($property);
-        foreach ($classLike->getMethods() as $classMethod) {
-            if (!$this->classMethodAndPropertyAnalyzer->hasClassMethodOnlyStatementReturnOfPropertyFetch($classMethod, $propertyName)) {
+        foreach ($class->getMethods() as $classMethod) {
+            if (!$this->classMethodAndPropertyAnalyzer->hasPropertyFetchReturn($classMethod, $propertyName)) {
                 continue;
             }
             $returnType = $this->functionLikeReturnTypeResolver->resolveFunctionLikeReturnTypeToPHPStanType($classMethod);
             // let PhpDoc solve that later for more precise type
-            if ($returnType instanceof ArrayType) {
+            if ($returnType->isArray()->yes()) {
                 return new MixedType();
             }
             if (!$returnType instanceof MixedType) {

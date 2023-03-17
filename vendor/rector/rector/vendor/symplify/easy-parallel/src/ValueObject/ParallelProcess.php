@@ -1,29 +1,31 @@
 <?php
 
 declare (strict_types=1);
-namespace RectorPrefix202208\Symplify\EasyParallel\ValueObject;
+namespace RectorPrefix202303\Symplify\EasyParallel\ValueObject;
 
-use RectorPrefix202208\Clue\React\NDJson\Decoder;
-use RectorPrefix202208\Clue\React\NDJson\Encoder;
+use RectorPrefix202303\Clue\React\NDJson\Decoder;
+use RectorPrefix202303\Clue\React\NDJson\Encoder;
 use Exception;
-use RectorPrefix202208\React\ChildProcess\Process;
-use RectorPrefix202208\React\EventLoop\LoopInterface;
-use RectorPrefix202208\React\EventLoop\TimerInterface;
-use RectorPrefix202208\Symplify\EasyParallel\Enum\Action;
-use RectorPrefix202208\Symplify\EasyParallel\Enum\Content;
-use RectorPrefix202208\Symplify\EasyParallel\Enum\ReactCommand;
-use RectorPrefix202208\Symplify\EasyParallel\Enum\ReactEvent;
-use RectorPrefix202208\Symplify\EasyParallel\Exception\ParallelShouldNotHappenException;
+use RectorPrefix202303\React\ChildProcess\Process;
+use RectorPrefix202303\React\EventLoop\LoopInterface;
+use RectorPrefix202303\React\EventLoop\TimerInterface;
+use RectorPrefix202303\Symplify\EasyParallel\Enum\Action;
+use RectorPrefix202303\Symplify\EasyParallel\Enum\Content;
+use RectorPrefix202303\Symplify\EasyParallel\Enum\ReactCommand;
+use RectorPrefix202303\Symplify\EasyParallel\Enum\ReactEvent;
+use RectorPrefix202303\Symplify\EasyParallel\Exception\ParallelShouldNotHappenException;
 use Throwable;
 /**
  * Inspired at @see https://raw.githubusercontent.com/phpstan/phpstan-src/master/src/Parallel/Process.php
+ *
+ * @api
  */
 final class ParallelProcess
 {
     /**
      * @var \React\ChildProcess\Process
      */
-    public $process;
+    private $process;
     /**
      * @var \Clue\React\NDJson\Encoder
      */
@@ -45,14 +47,17 @@ final class ParallelProcess
      */
     private $timer;
     /**
+     * @readonly
      * @var string
      */
     private $command;
     /**
+     * @readonly
      * @var \React\EventLoop\LoopInterface
      */
     private $loop;
     /**
+     * @readonly
      * @var int
      */
     private $timetoutInSeconds;
@@ -113,7 +118,6 @@ final class ParallelProcess
             $pipe->close();
         }
         $this->encoder->end();
-        $this->process->terminate();
     }
     public function bindConnection(Decoder $decoder, Encoder $encoder) : void
     {

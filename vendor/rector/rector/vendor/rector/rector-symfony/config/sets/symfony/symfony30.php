@@ -1,7 +1,7 @@
 <?php
 
 declare (strict_types=1);
-namespace RectorPrefix202208;
+namespace RectorPrefix202303;
 
 use Rector\Config\RectorConfig;
 use Rector\Renaming\Rector\ClassConstFetch\RenameClassConstFetchRector;
@@ -13,7 +13,6 @@ use Rector\Symfony\Rector\ClassMethod\FormTypeGetParentRector;
 use Rector\Symfony\Rector\ClassMethod\GetRequestRector;
 use Rector\Symfony\Rector\ClassMethod\RemoveDefaultGetBlockPrefixRector;
 use Rector\Symfony\Rector\MethodCall\CascadeValidationFormBuilderRector;
-use Rector\Symfony\Rector\MethodCall\ChangeCollectionTypeOptionNameFromTypeToEntryTypeRector;
 use Rector\Symfony\Rector\MethodCall\ChangeStringCollectionOptionToConstantRector;
 use Rector\Symfony\Rector\MethodCall\FormTypeInstanceToClassConstRector;
 use Rector\Symfony\Rector\MethodCall\OptionNameRector;
@@ -35,7 +34,6 @@ return static function (RectorConfig $rectorConfig) : void {
         RemoveDefaultGetBlockPrefixRector::class,
         // forms - collection
         ChangeStringCollectionOptionToConstantRector::class,
-        ChangeCollectionTypeOptionNameFromTypeToEntryTypeRector::class,
     ]);
     $rectorConfig->ruleWithConfiguration(RenameClassConstFetchRector::class, [new RenameClassConstFetch('Symfony\\Component\\Form\\FormEvents', 'PRE_BIND', 'PRE_SUBMIT'), new RenameClassConstFetch('Symfony\\Component\\Form\\FormEvents', 'BIND', 'SUBMIT'), new RenameClassConstFetch('Symfony\\Component\\Form\\FormEvents', 'POST_BIND', 'POST_SUBMIT'), new RenameClassConstFetch('Symfony\\Component\\Form\\Extension\\Core\\DataTransformer', 'ROUND_HALFEVEN', 'ROUND_HALF_EVEN'), new RenameClassConstFetch('Symfony\\Component\\Form\\Extension\\Core\\DataTransformer', 'ROUND_HALFUP', 'ROUND_HALF_UP'), new RenameClassConstFetch('Symfony\\Component\\Form\\Extension\\Core\\DataTransformer', 'ROUND_HALFDOWN', 'ROUND_HALF_DOWN')]);
     $rectorConfig->ruleWithConfiguration(RenameMethodRector::class, [
@@ -48,7 +46,6 @@ return static function (RectorConfig $rectorConfig) : void {
         new MethodCallRename('Symfony\\Component\\ClassLoader\\UniversalClassLoader\\UniversalClassLoader', 'getPrefixFallbacks', 'getFallbackDirs'),
         // form
         new MethodCallRename('Symfony\\Component\\Form\\AbstractType', 'getName', 'getBlockPrefix'),
-        new MethodCallRename('Symfony\\Component\\Form\\AbstractType', 'setDefaultOptions', 'configureOptions'),
         new MethodCallRename('Symfony\\Component\\Form\\FormTypeInterface', 'getName', 'getBlockPrefix'),
         new MethodCallRename('Symfony\\Component\\Form\\FormTypeInterface', 'setDefaultOptions', 'configureOptions'),
         new MethodCallRename('Symfony\\Component\\Form\\ResolvedFormTypeInterface', 'getName', 'getBlockPrefix'),
@@ -118,9 +115,6 @@ return static function (RectorConfig $rectorConfig) : void {
         'Symfony\\Bridge\\Monolog\\Logger' => 'Psr\\Log\\LoggerInterface',
         # security
         'Symfony\\Component\\Security\\Core\\Authorization\\Voter\\AbstractVoter' => 'Symfony\\Component\\Security\\Core\\Authorization\\Voter\\Voter',
-        # translator
-        # partial with class rename
-        'Symfony\\Component\\Translation\\Translator' => 'Symfony\\Component\\Translation\\TranslatorBagInterface',
         # twig
         'Symfony\\Bundle\\TwigBundle\\TwigDefaultEscapingStrategy' => 'Twig_FileExtensionEscapingStrategy',
         # validator

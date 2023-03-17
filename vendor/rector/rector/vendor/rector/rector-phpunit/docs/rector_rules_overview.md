@@ -1,4 +1,4 @@
-# 39 Rules Overview
+# 48 Rules Overview
 
 ## AddDoesNotPerformAssertionToNonAssertingTestRector
 
@@ -69,6 +69,50 @@ Add `@see` annotation test of the class for faster jump to test. Make it FQN, so
 
 <br>
 
+## AnnotationWithValueToAttributeRector
+
+Change annotations with value to attribute
+
+:wrench: **configure it!**
+
+- class: [`Rector\PHPUnit\Rector\Class_\AnnotationWithValueToAttributeRector`](../src/Rector/Class_/AnnotationWithValueToAttributeRector.php)
+
+```php
+<?php
+
+declare(strict_types=1);
+
+use Rector\Config\RectorConfig;
+use Rector\PHPUnit\Rector\Class_\AnnotationWithValueToAttributeRector;
+use Rector\PHPUnit\ValueObject\AnnotationWithValueToAttribute;
+
+return static function (RectorConfig $rectorConfig): void {
+    $rectorConfig->ruleWithConfiguration(AnnotationWithValueToAttributeRector::class, [
+        new AnnotationWithValueToAttribute('backupGlobals', 'PHPUnit\Framework\Attributes\BackupGlobals', [
+            true,
+            false,
+        ]),
+    ]);
+};
+```
+
+↓
+
+```diff
+ use PHPUnit\Framework\TestCase;
++use PHPUnit\Framework\Attributes\BackupGlobals;
+
+-/**
+- * @backupGlobals enabled
+- */
++#[BackupGlobals(true)]
+ final class SomeTest extends TestCase
+ {
+ }
+```
+
+<br>
+
 ## ArrayArgumentToDataProviderRector
 
 Move array argument from tests into data provider [configurable]
@@ -78,12 +122,20 @@ Move array argument from tests into data provider [configurable]
 - class: [`Rector\PHPUnit\Rector\Class_\ArrayArgumentToDataProviderRector`](../src/Rector/Class_/ArrayArgumentToDataProviderRector.php)
 
 ```php
+<?php
+
+declare(strict_types=1);
+
 use Rector\Config\RectorConfig;
 use Rector\PHPUnit\Rector\Class_\ArrayArgumentToDataProviderRector;
 use Rector\PHPUnit\ValueObject\ArrayArgumentToDataProvider;
 
 return static function (RectorConfig $rectorConfig): void {
-    $rectorConfig->ruleWithConfiguration(ArrayArgumentToDataProviderRector::class, [Rector\PHPUnit\Rector\Class_\ArrayArgumentToDataProviderRector::ARRAY_ARGUMENTS_TO_DATA_PROVIDERS: [new ArrayArgumentToDataProvider('PHPUnit\Framework\TestCase', 'doTestMultiple', 'doTestSingle', 'number')]]);
+    $rectorConfig->ruleWithConfiguration(ArrayArgumentToDataProviderRector::class, [
+        ArrayArgumentToDataProviderRector::ARRAY_ARGUMENTS_TO_DATA_PROVIDERS => [
+            new ArrayArgumentToDataProvider('PHPUnit\Framework\TestCase', 'doTestMultiple', 'doTestSingle', 'number'),
+        ],
+    ]);
 };
 ```
 
@@ -129,8 +181,8 @@ Turns vague php-only method in PHPUnit TestCase to more specific
 <br>
 
 ```diff
--$this->assertNotEquals(get_class($value), stdClass::class);
-+$this->assertNotInstanceOf(stdClass::class, $value);
+-$this->assertNotEquals(get_class($value), SomeInstance::class);
++$this->assertNotInstanceOf(SomeInstance::class, $value);
 ```
 
 <br>
@@ -191,15 +243,8 @@ Turns `assertEquals()` into stricter `assertSame()` for scalar values in PHPUnit
 - class: [`Rector\PHPUnit\Rector\MethodCall\AssertEqualsToSameRector`](../src/Rector/MethodCall/AssertEqualsToSameRector.php)
 
 ```diff
--$this->assertEquals(2, $result, "message");
-+$this->assertSame(2, $result, "message");
-```
-
-<br>
-
-```diff
--$this->assertEquals($aString, $result, "message");
-+$this->assertSame($aString, $result, "message");
+-$this->assertEquals(2, $result);
++$this->assertSame(2, $result);
 ```
 
 <br>
@@ -213,13 +258,6 @@ Turns `strpos`/`stripos` comparisons to their method name alternatives in PHPUni
 ```diff
 -$this->assertFalse(strpos($anything, "foo"), "message");
 +$this->assertNotContains("foo", $anything, "message");
-```
-
-<br>
-
-```diff
--$this->assertNotFalse(stripos($anything, "foo"), "message");
-+$this->assertContains("foo", $anything, "message");
 ```
 
 <br>
@@ -291,15 +329,10 @@ Turns `property_exists` comparisons to their method name alternatives in PHPUnit
 - class: [`Rector\PHPUnit\Rector\MethodCall\AssertPropertyExistsRector`](../src/Rector/MethodCall/AssertPropertyExistsRector.php)
 
 ```diff
--$this->assertTrue(property_exists(new Class, "property"), "message");
-+$this->assertClassHasAttribute("property", "Class", "message");
-```
-
-<br>
-
-```diff
--$this->assertFalse(property_exists(new Class, "property"), "message");
-+$this->assertClassNotHasAttribute("property", "Class", "message");
+-$this->assertFalse(property_exists(new Class, "property"));
+-$this->assertTrue(property_exists(new Class, "property"));
++$this->assertClassHasAttribute("property", "Class");
++$this->assertClassNotHasAttribute("property", "Class");
 ```
 
 <br>
@@ -438,6 +471,64 @@ Change `__construct()` method in tests of `PHPUnit\Framework\TestCase` to `setUp
 
 <br>
 
+## CoversAnnotationWithValueToAttributeRector
+
+Change covers annotations with value to attribute
+
+- class: [`Rector\PHPUnit\Rector\Class_\CoversAnnotationWithValueToAttributeRector`](../src/Rector/Class_/CoversAnnotationWithValueToAttributeRector.php)
+
+```diff
+ use PHPUnit\Framework\TestCase;
++use PHPUnit\Framework\Attributes\CoversClass;
++use PHPUnit\Framework\Attributes\CoversFunction;
+
+-/**
+- * @covers SomeClass
+- */
++#[CoversClass(SomeClass::class)]
+ final class SomeTest extends TestCase
+ {
+-    /**
+-     * @covers ::someFunction
+-     */
++    #[CoversFunction('someFunction')]
+     public function test()
+     {
+     }
+ }
+```
+
+<br>
+
+## CreateMockToAnonymousClassRector
+
+Change `$this->createMock()` with methods to direct anonymous class
+
+- class: [`Rector\PHPUnit\Rector\ClassMethod\CreateMockToAnonymousClassRector`](../src/Rector/ClassMethod/CreateMockToAnonymousClassRector.php)
+
+```diff
+ use PHPUnit\Framework\TestCase;
+
+ final class SomeTest extends TestCase
+ {
+     public function test()
+     {
+-        $someMockObject = $this->createMock(SomeClass::class);
+-
+-        $someMockObject->method('someMethod')
+-            ->willReturn(100);
++        $someMockObject = new class extends SomeClass {
++            public function someMethod()
++            {
++                return 100;
++            }
++        };
+     }
+ }
+```
+
+<br>
+
 ## CreateMockToCreateStubRector
 
 Replaces `createMock()` with `createStub()` when relevant
@@ -469,6 +560,29 @@ Replaces `createMock()` with `createStub()` when relevant
 
 <br>
 
+## DataProviderAnnotationToAttributeRector
+
+Change dataProvider annotations to attribute
+
+- class: [`Rector\PHPUnit\Rector\ClassMethod\DataProviderAnnotationToAttributeRector`](../src/Rector/ClassMethod/DataProviderAnnotationToAttributeRector.php)
+
+```diff
+ use PHPUnit\Framework\TestCase;
+
+ final class SomeTest extends TestCase
+ {
+-    /**
+-     * @dataProvider someMethod()
+-     */
++    #[\PHPUnit\Framework\Attributes\DataProvider('test')]
+     public function test(): void
+     {
+     }
+ }
+```
+
+<br>
+
 ## DelegateExceptionArgumentsRector
 
 Takes `setExpectedException()` 2nd and next arguments to own methods in PHPUnit.
@@ -476,10 +590,37 @@ Takes `setExpectedException()` 2nd and next arguments to own methods in PHPUnit.
 - class: [`Rector\PHPUnit\Rector\MethodCall\DelegateExceptionArgumentsRector`](../src/Rector/MethodCall/DelegateExceptionArgumentsRector.php)
 
 ```diff
--$this->setExpectedException(Exception::class, "Message", "CODE");
-+$this->setExpectedException(Exception::class);
+-$this->setExpectedException(SomeException::class, "Message", "CODE");
++$this->setExpectedException(SomeException::class);
 +$this->expectExceptionMessage('Message');
 +$this->expectExceptionCode('CODE');
+```
+
+<br>
+
+## DependsAnnotationWithValueToAttributeRector
+
+Change depends annotations with value to attribute
+
+- class: [`Rector\PHPUnit\Rector\ClassMethod\DependsAnnotationWithValueToAttributeRector`](../src/Rector/ClassMethod/DependsAnnotationWithValueToAttributeRector.php)
+
+```diff
+ use PHPUnit\Framework\TestCase;
+
+ final class SomeTest extends TestCase
+ {
+     public function testOne() {}
+     public function testTwo() {}
+-    /**
+-     * @depends testOne
+-     * @depends testTwo
+-     */
++    #[\PHPUnit\Framework\Attributes\Depends('testOne')]
++    #[\PHPUnit\Framework\Attributes\Depends('testTwo')]
+     public function testThree(): void
+     {
+     }
+ }
 ```
 
 <br>
@@ -537,7 +678,9 @@ Remove `getMockBuilder()` to `createMock()`
 - class: [`Rector\PHPUnit\Rector\MethodCall\GetMockBuilderGetMockToCreateMockRector`](../src/Rector/MethodCall/GetMockBuilderGetMockToCreateMockRector.php)
 
 ```diff
- class SomeTest extends \PHPUnit\Framework\TestCase
+ use PHPUnit\Framework\TestCase;
+
+ final class SomeTest extends TestCase
  {
      public function test()
      {
@@ -558,15 +701,40 @@ Turns getMock*() methods to `createMock()`
 - class: [`Rector\PHPUnit\Rector\StaticCall\GetMockRector`](../src/Rector/StaticCall/GetMockRector.php)
 
 ```diff
--$this->getMock("Class");
-+$this->createMock("Class");
+ use PHPUnit\Framework\TestCase;
+
+ final class SomeTest extends TestCase
+ {
+     public function test()
+     {
+-        $classMock = $this->getMock("Class");
++        $classMock = $this->createMock("Class");
+     }
+ }
 ```
 
 <br>
 
+## ProphecyPHPDocRector
+
+Add correct `@var` to ObjectProphecy instances based on `$this->prophesize()` call.
+
+- class: [`Rector\PHPUnit\Rector\Class_\ProphecyPHPDocRector`](../src/Rector/Class_/ProphecyPHPDocRector.php)
+
 ```diff
--$this->getMockWithoutInvokingTheOriginalConstructor("Class");
-+$this->createMock("Class");
+ class HelloTest extends TestCase
+ {
+     /**
+-     * @var SomeClass
++     * @var ObjectProphecy<SomeClass>
+      */
+     private $propesizedObject;
+
+     public function setUp(): void
+     {
+         $this->propesizedObject = $this->prophesize(SomeClass::class);
+     }
+ }
 ```
 
 <br>
@@ -662,6 +830,25 @@ Remove `"setMethods()"` method as never used
 -            ->setMethods(['run'])
              ->getMock();
      }
+ }
+```
+
+<br>
+
+## RemoveTestSuffixFromAbstractTestClassesRector
+
+Rename abstract test class suffix from "*Test" to "*TestCase"
+
+- class: [`Rector\PHPUnit\Rector\ClassLike\RemoveTestSuffixFromAbstractTestClassesRector`](../src/Rector/ClassLike/RemoveTestSuffixFromAbstractTestClassesRector.php)
+
+```diff
+-// tests/AbstractTest.php
++// tests/AbstractTestCase.php
+ use PHPUnit\Framework\TestCase;
+
+-abstract class AbstractTest extends TestCase
++abstract class AbstractTestCase extends TestCase
+ {
  }
 ```
 
@@ -794,6 +981,34 @@ Change `assertInternalType()/assertNotInternalType()` method to new specific alt
 
 <br>
 
+## StaticDataProviderClassMethodRector
+
+Change data provider methods to static
+
+- class: [`Rector\PHPUnit\Rector\Class_\StaticDataProviderClassMethodRector`](../src/Rector/Class_/StaticDataProviderClassMethodRector.php)
+
+```diff
+ use PHPUnit\Framework\TestCase;
+
+ final class SomeTest extends TestCase
+ {
+     /**
+      * @dataProvider provideData()
+      */
+     public function test()
+     {
+     }
+
+-    public function provideData()
++    public static function provideData()
+     {
+         yield [1];
+     }
+ }
+```
+
+<br>
+
 ## TestListenerToHooksRector
 
 Refactor "*TestListener.php" to particular "*Hook.php" files
@@ -878,7 +1093,7 @@ Turns try/catch to `expectException()` call
 
 ## UseSpecificWillMethodRector
 
-Changes `->will($this->xxx())` to one specific method
+Changes `$mock->will()` call to more specific method
 
 - class: [`Rector\PHPUnit\Rector\MethodCall\UseSpecificWillMethodRector`](../src/Rector/MethodCall/UseSpecificWillMethodRector.php)
 
@@ -887,13 +1102,34 @@ Changes `->will($this->xxx())` to one specific method
  {
      public function test()
      {
-         $translator = $this->getMockBuilder('Symfony\Component\Translation\TranslatorInterface')->getMock();
+         $translator = $this->createMock('SomeClass');
          $translator->expects($this->any())
              ->method('trans')
--            ->with($this->equalTo('old max {{ max }}!'))
 -            ->will($this->returnValue('translated max {{ max }}!'));
-+            ->with('old max {{ max }}!')
 +            ->willReturnValue('translated max {{ max }}!');
+     }
+ }
+```
+
+<br>
+
+## UseSpecificWithMethodRector
+
+Changes `->with()` to more specific method
+
+- class: [`Rector\PHPUnit\Rector\MethodCall\UseSpecificWithMethodRector`](../src/Rector/MethodCall/UseSpecificWithMethodRector.php)
+
+```diff
+ class SomeClass extends PHPUnit\Framework\TestCase
+ {
+     public function test()
+     {
+         $translator = $this->createMock('SomeClass');
+
+         $translator->expects($this->any())
+             ->method('trans')
+-            ->with($this->equalTo('old max {{ max }}!'));
++            ->with('old max {{ max }}!');
      }
  }
 ```

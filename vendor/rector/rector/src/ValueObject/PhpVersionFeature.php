@@ -295,6 +295,10 @@ final class PhpVersionFeature
     /**
      * @var int
      */
+    public const DEPRECATE_MONEY_FORMAT = \Rector\Core\ValueObject\PhpVersion::PHP_74;
+    /**
+     * @var int
+     */
     public const ARRAY_KEY_EXISTS_TO_PROPERTY_EXISTS = \Rector\Core\ValueObject\PhpVersion::PHP_74;
     /**
      * @var int
@@ -316,6 +320,10 @@ final class PhpVersionFeature
      * @var int
      */
     public const EXPORT_TO_REFLECTION_FUNCTION = \Rector\Core\ValueObject\PhpVersion::PHP_74;
+    /**
+     * @var int
+     */
+    public const DEPRECATE_NESTED_TERNARY = \Rector\Core\ValueObject\PhpVersion::PHP_74;
     /**
      * @var int
      */
@@ -479,4 +487,21 @@ final class PhpVersionFeature
      * @var int
      */
     public const DEPRECATE_NULL_ARG_IN_STRING_FUNCTION = \Rector\Core\ValueObject\PhpVersion::PHP_81;
+    /**
+     * @see https://wiki.php.net/rfc/remove_utf8_decode_and_utf8_encode
+     * @var int
+     */
+    public const DEPRECATE_UTF8_DECODE_ENCODE_FUNCTION = \Rector\Core\ValueObject\PhpVersion::PHP_82;
+    /**
+     * @see https://www.php.net/manual/en/filesystemiterator.construct
+     * @var int
+     */
+    public const FILESYSTEM_ITERATOR_SKIP_DOTS = \Rector\Core\ValueObject\PhpVersion::PHP_82;
+    /**
+     * @see https://wiki.php.net/rfc/null-false-standalone-types
+     * @see https://wiki.php.net/rfc/true-type
+     *
+     * @var int
+     */
+    public const NULL_FALSE_TRUE_STANDALONE_TYPE = \Rector\Core\ValueObject\PhpVersion::PHP_82;
 }

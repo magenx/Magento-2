@@ -1,0 +1,57 @@
+{
+    "name": "laminas/laminas-oauth",
+    "description": " ",
+    "license": "BSD-3-Clause",
+    "keywords": [
+        "laminas",
+        "oauth"
+    ],
+    "homepage": "https://laminas.dev",
+    "support": {
+        "issues": "https://github.com/laminas/laminas-oauth/issues",
+        "source": "https://github.com/laminas/laminas-oauth",
+        "rss": "https://github.com/laminas/laminas-oauth/releases.atom",
+        "chat": "https://laminas.dev/chat",
+        "forum": "https://discourse.laminas.dev"
+    },
+    "config": {
+        "sort-packages": true,
+        "platform": {
+            "php": "8.0.99"
+        },
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        }
+    },
+    "require": {
+        "php": "~8.0.0 || ~8.1.0 || ~8.2.0",
+        "laminas/laminas-config": "^3.7",
+        "laminas/laminas-crypt": "^3.6.0",
+        "laminas/laminas-http": "^2.15",
+        "laminas/laminas-i18n": "^2.13.0",
+        "laminas/laminas-loader": "^2.8",
+        "laminas/laminas-math": "^3.5",
+        "laminas/laminas-stdlib": "^3.10",
+        "laminas/laminas-uri": "^2.9"
+    },
+    "require-dev": {
+        "laminas/laminas-coding-standard": "~1.0.0",
+        "phpunit/phpunit": "^9.5.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "Laminas\\OAuth\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "LaminasTest\\OAuth\\": "test/"
+        }
+    },
+    "scripts": {
+        "static-analysis": "psalm --shepherd --stats"
+    },
+    "conflict": {
+        "zendframework/zendoauth": "*"
+    }
+}

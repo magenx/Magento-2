@@ -37,20 +37,17 @@ use Symfony\Component\Finder\SplFileInfo;
  */
 final class FixerFactory
 {
-    /**
-     * @var FixerNameValidator
-     */
-    private $nameValidator;
+    private FixerNameValidator $nameValidator;
 
     /**
-     * @var FixerInterface[]
+     * @var list<FixerInterface>
      */
-    private $fixers = [];
+    private array $fixers = [];
 
     /**
-     * @var FixerInterface[] Associative array of fixers with names as keys
+     * @var array<string, FixerInterface>
      */
-    private $fixersByName = [];
+    private array $fixersByName = [];
 
     public function __construct()
     {
@@ -69,7 +66,7 @@ final class FixerFactory
     }
 
     /**
-     * @return FixerInterface[]
+     * @return list<FixerInterface>
      */
     public function getFixers(): array
     {

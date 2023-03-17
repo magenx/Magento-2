@@ -1,5 +1,9 @@
-Composer - Dependency Management for PHP
-========================================
+<p align="center">
+    <a href="https://getcomposer.org">
+        <img src="https://getcomposer.org/img/logo-composer-transparent.png" alt="Composer">
+    </a>
+</p>
+<h1 align="center">Dependency Management for PHP</h1>
 
 Composer helps you declare, manage, and install dependencies of PHP projects.
 
@@ -17,7 +21,9 @@ For usage, see [the documentation](https://getcomposer.org/doc/).
 Packages
 --------
 
-Find packages on [Packagist](https://packagist.org).
+Find public packages on [Packagist.org](https://packagist.org).
+
+For private package hosting take a look at [Private Packagist](https://packagist.com).
 
 Community
 ---------
@@ -34,7 +40,15 @@ By participating in this project and its community you agree to abide by those t
 Requirements
 ------------
 
-PHP 5.3.2 or above (at least 5.3.4 recommended to avoid potential bugs)
+#### Latest Composer
+
+PHP 7.2.5 or above for the latest version.
+
+#### Composer 2.2 LTS (Long Term Support)
+
+PHP versions 5.3.2 - 8.1 are still supported via the LTS releases of Composer (2.2.x). If you
+run the installer or the `self-update` command the appropriate Composer version for your PHP
+should be automatically selected.
 
 Authors
 -------

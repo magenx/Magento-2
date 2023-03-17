@@ -3,6 +3,25 @@ This project versioning adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## 1.13.1 - 2022-10-11
+### Fixed
+- Do not fail when using `isDisplayed()` and capabilities are missing in WebDriver instance. (Happens when driver instance was created using `RemoteWebDriver::createBySessionID()`.)
+
+## 1.13.0 - 2022-10-03
+### Added
+- Support for current Firefox XPI extension format. Extensions could now be loaded into `FirefoxProfile` using `addExtension()` method.
+- `setProfile()` method to `FirefoxOptions`, which is now a preferred way to set Firefox Profile.
+- Element `isDisplayed()` can now be used even for browsers not supporting native API endpoint (like Safari), thanks to javascript atom workaround.
+
+### Changed
+- Handle errors when taking screenshots. `WebDriverException` is thrown if WebDriver returns empty or invalid screenshot data.
+- Deprecate `FirefoxDriver::PROFILE` constant. Instead, use `setProfile()` method of `FirefoxOptions` to set Firefox Profile.
+- Deprecate `getAllSessions()` method of `RemoteWebDriver` (which is not part of W3C WebDriver).
+- Increase default request timeout to 3 minutes (instead of 30 seconds).
+
+### Fixed
+- Throw `UnknownErrorException` instead of fatal error if remote end returns invalid response for `findElement()`/`findElements()` commands.
+
 ## 1.12.1 - 2022-05-03
 ### Fixed
 - Improper PHP documentation for `getAttribute()` and `getDomProperty()`.

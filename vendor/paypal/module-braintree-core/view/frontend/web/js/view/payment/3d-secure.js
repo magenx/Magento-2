@@ -41,7 +41,7 @@ define([
          * @returns {string}
          */
         escapeNonAsciiCharacters: function (str) {
-            return str.split("").map(function (c) { return /^[\x00-\x7F]$/.test(c) ? c : c.split("").map(function (a) { return "\\u00" + a.charCodeAt().toString(16)}).join("")}).join("");
+            return str.split("").map(function (c) { return /[^\x00-\x7F]$/.test(c) ? c : c.split("").map(function (a) { return "\\u00" + a.charCodeAt().toString(16)}).join("")}).join("");
         },
 
         /**
@@ -144,7 +144,7 @@ define([
                         fullScreenLoader.stopLoader();
 
                         if (err) {
-                            console.error("3dsecure validation failed", err);
+                            console.error("3DSecure validation failed", err);
                             if (err.code === 'THREEDS_LOOKUP_VALIDATION_ERROR') {
                                 let errorMessage = err.details.originalError.details.originalError.error.message;
                                 if (errorMessage === 'Billing line1 format is invalid.' && billingAddress.street[0].length > 50) {
@@ -175,18 +175,6 @@ define([
                             state.reject($t('Please try again with another form of payment.'));
                         }
                     });
-
-                    // When customer cancel 3d secure popup, invalidate the re-captcha v2.
-                    var isReCaptchaEnabled = window.checkoutConfig.recaptcha_braintree;
-                    if (isReCaptchaEnabled) {
-                        var recaptchaCheckBox = jQuery("#recaptcha-checkout-braintree-wrapper input[name='recaptcha-validate-']");
-
-                        threeDSecureInstance.on('customer-canceled', function () {
-                            if (recaptchaCheckBox.prop('checked') === true) {
-                                recaptchaCheckBox.prop('checked', false);
-                            }
-                        });
-                    }
                 });
             };
 

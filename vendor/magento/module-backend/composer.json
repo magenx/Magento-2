@@ -9,9 +9,9 @@
     "config": {
         "sort-packages": true
     },
-    "version": "102.0.5",
+    "version": "102.0.6",
     "require": {
-        "php": "~7.4.0||~8.1.0",
+        "php": "~8.1.0||~8.2.0",
         "magento/framework": "103.0.*",
         "magento/module-backup": "100.4.*",
         "magento/module-catalog": "104.0.*",

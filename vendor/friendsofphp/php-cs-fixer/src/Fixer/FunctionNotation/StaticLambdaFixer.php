@@ -43,11 +43,7 @@ final class StaticLambdaFixer extends AbstractFixer
      */
     public function isCandidate(Tokens $tokens): bool
     {
-        if (\PHP_VERSION_ID >= 70400 && $tokens->isTokenKindFound(T_FN)) {
-            return true;
-        }
-
-        return $tokens->isTokenKindFound(T_FUNCTION);
+        return $tokens->isAnyTokenKindsFound([T_FUNCTION, T_FN]);
     }
 
     /**
@@ -64,11 +60,7 @@ final class StaticLambdaFixer extends AbstractFixer
     protected function applyFix(\SplFileInfo $file, Tokens $tokens): void
     {
         $analyzer = new TokensAnalyzer($tokens);
-        $expectedFunctionKinds = [T_FUNCTION];
-
-        if (\PHP_VERSION_ID >= 70400) {
-            $expectedFunctionKinds[] = T_FN;
-        }
+        $expectedFunctionKinds = [T_FUNCTION, T_FN];
 
         for ($index = $tokens->count() - 4; $index > 0; --$index) {
             if (!$tokens[$index]->isGivenKind($expectedFunctionKinds) || !$analyzer->isLambda($index)) {
@@ -123,7 +115,6 @@ final class StaticLambdaFixer extends AbstractFixer
                 break;
             }
 
-            /** @var null|array{isStart: bool, type: int} $blockType */
             $blockType = Tokens::detectBlockType($nextToken);
 
             if (null !== $blockType && $blockType['isStart']) {
@@ -142,7 +133,7 @@ final class StaticLambdaFixer extends AbstractFixer
      */
     private function hasPossibleReferenceToThis(Tokens $tokens, int $startIndex, int $endIndex): bool
     {
-        for ($i = $startIndex; $i < $endIndex; ++$i) {
+        for ($i = $startIndex; $i <= $endIndex; ++$i) {
             if ($tokens[$i]->isGivenKind(T_VARIABLE) && '$this' === strtolower($tokens[$i]->getContent())) {
                 return true; // directly accessing '$this'
             }

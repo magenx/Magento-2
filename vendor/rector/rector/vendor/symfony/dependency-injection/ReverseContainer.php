@@ -8,10 +8,10 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202208\Symfony\Component\DependencyInjection;
+namespace RectorPrefix202303\Symfony\Component\DependencyInjection;
 
-use RectorPrefix202208\Psr\Container\ContainerInterface;
-use RectorPrefix202208\Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
+use RectorPrefix202303\Psr\Container\ContainerInterface;
+use RectorPrefix202303\Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
 /**
  * Turns public and "container.reversible" services back to their ids.
  *
@@ -67,16 +67,12 @@ final class ReverseContainer
      */
     public function getService(string $id) : object
     {
-        if ($this->serviceContainer->has($id)) {
-            return $this->serviceContainer->get($id);
-        }
         if ($this->reversibleLocator->has($id)) {
             return $this->reversibleLocator->get($id);
         }
         if (isset($this->serviceContainer->getRemovedIds()[$id])) {
             throw new ServiceNotFoundException($id, null, null, [], \sprintf('The "%s" service is private and cannot be accessed by reference. You should either make it public, or tag it as "%s".', $id, $this->tagName));
         }
-        // will throw a ServiceNotFoundException
-        $this->serviceContainer->get($id);
+        return $this->serviceContainer->get($id);
     }
 }

@@ -7,6 +7,7 @@ use PhpParser\Node;
 use PhpParser\Node\Expr\ConstFetch;
 use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Name;
+use PhpParser\Node\Stmt\GroupUse;
 use PhpParser\Node\Stmt\Namespace_;
 use PhpParser\Node\Stmt\Use_;
 use PhpParser\Node\Stmt\UseUse;
@@ -14,12 +15,12 @@ use PHPStan\Reflection\ReflectionProvider;
 use Rector\CodingStyle\ClassNameImport\AliasUsesResolver;
 use Rector\CodingStyle\ClassNameImport\ClassNameImportSkipper;
 use Rector\Core\Configuration\Option;
+use Rector\Core\Configuration\Parameter\ParameterProvider;
 use Rector\Core\ValueObject\Application\File;
 use Rector\NodeTypeResolver\Node\AttributeKey;
 use Rector\PostRector\Collector\UseNodesToAddCollector;
 use Rector\StaticTypeMapper\StaticTypeMapper;
 use Rector\StaticTypeMapper\ValueObject\Type\FullyQualifiedObjectType;
-use RectorPrefix202208\Symplify\PackageBuilder\Parameter\ParameterProvider;
 final class NameImporter
 {
     /**
@@ -38,7 +39,7 @@ final class NameImporter
     private $classNameImportSkipper;
     /**
      * @readonly
-     * @var \Symplify\PackageBuilder\Parameter\ParameterProvider
+     * @var \Rector\Core\Configuration\Parameter\ParameterProvider
      */
     private $parameterProvider;
     /**
@@ -66,14 +67,11 @@ final class NameImporter
         $this->reflectionProvider = $reflectionProvider;
     }
     /**
-     * @param Use_[] $uses
+     * @param Use_[]|GroupUse[] $uses
      */
     public function importName(Name $name, File $file, array $uses) : ?Name
     {
         if ($this->shouldSkipName($name)) {
-            return null;
-        }
-        if ($this->classNameImportSkipper->isShortNameInUseStatement($name, $uses)) {
             return null;
         }
         $staticType = $this->staticTypeMapper->mapPhpParserNodePHPStanType($name);

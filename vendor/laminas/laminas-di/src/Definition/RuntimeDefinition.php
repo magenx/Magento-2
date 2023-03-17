@@ -66,7 +66,10 @@ class RuntimeDefinition implements DefinitionInterface
         return $this;
     }
 
-    /** @param class-string $class */
+    /**
+     * @psalm-assert class-string $class
+     * @throws Exception\ClassNotFoundException
+     */
     private function ensureClassExists(string $class): void
     {
         if (! $this->hasClass($class)) {
@@ -91,16 +94,15 @@ class RuntimeDefinition implements DefinitionInterface
         return array_keys(array_merge($this->definition, $this->explicitClasses));
     }
 
+    /**
+     * @psalm-assert-if-true class-string $class
+     */
     public function hasClass(string $class): bool
     {
         return class_exists($class);
     }
 
-    /**
-     * @param class-string $class
-     * @return ClassDefinition
-     * @throws Exception\ClassNotFoundException
-     */
+    /** @throws Exception\ClassNotFoundException */
     public function getClassDefinition(string $class): ClassDefinitionInterface
     {
         if (! isset($this->definition[$class])) {

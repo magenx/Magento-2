@@ -113,6 +113,9 @@ final class ClassDependencyManipulator
             $this->addConstructorDependencyWithCustomAssign($class, $propertyMetadata->getName(), $propertyMetadata->getType(), $assign);
         }
     }
+    /**
+     * @api doctrine
+     */
     public function addConstructorDependencyWithCustomAssign(Class_ $class, string $name, ?Type $type, Assign $assign) : void
     {
         /** @var ClassMethod|null $constructorMethod */
@@ -129,6 +132,7 @@ final class ClassDependencyManipulator
         $this->dependencyClassMethodDecorator->decorateConstructorWithParentDependencies($class, $constructorMethod, $scope);
     }
     /**
+     * @api doctrine
      * @param Stmt[] $stmts
      */
     public function addStmtsToConstructorIfNotThereYet(Class_ $class, array $stmts) : void
@@ -172,10 +176,10 @@ final class ClassDependencyManipulator
             $constructClassMethod = $this->nodeFactory->createPublicMethod(MethodName::CONSTRUCT);
             $constructClassMethod->params[] = $param;
             $this->classInsertManipulator->addAsFirstMethod($class, $constructClassMethod);
+            /** @var Scope $scope */
+            $scope = $class->getAttribute(AttributeKey::SCOPE);
+            $this->dependencyClassMethodDecorator->decorateConstructorWithParentDependencies($class, $constructClassMethod, $scope);
         }
-        /** @var Scope $scope */
-        $scope = $class->getAttribute(AttributeKey::SCOPE);
-        $this->dependencyClassMethodDecorator->decorateConstructorWithParentDependencies($class, $constructClassMethod, $scope);
     }
     private function hasClassParentClassMethod(Class_ $class, string $methodName) : bool
     {

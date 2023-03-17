@@ -8,7 +8,7 @@
  * For the full copyright and license information, please view
  * the LICENSE file that was distributed with this source code.
  */
-namespace RectorPrefix202208\Composer\Pcre;
+namespace RectorPrefix202303\Composer\Pcre;
 
 final class MatchResult
 {
@@ -28,7 +28,7 @@ final class MatchResult
      * @param 0|positive-int $count
      * @param array<string|null> $matches
      */
-    public function __construct($count, array $matches)
+    public function __construct(int $count, array $matches)
     {
         $this->matches = $matches;
         $this->matched = (bool) $count;

@@ -9,7 +9,6 @@ use function array_shift;
 use function array_walk;
 use function count;
 use function explode;
-use function get_class;
 use function gettype;
 use function implode;
 use function is_object;
@@ -295,7 +294,7 @@ class ContentType implements HeaderInterface
         if (! is_string($string)) {
             throw new Exception\InvalidArgumentException(sprintf(
                 'Non-string mediatype "%s" provided',
-                is_object($string) ? get_class($string) : gettype($string)
+                is_object($string) ? $string::class : gettype($string)
             ));
         }
 

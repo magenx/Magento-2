@@ -176,14 +176,15 @@ class Transaction extends Base
     const RECURRING     = 'recurring';
 
     // Gateway Rejection Reason
-    const AVS            = 'avs';
-    const AVS_AND_CVV    = 'avs_and_cvv';
-    const CVV            = 'cvv';
-    const DUPLICATE      = 'duplicate';
-    const FRAUD          = 'fraud';
-    const RISK_THRESHOLD = 'risk_threshold';
-    const THREE_D_SECURE = 'three_d_secure';
-    const TOKEN_ISSUANCE = 'token_issuance';
+    const AVS                    = 'avs';
+    const AVS_AND_CVV            = 'avs_and_cvv';
+    const CVV                    = 'cvv';
+    const DUPLICATE              = 'duplicate';
+    const EXCESSIVE_RETRY        = 'excessive_retry';
+    const FRAUD                  = 'fraud';
+    const RISK_THRESHOLD         = 'risk_threshold';
+    const THREE_D_SECURE         = 'three_d_secure';
+    const TOKEN_ISSUANCE         = 'token_issuance';
     const APPLICATION_INCOMPLETE = 'application_incomplete';
 
     // Industry Types
@@ -198,6 +199,9 @@ class Transaction extends Base
     const TELEPHONE  = 'telephone';
     const LAUNDRY    = 'laundry';
     const OTHER      = 'other';
+
+    // Reason Codes
+    const TRANSACTION_REASON_CODE = 'any_reason_code';
 
     /**
      * sets instance properties from an array of values
@@ -270,6 +274,15 @@ class Transaction extends Base
                 'usBankAccount',
                 new Transaction\UsBankAccountDetails(
                     $transactionAttribs['usBankAccount']
+                )
+            );
+        }
+
+        if (isset($transactionAttribs['sepaDebitAccountDetail'])) {
+            $this->_set(
+                'sepaDirectDebitAccountDetails',
+                new Transaction\SepaDirectDebitAccountDetails(
+                    $transactionAttribs['sepaDebitAccountDetail']
                 )
             );
         }

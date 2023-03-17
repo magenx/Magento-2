@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 /*
  * This file is part of Composer.
@@ -12,9 +12,10 @@
 
 namespace Composer\Command;
 
+use Composer\Pcre\Preg;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
-use Symfony\Component\Console\Input\InputArgument;
+use Composer\Console\Input\InputOption;
+use Composer\Console\Input\InputArgument;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
@@ -27,52 +28,49 @@ class ScriptAliasCommand extends BaseCommand
     /** @var string */
     private $description;
 
-    /**
-     * @param string $script
-     * @param string $description
-     */
-    public function __construct($script, $description)
+    public function __construct(string $script, ?string $description)
     {
         $this->script = $script;
-        $this->description = empty($description) ? 'Runs the '.$script.' script as defined in composer.json.' : $description;
+        $this->description = $description ?? 'Runs the '.$script.' script as defined in composer.json';
+
+        $this->ignoreValidationErrors();
 
         parent::__construct();
     }
 
-    /**
-     * @return void
-     */
-    protected function configure()
+    protected function configure(): void
     {
         $this
             ->setName($this->script)
             ->setDescription($this->description)
-            ->setDefinition(array(
+            ->setDefinition([
                 new InputOption('dev', null, InputOption::VALUE_NONE, 'Sets the dev mode.'),
                 new InputOption('no-dev', null, InputOption::VALUE_NONE, 'Disables the dev mode.'),
                 new InputArgument('args', InputArgument::IS_ARRAY | InputArgument::OPTIONAL, ''),
-            ))
+            ])
             ->setHelp(
                 <<<EOT
 The <info>run-script</info> command runs scripts defined in composer.json:
 
 <info>php composer.phar run-script post-update-cmd</info>
 
-Read more at https://getcomposer.org/doc/03-cli.md#run-script
+Read more at https://getcomposer.org/doc/03-cli.md#run-script-run
 EOT
             )
         ;
     }
 
-    /**
-     * @return int
-     */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $composer = $this->getComposer();
+        $composer = $this->requireComposer();
 
         $args = $input->getArguments();
 
-        return $composer->getEventDispatcher()->dispatchScript($this->script, $input->getOption('dev') || !$input->getOption('no-dev'), $args['args']);
+        // TODO remove for Symfony 6+ as it is then in the interface
+        if (!method_exists($input, '__toString')) { // @phpstan-ignore-line
+            throw new \LogicException('Expected an Input instance that is stringable, got '.get_class($input));
+        }
+
+        return $composer->getEventDispatcher()->dispatchScript($this->script, $input->getOption('dev') || !$input->getOption('no-dev'), $args['args'], ['script-alias-input' => Preg::replace('{^\S+ ?}', '', $input->__toString(), 1)]);
     }
 }

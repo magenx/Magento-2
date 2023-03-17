@@ -10,11 +10,12 @@ use Laminas\Stdlib\Parameters;
 use Traversable;
 
 use function array_pop;
+use function assert;
 use function class_exists;
-use function interface_exists;
 use function is_array;
 use function is_iterable;
-use function strpos;
+use function is_string;
+use function str_contains;
 use function trigger_error;
 
 use const E_USER_DEPRECATED;
@@ -25,7 +26,7 @@ use const E_USER_DEPRECATED;
 class LegacyConfig extends Config
 {
     /**
-     * @param array|ArrayAccess $config
+     * @param iterable<mixed>|ArrayAccess<mixed, mixed> $config
      */
     public function __construct($config)
     {
@@ -35,25 +36,29 @@ class LegacyConfig extends Config
             $config = ArrayUtils::iteratorToArray($config);
         }
 
-        if (! is_array($config)) {
+        /** @psalm-suppress DocblockTypeContradiction Can this whole typecheck statement be dropped? */
+        if (! is_array($config) && ! $config instanceof ArrayAccess) {
             throw new Exception\InvalidArgumentException('Config data must be an array or implement Traversable');
         }
 
-        if (isset($config['instance'])) {
+        if (isset($config['instance']) && is_iterable($config['instance'])) {
             $this->configureInstance($config['instance']);
         }
     }
 
     /**
-     * @param mixed $parameters
-     * @return mixed[]
+     * @psalm-suppress MixedAssignment
+     * @param iterable<mixed> $parameters
+     * @return array<array-key, mixed>
      */
-    private function prepareParametersArray($parameters, string $class)
+    private function prepareParametersArray($parameters): array
     {
         $prepared = [];
 
         foreach ($parameters as $key => $value) {
-            if (strpos($key, ':') !== false) {
+            $key = (string) $key;
+
+            if (str_contains($key, ':')) {
                 trigger_error('Full qualified parameter positions are no longer supported', E_USER_DEPRECATED);
             }
 
@@ -64,37 +69,48 @@ class LegacyConfig extends Config
     }
 
     /**
-     * @param iterable $config
+     * @psalm-suppress MixedAssignment
+     * @param iterable<mixed> $config
      */
-    private function configureInstance($config)
+    private function configureInstance($config): void
     {
+        /** @var mixed $data*/
         foreach ($config as $target => $data) {
             switch ($target) {
                 case 'aliases':
                 case 'alias':
+                    assert(is_iterable($data));
+
                     foreach ($data as $name => $class) {
-                        if (class_exists($class) || interface_exists($class)) {
-                            $this->setAlias($name, $class);
+                        if (is_string($class) && class_exists($class)) {
+                            $this->setAlias((string) $name, $class);
                         }
                     }
+
                     break;
 
                 case 'preferences':
                 case 'preference':
+                    assert(is_iterable($data));
+
                     foreach ($data as $type => $pref) {
                         $preference = is_array($pref) ? array_pop($pref) : $pref;
-                        $this->setTypePreference($type, $preference);
+                        $this->setTypePreference((string) $type, (string) $preference);
                     }
+
                     break;
 
                 default:
-                    $config     = new Parameters($data);
+                    assert(is_string($target));
+
+                    $config     = new Parameters(is_array($data) ? $data : []);
                     $parameters = $config->get('parameters', $config->get('parameter'));
 
                     if (is_iterable($parameters)) {
-                        $parameters = $this->prepareParametersArray($parameters, $target);
+                        $parameters = $this->prepareParametersArray($parameters);
                         $this->setParameters($target, $parameters);
                     }
+
                     break;
             }
         }

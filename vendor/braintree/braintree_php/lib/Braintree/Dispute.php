@@ -13,6 +13,7 @@ class Dispute extends Base
 
     /* Dispute Status */
     const ACCEPTED = 'accepted';
+    const AUTO_ACCEPTED = 'auto_accepted';
     const DISPUTED = 'disputed';
     const EXPIRED = 'expired';
     const OPEN  = 'open';
@@ -37,14 +38,30 @@ class Dispute extends Base
     const STANDARD        = 'standard';
     const NOT_PROTECTED   = 'not_protected';
 
+    /* Dispute ProtectionLevel */
+    const EFFORTLESS_CBP   = 'Effortless Chargeback Protection tool';
+    const STANDARD_CBP     = 'Chargeback Protection tool';
+    const NO_PROTECTION    = 'No Protection';
+
     /* Dispute Kind */
     const CHARGEBACK      = 'chargeback';
     const PRE_ARBITRATION = 'pre_arbitration';
     // RETRIEVAL for kind already defined under Dispute Reason
 
+    /* Dispute PreDisputeProgram */
+    const NONE = 'none';
+    const VISA_RDR = 'visa_rdr';
+
     protected function _initialize($disputeAttribs)
     {
         $this->_attributes = $disputeAttribs;
+
+        if (isset($disputeAttribs['chargebackProtectionLevel']) && in_array($disputeAttribs['chargebackProtectionLevel'], array(self::EFFORTLESS, self::STANDARD))) {
+            $protectionLevel = constant('self::' . strtoupper($disputeAttribs['chargebackProtectionLevel']) . '_CBP');
+            $this->_set('protectionLevel', $protectionLevel);
+        } else {
+            $this->_set('protectionLevel', self::NO_PROTECTION);
+        }
 
         if (isset($disputeAttribs['transaction'])) {
             $transactionDetails = new Dispute\TransactionDetails($disputeAttribs['transaction']);
@@ -210,8 +227,11 @@ class Dispute extends Base
         return Configuration::gateway()->dispute()->search($query);
     }
 
-    /*
+    // NEXT_MAJOR_VERSION Remove this function
+    /**
      * Retrive all types of chargeback protection level types
+     *
+     * @deprecated Use allProtectionLevelTypes() instead
      *
      * @return array
      */
@@ -221,6 +241,33 @@ class Dispute extends Base
             Dispute::EFFORTLESS,
             Dispute::STANDARD,
             Dispute::NOT_PROTECTED
+        ];
+    }
+
+   /*
+     * Retrieve all types of protection level types
+     *
+     * @return array
+     */
+    public static function allProtectionLevelTypes()
+    {
+        return [
+            Dispute::EFFORTLESS_CBP,
+            Dispute::STANDARD_CBP,
+            Dispute::NO_PROTECTION
+        ];
+    }
+
+   /*
+     * Retrieve all pre-dispute programs
+     *
+     * @return array
+     */
+    public static function allPreDisputePrograms()
+    {
+        return [
+            Dispute::NONE,
+            Dispute::VISA_RDR
         ];
     }
 }

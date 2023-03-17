@@ -40,7 +40,7 @@ final class DoctrineSetList implements SetListInterface
     /**
      * @var string
      */
-    public const DOCTRINE_GEDMO_TO_KNPLABS = __DIR__ . '/../../config/sets/doctrine-gedmo-to-knplabs.php';
+    public const DOCTRINE_DBAL_40 = __DIR__ . '/../../config/sets/doctrine-dbal-40.php';
     /**
      * @var string
      */
@@ -52,7 +52,15 @@ final class DoctrineSetList implements SetListInterface
     /**
      * @var string
      */
+    public const DOCTRINE_ORM_213 = __DIR__ . '/../../config/sets/doctrine-orm-213.php';
+    /**
+     * @var string
+     */
     public const ANNOTATIONS_TO_ATTRIBUTES = __DIR__ . '/../../config/sets/doctrine-annotations-to-attributes.php';
+    /**
+     * @var string
+     */
+    public const GEDMO_ANNOTATIONS_TO_ATTRIBUTES = __DIR__ . '/../../config/sets/doctrine-gedmo-annotations-to-attributes.php';
     /**
      * @var string
      */

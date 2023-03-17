@@ -1,9 +1,12 @@
 <?php
 
 declare (strict_types=1);
-namespace RectorPrefix202208\Symplify\EasyParallel\FileSystem;
+namespace RectorPrefix202303\Symplify\EasyParallel\FileSystem;
 
-use RectorPrefix202208\Symplify\SmartFileSystem\SmartFileInfo;
+use RectorPrefix202303\Symplify\SmartFileSystem\SmartFileInfo;
+/**
+ * @api
+ */
 final class FilePathNormalizer
 {
     /**

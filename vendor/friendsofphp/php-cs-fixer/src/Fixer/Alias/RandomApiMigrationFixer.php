@@ -33,9 +33,9 @@ use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 final class RandomApiMigrationFixer extends AbstractFunctionReferenceFixer implements ConfigurableFixerInterface
 {
     /**
-     * @var array
+     * @var array<string, array<int, int>>
      */
-    private static $argumentCounts = [
+    private static array $argumentCounts = [
         'getrandmax' => [0],
         'mt_rand' => [1, 2],
         'rand' => [0, 2],
@@ -152,7 +152,7 @@ final class RandomApiMigrationFixer extends AbstractFunctionReferenceFixer imple
                             throw new InvalidOptionsException(sprintf(
                                 'Replacement for function "%s" must be a string, "%s" given.',
                                 $functionName,
-                                \is_object($replacement) ? \get_class($replacement) : \gettype($replacement)
+                                get_debug_type($replacement)
                             ));
                         }
                     }

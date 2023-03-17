@@ -46,7 +46,7 @@ add more repositories to your project by declaring them in `composer.json`.
 
 Repositories are only available to the root package and the repositories
 defined in your dependencies will not be loaded. Read the
-[FAQ entry](faqs/why-can't-composer-load-repositories-recursively.md) if you
+[FAQ entry](faqs/why-cant-composer-load-repositories-recursively.md) if you
 want to learn why.
 
 When resolving dependencies, packages are looked up from repositories from
@@ -149,7 +149,7 @@ number.
 
 This field is optional.
 
-### metadata-url, available-packages and available-package-patterns
+#### metadata-url, available-packages and available-package-patterns
 
 The `metadata-url` field allows you to provide a URL template to serve all
 packages which are in the repository. It must contain the placeholder
@@ -204,7 +204,7 @@ every matching package name in this repository).
 
 This field is optional.
 
-### providers-api
+#### providers-api
 
 The `providers-api` field allows you to provide a URL template to serve all
 packages which provide a given package name, but not the package which has
@@ -222,7 +222,7 @@ monolog/monolog itself.
 
 This field is optional.
 
-### list
+#### list
 
 The `list` field allows you to return the names of packages which match a
 given field (or all names if no filter is present). It should accept an
@@ -388,15 +388,15 @@ GitHub and Bitbucket:
 
 ```json
 {
-    "require": {
-        "vendor/my-private-repo": "dev-master"
-    },
     "repositories": [
         {
             "type": "vcs",
             "url":  "git@bitbucket.org:vendor/my-private-repo.git"
         }
-    ]
+    ],
+    "require": {
+        "vendor/my-private-repo": "dev-master"
+    }
 }
 ```
 
@@ -591,7 +591,7 @@ time, there are some use cases for hosting your own repository.
 * **Separate ecosystem:** If you have a project which has its own ecosystem,
   and the packages aren't really reusable by the greater PHP community, you
   might want to keep them separate to packagist. An example of this would be
-  wordpress plugins.
+  WordPress plugins.
 
 For hosting your own packages, a native `composer` type of repository is
 recommended, which provides the best performance.
@@ -646,9 +646,10 @@ those private packages:
 
 Each zip artifact is a ZIP archive with `composer.json` in root folder:
 
-```sh
+```shell
 unzip -l acme-corp-parser-10.3.5.zip
-
+```
+```text
 composer.json
 ...
 ```
@@ -665,11 +666,11 @@ you to depend on a local directory, either absolute or relative. This can be
 especially useful when dealing with monolithic repositories.
 
 For instance, if you have the following directory structure in your repository:
-```
+```text
 ...
 ├── apps
-│   └── my-app
-│       └── composer.json
+│   └── my-app
+│       └── composer.json
 ├── packages
 │   └── my-package
 │       └── composer.json
@@ -755,6 +756,31 @@ variables are parsed in both Windows and Linux/Mac notations. For example
 > **Note:** Repository paths can also contain wildcards like `*` and `?`.
 > For details, see the [PHP glob function](https://php.net/glob).
 
+You can configure the way the package's dist reference (which appears in
+the composer.lock file) is built.
+
+The following modes exist:
+- `none` - reference will be always null. This can help reduce lock file conflicts
+  in the lock file but reduces clarity as to when the last update happened and whether
+  the package is in the latest state.
+- `config` - reference is built based on a hash of the package's composer.json and repo config
+- `auto` (used by default) - reference is built basing on the hash like with `config`, but if
+  the package folder contains a git repository, the HEAD commit's hash is used as reference instead.
+
+```json
+{
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../../packages/my-package",
+            "options": {
+                "reference": "config"
+            }
+        }
+    ]
+}
+```
+
 ## Disabling Packagist.org
 
 You can disable the default Packagist.org repository by adding this to your
@@ -772,7 +798,7 @@ You can disable the default Packagist.org repository by adding this to your
 
 You can disable Packagist.org globally by using the global config flag:
 
-```bash
+```shell
 php composer.phar config -g repo.packagist false
 ```
 

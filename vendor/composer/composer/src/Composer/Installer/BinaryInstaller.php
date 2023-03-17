@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 /*
  * This file is part of Composer.
@@ -41,13 +41,9 @@ class BinaryInstaller
     private $vendorDir;
 
     /**
-     * @param IOInterface $io
-     * @param string      $binDir
-     * @param string      $binCompat
      * @param Filesystem  $filesystem
-     * @param string|null $vendorDir
      */
-    public function __construct(IOInterface $io, $binDir, $binCompat, Filesystem $filesystem = null, $vendorDir = null)
+    public function __construct(IOInterface $io, string $binDir, string $binCompat, ?Filesystem $filesystem = null, ?string $vendorDir = null)
     {
         $this->binDir = $binDir;
         $this->binCompat = $binCompat;
@@ -56,13 +52,7 @@ class BinaryInstaller
         $this->vendorDir = $vendorDir;
     }
 
-    /**
-     * @param string $installPath
-     * @param bool $warnOnOverwrite
-     *
-     * @return void
-     */
-    public function installBinaries(PackageInterface $package, $installPath, $warnOnOverwrite = true)
+    public function installBinaries(PackageInterface $package, string $installPath, bool $warnOnOverwrite = true): void
     {
         $binaries = $this->getBinaries($package);
         if (!$binaries) {
@@ -117,10 +107,7 @@ class BinaryInstaller
         }
     }
 
-    /**
-     * @return void
-     */
-    public function removeBinaries(PackageInterface $package)
+    public function removeBinaries(PackageInterface $package): void
     {
         $this->initializeBinDir();
 
@@ -144,12 +131,7 @@ class BinaryInstaller
         }
     }
 
-    /**
-     * @param string $bin
-     *
-     * @return string
-     */
-    public static function determineBinaryCaller($bin)
+    public static function determineBinaryCaller(string $bin): string
     {
         if ('.bat' === substr($bin, -4) || '.exe' === substr($bin, -4)) {
             return 'call';
@@ -158,7 +140,7 @@ class BinaryInstaller
         $handle = fopen($bin, 'r');
         $line = fgets($handle);
         fclose($handle);
-        if (Preg::isMatch('{^#!/(?:usr/bin/env )?(?:[^/]+/)*(.+)$}m', $line, $match)) {
+        if (Preg::isMatchStrictGroups('{^#!/(?:usr/bin/env )?(?:[^/]+/)*(.+)$}m', (string) $line, $match)) {
             return trim($match[1]);
         }
 
@@ -168,19 +150,12 @@ class BinaryInstaller
     /**
      * @return string[]
      */
-    protected function getBinaries(PackageInterface $package)
+    protected function getBinaries(PackageInterface $package): array
     {
         return $package->getBinaries();
     }
 
-    /**
-     * @param string $binPath
-     * @param string $link
-     * @param string $bin
-     *
-     * @return void
-     */
-    protected function installFullBinaries($binPath, $link, $bin, PackageInterface $package)
+    protected function installFullBinaries(string $binPath, string $link, string $bin, PackageInterface $package): void
     {
         // add unixy support for cygwin and similar environments
         if ('.bat' !== substr($binPath, -4)) {
@@ -196,34 +171,19 @@ class BinaryInstaller
         }
     }
 
-    /**
-     * @param string $binPath
-     * @param string $link
-     *
-     * @return void
-     */
-    protected function installUnixyProxyBinaries($binPath, $link)
+    protected function installUnixyProxyBinaries(string $binPath, string $link): void
     {
         file_put_contents($link, $this->generateUnixyProxyCode($binPath, $link));
         Silencer::call('chmod', $link, 0777 & ~umask());
     }
 
-    /**
-     * @return void
-     */
-    protected function initializeBinDir()
+    protected function initializeBinDir(): void
     {
         $this->filesystem->ensureDirectoryExists($this->binDir);
         $this->binDir = realpath($this->binDir);
     }
 
-    /**
-     * @param string $bin
-     * @param string $link
-     *
-     * @return string
-     */
-    protected function generateWindowsProxyCode($bin, $link)
+    protected function generateWindowsProxyCode(string $bin, string $link): string
     {
         $binPath = $this->filesystem->findShortestPath($link, $bin);
         $caller = self::determineBinaryCaller($bin);
@@ -246,13 +206,7 @@ class BinaryInstaller
             "{$caller} \"%BIN_TARGET%\" %*\r\n";
     }
 
-    /**
-     * @param string $bin
-     * @param string $link
-     *
-     * @return string
-     */
-    protected function generateUnixyProxyCode($bin, $link)
+    protected function generateUnixyProxyCode(string $bin, string $link): string
     {
         $binPath = $this->filesystem->findShortestPath($link, $bin);
 
@@ -264,7 +218,7 @@ class BinaryInstaller
         // which allows calling the proxy with a custom php process
         if (Preg::isMatch('{^(#!.*\r?\n)?[\r\n\t ]*<\?php}', $binContents, $match)) {
             // carry over the existing shebang if present, otherwise add our own
-            $proxyCode = empty($match[1]) ? '#!/usr/bin/env php' : trim($match[1]);
+            $proxyCode = $match[1] === null ? '#!/usr/bin/env php' : trim($match[1]);
             $binPathExported = $this->filesystem->findShortestPathCode($link, $bin, false, true);
             $streamProxyCode = $streamHint = '';
             $globalsCode = '$GLOBALS[\'_composer_bin_dir\'] = __DIR__;'."\n";
@@ -283,7 +237,7 @@ class BinaryInstaller
                 $data = str_replace(\'__DIR__\', var_export(dirname($this->realpath), true), $data);
                 $data = str_replace(\'__FILE__\', var_export($this->realpath, true), $data);';
             }
-            if (trim($match[0]) !== '<?php') {
+            if (trim((string) $match[0]) !== '<?php') {
                 $streamHint = ' using a stream wrapper to prevent the shebang from being output on PHP<8'."\n *";
                 $streamProxyCode = <<<STREAMPROXY
 if (PHP_VERSION_ID < 80000) {

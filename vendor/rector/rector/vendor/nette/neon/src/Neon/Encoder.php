@@ -5,7 +5,7 @@
  * Copyright (c) 2004 David Grudl (https://davidgrudl.com)
  */
 declare (strict_types=1);
-namespace RectorPrefix202208\Nette\Neon;
+namespace RectorPrefix202303\Nette\Neon;
 
 /**
  * Converts value to NEON format.
@@ -15,18 +15,26 @@ final class Encoder
 {
     /** @deprecated */
     public const BLOCK = \true;
-    /** @var bool */
+    /**
+     * @var bool
+     */
     public $blockMode = \false;
-    /** @var string */
+    /**
+     * @var string
+     */
     public $indentation = "\t";
     /**
      * Returns the NEON representation of a value.
+     * @param mixed $val
      */
     public function encode($val) : string
     {
         $node = $this->valueToNode($val, $this->blockMode);
         return $node->toString();
     }
+    /**
+     * @param mixed $val
+     */
     public function valueToNode($val, bool $blockMode = \false) : Node
     {
         if ($val instanceof \DateTimeInterface) {
@@ -38,7 +46,7 @@ final class Encoder
             }
             return $node;
         } elseif ($val instanceof Entity) {
-            return new Node\EntityNode($this->valueToNode($val->value), $this->arrayToNodes((array) $val->attributes));
+            return new Node\EntityNode($this->valueToNode($val->value), $this->arrayToNodes($val->attributes));
         } elseif (\is_object($val) || \is_array($val)) {
             if ($blockMode) {
                 $node = new Node\BlockArrayNode();
@@ -54,7 +62,8 @@ final class Encoder
             return new Node\LiteralNode($val);
         }
     }
-    /** @return Node\ArrayItemNode[] */
+    /** @return Node\ArrayItemNode[]
+     * @param mixed $val */
     private function arrayToNodes($val, bool $blockMode = \false) : array
     {
         $res = [];

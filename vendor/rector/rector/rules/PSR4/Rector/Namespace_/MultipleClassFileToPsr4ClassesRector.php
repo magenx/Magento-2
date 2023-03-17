@@ -8,11 +8,13 @@ use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\Namespace_;
 use Rector\Core\Application\FileSystem\RemovedAndAddedFilesCollector;
+use Rector\Core\NodeAnalyzer\ClassAnalyzer;
 use Rector\Core\PhpParser\Node\CustomNode\FileWithoutNamespace;
+use Rector\Core\PhpParser\Printer\NeighbourClassLikePrinter;
 use Rector\Core\Rector\AbstractRector;
+use Rector\FileSystemRector\ValueObject\AddedFileWithContent;
 use Rector\PSR4\FileInfoAnalyzer\FileInfoDeletionAnalyzer;
 use Rector\PSR4\NodeManipulator\NamespaceManipulator;
-use Rector\Symfony\Printer\NeighbourClassLikePrinter;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
@@ -32,7 +34,7 @@ final class MultipleClassFileToPsr4ClassesRector extends AbstractRector
     private $fileInfoDeletionAnalyzer;
     /**
      * @readonly
-     * @var \Rector\Symfony\Printer\NeighbourClassLikePrinter
+     * @var \Rector\Core\PhpParser\Printer\NeighbourClassLikePrinter
      */
     private $neighbourClassLikePrinter;
     /**
@@ -40,12 +42,18 @@ final class MultipleClassFileToPsr4ClassesRector extends AbstractRector
      * @var \Rector\Core\Application\FileSystem\RemovedAndAddedFilesCollector
      */
     private $removedAndAddedFilesCollector;
-    public function __construct(NamespaceManipulator $namespaceManipulator, FileInfoDeletionAnalyzer $fileInfoDeletionAnalyzer, NeighbourClassLikePrinter $neighbourClassLikePrinter, RemovedAndAddedFilesCollector $removedAndAddedFilesCollector)
+    /**
+     * @readonly
+     * @var \Rector\Core\NodeAnalyzer\ClassAnalyzer
+     */
+    private $classAnalyzer;
+    public function __construct(NamespaceManipulator $namespaceManipulator, FileInfoDeletionAnalyzer $fileInfoDeletionAnalyzer, NeighbourClassLikePrinter $neighbourClassLikePrinter, RemovedAndAddedFilesCollector $removedAndAddedFilesCollector, ClassAnalyzer $classAnalyzer)
     {
         $this->namespaceManipulator = $namespaceManipulator;
         $this->fileInfoDeletionAnalyzer = $fileInfoDeletionAnalyzer;
         $this->neighbourClassLikePrinter = $neighbourClassLikePrinter;
         $this->removedAndAddedFilesCollector = $removedAndAddedFilesCollector;
+        $this->classAnalyzer = $classAnalyzer;
     }
     public function getRuleDefinition() : RuleDefinition
     {
@@ -106,13 +114,17 @@ CODE_SAMPLE
             $nodeToReturn = $this->refactorFileWithoutNamespace($node);
         }
         // 1. remove this node
-        if ($nodeToReturn !== null) {
+        if ($nodeToReturn instanceof Node) {
             return $nodeToReturn;
         }
-        $smartFileInfo = $this->file->getSmartFileInfo();
-        // 2. nothing to return - remove the file
-        $this->removedAndAddedFilesCollector->removeFile($smartFileInfo);
-        return null;
+        $isInAddedFiles = (bool) \array_filter($this->removedAndAddedFilesCollector->getAddedFilesWithContent(), function (AddedFileWithContent $addedFileWithContent) : bool {
+            return $addedFileWithContent->getFilePath() === $this->file->getFilePath();
+        });
+        if ($isInAddedFiles === \false) {
+            // 2. nothing to return - remove the file
+            $this->removedAndAddedFilesCollector->removeFile($this->file->getFilePath());
+        }
+        return $node;
     }
     private function hasAtLeastTwoClassLikes(Node $node) : bool
     {
@@ -132,7 +144,6 @@ CODE_SAMPLE
                 $nodeToReturn = $newNamespace;
                 continue;
             }
-            // 2. new file
             $this->printNewNodes($classLike, $newNamespace);
         }
         return $nodeToReturn;
@@ -157,8 +168,8 @@ CODE_SAMPLE
      */
     private function printNewNodes(ClassLike $classLike, $mainNode) : void
     {
-        $smartFileInfo = $this->file->getSmartFileInfo();
-        $this->neighbourClassLikePrinter->printClassLike($classLike, $mainNode, $smartFileInfo, $this->file);
+        $filePath = $this->file->getFilePath();
+        $this->neighbourClassLikePrinter->printClassLike($classLike, $mainNode, $filePath, $this->file);
     }
     /**
      * @return ClassLike[]
@@ -166,11 +177,11 @@ CODE_SAMPLE
     private function findNonAnonymousClassLikes(Node $node) : array
     {
         $classLikes = $this->betterNodeFinder->findInstanceOf([$node], ClassLike::class);
-        return \array_filter($classLikes, static function (ClassLike $classLike) : bool {
+        return \array_filter($classLikes, function (ClassLike $classLike) : bool {
             if (!$classLike instanceof Class_) {
                 return \true;
             }
-            return !$classLike->isAnonymous();
+            return !$this->classAnalyzer->isAnonymousClass($classLike);
         });
     }
 }

@@ -3,15 +3,15 @@
 declare (strict_types=1);
 namespace Rector\PhpAttribute\AnnotationToAttributeMapper;
 
-use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\Array_;
 use PhpParser\Node\Expr\ArrayItem;
+use PhpParser\Node\Scalar\LNumber;
 use Rector\BetterPhpDocParser\ValueObject\PhpDoc\DoctrineAnnotation\CurlyListNode;
 use Rector\PhpAttribute\AnnotationToAttributeMapper;
 use Rector\PhpAttribute\Contract\AnnotationToAttributeMapperInterface;
 use Rector\PhpAttribute\Enum\DocTagNodeState;
-use RectorPrefix202208\Symfony\Contracts\Service\Attribute\Required;
-use RectorPrefix202208\Webmozart\Assert\Assert;
+use RectorPrefix202303\Symfony\Contracts\Service\Attribute\Required;
+use RectorPrefix202303\Webmozart\Assert\Assert;
 /**
  * @implements AnnotationToAttributeMapperInterface<CurlyListNode>
  */
@@ -42,19 +42,27 @@ final class CurlyListNodeAnnotationToAttributeMapper implements AnnotationToAttr
     public function map($value) : \PhpParser\Node\Expr
     {
         $arrayItems = [];
-        foreach ($value->getValuesWithExplicitSilentAndWithoutQuotes() as $key => $singleValue) {
-            $valueExpr = $this->annotationToAttributeMapper->map($singleValue);
+        $arrayItemNodes = $value->getValues();
+        $loop = -1;
+        foreach ($arrayItemNodes as $arrayItemNode) {
+            $valueExpr = $this->annotationToAttributeMapper->map($arrayItemNode);
             // remove node
             if ($valueExpr === DocTagNodeState::REMOVE_ARRAY) {
                 continue;
             }
-            Assert::isInstanceOf($valueExpr, Expr::class);
-            $keyExpr = null;
-            if (!\is_int($key)) {
-                $keyExpr = $this->annotationToAttributeMapper->map($key);
-                Assert::isInstanceOf($keyExpr, Expr::class);
+            Assert::isInstanceOf($valueExpr, ArrayItem::class);
+            if (!\is_numeric($arrayItemNode->key)) {
+                $arrayItems[] = $valueExpr;
+                continue;
             }
-            $arrayItems[] = new ArrayItem($valueExpr, $keyExpr);
+            ++$loop;
+            $arrayItemNodeKey = (int) $arrayItemNode->key;
+            if ($loop === $arrayItemNodeKey) {
+                $arrayItems[] = $valueExpr;
+                continue;
+            }
+            $valueExpr->key = new LNumber($arrayItemNodeKey);
+            $arrayItems[] = $valueExpr;
         }
         return new Array_($arrayItems);
     }

@@ -24,7 +24,6 @@ use function array_intersect;
 use function array_key_exists;
 use function array_keys;
 use function class_exists;
-use function get_class;
 use function gettype;
 use function in_array;
 use function is_callable;
@@ -60,7 +59,19 @@ use const E_USER_DEPRECATED;
  * @psalm-import-type FactoriesConfigurationType from ConfigInterface
  * @psalm-import-type InitializersConfigurationType from ConfigInterface
  * @psalm-import-type LazyServicesConfigurationType from ConfigInterface
- * @psalm-type ServiceManagerConfiguration = array{shared_by_default?:bool}&ServiceManagerConfigurationType
+ * @psalm-type ServiceManagerConfiguration = array{
+ *     abstract_factories?: AbstractFactoriesConfigurationType,
+ *     aliases?: array<string,string>,
+ *     delegators?: DelegatorsConfigurationType,
+ *     factories?: FactoriesConfigurationType,
+ *     initializers?: InitializersConfigurationType,
+ *     invokables?: array<string,string>,
+ *     lazy_services?: LazyServicesConfigurationType,
+ *     services?: array<string,object|array>,
+ *     shared?:array<string,bool>,
+ *     shared_by_default?:bool,
+ *     ...
+ * }
  */
 class ServiceManager implements ServiceLocatorInterface
 {
@@ -158,7 +169,6 @@ class ServiceManager implements ServiceLocatorInterface
      * See {@see \Laminas\ServiceManager\ServiceManager::configure()} for details
      * on what $config accepts.
      *
-     * @param array $config
      * @psalm-param ServiceManagerConfiguration $config
      */
     public function __construct(array $config = [])
@@ -186,9 +196,7 @@ class ServiceManager implements ServiceLocatorInterface
         return $this->creationContext;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     public function get($name)
     {
         // We start by checking if we have cached the requested service;
@@ -247,9 +255,7 @@ class ServiceManager implements ServiceLocatorInterface
         return $object;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     public function build($name, ?array $options = null)
     {
         // We never cache when using "build".
@@ -290,7 +296,6 @@ class ServiceManager implements ServiceLocatorInterface
     }
 
     /**
-     * @param  array $config
      * @psalm-param ServiceManagerConfiguration $config
      * @return self
      * @throws ContainerModificationsNotAllowedException If the allow
@@ -976,7 +981,7 @@ class ServiceManager implements ServiceLocatorInterface
         }
         throw new ServiceNotCreatedException(sprintf(
             'A non-callable delegator, "%s", was provided; expected a callable or instance of "%s"',
-            is_object($delegatorFactory) ? get_class($delegatorFactory) : gettype($delegatorFactory),
+            is_object($delegatorFactory) ? $delegatorFactory::class : gettype($delegatorFactory),
             DelegatorFactoryInterface::class
         ));
     }

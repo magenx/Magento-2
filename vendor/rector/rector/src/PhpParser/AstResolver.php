@@ -3,6 +3,7 @@
 declare (strict_types=1);
 namespace Rector\Core\PhpParser;
 
+use RectorPrefix202303\Nette\Utils\FileSystem;
 use PhpParser\Node;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\FuncCall;
@@ -32,8 +33,7 @@ use Rector\Core\ValueObject\MethodName;
 use Rector\NodeNameResolver\NodeNameResolver;
 use Rector\NodeTypeResolver\NodeScopeAndMetadataDecorator;
 use Rector\NodeTypeResolver\NodeTypeResolver;
-use RectorPrefix202208\Symplify\Astral\PhpParser\SmartPhpParser;
-use RectorPrefix202208\Symplify\SmartFileSystem\SmartFileInfo;
+use Rector\PhpDocParser\PhpParser\SmartPhpParser;
 /**
  * The nodes provided by this resolver is for read-only analysis only!
  * They are not part of node tree processed by Rector, so any changes will not make effect in final printed file.
@@ -56,7 +56,7 @@ final class AstResolver
     private $functionsByName = [];
     /**
      * @readonly
-     * @var \Symplify\Astral\PhpParser\SmartPhpParser
+     * @var \Rector\PhpDocParser\PhpParser\SmartPhpParser
      */
     private $smartPhpParser;
     /**
@@ -114,20 +114,19 @@ final class AstResolver
             return null;
         }
         $classReflection = $this->reflectionProvider->getClass($className);
-        return $this->resolveClassFromClassReflection($classReflection, $className);
-    }
-    /**
-     * @return \PhpParser\Node\Stmt\Class_|\PhpParser\Node\Stmt\Trait_|\PhpParser\Node\Stmt\Interface_|\PhpParser\Node\Stmt\Enum_|null
-     */
-    public function resolveClassFromObjectType(TypeWithClassName $typeWithClassName)
-    {
-        return $this->resolveClassFromName($typeWithClassName->getClassName());
+        return $this->resolveClassFromClassReflection($classReflection);
     }
     public function resolveClassMethodFromMethodReflection(MethodReflection $methodReflection) : ?ClassMethod
     {
         $classReflection = $methodReflection->getDeclaringClass();
-        if (isset($this->classMethodsByClassAndMethod[$classReflection->getName()][$methodReflection->getName()])) {
-            return $this->classMethodsByClassAndMethod[$classReflection->getName()][$methodReflection->getName()];
+        $classLikeName = $classReflection->getName();
+        $methodName = $methodReflection->getName();
+        if (isset($this->classMethodsByClassAndMethod[$classLikeName][$methodName])) {
+            return $this->classMethodsByClassAndMethod[$classLikeName][$methodName];
+        }
+        // saved as null data
+        if (\array_key_exists($classLikeName, $this->classMethodsByClassAndMethod) && \array_key_exists($methodName, $this->classMethodsByClassAndMethod[$classLikeName])) {
+            return null;
         }
         $fileName = $classReflection->getFileName();
         // probably native PHP method → un-parseable
@@ -140,21 +139,19 @@ final class AstResolver
         }
         /** @var ClassLike[] $classLikes */
         $classLikes = $this->betterNodeFinder->findInstanceOf($nodes, ClassLike::class);
-        $classLikeName = $classReflection->getName();
-        $methodReflectionName = $methodReflection->getName();
         foreach ($classLikes as $classLike) {
             if (!$this->nodeNameResolver->isName($classLike, $classLikeName)) {
                 continue;
             }
-            $classMethod = $classLike->getMethod($methodReflectionName);
+            $classMethod = $classLike->getMethod($methodName);
             if (!$classMethod instanceof ClassMethod) {
                 continue;
             }
-            $this->classMethodsByClassAndMethod[$classLikeName][$methodReflectionName] = $classMethod;
+            $this->classMethodsByClassAndMethod[$classLikeName][$methodName] = $classMethod;
             return $classMethod;
         }
         // avoids looking for a class in a file where is not present
-        $this->classMethodsByClassAndMethod[$classLikeName][$methodReflectionName] = null;
+        $this->classMethodsByClassAndMethod[$classLikeName][$methodName] = null;
         return null;
     }
     /**
@@ -170,8 +167,13 @@ final class AstResolver
     }
     public function resolveFunctionFromFunctionReflection(FunctionReflection $functionReflection) : ?Function_
     {
-        if (isset($this->functionsByName[$functionReflection->getName()])) {
-            return $this->functionsByName[$functionReflection->getName()];
+        $functionName = $functionReflection->getName();
+        if (isset($this->functionsByName[$functionName])) {
+            return $this->functionsByName[$functionName];
+        }
+        // saved as null data
+        if (\array_key_exists($functionName, $this->functionsByName)) {
+            return null;
         }
         $fileName = $functionReflection->getFileName();
         if ($fileName === null) {
@@ -184,15 +186,15 @@ final class AstResolver
         /** @var Function_[] $functions */
         $functions = $this->betterNodeFinder->findInstanceOf($nodes, Function_::class);
         foreach ($functions as $function) {
-            if (!$this->nodeNameResolver->isName($function, $functionReflection->getName())) {
+            if (!$this->nodeNameResolver->isName($function, $functionName)) {
                 continue;
             }
             // to avoid parsing missing function again
-            $this->functionsByName[$functionReflection->getName()] = $function;
+            $this->functionsByName[$functionName] = $function;
             return $function;
         }
         // to avoid parsing missing function again
-        $this->functionsByName[$functionReflection->getName()] = null;
+        $this->functionsByName[$functionName] = null;
         return null;
     }
     /**
@@ -232,9 +234,9 @@ final class AstResolver
     /**
      * @return \PhpParser\Node\Stmt\Trait_|\PhpParser\Node\Stmt\Class_|\PhpParser\Node\Stmt\Interface_|\PhpParser\Node\Stmt\Enum_|null
      */
-    public function resolveClassFromClassReflection(ClassReflection $classReflection, string $className)
+    public function resolveClassFromClassReflection(ClassReflection $classReflection)
     {
-        return $this->classLikeAstResolver->resolveClassFromClassReflection($classReflection, $className);
+        return $this->classLikeAstResolver->resolveClassFromClassReflection($classReflection);
     }
     /**
      * @return Trait_[]
@@ -313,8 +315,7 @@ final class AstResolver
         if ($stmts === []) {
             return null;
         }
-        $smartFileInfo = new SmartFileInfo($fileName);
-        $file = new File($smartFileInfo, $smartFileInfo->getContents());
+        $file = new File($fileName, FileSystem::read($fileName));
         return $this->nodeScopeAndMetadataDecorator->decorateNodesFromFile($file, $stmts);
     }
     /**

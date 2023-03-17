@@ -5,15 +5,16 @@
  * Copyright (c) 2004 David Grudl (https://davidgrudl.com)
  */
 declare (strict_types=1);
-namespace RectorPrefix202208\Nette\Utils;
+namespace RectorPrefix202303\Nette\Utils;
 
-use RectorPrefix202208\Nette;
+use RectorPrefix202303\Nette;
 /**
  * Validation utilities.
  */
 class Validators
 {
     use Nette\StaticClass;
+    private const BuiltinTypes = ['string' => 1, 'int' => 1, 'float' => 1, 'bool' => 1, 'array' => 1, 'object' => 1, 'callable' => 1, 'iterable' => 1, 'void' => 1, 'null' => 1, 'mixed' => 1, 'false' => 1, 'never' => 1, 'true' => 1];
     /** @var array<string,?callable> */
     protected static $validators = [
         // PHP types
@@ -70,7 +71,7 @@ class Validators
     {
         if (!static::is($value, $expected)) {
             $expected = \str_replace(['|', ':'], [' or ', ' in range '], $expected);
-            static $translate = ['boolean' => 'bool', 'integer' => 'int', 'double' => 'float', 'NULL' => 'null'];
+            $translate = ['boolean' => 'bool', 'integer' => 'int', 'double' => 'float', 'NULL' => 'null'];
             $type = $translate[\gettype($value)] ?? \gettype($value);
             if (\is_int($value) || \is_float($value) || \is_string($value) && \strlen($value) < 40) {
                 $type .= ' ' . \var_export($value, \true);
@@ -307,5 +308,33 @@ XX
     public static function isPhpIdentifier(string $value) : bool
     {
         return \preg_match('#^[a-zA-Z_\\x7f-\\xff][a-zA-Z0-9_\\x7f-\\xff]*$#D', $value) === 1;
+    }
+    /**
+     * Determines if type is PHP built-in type. Otherwise, it is the class name.
+     */
+    public static function isBuiltinType(string $type) : bool
+    {
+        return isset(self::BuiltinTypes[\strtolower($type)]);
+    }
+    /**
+     * Determines if type is special class name self/parent/static.
+     */
+    public static function isClassKeyword(string $name) : bool
+    {
+        return (bool) \preg_match('#^(self|parent|static)$#Di', $name);
+    }
+    /**
+     * Checks whether the given type declaration is syntactically valid.
+     */
+    public static function isTypeDeclaration(string $type) : bool
+    {
+        return (bool) \preg_match(<<<'XX'
+		~(
+			\?? (?<type> \\? (?<name> [a-zA-Z_\x7f-\xff][\w\x7f-\xff]*) (\\ (?&name))* ) |
+			(?<intersection> (?&type) (& (?&type))+ ) |
+			(?<upart> (?&type) | \( (?&intersection) \) )  (\| (?&upart))+
+		)$~xAD
+XX
+, $type);
     }
 }

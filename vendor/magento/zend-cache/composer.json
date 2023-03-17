@@ -1,0 +1,29 @@
+{
+    "name": "magento/zend-cache",
+    "description": "Zend Framework 1 Cache package",
+    "type": "library",
+    "keywords": [
+        "framework", "zf1", "zend", "cache"
+    ],
+    "homepage": "http://framework.zend.com/",
+    "license": "BSD-3-Clause",
+    "require": {
+        "php": ">=7.0.0",
+        "magento/zend-exception": "^1.16",
+        "magento/zend-log": "^1.16"
+    },
+    "replace": {
+        "zf1/zend-cache": "^1.12",
+        "zfs1/zend-cache": "^1.12"
+    },
+    "autoload": {
+        "psr-0": {
+            "Zend_Cache": "library/"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "1.16.x-dev"
+        }
+    }
+}

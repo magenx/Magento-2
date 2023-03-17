@@ -3,7 +3,7 @@
 declare (strict_types=1);
 namespace Rector\Php74\Rector\LNumber;
 
-use RectorPrefix202208\Nette\Utils\Strings;
+use RectorPrefix202303\Nette\Utils\Strings;
 use PhpParser\Node;
 use PhpParser\Node\Scalar\DNumber;
 use PhpParser\Node\Scalar\LNumber;
@@ -15,7 +15,7 @@ use Rector\NodeTypeResolver\Node\AttributeKey;
 use Rector\VersionBonding\Contract\MinPhpVersionInterface;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
-use RectorPrefix202208\Webmozart\Assert\Assert;
+use RectorPrefix202303\Webmozart\Assert\Assert;
 /**
  * @changelog https://wiki.php.net/rfc/numeric_literal_separator
  * @changelog https://github.com/nikic/PHP-Parser/pull/615
@@ -105,7 +105,11 @@ CODE_SAMPLE
                 $literalSeparatedNumber .= '.0';
             }
         }
-        $node->value = $literalSeparatedNumber;
+        // this cannot be integer directly to $node->value, as PHPStan sees it as error type
+        // @see https://github.com/rectorphp/rector/issues/7454
+        $node->setAttribute(AttributeKey::RAW_VALUE, $literalSeparatedNumber);
+        $node->setAttribute(AttributeKey::REPRINT_RAW_VALUE, \true);
+        $node->setAttribute(AttributeKey::ORIGINAL_NODE, null);
         return $node;
     }
     public function provideMinPhpVersion() : int

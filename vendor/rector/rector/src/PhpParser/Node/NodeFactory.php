@@ -3,11 +3,13 @@
 declare (strict_types=1);
 namespace Rector\Core\PhpParser\Node;
 
+use PhpParser\Builder\Method;
+use PhpParser\Builder\Param as ParamBuilder;
+use PhpParser\Builder\Property as PropertyBuilder;
 use PhpParser\BuilderFactory;
 use PhpParser\BuilderHelpers;
 use PhpParser\Node;
 use PhpParser\Node\Arg;
-use PhpParser\Node\Const_;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\Array_;
 use PhpParser\Node\Expr\ArrayItem;
@@ -31,33 +33,22 @@ use PhpParser\Node\Param;
 use PhpParser\Node\Scalar;
 use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt\Class_;
-use PhpParser\Node\Stmt\ClassConst;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Property;
-use PhpParser\Node\Stmt\Return_;
-use PhpParser\Node\Stmt\Use_;
-use PhpParser\Node\Stmt\UseUse;
 use PHPStan\PhpDocParser\Ast\PhpDoc\GenericTagValueNode;
 use PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagNode;
-use PHPStan\Type\MixedType;
 use PHPStan\Type\Type;
 use Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfoFactory;
-use Rector\BetterPhpDocParser\PhpDocManipulator\PhpDocTypeChanger;
 use Rector\Core\Configuration\CurrentNodeProvider;
 use Rector\Core\Enum\ObjectReference;
 use Rector\Core\Exception\NotImplementedYetException;
 use Rector\Core\Exception\ShouldNotHappenException;
 use Rector\Core\NodeDecorator\PropertyTypeDecorator;
-use Rector\Core\Php\PhpVersionProvider;
 use Rector\Core\ValueObject\MethodName;
-use Rector\Core\ValueObject\PhpVersionFeature;
 use Rector\NodeTypeResolver\Node\AttributeKey;
 use Rector\PHPStanStaticTypeMapper\Enum\TypeKind;
 use Rector\PostRector\ValueObject\PropertyMetadata;
 use Rector\StaticTypeMapper\StaticTypeMapper;
-use RectorPrefix202208\Symplify\Astral\ValueObject\NodeBuilder\MethodBuilder;
-use RectorPrefix202208\Symplify\Astral\ValueObject\NodeBuilder\ParamBuilder;
-use RectorPrefix202208\Symplify\Astral\ValueObject\NodeBuilder\PropertyBuilder;
 /**
  * @see \Rector\Core\Tests\PhpParser\Node\NodeFactoryTest
  */
@@ -79,19 +70,9 @@ final class NodeFactory
     private $phpDocInfoFactory;
     /**
      * @readonly
-     * @var \Rector\Core\Php\PhpVersionProvider
-     */
-    private $phpVersionProvider;
-    /**
-     * @readonly
      * @var \Rector\StaticTypeMapper\StaticTypeMapper
      */
     private $staticTypeMapper;
-    /**
-     * @readonly
-     * @var \Rector\BetterPhpDocParser\PhpDocManipulator\PhpDocTypeChanger
-     */
-    private $phpDocTypeChanger;
     /**
      * @readonly
      * @var \Rector\Core\Configuration\CurrentNodeProvider
@@ -102,23 +83,13 @@ final class NodeFactory
      * @var \Rector\Core\NodeDecorator\PropertyTypeDecorator
      */
     private $propertyTypeDecorator;
-    public function __construct(BuilderFactory $builderFactory, PhpDocInfoFactory $phpDocInfoFactory, PhpVersionProvider $phpVersionProvider, StaticTypeMapper $staticTypeMapper, PhpDocTypeChanger $phpDocTypeChanger, CurrentNodeProvider $currentNodeProvider, PropertyTypeDecorator $propertyTypeDecorator)
+    public function __construct(BuilderFactory $builderFactory, PhpDocInfoFactory $phpDocInfoFactory, StaticTypeMapper $staticTypeMapper, CurrentNodeProvider $currentNodeProvider, PropertyTypeDecorator $propertyTypeDecorator)
     {
         $this->builderFactory = $builderFactory;
         $this->phpDocInfoFactory = $phpDocInfoFactory;
-        $this->phpVersionProvider = $phpVersionProvider;
         $this->staticTypeMapper = $staticTypeMapper;
-        $this->phpDocTypeChanger = $phpDocTypeChanger;
         $this->currentNodeProvider = $currentNodeProvider;
         $this->propertyTypeDecorator = $propertyTypeDecorator;
-    }
-    /**
-     * Creates "SomeClass::CONSTANT"
-     */
-    public function createShortClassConstFetch(string $shortClassName, string $constantName) : ClassConstFetch
-    {
-        $name = new Name($shortClassName);
-        return $this->createClassConstFetchFromName($name, $constantName);
     }
     /**
      * @param string|ObjectReference::* $className
@@ -188,20 +159,20 @@ final class NodeFactory
     }
     public function createPublicMethod(string $name) : ClassMethod
     {
-        $methodBuilder = new MethodBuilder($name);
-        $methodBuilder->makePublic();
-        return $methodBuilder->getNode();
+        $method = new Method($name);
+        $method->makePublic();
+        return $method->getNode();
     }
     public function createParamFromNameAndType(string $name, ?Type $type) : Param
     {
-        $paramBuilder = new ParamBuilder($name);
+        $param = new ParamBuilder($name);
         if ($type !== null) {
             $typeNode = $this->staticTypeMapper->mapPHPStanTypeToPhpParserNode($type, TypeKind::PARAM);
             if ($typeNode !== null) {
-                $paramBuilder->setType($typeNode);
+                $param->setType($typeNode);
             }
         }
-        return $paramBuilder->getNode();
+        return $param->getNode();
     }
     public function createPublicInjectPropertyFromNameAndType(string $name, ?Type $type) : Property
     {
@@ -223,6 +194,7 @@ final class NodeFactory
         return $property;
     }
     /**
+     * @api symfony
      * @param mixed[] $arguments
      */
     public function createLocalMethodCall(string $method, array $arguments = []) : MethodCall
@@ -254,6 +226,9 @@ final class NodeFactory
     {
         return new StaticCall(new Name(ObjectReference::PARENT), new Identifier(MethodName::CONSTRUCT), $this->createArgsFromParams($params));
     }
+    /**
+     * @api doctrine
+     */
     public function createPrivateProperty(string $name) : Property
     {
         $propertyBuilder = new PropertyBuilder($name);
@@ -261,34 +236,6 @@ final class NodeFactory
         $property = $propertyBuilder->getNode();
         $this->phpDocInfoFactory->createFromNode($property);
         return $property;
-    }
-    public function createGetterClassMethod(string $propertyName, Type $type) : ClassMethod
-    {
-        $methodBuilder = new MethodBuilder('get' . \ucfirst($propertyName));
-        $methodBuilder->makePublic();
-        $propertyFetch = new PropertyFetch(new Variable(self::THIS), $propertyName);
-        $return = new Return_($propertyFetch);
-        $methodBuilder->addStmt($return);
-        $typeNode = $this->staticTypeMapper->mapPHPStanTypeToPhpParserNode($type, TypeKind::RETURN);
-        if ($typeNode !== null) {
-            $methodBuilder->setReturnType($typeNode);
-        }
-        return $methodBuilder->getNode();
-    }
-    public function createSetterClassMethod(string $propertyName, Type $type) : ClassMethod
-    {
-        $methodBuilder = new MethodBuilder('set' . \ucfirst($propertyName));
-        $methodBuilder->makePublic();
-        $variable = new Variable($propertyName);
-        $param = $this->createParamWithType($variable, $type);
-        $methodBuilder->addParam($param);
-        $propertyFetch = new PropertyFetch(new Variable(self::THIS), $propertyName);
-        $assign = new Assign($propertyFetch, $variable);
-        $methodBuilder->addStmt($assign);
-        if ($this->phpVersionProvider->isAtLeastPhpVersion(PhpVersionFeature::VOID_TYPE)) {
-            $methodBuilder->setReturnType(new Name('void'));
-        }
-        return $methodBuilder->getNode();
     }
     /**
      * @param Expr[] $exprs
@@ -306,19 +253,6 @@ final class NodeFactory
             throw new ShouldNotHappenException();
         }
         return $previousConcat;
-    }
-    /**
-     * @param string[] $names
-     * @return Use_[]
-     */
-    public function createUsesFromNames(array $names) : array
-    {
-        $uses = [];
-        foreach ($names as $name) {
-            $useUse = new UseUse(new Name($name));
-            $uses[] = new Use_([$useUse]);
-        }
-        return $uses;
     }
     /**
      * @param string|ObjectReference::* $class
@@ -383,6 +317,7 @@ final class NodeFactory
         return new ConstFetch(new Name('true'));
     }
     /**
+     * @api phpunit
      * @param string|ObjectReference::* $constantName
      */
     public function createClassConstFetchFromName(Name $className, string $constantName) : ClassConstFetch
@@ -413,30 +348,13 @@ final class NodeFactory
         return $this->createBooleanAndFromNodes($newNodes);
     }
     /**
-     * @api
-     */
-    public function createClassConstant(string $name, Expr $expr, int $modifier) : ClassConst
-    {
-        $normalizedExpr = BuilderHelpers::normalizeValue($expr);
-        $const = new Const_($name, $normalizedExpr);
-        $classConst = new ClassConst([$const]);
-        $classConst->flags |= $modifier;
-        // add @var type by default
-        $staticType = $this->staticTypeMapper->mapPhpParserNodePHPStanType($expr);
-        if (!$staticType instanceof MixedType) {
-            $phpDocInfo = $this->phpDocInfoFactory->createFromNodeOrEmpty($classConst);
-            $this->phpDocTypeChanger->changeVarType($phpDocInfo, $staticType);
-        }
-        return $classConst;
-    }
-    /**
      * @param string|int|null $key
      * @param mixed $item
      */
     private function createArrayItem($item, $key = null) : ArrayItem
     {
         $arrayItem = null;
-        if ($item instanceof Variable || $item instanceof MethodCall || $item instanceof StaticCall || $item instanceof FuncCall || $item instanceof Concat || $item instanceof Scalar || $item instanceof Cast) {
+        if ($item instanceof Variable || $item instanceof MethodCall || $item instanceof StaticCall || $item instanceof FuncCall || $item instanceof Concat || $item instanceof Scalar || $item instanceof Cast || $item instanceof ConstFetch) {
             $arrayItem = new ArrayItem($item);
         } elseif ($item instanceof Identifier) {
             $string = new String_($item->toString());
@@ -483,12 +401,6 @@ final class NodeFactory
         }
         /** @var BooleanAnd $booleanAnd */
         return $booleanAnd;
-    }
-    private function createParamWithType(Variable $variable, Type $type) : Param
-    {
-        $param = new Param($variable);
-        $param->type = $this->staticTypeMapper->mapPHPStanTypeToPhpParserNode($type, TypeKind::PARAM);
-        return $param;
     }
     /**
      * @param string|ObjectReference::* $className

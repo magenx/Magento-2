@@ -1,7 +1,7 @@
 <?php
 
 declare (strict_types=1);
-namespace RectorPrefix202208;
+namespace RectorPrefix202303;
 
 use PHPStan\Type\ArrayType;
 use PHPStan\Type\BooleanType;
@@ -9,20 +9,17 @@ use PHPStan\Type\FloatType;
 use PHPStan\Type\IntegerType;
 use PHPStan\Type\IterableType;
 use PHPStan\Type\MixedType;
-use PHPStan\Type\NullType;
 use PHPStan\Type\ObjectWithoutClassType;
 use PHPStan\Type\StringType;
-use PHPStan\Type\UnionType;
 use Rector\Config\RectorConfig;
 use Rector\TypeDeclaration\Rector\ClassMethod\AddParamTypeDeclarationRector;
 use Rector\TypeDeclaration\ValueObject\AddParamTypeDeclaration;
-# see https://symfony.com/blog/symfony-type-declarations-return-types-and-phpunit-compatibility
+# @see https://symfony.com/blog/symfony-type-declarations-return-types-and-phpunit-compatibility
 return static function (RectorConfig $rectorConfig) : void {
     $arrayType = new ArrayType(new MixedType(), new MixedType());
     $iterableType = new IterableType(new MixedType(), new MixedType());
-    $nullableStringType = new UnionType([new StringType(), new NullType()]);
     $rectorConfig->ruleWithConfiguration(AddParamTypeDeclarationRector::class, [
-        // see https://github.com/symfony/symfony/issues/32179
+        // @see https://github.com/symfony/symfony/issues/32179
         new AddParamTypeDeclaration('Symfony\\Component\\EventDispatcher\\EventDispatcherInterface', 'addListener', 0, new StringType()),
         new AddParamTypeDeclaration('Symfony\\Component\\EventDispatcher\\EventDispatcherInterface', 'addListener', 2, new IntegerType()),
         new AddParamTypeDeclaration('Symfony\\Component\\EventDispatcher\\EventDispatcherInterface', 'removeListener', 0, new StringType()),
@@ -83,7 +80,7 @@ return static function (RectorConfig $rectorConfig) : void {
         new AddParamTypeDeclaration('Symfony\\Component\\Process\\Process', 'updateStatus', 0, new BooleanType()),
         new AddParamTypeDeclaration('Symfony\\Component\\EventDispatcher\\EventDispatcher', 'dispatch', 0, new ObjectWithoutClassType()),
         new AddParamTypeDeclaration('Symfony\\Contracts\\Translation\\TranslatorInterface', 'setLocale', 0, new StringType()),
-        new AddParamTypeDeclaration('Symfony\\Contracts\\Translation\\TranslatorInterface', 'trans', 0, $nullableStringType),
+        new AddParamTypeDeclaration('Symfony\\Contracts\\Translation\\TranslatorInterface', 'trans', 0, new StringType()),
         new AddParamTypeDeclaration('Symfony\\Contracts\\Translation\\TranslatorInterface', 'trans', 2, new StringType()),
         new AddParamTypeDeclaration('Symfony\\Contracts\\Translation\\TranslatorInterface', 'trans', 3, new StringType()),
         new AddParamTypeDeclaration('Symfony\\Component\\Form\\AbstractExtension', 'getType', 0, new StringType()),

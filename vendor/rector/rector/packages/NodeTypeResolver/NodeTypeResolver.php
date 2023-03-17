@@ -111,6 +111,7 @@ final class NodeTypeResolver
         }
     }
     /**
+     * @api doctrine symfony
      * @param ObjectType[] $requiredTypes
      */
     public function isObjectTypes(Node $node, array $requiredTypes) : bool
@@ -256,11 +257,8 @@ final class NodeTypeResolver
             return \false;
         }
         $bareType = TypeCombinator::removeNull($nodeType);
-        return \is_a($bareType, $desiredType, \true);
+        return $bareType instanceof $desiredType;
     }
-    /**
-     * @return class-string
-     */
     public function getFullyQualifiedClassName(TypeWithClassName $typeWithClassName) : string
     {
         if ($typeWithClassName instanceof ShortenedObjectType) {
@@ -310,7 +308,7 @@ final class NodeTypeResolver
     private function resolveByNodeTypeResolvers(Node $node) : ?Type
     {
         foreach ($this->nodeTypeResolvers as $nodeClass => $nodeTypeResolver) {
-            if (!\is_a($node, $nodeClass, \true)) {
+            if (!$node instanceof $nodeClass) {
                 continue;
             }
             return $nodeTypeResolver->resolve($node);

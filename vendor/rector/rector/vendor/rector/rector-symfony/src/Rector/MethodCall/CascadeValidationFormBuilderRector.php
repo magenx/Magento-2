@@ -150,15 +150,15 @@ CODE_SAMPLE
         $new = new New_(new FullyQualified('Symfony\\Component\\Validator\\Constraints\\Valid'));
         return new Array_([new ArrayItem($new)]);
     }
-    /**
-     * @return null|\PhpParser\Node\Expr\ArrayItem
-     */
-    private function refactorArrayItem(ArrayItem $arrayItem)
+    private function refactorArrayItem(ArrayItem $arrayItem) : ?\PhpParser\Node\Expr\ArrayItem
     {
         if (!$arrayItem->key instanceof Expr) {
             return null;
         }
-        if (!$this->valueResolver->isValue($arrayItem->key, 'cascade_validation')) {
+        if (!$arrayItem->key instanceof String_) {
+            return null;
+        }
+        if ($arrayItem->key->value !== 'cascade_validation') {
             return null;
         }
         if (!$this->valueResolver->isValue($arrayItem->value, \true)) {

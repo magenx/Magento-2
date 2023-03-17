@@ -12,15 +12,10 @@ use function is_array;
 
 class ValidatorChain extends EventManager
 {
-    /** @var StorageInterface */
-    protected $storage;
-
-    public function __construct(StorageInterface $storage)
+    public function __construct(protected StorageInterface $storage)
     {
         parent::__construct();
-
-        $this->storage = $storage;
-        $validators    = $storage->getMetadata('_VALID');
+        $validators = $storage->getMetadata('_VALID');
         if ($validators) {
             foreach ($validators as $validator => $data) {
                 $this->attachValidator('session.validate', [new $validator($data), 'isValid'], 1);
@@ -35,9 +30,9 @@ class ValidatorChain extends EventManager
      * @param int      $priority
      * @return callable
      */
-    public function attach($eventName, callable $callback, $priority = 1)
+    public function attach($eventName, callable $listener, $priority = 1)
     {
-        return $this->attachValidator($eventName, $callback, $priority);
+        return $this->attachValidator($eventName, $listener, $priority);
     }
 
     /**

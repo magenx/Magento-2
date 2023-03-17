@@ -1,0 +1,22 @@
+{
+    "name": "magento/module-admin-adobe-ims-two-factor-auth",
+    "description": "This module is used to add Admin Adobe Ims and Two Factor Auth dependency.",
+    "type": "magento2-module",
+    "license": "OSL-3.0",
+    "version": "1.0.0",
+    "require": {
+        "php": "~8.1.0||~8.2.0",
+        "magento/framework": "*",
+        "magento/module-admin-adobe-ims": "100.5.*",
+        "magento/module-two-factor-auth": "*"
+    },
+    "autoload": {
+        "files": [
+            "registration.php"
+        ],
+        "psr-4": {
+            "Magento\\AdminAdobeImsTwoFactorAuth\\": ""
+        }
+    }
+}
+

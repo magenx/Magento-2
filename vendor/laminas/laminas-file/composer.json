@@ -1,0 +1,68 @@
+{
+    "name": "laminas/laminas-file",
+    "description": "Locate PHP classfiles",
+    "license": "BSD-3-Clause",
+    "keywords": [
+        "laminas",
+        "file"
+    ],
+    "homepage": "https://laminas.dev",
+    "support": {
+        "docs": "https://docs.laminas.dev/laminas-file/",
+        "issues": "https://github.com/laminas/laminas-file/issues",
+        "source": "https://github.com/laminas/laminas-file",
+        "rss": "https://github.com/laminas/laminas-file/releases.atom",
+        "chat": "https://laminas.dev/chat",
+        "forum": "https://discourse.laminas.dev"
+    },
+    "config": {
+        "sort-packages": true,
+        "platform": {
+            "php": "8.0.99"
+        }
+    },
+    "require": {
+        "php": "~8.0.0 || ~8.1.0 || ~8.2.0",
+        "laminas/laminas-stdlib": "^2.7.7 || ^3.15.0"
+    },
+    "require-dev": {
+        "laminas/laminas-coding-standard": "~1.0.0",
+        "laminas/laminas-filter": "^2.7.2",
+        "laminas/laminas-i18n": "^2.7.4",
+        "laminas/laminas-progressbar": "^2.5.2",
+        "laminas/laminas-servicemanager": "^2.7.8 || ^3.3",
+        "laminas/laminas-session": "^2.8",
+        "laminas/laminas-validator": "^2.10.1",
+        "phpunit/phpunit": "^9.5.10"
+    },
+    "suggest": {
+        "laminas/laminas-filter": "Laminas\\Filter component",
+        "laminas/laminas-i18n": "Laminas\\I18n component",
+        "laminas/laminas-validator": "Laminas\\Validator component"
+    },
+    "autoload": {
+        "psr-4": {
+            "Laminas\\File\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "LaminasTest\\File\\": "test/"
+        }
+    },
+    "scripts": {
+        "check": [
+            "@cs-check",
+            "@test"
+        ],
+        "cs-check": "phpcs",
+        "cs-fix": "phpcbf",
+        "test": "phpunit --colors=always --testsuite \"unit test\"",
+        "test-coverage": "phpunit --colors=always --coverage-clover clover.xml",
+        "test-integration": "phpunit --colors=always --testsuite \"integration test\"",
+        "upload-coverage": "coveralls -v"
+    },
+    "conflict": {
+        "zendframework/zend-file": "*"
+    }
+}

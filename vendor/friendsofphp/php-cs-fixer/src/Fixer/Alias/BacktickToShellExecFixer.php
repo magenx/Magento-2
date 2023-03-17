@@ -63,7 +63,7 @@ EOT
      */
     public function getPriority(): int
     {
-        return 2;
+        return 17;
     }
 
     /**
@@ -102,7 +102,7 @@ EOT
      */
     private function fixBackticks(Tokens $tokens, array $backtickTokens): void
     {
-        // Track indexes for final override
+        // Track indices for final override
         ksort($backtickTokens);
         $openingBacktickIndex = key($backtickTokens);
         end($backtickTokens);

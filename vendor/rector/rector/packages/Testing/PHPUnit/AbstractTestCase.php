@@ -4,10 +4,10 @@ declare (strict_types=1);
 namespace Rector\Testing\PHPUnit;
 
 use PHPUnit\Framework\TestCase;
-use RectorPrefix202208\Psr\Container\ContainerInterface;
+use RectorPrefix202303\Psr\Container\ContainerInterface;
 use Rector\Core\Exception\ShouldNotHappenException;
 use Rector\Core\Kernel\RectorKernel;
-use RectorPrefix202208\Webmozart\Assert\Assert;
+use RectorPrefix202303\Webmozart\Assert\Assert;
 abstract class AbstractTestCase extends TestCase
 {
     /**
@@ -33,9 +33,9 @@ abstract class AbstractTestCase extends TestCase
             self::$currentContainer = $rectorKernel->getContainer();
         } else {
             $rectorKernel = new RectorKernel();
-            $container = $rectorKernel->createFromConfigs($configFiles);
+            $containerBuilder = $rectorKernel->createFromConfigs($configFiles);
             self::$kernelsByHash[$configsHash] = $rectorKernel;
-            self::$currentContainer = $container;
+            self::$currentContainer = $containerBuilder;
         }
     }
     /**
@@ -48,7 +48,7 @@ abstract class AbstractTestCase extends TestCase
     protected function getService(string $type) : object
     {
         if (self::$currentContainer === null) {
-            throw new ShouldNotHappenException('First, create container with "bootWithConfigFileInfos([...])"');
+            throw new ShouldNotHappenException('First, create container with "boot()" or "bootWithConfigFileInfos([...])"');
         }
         $object = self::$currentContainer->get($type);
         if ($object === null) {

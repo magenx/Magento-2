@@ -8,10 +8,10 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202208\Symfony\Contracts\Service;
+namespace RectorPrefix202303\Symfony\Contracts\Service;
 
-use RectorPrefix202208\Psr\Container\ContainerExceptionInterface;
-use RectorPrefix202208\Psr\Container\NotFoundExceptionInterface;
+use RectorPrefix202303\Psr\Container\ContainerExceptionInterface;
+use RectorPrefix202303\Psr\Container\NotFoundExceptionInterface;
 // Help opcache.preload discover always-needed symbols
 \class_exists(ContainerExceptionInterface::class);
 \class_exists(NotFoundExceptionInterface::class);
@@ -42,15 +42,11 @@ trait ServiceLocatorTrait
     {
         $this->factories = $factories;
     }
-    /**
-     * {@inheritdoc}
-     */
     public function has(string $id) : bool
     {
         return isset($this->factories[$id]);
     }
     /**
-     * {@inheritdoc}
      * @return mixed
      */
     public function get(string $id)
@@ -71,9 +67,6 @@ trait ServiceLocatorTrait
             unset($this->loading[$id]);
         }
     }
-    /**
-     * {@inheritdoc}
-     */
     public function getProvidedServices() : array
     {
         if (!isset($this->providedTypes)) {

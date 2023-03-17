@@ -5,6 +5,9 @@
  */
 namespace PayPal\Braintree\Gateway\Data\Order;
 
+use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Sales\Api\Data\OrderExtensionInterface;
+use Magento\Sales\Api\Data\OrderItemInterface;
 use PayPal\Braintree\Gateway\Data\AddressAdapterInterface;
 use Magento\Payment\Gateway\Data\OrderAdapterInterface;
 use Magento\Quote\Api\CartRepositoryInterface;
@@ -15,20 +18,21 @@ class OrderAdapter implements OrderAdapterInterface
     /**
      * @var Order
      */
-    private $order;
+    private Order $order;
 
     /**
      * @var CartRepositoryInterface
      */
-    private $quoteRepository;
+    private CartRepositoryInterface $quoteRepository;
 
     /**
      * @var AddressAdapterFactory
      */
-    private $addressAdapterFactory;
+    private AddressAdapterFactory $addressAdapterFactory;
 
     /**
      * OrderAdapter constructor.
+     *
      * @param Order $order
      * @param CartRepositoryInterface $quoteRepository
      * @param AddressAdapterFactory $addressAdapterFactory
@@ -48,7 +52,7 @@ class OrderAdapter implements OrderAdapterInterface
      *
      * @return string
      */
-    public function getCurrencyCode()
+    public function getCurrencyCode(): string
     {
         return $this->order->getBaseCurrencyCode();
     }
@@ -58,7 +62,7 @@ class OrderAdapter implements OrderAdapterInterface
      *
      * @return string
      */
-    public function getOrderIncrementId()
+    public function getOrderIncrementId(): string
     {
         return $this->order->getIncrementId();
     }
@@ -67,9 +71,9 @@ class OrderAdapter implements OrderAdapterInterface
      * Check whether order is multi shipping
      *
      * @return bool
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @throws NoSuchEntityException
      */
-    public function isMultiShipping()
+    public function isMultiShipping(): bool
     {
         $quoteId = $this->order->getQuoteId();
         if (!$quoteId) {
@@ -85,7 +89,7 @@ class OrderAdapter implements OrderAdapterInterface
      *
      * @return int|null
      */
-    public function getCustomerId()
+    public function getCustomerId(): ?int
     {
         return $this->order->getCustomerId();
     }
@@ -95,7 +99,7 @@ class OrderAdapter implements OrderAdapterInterface
      *
      * @return AddressAdapterInterface|null
      */
-    public function getBillingAddress()
+    public function getBillingAddress(): ?AddressAdapterInterface
     {
         if ($this->order->getBillingAddress()) {
             return $this->addressAdapterFactory->create(
@@ -111,7 +115,7 @@ class OrderAdapter implements OrderAdapterInterface
      *
      * @return int
      */
-    public function getStoreId()
+    public function getStoreId(): int
     {
         return $this->order->getStoreId();
     }
@@ -121,7 +125,7 @@ class OrderAdapter implements OrderAdapterInterface
      *
      * @return AddressAdapterInterface|null
      */
-    public function getShippingAddress()
+    public function getShippingAddress(): ?AddressAdapterInterface
     {
         if ($this->order->getShippingAddress()) {
             return $this->addressAdapterFactory->create(
@@ -137,7 +141,7 @@ class OrderAdapter implements OrderAdapterInterface
      *
      * @return int
      */
-    public function getId()
+    public function getId(): int
     {
         return $this->order->getEntityId();
     }
@@ -147,7 +151,7 @@ class OrderAdapter implements OrderAdapterInterface
      *
      * @return float|null
      */
-    public function getGrandTotalAmount()
+    public function getGrandTotalAmount(): ?float
     {
         return $this->order->getBaseGrandTotal();
     }
@@ -157,7 +161,7 @@ class OrderAdapter implements OrderAdapterInterface
      *
      * @return float|null
      */
-    public function getBaseDiscountAmount()
+    public function getBaseDiscountAmount(): ?float
     {
         return $this->order->getBaseDiscountAmount();
     }
@@ -167,7 +171,7 @@ class OrderAdapter implements OrderAdapterInterface
      *
      * @return string|null Remote IP address.
      */
-    public function getRemoteIp()
+    public function getRemoteIp(): ?string
     {
         return $this->order->getRemoteIp();
     }
@@ -177,7 +181,7 @@ class OrderAdapter implements OrderAdapterInterface
      *
      * @return float|null
      */
-    public function getBaseTaxAmount()
+    public function getBaseTaxAmount(): ?float
     {
         return $this->order->getBaseTaxAmount();
     }
@@ -185,10 +189,30 @@ class OrderAdapter implements OrderAdapterInterface
     /**
      * Returns list of line items in the cart
      *
-     * @return \Magento\Sales\Api\Data\OrderItemInterface[]
+     * @return OrderItemInterface[]
      */
-    public function getItems()
+    public function getItems(): array
     {
         return $this->order->getItems();
+    }
+
+    /**
+     * Retrieve existing extension attributes object
+     *
+     * @return OrderExtensionInterface|null
+     */
+    public function getExtensionAttributes(): ?OrderExtensionInterface
+    {
+        return $this->order->getExtensionAttributes();
+    }
+
+    /**
+     * Return quote_id
+     *
+     * @return int|null
+     */
+    public function getQuoteId(): ?int
+    {
+        return $this->order->getQuoteId();
     }
 }

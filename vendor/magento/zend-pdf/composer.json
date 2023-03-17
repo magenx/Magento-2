@@ -1,0 +1,34 @@
+{
+    "name": "magento/zend-pdf",
+    "description": "Zend Framework 1 Pdf package",
+    "type": "library",
+    "keywords": [
+        "framework", "zf1", "zend", "pdf"
+    ],
+    "homepage": "http://framework.zend.com/",
+    "license": "BSD-3-Clause",
+    "require": {
+        "php": ">=7.0.0",
+        "ext-ctype": "*",
+        "ext-gd": "*",
+        "ext-iconv": "*",
+        "ext-zlib": "*",
+        "magento/zend-exception": "^1.16",
+        "magento/zend-log": "^1.16",
+        "magento/zend-memory": "^1.16"
+    },
+    "replace": {
+        "zf1/zend-pdf": "^1.12",
+        "zfs1/zend-pdf": "^1.12"
+    },
+    "autoload": {
+        "psr-0": {
+            "Zend_Pdf": "library/"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "1.16.x-dev"
+        }
+    }
+}

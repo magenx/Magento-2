@@ -3,6 +3,7 @@
 declare (strict_types=1);
 namespace Rector\Core\Application\FileProcessor;
 
+use RectorPrefix202303\Nette\Utils\Strings;
 use PHPStan\AnalysedCodeException;
 use Rector\ChangesReporting\ValueObjectFactory\ErrorFactory;
 use Rector\Core\Application\FileDecorator\FileDiffFileDecorator;
@@ -11,6 +12,7 @@ use Rector\Core\Application\FileSystem\RemovedAndAddedFilesCollector;
 use Rector\Core\Contract\Console\OutputStyleInterface;
 use Rector\Core\Contract\Processor\FileProcessorInterface;
 use Rector\Core\Exception\ShouldNotHappenException;
+use Rector\Core\FileSystem\FilePathHelper;
 use Rector\Core\PhpParser\Printer\FormatPerservingPrinter;
 use Rector\Core\Provider\CurrentFileProvider;
 use Rector\Core\ValueObject\Application\File;
@@ -23,6 +25,11 @@ use Rector\Testing\PHPUnit\StaticPHPUnitEnvironment;
 use Throwable;
 final class PhpFileProcessor implements FileProcessorInterface
 {
+    /**
+     * @var string
+     * @see https://regex101.com/r/xP2MGa/1
+     */
+    private const OPEN_TAG_SPACED_REGEX = '#^(?<open_tag_spaced>[^\\S\\r\\n]+\\<\\?php)#m';
     /**
      * @readonly
      * @var \Rector\Core\PhpParser\Printer\FormatPerservingPrinter
@@ -63,7 +70,12 @@ final class PhpFileProcessor implements FileProcessorInterface
      * @var \Rector\ChangesReporting\ValueObjectFactory\ErrorFactory
      */
     private $errorFactory;
-    public function __construct(FormatPerservingPrinter $formatPerservingPrinter, FileProcessor $fileProcessor, RemovedAndAddedFilesCollector $removedAndAddedFilesCollector, OutputStyleInterface $rectorOutputStyle, FileDiffFileDecorator $fileDiffFileDecorator, CurrentFileProvider $currentFileProvider, PostFileProcessor $postFileProcessor, ErrorFactory $errorFactory)
+    /**
+     * @readonly
+     * @var \Rector\Core\FileSystem\FilePathHelper
+     */
+    private $filePathHelper;
+    public function __construct(FormatPerservingPrinter $formatPerservingPrinter, FileProcessor $fileProcessor, RemovedAndAddedFilesCollector $removedAndAddedFilesCollector, OutputStyleInterface $rectorOutputStyle, FileDiffFileDecorator $fileDiffFileDecorator, CurrentFileProvider $currentFileProvider, PostFileProcessor $postFileProcessor, ErrorFactory $errorFactory, FilePathHelper $filePathHelper)
     {
         $this->formatPerservingPrinter = $formatPerservingPrinter;
         $this->fileProcessor = $fileProcessor;
@@ -73,6 +85,7 @@ final class PhpFileProcessor implements FileProcessorInterface
         $this->currentFileProvider = $currentFileProvider;
         $this->postFileProcessor = $postFileProcessor;
         $this->errorFactory = $errorFactory;
+        $this->filePathHelper = $filePathHelper;
     }
     /**
      * @return array{system_errors: SystemError[], file_diffs: FileDiff[]}
@@ -90,13 +103,12 @@ final class PhpFileProcessor implements FileProcessorInterface
         // 2. change nodes with Rectors
         do {
             $file->changeHasChanged(\false);
-            $this->refactorNodesWithRectors($file, $configuration);
+            $this->fileProcessor->refactor($file, $configuration);
             // 3. apply post rectors
             $newStmts = $this->postFileProcessor->traverse($file->getNewStmts());
             // this is needed for new tokens added in "afterTraverse()"
             $file->changeNewStmts($newStmts);
             // 4. print to file or string
-            $this->currentFileProvider->setFile($file);
             // important to detect if file has changed
             $this->printFile($file, $configuration);
         } while ($file->hasChanged());
@@ -110,8 +122,8 @@ final class PhpFileProcessor implements FileProcessorInterface
     }
     public function supports(File $file, Configuration $configuration) : bool
     {
-        $smartFileInfo = $file->getSmartFileInfo();
-        return $smartFileInfo->hasSuffixes($configuration->getFileExtensions());
+        $filePathExtension = \pathinfo($file->getFilePath(), \PATHINFO_EXTENSION);
+        return \in_array($filePathExtension, $configuration->getFileExtensions(), \true);
     }
     /**
      * @return string[]
@@ -119,11 +131,6 @@ final class PhpFileProcessor implements FileProcessorInterface
     public function getSupportedFileExtensions() : array
     {
         return ['php'];
-    }
-    private function refactorNodesWithRectors(File $file, Configuration $configuration) : void
-    {
-        $this->currentFileProvider->setFile($file);
-        $this->fileProcessor->refactor($file, $configuration);
     }
     /**
      * @return SystemError[]
@@ -141,25 +148,53 @@ final class PhpFileProcessor implements FileProcessorInterface
             if (StaticPHPUnitEnvironment::isPHPUnitRun()) {
                 throw $analysedCodeException;
             }
-            $autoloadSystemError = $this->errorFactory->createAutoloadError($analysedCodeException, $file->getSmartFileInfo());
+            $autoloadSystemError = $this->errorFactory->createAutoloadError($analysedCodeException, $file->getFilePath());
             return [$autoloadSystemError];
         } catch (Throwable $throwable) {
             if ($this->rectorOutputStyle->isVerbose() || StaticPHPUnitEnvironment::isPHPUnitRun()) {
                 throw $throwable;
             }
-            $systemError = new SystemError($throwable->getMessage(), $file->getRelativeFilePath(), $throwable->getLine());
+            $relativeFilePath = $this->filePathHelper->relativePath($file->getFilePath());
+            $systemError = new SystemError($throwable->getMessage(), $relativeFilePath, $throwable->getLine());
             return [$systemError];
         }
         return [];
     }
     private function printFile(File $file, Configuration $configuration) : void
     {
-        $smartFileInfo = $file->getSmartFileInfo();
-        if ($this->removedAndAddedFilesCollector->isFileRemoved($smartFileInfo)) {
+        $filePath = $file->getFilePath();
+        if ($this->removedAndAddedFilesCollector->isFileRemoved($filePath)) {
             // skip, because this file exists no more
             return;
         }
-        $newContent = $configuration->isDryRun() ? $this->formatPerservingPrinter->printParsedStmstAndTokensToString($file) : $this->formatPerservingPrinter->printParsedStmstAndTokens($file);
+        // only save to string first, no need to print to file when not needed
+        $newContent = $this->formatPerservingPrinter->printParsedStmstAndTokensToString($file);
+        /**
+         * When no diff applied, the PostRector may still change the content, that's why printing still needed
+         * On printing, the space may be wiped, these below check compare with original file content used to verify
+         * that no change actually needed
+         */
+        if (!$file->getFileDiff() instanceof FileDiff) {
+            /**
+             * Handle new line or space before <?php or InlineHTML node wiped on print format preserving
+             * On very first content level
+             */
+            $originalFileContent = $file->getOriginalFileContent();
+            $ltrimOriginalFileContent = \ltrim($originalFileContent);
+            if ($ltrimOriginalFileContent === $newContent) {
+                return;
+            }
+            /**
+             * Handle space before <?php wiped on print format preserving
+             * On inside content level
+             */
+            if (Strings::replace($ltrimOriginalFileContent, self::OPEN_TAG_SPACED_REGEX, '<?php') === $newContent) {
+                return;
+            }
+        }
+        if (!$configuration->isDryRun()) {
+            $this->formatPerservingPrinter->dumpFile($file->getFilePath(), $newContent);
+        }
         $file->changeFileContent($newContent);
         $this->fileDiffFileDecorator->decorate([$file]);
     }
@@ -168,8 +203,7 @@ final class PhpFileProcessor implements FileProcessorInterface
         if (!$this->rectorOutputStyle->isVerbose()) {
             return;
         }
-        $smartFileInfo = $file->getSmartFileInfo();
-        $message = $smartFileInfo->getRelativeFilePathFromDirectory(\getcwd());
-        $this->rectorOutputStyle->writeln($message);
+        $relativeFilePath = $this->filePathHelper->relativePath($file->getFilePath());
+        $this->rectorOutputStyle->writeln($relativeFilePath);
     }
 }

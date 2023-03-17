@@ -43,8 +43,11 @@ define(
             /**
              * @param token
              * @param currency
+             * @param env
+             * @param local
+             * @param lineItems
              */
-            init: function (token, currency, env, local) {
+            init: function (token, currency, env, local, lineItems) {
                 if ($('.action-braintree-paypal-message').length) {
                     $('.product-add-form form').on('keyup change paste', 'input, select, textarea', function () {
                         var currentPrice, currencySymbol;
@@ -63,7 +66,7 @@ define(
                 });
 
                 if (buttonIds.length > 0) {
-                    this.loadSDK(token, currency, env, local);
+                    this.loadSDK(token, currency, env, local, lineItems);
                 }
             },
 
@@ -71,8 +74,11 @@ define(
              * Load Braintree PayPal SDK
              * @param token
              * @param currency
+             * @param env
+             * @param local
+             * @param lineItems
              */
-            loadSDK: function (token, currency, env, local) {
+            loadSDK: function (token, currency, env, local, lineItems) {
                 braintree.create({
                     authorization: token
                 }, function (clientErr, clientInstance) {
@@ -92,7 +98,7 @@ define(
                         client: clientInstance
                     }, function (err, paypalCheckoutInstance) {
                         if (typeof paypal !== 'undefined' ) {
-                            this.renderPayPalButtons(buttonIds, paypalCheckoutInstance);
+                            this.renderPayPalButtons(buttonIds, paypalCheckoutInstance, lineItems);
                             this.renderPayPalMessages();
                         } else {
                             var configSDK = {
@@ -100,11 +106,11 @@ define(
                                 "enable-funding": "paylater",
                                 currency: currency
                             };
-                            if (env == 'sandbox' && local != '') {
+                            if (env === 'sandbox' && local !== '') {
                                 configSDK["buyer-country"] = local;
                             }
                             paypalCheckoutInstance.loadPayPalSDK(configSDK, function () {
-                                this.renderPayPalButtons(buttonIds, paypalCheckoutInstance);
+                                this.renderPayPalButtons(buttonIds, paypalCheckoutInstance, lineItems);
                                 this.renderPayPalMessages();
                             }.bind(this));
                         }
@@ -117,10 +123,11 @@ define(
              *
              * @param ids
              * @param paypalCheckoutInstance
+             * @param lineItems
              */
-            renderPayPalButtons: function (ids, paypalCheckoutInstance) {
+            renderPayPalButtons: function (ids, paypalCheckoutInstance, lineItems) {
                 _.each(ids, function (id) {
-                    this.payPalButton(id, paypalCheckoutInstance);
+                    this.payPalButton(id, paypalCheckoutInstance, lineItems);
                 }.bind(this));
             },
 
@@ -151,15 +158,14 @@ define(
             /**
              * @param id
              * @param paypalCheckoutInstance
+             * @param lineItems
              */
-            payPalButton: function (id, paypalCheckoutInstance) {
+            payPalButton: function (id, paypalCheckoutInstance, lineItems) {
                 let data = $('#' + id);
                 let style = {
                     color: data.data('color'),
                     shape: data.data('shape'),
                     size: data.data('size'),
-                    layout: data.data('layout'),
-                    tagline: data.data('tagline'),
                     label: data.data('label')
                 };
 
@@ -179,7 +185,8 @@ define(
                             currency: data.data('currency'),
                             flow: 'checkout',
                             enableShippingAddress: true,
-                            displayName: data.data('displayname')
+                            displayName: data.data('displayname'),
+                            lineItems: $.parseJSON(lineItems)
                         });
                     },
                     validate: function (actions) {

@@ -32,6 +32,7 @@ use PhpCsFixer\StdinFileInfo;
 use PhpCsFixer\Tokenizer\Tokens;
 use PhpCsFixer\Utils;
 use PhpCsFixer\WordMatcher;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Formatter\OutputFormatter;
 use Symfony\Component\Console\Input\InputArgument;
@@ -44,6 +45,7 @@ use Symfony\Component\Console\Output\OutputInterface;
  *
  * @internal
  */
+#[AsCommand(name: 'describe')]
 final class DescribeCommand extends Command
 {
     /**
@@ -56,10 +58,7 @@ final class DescribeCommand extends Command
      */
     private $setNames;
 
-    /**
-     * @var FixerFactory
-     */
-    private $fixerFactory;
+    private FixerFactory $fixerFactory;
 
     /**
      * @var array<string, FixerInterface>
@@ -101,7 +100,6 @@ final class DescribeCommand extends Command
         if (OutputInterface::VERBOSITY_VERBOSE <= $output->getVerbosity() && $output instanceof ConsoleOutputInterface) {
             $stdErr = $output->getErrorOutput();
             $stdErr->writeln($this->getApplication()->getLongVersion());
-            $stdErr->writeln(sprintf('Runtime: <info>PHP %s</info>', PHP_VERSION));
         }
 
         $name = $input->getArgument('name');
@@ -198,19 +196,15 @@ final class DescribeCommand extends Command
 
                 if (null === $allowed) {
                     $allowed = array_map(
-                        static function (string $type): string {
-                            return '<comment>'.$type.'</comment>';
-                        },
-                        $option->getAllowedTypes()
+                        static fn (string $type): string => '<comment>'.$type.'</comment>',
+                        $option->getAllowedTypes(),
                     );
                 } else {
-                    foreach ($allowed as &$value) {
-                        if ($value instanceof AllowedValueSubset) {
-                            $value = 'a subset of <comment>'.HelpCommand::toString($value->getAllowedValues()).'</comment>';
-                        } else {
-                            $value = '<comment>'.HelpCommand::toString($value).'</comment>';
-                        }
-                    }
+                    $allowed = array_map(static function ($value): string {
+                        return $value instanceof AllowedValueSubset
+                            ? 'a subset of <comment>'.HelpCommand::toString($value->getAllowedValues()).'</comment>'
+                            : '<comment>'.HelpCommand::toString($value).'</comment>';
+                    }, $allowed);
                 }
 
                 $line .= ' ('.implode(', ', $allowed).')';

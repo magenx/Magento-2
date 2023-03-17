@@ -3,8 +3,8 @@
 declare (strict_types=1);
 namespace Rector\Naming\ExpectedNameResolver;
 
-use RectorPrefix202208\Doctrine\Inflector\Inflector;
-use RectorPrefix202208\Nette\Utils\Strings;
+use RectorPrefix202303\Doctrine\Inflector\Inflector;
+use RectorPrefix202303\Nette\Utils\Strings;
 use Rector\Core\Util\StringUtils;
 /**
  * @see \Rector\Core\Tests\Naming\ExpectedNameResolver\InflectorSingularResolverTest
@@ -28,10 +28,6 @@ final class InflectorSingularResolver
     /**
      * @var string
      */
-    private const SINGLE = 'single';
-    /**
-     * @var string
-     */
     private const CAMELCASE = 'camelcase';
     /**
      * @readonly
@@ -52,16 +48,9 @@ final class InflectorSingularResolver
         if ($resolvedValue !== null) {
             return $resolvedValue;
         }
-        if (\strncmp($currentName, self::SINGLE, \strlen(self::SINGLE)) === 0) {
-            return $currentName;
-        }
         $singularValueVarName = $this->singularizeCamelParts($currentName);
         if (\in_array($singularValueVarName, ['', '_'], \true)) {
             return $currentName;
-        }
-        $singularValueVarName = $singularValueVarName === $currentName ? self::SINGLE . \ucfirst($singularValueVarName) : $singularValueVarName;
-        if (\strncmp($singularValueVarName, self::SINGLE, \strlen(self::SINGLE)) !== 0) {
-            return $singularValueVarName;
         }
         $length = \strlen($singularValueVarName);
         if ($length < 40) {
@@ -69,10 +58,7 @@ final class InflectorSingularResolver
         }
         return $currentName;
     }
-    /**
-     * @return string|null
-     */
-    private function resolveSingularizeMap(string $currentName)
+    private function resolveSingularizeMap(string $currentName) : ?string
     {
         foreach (self::SINGULARIZE_MAP as $plural => $singular) {
             if ($currentName === $plural) {

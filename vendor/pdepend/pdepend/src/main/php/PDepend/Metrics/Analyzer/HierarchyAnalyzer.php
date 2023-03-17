@@ -146,14 +146,12 @@ class HierarchyAnalyzer extends AbstractAnalyzer implements AnalyzerFilterAware,
      * )
      * </code>
      *
-     * @var array<string, array>
+     * @var array<string, array<string, int>>
      */
     private $nodeMetrics = null;
 
     /**
      * Processes all {@link ASTNamespace} code nodes.
-     *
-     * @param ASTNamespace[] $namespaces
      *
      * @return void
      */

@@ -1,0 +1,28 @@
+{
+    "name": "magento/zend-log",
+    "description": "Zend Framework 1 Log package",
+    "type": "library",
+    "keywords": [
+        "framework", "zf1", "zend", "log"
+    ],
+    "homepage": "http://framework.zend.com/",
+    "license": "BSD-3-Clause",
+    "require": {
+        "php": ">=7.0.0",
+        "magento/zend-exception": "^1.16"
+    },
+    "replace": {
+        "zf1/zend-log": "^1.12",
+        "zfs1/zend-log": "^1.12"
+    },
+    "autoload": {
+        "psr-0": {
+            "Zend_Log": "library/"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "1.16.x-dev"
+        }
+    }
+}

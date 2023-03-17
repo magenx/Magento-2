@@ -3,7 +3,7 @@
 declare (strict_types=1);
 namespace Rector\Php55;
 
-use RectorPrefix202208\Nette\Utils\Strings;
+use RectorPrefix202303\Nette\Utils\Strings;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\BinaryOp\Concat;
 use PhpParser\Node\Scalar\String_;
@@ -20,6 +20,11 @@ final class RegexMatcher
      * @see https://regex101.com/r/2NWVwT/1
      */
     private const LETTER_SUFFIX_REGEX = '#(?<modifiers>\\w+)$#';
+    /**
+     * @var string[]
+     * @see https://www.php.net/manual/en/reference.pcre.pattern.modifiers.php
+     */
+    private const ALL_MODIFIERS_VALUES = ['i', 'm', 's', 'x', 'e', 'A', 'D', 'S', 'U', 'X', 'J', 'u'];
     /**
      * @readonly
      * @var \Rector\Core\PhpParser\Node\Value\ValueResolver
@@ -40,8 +45,25 @@ final class RegexMatcher
                 return null;
             }
             $delimiter = $pattern[0];
+            switch ($delimiter) {
+                case '(':
+                    $delimiter = ')';
+                    break;
+                case '{':
+                    $delimiter = '}';
+                    break;
+                case '[':
+                    $delimiter = ']';
+                    break;
+                case '<':
+                    $delimiter = '>';
+                    break;
+                default:
+                    $delimiter = $delimiter;
+                    break;
+            }
             /** @var string $modifiers */
-            $modifiers = Strings::after($pattern, $delimiter, -1);
+            $modifiers = $this->resolveModifiers((string) Strings::after($pattern, $delimiter, -1));
             if (\strpos($modifiers, 'e') === \false) {
                 return null;
             }
@@ -53,9 +75,21 @@ final class RegexMatcher
         }
         return null;
     }
+    private function resolveModifiers(string $modifiersCandidate) : string
+    {
+        $modifiers = '';
+        for ($modifierIndex = 0; $modifierIndex < \strlen($modifiersCandidate); ++$modifierIndex) {
+            if (!\in_array($modifiersCandidate[$modifierIndex], self::ALL_MODIFIERS_VALUES, \true)) {
+                $modifiers = '';
+                continue;
+            }
+            $modifiers .= $modifiersCandidate[$modifierIndex];
+        }
+        return $modifiers;
+    }
     private function createPatternWithoutE(string $pattern, string $delimiter, string $modifiers) : string
     {
-        $modifiersWithoutE = Strings::replace($modifiers, '#e#', '');
+        $modifiersWithoutE = Strings::replace($modifiers, '#e#');
         return Strings::before($pattern, $delimiter, -1) . $delimiter . $modifiersWithoutE;
     }
     private function matchConcat(Concat $concat) : ?Concat

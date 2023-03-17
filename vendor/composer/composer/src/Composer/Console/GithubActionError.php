@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 /*
  * This file is part of Composer.
@@ -27,14 +27,7 @@ final class GithubActionError
         $this->io = $io;
     }
 
-    /**
-     * @param string      $message
-     * @param null|string $file
-     * @param null|int    $line
-     *
-     * @return void
-     */
-    public function emit($message, $file = null, $line = null)
+    public function emit(string $message, ?string $file = null, ?int $line = null): void
     {
         if (Platform::getEnv('GITHUB_ACTIONS') && !Platform::getEnv('COMPOSER_TESTS_ARE_RUNNING')) {
             $message = $this->escapeData($message);
@@ -50,12 +43,9 @@ final class GithubActionError
             }
         }
     }
-    
-    /**
-     * @param string $data
-     * @return string
-     */
-    private function escapeData($data) {
+
+    private function escapeData(string $data): string
+    {
         // see https://github.com/actions/toolkit/blob/4f7fb6513a355689f69f0849edeb369a4dc81729/packages/core/src/command.ts#L80-L85
         $data = str_replace("%", '%25', $data);
         $data = str_replace("\r", '%0D', $data);
@@ -63,12 +53,9 @@ final class GithubActionError
 
         return $data;
     }
-    
-    /**
-     * @param string $property
-     * @return string
-     */
-    private function escapeProperty($property) {
+
+    private function escapeProperty(string $property): string
+    {
         // see https://github.com/actions/toolkit/blob/4f7fb6513a355689f69f0849edeb369a4dc81729/packages/core/src/command.ts#L87-L94
         $property = str_replace("%", '%25', $property);
         $property = str_replace("\r", '%0D', $property);

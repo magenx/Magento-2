@@ -8,11 +8,11 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202208\Symfony\Contracts\Service;
+namespace RectorPrefix202303\Symfony\Contracts\Service;
 
-use RectorPrefix202208\Psr\Container\ContainerInterface;
-use RectorPrefix202208\Symfony\Contracts\Service\Attribute\Required;
-use RectorPrefix202208\Symfony\Contracts\Service\Attribute\SubscribedService;
+use RectorPrefix202303\Psr\Container\ContainerInterface;
+use RectorPrefix202303\Symfony\Contracts\Service\Attribute\Required;
+use RectorPrefix202303\Symfony\Contracts\Service\Attribute\SubscribedService;
 /**
  * Implementation of ServiceSubscriberInterface that determines subscribed services from
  * method return types. Service ids are available as "ClassName::methodName".
@@ -23,9 +23,6 @@ trait ServiceSubscriberTrait
 {
     /** @var ContainerInterface */
     protected $container;
-    /**
-     * {@inheritdoc}
-     */
     public static function getSubscribedServices() : array
     {
         $services = \method_exists(\get_parent_class(self::class) ?: '', __FUNCTION__) ? parent::getSubscribedServices() : [];
@@ -42,11 +39,16 @@ trait ServiceSubscriberTrait
             if (!($returnType = $method->getReturnType())) {
                 throw new \LogicException(\sprintf('Cannot use "%s" on methods without a return type in "%s::%s()".', SubscribedService::class, $method->name, self::class));
             }
-            $serviceId = $returnType instanceof \ReflectionNamedType ? $returnType->getName() : (string) $returnType;
-            if ($returnType->allowsNull()) {
-                $serviceId = '?' . $serviceId;
+            /* @var SubscribedService $attribute */
+            $attribute = $attribute->newInstance();
+            $attribute->key = $attribute->key ?? self::class . '::' . $method->name;
+            $attribute->type = $attribute->type ?? ($returnType instanceof \ReflectionNamedType ? $returnType->getName() : (string) $returnType);
+            $attribute->nullable = $returnType->allowsNull();
+            if ($attribute->attributes) {
+                $services[] = $attribute;
+            } else {
+                $services[$attribute->key] = ($attribute->nullable ? '?' : '') . $attribute->type;
             }
-            $services[$attribute->newInstance()->key ?? self::class . '::' . $method->name] = $serviceId;
         }
         return $services;
     }
@@ -55,10 +57,11 @@ trait ServiceSubscriberTrait
      */
     public function setContainer(ContainerInterface $container) : ?ContainerInterface
     {
-        $this->container = $container;
+        $ret = null;
         if (\method_exists(\get_parent_class(self::class) ?: '', __FUNCTION__)) {
-            return parent::setContainer($container);
+            $ret = parent::setContainer($container);
         }
-        return null;
+        $this->container = $container;
+        return $ret;
     }
 }

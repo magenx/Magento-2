@@ -3,7 +3,7 @@
 declare (strict_types=1);
 namespace Rector\ChangesReporting\Output;
 
-use RectorPrefix202208\Nette\Utils\Strings;
+use RectorPrefix202303\Nette\Utils\Strings;
 use Rector\ChangesReporting\Annotation\RectorsChangelogResolver;
 use Rector\ChangesReporting\Contract\Output\OutputFormatterInterface;
 use Rector\Core\Contract\Console\OutputStyleInterface;
@@ -120,8 +120,8 @@ final class ConsoleOutputFormatter implements OutputFormatterInterface
     private function normalizePathsToRelativeWithLine(string $errorMessage) : string
     {
         $regex = '#' . \preg_quote(\getcwd(), '#') . '/#';
-        $errorMessage = Strings::replace($errorMessage, $regex, '');
-        return Strings::replace($errorMessage, self::ON_LINE_REGEX, ':');
+        $errorMessage = Strings::replace($errorMessage, $regex);
+        return Strings::replace($errorMessage, self::ON_LINE_REGEX);
     }
     private function reportRemovedNodes(ProcessResult $processResult) : void
     {

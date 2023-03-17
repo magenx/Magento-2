@@ -3,12 +3,15 @@
 declare (strict_types=1);
 namespace Rector\FileSystemRector\Parser;
 
+use RectorPrefix202303\Nette\Utils\FileSystem;
 use PhpParser\Node\Stmt;
 use Rector\Core\PhpParser\NodeTraverser\FileWithoutNamespaceNodeTraverser;
 use Rector\Core\PhpParser\Parser\RectorParser;
 use Rector\Core\ValueObject\Application\File;
 use Rector\NodeTypeResolver\NodeScopeAndMetadataDecorator;
-use RectorPrefix202208\Symplify\SmartFileSystem\SmartFileInfo;
+/**
+ * Only for testing, @todo move to testing
+ */
 final class FileInfoParser
 {
     /**
@@ -33,13 +36,14 @@ final class FileInfoParser
         $this->rectorParser = $rectorParser;
     }
     /**
+     * @api tests only
      * @return Stmt[]
      */
-    public function parseFileInfoToNodesAndDecorate(SmartFileInfo $smartFileInfo) : array
+    public function parseFileInfoToNodesAndDecorate(string $filePath) : array
     {
-        $stmts = $this->rectorParser->parseFile($smartFileInfo);
+        $stmts = $this->rectorParser->parseFile($filePath);
         $stmts = $this->fileWithoutNamespaceNodeTraverser->traverse($stmts);
-        $file = new File($smartFileInfo, $smartFileInfo->getContents());
+        $file = new File($filePath, FileSystem::read($filePath));
         return $this->nodeScopeAndMetadataDecorator->decorateNodesFromFile($file, $stmts);
     }
 }

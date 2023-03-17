@@ -23,50 +23,29 @@ use PhpCsFixer\Fixer\FixerInterface;
  */
 class Config implements ConfigInterface
 {
-    /**
-     * @var string
-     */
-    private $cacheFile = '.php-cs-fixer.cache';
+    private string $cacheFile = '.php-cs-fixer.cache';
 
     /**
      * @var FixerInterface[]
      */
-    private $customFixers = [];
+    private array $customFixers = [];
 
     /**
-     * @var null|iterable
+     * @var null|iterable<\SplFileInfo>
      */
-    private $finder;
+    private ?iterable $finder = null;
 
-    /**
-     * @var string
-     */
-    private $format = 'txt';
+    private string $format = 'txt';
 
-    /**
-     * @var bool
-     */
-    private $hideProgress = false;
+    private bool $hideProgress = false;
 
-    /**
-     * @var string
-     */
-    private $indent = '    ';
+    private string $indent = '    ';
 
-    /**
-     * @var bool
-     */
-    private $isRiskyAllowed = false;
+    private bool $isRiskyAllowed = false;
 
-    /**
-     * @var string
-     */
-    private $lineEnding = "\n";
+    private string $lineEnding = "\n";
 
-    /**
-     * @var string
-     */
-    private $name;
+    private string $name;
 
     /**
      * @var null|string
@@ -74,14 +53,13 @@ class Config implements ConfigInterface
     private $phpExecutable;
 
     /**
-     * @var array
+     * @TODO: 4.0 - update to @PER
+     *
+     * @var array<string, array<string, mixed>|bool>
      */
-    private $rules = ['@PSR12' => true];
+    private array $rules = ['@PSR12' => true];
 
-    /**
-     * @var bool
-     */
-    private $usingCache = true;
+    private bool $usingCache = true;
 
     public function __construct(string $name = 'default')
     {

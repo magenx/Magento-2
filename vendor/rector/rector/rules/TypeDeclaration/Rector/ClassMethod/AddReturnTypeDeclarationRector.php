@@ -20,7 +20,7 @@ use Rector\TypeDeclaration\ValueObject\AddReturnTypeDeclaration;
 use Rector\VendorLocker\ParentClassMethodTypeOverrideGuard;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
-use RectorPrefix202208\Webmozart\Assert\Assert;
+use RectorPrefix202303\Webmozart\Assert\Assert;
 /**
  * @see \Rector\Tests\TypeDeclaration\Rector\ClassMethod\AddReturnTypeDeclarationRector\AddReturnTypeDeclarationRectorTest
  */
@@ -109,11 +109,11 @@ CODE_SAMPLE
     private function processClassMethodNodeWithTypehints(ClassMethod $classMethod, Type $newType, ObjectType $objectType) : void
     {
         if ($newType instanceof MixedType) {
-            $class = $classMethod->getAttribute(AttributeKey::PARENT_NODE);
-            if (!$class instanceof Class_) {
+            $parentNode = $classMethod->getAttribute(AttributeKey::PARENT_NODE);
+            if (!$parentNode instanceof Class_) {
                 return;
             }
-            $className = (string) $this->nodeNameResolver->getName($class);
+            $className = (string) $this->nodeNameResolver->getName($parentNode);
             $currentObjectType = new ObjectType($className);
             if (!$objectType->equals($currentObjectType) && $classMethod->returnType !== null) {
                 return;

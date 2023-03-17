@@ -23,7 +23,7 @@
         "sort-packages": true
     },
     "require": {
-        "php": "^7.3 || ~8.0.0 || ~8.1.0",
+        "php": "~8.0.0 || ~8.1.0 || ~8.2.0",
         "laminas/laminas-loader": "^2.8",
         "laminas/laminas-stdlib": "^3.6",
         "laminas/laminas-uri": "^2.9.1",
@@ -31,8 +31,8 @@
     },
     "require-dev": {
         "ext-curl": "*",
-        "laminas/laminas-coding-standard": "~2.2.1",
-        "phpunit/phpunit": "^9.5.5"
+        "laminas/laminas-coding-standard": "~2.4.0",
+        "phpunit/phpunit": "^9.5.25"
     },
     "suggest": {
         "paragonie/certainty": "For automated management of cacert.pem"

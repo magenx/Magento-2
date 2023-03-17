@@ -5,13 +5,15 @@
  * Copyright (c) 2004 David Grudl (https://davidgrudl.com)
  */
 declare (strict_types=1);
-namespace RectorPrefix202208\Nette\Neon\Node;
+namespace RectorPrefix202303\Nette\Neon\Node;
 
 /** @internal */
 final class BlockArrayNode extends ArrayNode
 {
-    /** @var string */
-    public $indentation;
+    /**
+     * @var string
+     */
+    public $indentation = '';
     public function __construct(string $indentation = '')
     {
         $this->indentation = $indentation;

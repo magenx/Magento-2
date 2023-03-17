@@ -24,21 +24,20 @@ use PhpCsFixer\RuleSet\RuleSetDescriptionInterface;
 final class ReportSummary
 {
     /**
-     * @var RuleSetDescriptionInterface[]
+     * @var list<RuleSetDescriptionInterface>
      */
-    private $sets;
+    private array $sets;
 
     /**
-     * @param RuleSetDescriptionInterface[] $sets
+     * @param list<RuleSetDescriptionInterface> $sets
      */
-    public function __construct(
-        array $sets
-    ) {
+    public function __construct(array $sets)
+    {
         $this->sets = $sets;
     }
 
     /**
-     * @return RuleSetDescriptionInterface[]
+     * @return list<RuleSetDescriptionInterface>
      */
     public function getSets(): array
     {

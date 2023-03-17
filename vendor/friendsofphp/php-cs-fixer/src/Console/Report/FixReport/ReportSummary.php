@@ -22,41 +22,30 @@ namespace PhpCsFixer\Console\Report\FixReport;
 final class ReportSummary
 {
     /**
-     * @var bool
+     * @var array<string, array{appliedFixers: list<string>, diff: string}>
      */
-    private $addAppliedFixers;
+    private array $changed;
+
+    private int $filesCount;
+
+    private int $time;
+
+    private int $memory;
+
+    private bool $addAppliedFixers;
+
+    private bool $isDryRun;
+
+    private bool $isDecoratedOutput;
 
     /**
-     * @var array
-     */
-    private $changed;
-
-    /**
-     * @var bool
-     */
-    private $isDecoratedOutput;
-
-    /**
-     * @var bool
-     */
-    private $isDryRun;
-
-    /**
-     * @var int
-     */
-    private $memory;
-
-    /**
-     * @var int
-     */
-    private $time;
-
-    /**
-     * @param int $time   duration in milliseconds
-     * @param int $memory memory usage in bytes
+     * @param array<string, array{appliedFixers: list<string>, diff: string}> $changed
+     * @param int                                                             $time    duration in milliseconds
+     * @param int                                                             $memory  memory usage in bytes
      */
     public function __construct(
         array $changed,
+        int $filesCount,
         int $time,
         int $memory,
         bool $addAppliedFixers,
@@ -64,6 +53,7 @@ final class ReportSummary
         bool $isDecoratedOutput
     ) {
         $this->changed = $changed;
+        $this->filesCount = $filesCount;
         $this->time = $time;
         $this->memory = $memory;
         $this->addAppliedFixers = $addAppliedFixers;
@@ -81,6 +71,9 @@ final class ReportSummary
         return $this->isDryRun;
     }
 
+    /**
+     * @return array<string, array{appliedFixers: list<string>, diff: string}>
+     */
     public function getChanged(): array
     {
         return $this->changed;
@@ -94,6 +87,11 @@ final class ReportSummary
     public function getTime(): int
     {
         return $this->time;
+    }
+
+    public function getFilesCount(): int
+    {
+        return $this->filesCount;
     }
 
     public function shouldAddAppliedFixers(): bool

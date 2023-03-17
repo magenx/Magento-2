@@ -69,6 +69,29 @@ use PDepend\Source\ASTVisitor\ASTVisitor;
 class ASTArguments extends AbstractASTNode
 {
     /**
+     * This method will return true if the argument list is declared as foo(...)
+     *
+     * @return bool
+     *
+     * @since 2.11.0
+     */
+    public function isVariadicPlaceholder()
+    {
+        return $this->getMetadataBoolean(4);
+    }
+
+    /**
+     * This method can be used to mark the argument list as variadic placeholder
+     *
+     * @return void
+     * @since 2.11.0
+     */
+    public function setVariadicPlaceholder()
+    {
+        $this->setMetadataBoolean(4, true);
+    }
+
+    /**
      * Rather the given arguments list can still take one more argument.
      *
      * @return bool
@@ -90,16 +113,5 @@ class ASTArguments extends AbstractASTNode
         }
 
         parent::addChild($node);
-    }
-
-    /**
-     * Accept method of the visitor design pattern. This method will be called
-     * by a visitor during tree traversal.
-     *
-     * @since 0.9.12
-     */
-    public function accept(ASTVisitor $visitor, $data = null)
-    {
-        return $visitor->visitArguments($this, $data);
     }
 }

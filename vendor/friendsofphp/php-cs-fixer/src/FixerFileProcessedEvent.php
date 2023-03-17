@@ -30,7 +30,6 @@ final class FixerFileProcessedEvent extends Event
      */
     public const NAME = 'fixer.file_processed';
 
-    public const STATUS_UNKNOWN = 0;
     public const STATUS_INVALID = 1;
     public const STATUS_SKIPPED = 2;
     public const STATUS_NO_CHANGES = 3;
@@ -38,10 +37,7 @@ final class FixerFileProcessedEvent extends Event
     public const STATUS_EXCEPTION = 5;
     public const STATUS_LINT = 6;
 
-    /**
-     * @var int
-     */
-    private $status;
+    private int $status;
 
     public function __construct(int $status)
     {

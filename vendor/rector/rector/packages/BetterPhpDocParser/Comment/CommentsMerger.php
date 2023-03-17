@@ -6,12 +6,12 @@ namespace Rector\BetterPhpDocParser\Comment;
 use PhpParser\Comment;
 use PhpParser\Node;
 use Rector\NodeTypeResolver\Node\AttributeKey;
-use RectorPrefix202208\Symplify\Astral\NodeTraverser\SimpleCallableNodeTraverser;
+use Rector\PhpDocParser\NodeTraverser\SimpleCallableNodeTraverser;
 final class CommentsMerger
 {
     /**
      * @readonly
-     * @var \Symplify\Astral\NodeTraverser\SimpleCallableNodeTraverser
+     * @var \Rector\PhpDocParser\NodeTraverser\SimpleCallableNodeTraverser
      */
     private $simpleCallableNodeTraverser;
     public function __construct(SimpleCallableNodeTraverser $simpleCallableNodeTraverser)
@@ -39,12 +39,12 @@ final class CommentsMerger
      */
     public function keepParent(Node $newNode, Node $oldNode) : void
     {
-        $parent = $oldNode->getAttribute(AttributeKey::PARENT_NODE);
-        if (!$parent instanceof Node) {
+        $parentNode = $oldNode->getAttribute(AttributeKey::PARENT_NODE);
+        if (!$parentNode instanceof Node) {
             return;
         }
-        $phpDocInfo = $parent->getAttribute(AttributeKey::PHP_DOC_INFO);
-        $comments = $parent->getComments();
+        $phpDocInfo = $parentNode->getAttribute(AttributeKey::PHP_DOC_INFO);
+        $comments = $parentNode->getComments();
         if ($phpDocInfo === null && $comments === []) {
             return;
         }

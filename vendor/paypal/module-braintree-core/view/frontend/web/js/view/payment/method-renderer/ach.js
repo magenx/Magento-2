@@ -94,6 +94,9 @@ define(
                                     self.tokenizeAch(bankDetails, mandateText);
                                 }
                             }
+                        } else {
+                            fullScreenLoader.stopLoader();
+                            self.tokenizeAch(bankDetails, mandateText);
                         }
                     }).fail(function() {
                         fullScreenLoader.stopLoader();

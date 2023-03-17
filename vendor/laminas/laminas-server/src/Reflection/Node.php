@@ -2,11 +2,12 @@
 
 /**
  * @see       https://github.com/laminas/laminas-server for the canonical source repository
- * @copyright https://github.com/laminas/laminas-server/blob/master/COPYRIGHT.md
- * @license   https://github.com/laminas/laminas-server/blob/master/LICENSE.md New BSD License
  */
 
 namespace Laminas\Server\Reflection;
+
+use function array_merge;
+use function count;
 
 /**
  * Node Tree class for Laminas\Server reflection operations
@@ -15,30 +16,33 @@ class Node
 {
     /**
      * Node value
+     *
      * @var mixed
      */
-    protected $value = null;
+    protected $value;
 
     /**
      * Array of child nodes (if any)
+     *
      * @var array
      */
     protected $children = [];
 
     /**
      * Parent node (if any)
-     * @var \Laminas\Server\Reflection\Node
+     *
+     * @var Node
      */
-    protected $parent = null;
+    protected $parent;
 
     /**
      * Constructor
      *
      * @param mixed $value
-     * @param \Laminas\Server\Reflection\Node $parent Optional
-     * @return \Laminas\Server\Reflection\Node
+     * @param Node $parent Optional
+     * @return Node
      */
-    public function __construct($value, Node $parent = null)
+    public function __construct($value, ?Node $parent = null)
     {
         $this->value = $value;
         if (null !== $parent) {
@@ -51,7 +55,11 @@ class Node
     /**
      * Set parent node
      *
+     * //phpcs:disable SlevomatCodingStandard.Namespaces.ReferenceUsedNamesOnly.ReferenceViaFullyQualifiedName
+     * //phpcs:disable SlevomatCodingStandard.TypeHints.ParameterTypeHint.UselessAnnotation
      * @param \Laminas\Server\Reflection\Node $node
+     * //phpcs:enable SlevomatCodingStandard.TypeHints.ParameterTypeHint.UselessAnnotation
+     * //phpcs:enable SlevomatCodingStandard.Namespaces.ReferenceUsedNamesOnly.ReferenceViaFullyQualifiedName
      * @param  bool $new Whether or not the child node is newly created
      * and should always be attached
      * @return void
@@ -71,19 +79,16 @@ class Node
      *
      * @param mixed $value
      * @access public
-     * @return \Laminas\Server\Reflection\Node New child node
+     * @return Node New child node
      */
     public function createChild($value)
     {
-        $child = new static($value, $this);
-
-        return $child;
+        return new static($value, $this);
     }
 
     /**
      * Attach a child node
      *
-     * @param \Laminas\Server\Reflection\Node $node
      * @return void
      */
     public function attachChild(Node $node)
@@ -118,7 +123,7 @@ class Node
     /**
      * Return the parent node
      *
-     * @return null|\Laminas\Server\Reflection\Node
+     * @return null|Node
      */
     public function getParent()
     {

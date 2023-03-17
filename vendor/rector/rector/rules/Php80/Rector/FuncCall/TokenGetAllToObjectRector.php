@@ -13,6 +13,7 @@ use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Foreach_;
 use PhpParser\Node\Stmt\Function_;
 use PhpParser\Node\Stmt\If_;
+use PhpToken;
 use Rector\Core\Rector\AbstractRector;
 use Rector\Core\ValueObject\PhpVersionFeature;
 use Rector\NodeTypeResolver\Node\AttributeKey;
@@ -49,7 +50,7 @@ final class TokenGetAllToObjectRector extends AbstractRector implements MinPhpVe
     }
     public function getRuleDefinition() : RuleDefinition
     {
-        return new RuleDefinition('Convert `token_get_all` to `PhpToken::tokenize`', [new CodeSample(<<<'CODE_SAMPLE'
+        return new RuleDefinition('Convert `token_get_all` to `' . PhpToken::class . '::tokenize`', [new CodeSample(<<<'CODE_SAMPLE'
 final class SomeClass
 {
     public function run()
@@ -102,8 +103,8 @@ CODE_SAMPLE
     }
     private function refactorTokensVariable(FuncCall $funcCall) : void
     {
-        $assign = $funcCall->getAttribute(AttributeKey::PARENT_NODE);
-        if (!$assign instanceof Assign) {
+        $parentNode = $funcCall->getAttribute(AttributeKey::PARENT_NODE);
+        if (!$parentNode instanceof Assign) {
             return;
         }
         /** @var ClassMethod|Function_|null $classMethodOrFunction */
@@ -112,7 +113,7 @@ CODE_SAMPLE
             return;
         }
         // dummy approach, improve when needed
-        $this->replaceGetNameOrGetValue($classMethodOrFunction, $assign->var);
+        $this->replaceGetNameOrGetValue($classMethodOrFunction, $parentNode->var);
     }
     /**
      * @param \PhpParser\Node\Stmt\ClassMethod|\PhpParser\Node\Stmt\Function_ $functionLike

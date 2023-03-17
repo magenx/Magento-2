@@ -229,11 +229,12 @@ class BraintreeAdapter
      *
      * @param string $transactionId
      * @param null|float $amount
+     * @param array $attribs
      * @return Successful|Error
      */
-    public function submitForSettlement(string $transactionId, $amount = null)
+    public function submitForSettlement(string $transactionId, $amount = null, $attribs = [])
     {
-        return Transaction::submitForSettlement($transactionId, $amount);
+        return Transaction::submitForSettlement($transactionId, $amount, $attribs);
     }
 
     /**
@@ -241,11 +242,12 @@ class BraintreeAdapter
      *
      * @param string $transactionId
      * @param null|float $amount
+     * @param array $attribs
      * @return Successful|Error
      */
-    public function submitForPartialSettlement(string $transactionId, $amount = null)
+    public function submitForPartialSettlement(string $transactionId, $amount = null, $attribs = [])
     {
-        return Transaction::submitForPartialSettlement($transactionId, $amount);
+        return Transaction::submitForPartialSettlement($transactionId, $amount, $attribs);
     }
 
     /**

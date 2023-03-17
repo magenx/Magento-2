@@ -5,7 +5,7 @@
  * Copyright (c) 2004 David Grudl (https://davidgrudl.com)
  */
 declare (strict_types=1);
-namespace RectorPrefix202208\Tracy;
+namespace RectorPrefix202303\Tracy;
 
 /**
  * Red BlueScreen.
@@ -26,7 +26,7 @@ class BlueScreen
     /** @var callable|null  a callable returning true for sensitive data; fn(string $key, mixed $val): bool */
     public $scrubber;
     /** @var string[] */
-    public $keysToHide = ['password', 'passwd', 'pass', 'pwd', 'creditcard', 'credit card', 'cc', 'pin', self::class . '::$snapshot'];
+    public $keysToHide = ['password', 'passwd', 'pass', 'pwd', 'creditcard', 'credit card', 'cc', 'pin', 'authorization', self::class . '::$snapshot'];
     /** @var bool */
     public $showEnvironment = \true;
     /** @var callable[] */

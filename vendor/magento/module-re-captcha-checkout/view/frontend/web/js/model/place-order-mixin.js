@@ -31,6 +31,14 @@ define([
                 //Trigger ReCaptcha validation
                 recaptchaRegistry.triggers['recaptcha-checkout-place-order']();
 
+                if (
+                    !recaptchaRegistry._isInvisibleType.hasOwnProperty('recaptcha-checkout-place-order') ||
+                    recaptchaRegistry._isInvisibleType['recaptcha-checkout-place-order'] === false
+                ) {
+                    //remove listener so that place order action is only triggered by the 'Place Order' button
+                    recaptchaRegistry.removeListener('recaptcha-checkout-place-order');
+                }
+
                 return recaptchaDeferred;
             }
 

@@ -8,14 +8,14 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202208\Symfony\Contracts\HttpClient\Test;
+namespace RectorPrefix202303\Symfony\Contracts\HttpClient\Test;
 
 use PHPUnit\Framework\TestCase;
-use RectorPrefix202208\Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
-use RectorPrefix202208\Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
-use RectorPrefix202208\Symfony\Contracts\HttpClient\Exception\TimeoutExceptionInterface;
-use RectorPrefix202208\Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
-use RectorPrefix202208\Symfony\Contracts\HttpClient\HttpClientInterface;
+use RectorPrefix202303\Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
+use RectorPrefix202303\Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
+use RectorPrefix202303\Symfony\Contracts\HttpClient\Exception\TimeoutExceptionInterface;
+use RectorPrefix202303\Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
+use RectorPrefix202303\Symfony\Contracts\HttpClient\HttpClientInterface;
 /**
  * A reference test suite for HttpClientInterface implementations.
  */
@@ -796,7 +796,7 @@ abstract class HttpClientTestCase extends TestCase
         $client = $this->getHttpClient(__FUNCTION__);
         $client2 = $client->withOptions(['base_uri' => 'http://localhost:8057/']);
         $this->assertNotSame($client, $client2);
-        $this->assertSame(\get_class($client), \get_class($client2));
+        $this->assertSame($client::class, $client2::class);
         $response = $client2->request('GET', '/');
         $this->assertSame(200, $response->getStatusCode());
     }

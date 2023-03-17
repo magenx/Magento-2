@@ -7,6 +7,7 @@ use PhpParser\Node;
 use PhpParser\Node\ComplexType;
 use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\PropertyFetch;
+use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
 use PhpParser\Node\NullableType;
 use PhpParser\Node\Param;
@@ -83,13 +84,17 @@ CODE_SAMPLE
      */
     public function refactor(Node $node) : ?Node
     {
-        $parent = $node->getAttribute(AttributeKey::PARENT_NODE);
-        if (!$parent instanceof ClassMethod) {
+        $parentNode = $node->getAttribute(AttributeKey::PARENT_NODE);
+        if (!$parentNode instanceof ClassMethod) {
             return null;
         }
-        return $this->decorateParamWithType($parent, $node);
+        return $this->decorateParamWithType($parentNode, $node);
     }
-    public function decorateParamWithType(ClassMethod $classMethod, Param $param) : ?Param
+    public function provideMinPhpVersion() : int
+    {
+        return PhpVersionFeature::TYPED_PROPERTIES;
+    }
+    private function decorateParamWithType(ClassMethod $classMethod, Param $param) : ?Param
     {
         if ($param->type !== null) {
             return null;
@@ -120,12 +125,8 @@ CODE_SAMPLE
         }
         return null;
     }
-    public function provideMinPhpVersion() : int
-    {
-        return PhpVersionFeature::TYPED_PROPERTIES;
-    }
     /**
-     * @return Name|ComplexType|null
+     * @return Identifier|Name|ComplexType|null
      */
     private function matchPropertySingleTypeNode(PropertyFetch $propertyFetch) : ?Node
     {

@@ -1,0 +1,63 @@
+<?xml version="1.0"?>
+<psalm
+    errorLevel="1"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns="https://getpsalm.org/schema/config"
+    xsi:schemaLocation="https://getpsalm.org/schema/config vendor/vimeo/psalm/config.xsd"
+    errorBaseline="psalm-baseline.xml"
+    findUnusedPsalmSuppress="true"
+    findUnusedCode="true"
+>
+    <projectFiles>
+        <directory name="src"/>
+        <directory name="test"/>
+
+        <ignoreFiles>
+            <directory name="test/_files"/>
+            <directory name="vendor"/>
+            <!-- psalm cannot scan intersection types yet -->
+            <file name="test/TestAsset/Constructor/IntersectionTypeConstructorDependency.php"/>
+        </ignoreFiles>
+    </projectFiles>
+
+    <issueHandlers>
+        <DeprecatedClass>
+            <errorLevel type="suppress">
+                <referencedClass name="Laminas\Di\Resolver\AbstractInjection"/>
+                <referencedClass name="LaminasTest\Di\Resolver\AbstractInjectionTest"/>
+            </errorLevel>
+        </DeprecatedClass>
+
+        <PossiblyUnusedMethod>
+            <errorLevel type="suppress">
+                <directory name="test/TestAsset"/>
+            </errorLevel>
+        </PossiblyUnusedMethod>
+
+        <PossiblyUnusedProperty>
+            <errorLevel type="suppress">
+                <directory name="test/TestAsset"/>
+            </errorLevel>
+        </PossiblyUnusedProperty>
+
+        <UnusedClass>
+            <errorLevel type="suppress">
+                <directory name="test/TestAsset"/>
+            </errorLevel>
+        </UnusedClass>
+
+        <UnusedProperty>
+            <errorLevel type="suppress">
+                <directory name="test/TestAsset"/>
+            </errorLevel>
+        </UnusedProperty>
+    </issueHandlers>
+
+    <stubs>
+        <file name="./stubs/psr-container.phpstub"/>
+    </stubs>
+
+    <plugins>
+        <pluginClass class="Psalm\PhpUnitPlugin\Plugin"/>
+    </plugins>
+</psalm>

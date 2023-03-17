@@ -3,12 +3,15 @@
 declare (strict_types=1);
 namespace Rector\StaticTypeMapper\ValueObject\Type;
 
-use RectorPrefix202208\Nette\Utils\Strings;
+use RectorPrefix202303\Nette\Utils\Strings;
 use PhpParser\Node\Name;
 use PhpParser\Node\Stmt\Use_;
 use PhpParser\Node\Stmt\UseUse;
 use PHPStan\Type\ObjectType;
 use Rector\NodeTypeResolver\Node\AttributeKey;
+/**
+ * @api
+ */
 final class FullyQualifiedObjectType extends ObjectType
 {
     public function getShortNameType() : \Rector\StaticTypeMapper\ValueObject\Type\ShortenedObjectType

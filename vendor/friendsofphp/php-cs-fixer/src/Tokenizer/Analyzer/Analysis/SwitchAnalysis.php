@@ -20,17 +20,14 @@ namespace PhpCsFixer\Tokenizer\Analyzer\Analysis;
 final class SwitchAnalysis extends AbstractControlCaseStructuresAnalysis
 {
     /**
-     * @var null|DefaultAnalysis
+     * @var list<CaseAnalysis>
      */
-    private $defaultAnalysis;
+    private array $cases;
+
+    private ?DefaultAnalysis $defaultAnalysis;
 
     /**
-     * @var CaseAnalysis[]
-     */
-    private $cases;
-
-    /**
-     * @param CaseAnalysis[] $cases
+     * @param list<CaseAnalysis> $cases
      */
     public function __construct(int $index, int $open, int $close, array $cases, ?DefaultAnalysis $defaultAnalysis)
     {
@@ -41,7 +38,7 @@ final class SwitchAnalysis extends AbstractControlCaseStructuresAnalysis
     }
 
     /**
-     * @return CaseAnalysis[]
+     * @return list<CaseAnalysis>
      */
     public function getCases(): array
     {

@@ -1,13 +1,13 @@
 <?php
 
-namespace RectorPrefix202208\React\Socket;
+namespace RectorPrefix202303\React\Socket;
 
-use RectorPrefix202208\Evenement\EventEmitter;
-use RectorPrefix202208\React\EventLoop\LoopInterface;
-use RectorPrefix202208\React\Stream\DuplexResourceStream;
-use RectorPrefix202208\React\Stream\Util;
-use RectorPrefix202208\React\Stream\WritableResourceStream;
-use RectorPrefix202208\React\Stream\WritableStreamInterface;
+use RectorPrefix202303\Evenement\EventEmitter;
+use RectorPrefix202303\React\EventLoop\LoopInterface;
+use RectorPrefix202303\React\Stream\DuplexResourceStream;
+use RectorPrefix202303\React\Stream\Util;
+use RectorPrefix202303\React\Stream\WritableResourceStream;
+use RectorPrefix202303\React\Stream\WritableStreamInterface;
 /**
  * The actual connection implementation for ConnectionInterface
  *
@@ -102,13 +102,9 @@ class Connection extends EventEmitter implements ConnectionInterface
             return;
         }
         // Try to cleanly shut down socket and ignore any errors in case other
-        // side already closed. Shutting down may return to blocking mode on
-        // some legacy versions, so reset to non-blocking just in case before
-        // continuing to close the socket resource.
-        // Underlying Stream implementation will take care of closing file
-        // handle, so we otherwise keep this open here.
+        // side already closed. Underlying Stream implementation will take care
+        // of closing stream resource, so we otherwise keep this open here.
         @\stream_socket_shutdown($this->stream, \STREAM_SHUT_RDWR);
-        \stream_set_blocking($this->stream, \false);
     }
     public function getRemoteAddress()
     {
@@ -132,7 +128,7 @@ class Connection extends EventEmitter implements ConnectionInterface
         if ($this->unix) {
             // remove trailing colon from address for HHVM < 3.19: https://3v4l.org/5C1lo
             // note that technically ":" is a valid address, so keep this in place otherwise
-            if (\substr($address, -1) === ':' && \defined('RectorPrefix202208\\HHVM_VERSION_ID') && \RectorPrefix202208\HHVM_VERSION_ID < 31900) {
+            if (\substr($address, -1) === ':' && \defined('RectorPrefix202303\\HHVM_VERSION_ID') && \RectorPrefix202303\HHVM_VERSION_ID < 31900) {
                 $address = (string) \substr($address, 0, -1);
                 // @codeCoverageIgnore
             }

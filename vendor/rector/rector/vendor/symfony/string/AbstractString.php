@@ -8,11 +8,11 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202208\Symfony\Component\String;
+namespace RectorPrefix202303\Symfony\Component\String;
 
-use RectorPrefix202208\Symfony\Component\String\Exception\ExceptionInterface;
-use RectorPrefix202208\Symfony\Component\String\Exception\InvalidArgumentException;
-use RectorPrefix202208\Symfony\Component\String\Exception\RuntimeException;
+use RectorPrefix202303\Symfony\Component\String\Exception\ExceptionInterface;
+use RectorPrefix202303\Symfony\Component\String\Exception\InvalidArgumentException;
+use RectorPrefix202303\Symfony\Component\String\Exception\RuntimeException;
 /**
  * Represents a string of abstract characters.
  *
@@ -211,7 +211,7 @@ abstract class AbstractString implements \JsonSerializable
     public function collapseWhitespace()
     {
         $str = clone $this;
-        $str->string = \trim(\preg_replace('/(?:\\s{2,}+|[^\\S ])/', ' ', $str->string));
+        $str->string = \trim(\preg_replace("/(?:[ \n\r\t\f]{2,}+|[\n\r\t\f])/", ' ', $str->string), " \n\r\t\f");
         return $str;
     }
     /**
@@ -421,13 +421,7 @@ abstract class AbstractString implements \JsonSerializable
         });
         try {
             if (\false === ($chunks = \preg_split($delimiter, $this->string, $limit, $flags))) {
-                $lastError = \preg_last_error();
-                foreach (\get_defined_constants(\true)['pcre'] as $k => $v) {
-                    if ($lastError === $v && \substr_compare($k, '_ERROR', -\strlen('_ERROR')) === 0) {
-                        throw new RuntimeException('Splitting failed with ' . $k . '.');
-                    }
-                }
-                throw new RuntimeException('Splitting failed with unknown error code.');
+                throw new RuntimeException('Splitting failed with error: ' . \preg_last_error_msg());
             }
         } finally {
             \restore_error_handler();

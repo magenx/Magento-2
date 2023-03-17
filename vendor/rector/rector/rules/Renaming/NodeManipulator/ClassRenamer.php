@@ -3,7 +3,7 @@
 declare (strict_types=1);
 namespace Rector\Renaming\NodeManipulator;
 
-use RectorPrefix202208\Nette\Utils\Strings;
+use RectorPrefix202303\Nette\Utils\Strings;
 use PhpParser\Node;
 use PhpParser\Node\AttributeGroup;
 use PhpParser\Node\Expr\New_;
@@ -25,6 +25,7 @@ use Rector\BetterPhpDocParser\PhpDocManipulator\PhpDocClassRenamer;
 use Rector\BetterPhpDocParser\ValueObject\NodeTypes;
 use Rector\CodingStyle\Naming\ClassNaming;
 use Rector\Core\Configuration\Option;
+use Rector\Core\Configuration\Parameter\ParameterProvider;
 use Rector\Core\PhpParser\Node\BetterNodeFinder;
 use Rector\Naming\Naming\UseImportsResolver;
 use Rector\NodeNameResolver\NodeNameResolver;
@@ -32,9 +33,9 @@ use Rector\NodeRemoval\NodeRemover;
 use Rector\NodeTypeResolver\Node\AttributeKey;
 use Rector\NodeTypeResolver\PhpDoc\NodeAnalyzer\DocBlockClassRenamer;
 use Rector\NodeTypeResolver\ValueObject\OldToNewType;
+use Rector\PhpDocParser\NodeTraverser\SimpleCallableNodeTraverser;
+use Rector\Renaming\Helper\RenameClassCallbackHandler;
 use Rector\StaticTypeMapper\ValueObject\Type\FullyQualifiedObjectType;
-use RectorPrefix202208\Symplify\Astral\NodeTraverser\SimpleCallableNodeTraverser;
-use RectorPrefix202208\Symplify\PackageBuilder\Parameter\ParameterProvider;
 final class ClassRenamer
 {
     /**
@@ -52,7 +53,7 @@ final class ClassRenamer
     private $betterNodeFinder;
     /**
      * @readonly
-     * @var \Symplify\Astral\NodeTraverser\SimpleCallableNodeTraverser
+     * @var \Rector\PhpDocParser\NodeTraverser\SimpleCallableNodeTraverser
      */
     private $simpleCallableNodeTraverser;
     /**
@@ -92,7 +93,7 @@ final class ClassRenamer
     private $nodeRemover;
     /**
      * @readonly
-     * @var \Symplify\PackageBuilder\Parameter\ParameterProvider
+     * @var \Rector\Core\Configuration\Parameter\ParameterProvider
      */
     private $parameterProvider;
     /**
@@ -100,7 +101,12 @@ final class ClassRenamer
      * @var \Rector\Naming\Naming\UseImportsResolver
      */
     private $useImportsResolver;
-    public function __construct(BetterNodeFinder $betterNodeFinder, SimpleCallableNodeTraverser $simpleCallableNodeTraverser, ClassNaming $classNaming, NodeNameResolver $nodeNameResolver, PhpDocClassRenamer $phpDocClassRenamer, PhpDocInfoFactory $phpDocInfoFactory, DocBlockClassRenamer $docBlockClassRenamer, ReflectionProvider $reflectionProvider, NodeRemover $nodeRemover, ParameterProvider $parameterProvider, UseImportsResolver $useImportsResolver)
+    /**
+     * @readonly
+     * @var \Rector\Renaming\Helper\RenameClassCallbackHandler
+     */
+    private $renameClassCallbackHandler;
+    public function __construct(BetterNodeFinder $betterNodeFinder, SimpleCallableNodeTraverser $simpleCallableNodeTraverser, ClassNaming $classNaming, NodeNameResolver $nodeNameResolver, PhpDocClassRenamer $phpDocClassRenamer, PhpDocInfoFactory $phpDocInfoFactory, DocBlockClassRenamer $docBlockClassRenamer, ReflectionProvider $reflectionProvider, NodeRemover $nodeRemover, ParameterProvider $parameterProvider, UseImportsResolver $useImportsResolver, RenameClassCallbackHandler $renameClassCallbackHandler)
     {
         $this->betterNodeFinder = $betterNodeFinder;
         $this->simpleCallableNodeTraverser = $simpleCallableNodeTraverser;
@@ -113,13 +119,14 @@ final class ClassRenamer
         $this->nodeRemover = $nodeRemover;
         $this->parameterProvider = $parameterProvider;
         $this->useImportsResolver = $useImportsResolver;
+        $this->renameClassCallbackHandler = $renameClassCallbackHandler;
     }
     /**
      * @param array<string, string> $oldToNewClasses
      */
     public function renameNode(Node $node, array $oldToNewClasses) : ?Node
     {
-        $oldToNewTypes = $this->createOldToNewTypes($oldToNewClasses);
+        $oldToNewTypes = $this->createOldToNewTypes($node, $oldToNewClasses);
         $this->refactorPhpDoc($node, $oldToNewTypes, $oldToNewClasses);
         if ($node instanceof Name) {
             return $this->refactorName($node, $oldToNewClasses);
@@ -180,6 +187,10 @@ final class ClassRenamer
      */
     private function refactorName(Name $name, array $oldToNewClasses) : ?Name
     {
+        $parent = $name->getAttribute(AttributeKey::PARENT_NODE);
+        if ($parent instanceof Namespace_ && $parent->name === $name) {
+            return null;
+        }
         $stringName = $this->nodeNameResolver->getName($name);
         $newName = $oldToNewClasses[$stringName] ?? null;
         if ($newName === null) {
@@ -410,8 +421,9 @@ final class ClassRenamer
      * @param array<string, string> $oldToNewClasses
      * @return OldToNewType[]
      */
-    private function createOldToNewTypes(array $oldToNewClasses) : array
+    private function createOldToNewTypes(Node $node, array $oldToNewClasses) : array
     {
+        $oldToNewClasses = $this->resolveOldToNewClassCallbacks($node, $oldToNewClasses);
         $cacheKey = \md5(\serialize($oldToNewClasses));
         if (isset($this->oldToNewTypesByCacheKey[$cacheKey])) {
             return $this->oldToNewTypesByCacheKey[$cacheKey];
@@ -424,5 +436,14 @@ final class ClassRenamer
         }
         $this->oldToNewTypesByCacheKey[$cacheKey] = $oldToNewTypes;
         return $oldToNewTypes;
+    }
+    /**
+     * @param array<string, string> $oldToNewClasses
+     * @return array<string, string>
+     */
+    private function resolveOldToNewClassCallbacks(Node $node, array $oldToNewClasses) : array
+    {
+        $item1Unpacked = $this->renameClassCallbackHandler->getOldToNewClassesFromNode($node);
+        return \array_merge($oldToNewClasses, $item1Unpacked);
     }
 }

@@ -81,7 +81,7 @@ class CodeRankAnalyzer extends AbstractAnalyzer implements AnalyzerNodeAware
     /**
      * All found nodes.
      *
-     * @var array<string, array>
+     * @var array<string, array<string, array<int, string>>>
      */
     private $nodes = array();
 
@@ -110,14 +110,12 @@ class CodeRankAnalyzer extends AbstractAnalyzer implements AnalyzerNodeAware
      * )
      * </code>
      *
-     * @var array<string, array>
+     * @var array<string, array<string, int>>
      */
     private $nodeMetrics = null;
 
     /**
      * Processes all {@link ASTNamespace} code nodes.
-     *
-     * @param ASTNamespace[] $namespaces
      *
      * @return void
      */

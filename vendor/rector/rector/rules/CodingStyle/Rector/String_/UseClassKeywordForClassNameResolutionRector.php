@@ -3,13 +3,14 @@
 declare (strict_types=1);
 namespace Rector\CodingStyle\Rector\String_;
 
-use RectorPrefix202208\Nette\Utils\Strings;
+use RectorPrefix202303\Nette\Utils\Strings;
 use PhpParser\Node;
 use PhpParser\Node\Expr\ClassConstFetch;
 use PhpParser\Node\Name\FullyQualified;
 use PhpParser\Node\Scalar\String_;
 use PHPStan\Reflection\ReflectionProvider;
 use Rector\Core\Rector\AbstractRector;
+use Rector\NodeTypeResolver\Node\AttributeKey;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
@@ -53,9 +54,14 @@ CODE_SAMPLE
      */
     public function refactor(Node $node) : ?Node
     {
+        $stringKind = $node->getAttribute(AttributeKey::KIND);
+        if (\in_array($stringKind, [String_::KIND_HEREDOC, String_::KIND_NOWDOC], \true)) {
+            return null;
+        }
         $classNames = $this->getExistingClasses($node);
+        $classNames = $this->filterOurShortClasses($classNames);
         if ($classNames === []) {
-            return $node;
+            return null;
         }
         $parts = $this->getParts($node, $classNames);
         if ($parts === []) {
@@ -65,9 +71,22 @@ CODE_SAMPLE
         return $this->nodeFactory->createConcat($exprsToConcat);
     }
     /**
+     * @param string[] $classNames
+     * @return mixed[]
+     */
+    private function getParts(String_ $string, array $classNames) : array
+    {
+        $quotedClassNames = \array_map('preg_quote', $classNames);
+        // @see https://regex101.com/r/8nGS0F/1
+        $parts = Strings::split($string->value, '#(' . \implode('|', $quotedClassNames) . ')#');
+        return \array_filter($parts, static function (string $className) : bool {
+            return $className !== '';
+        });
+    }
+    /**
      * @return string[]
      */
-    public function getExistingClasses(String_ $string) : array
+    private function getExistingClasses(String_ $string) : array
     {
         /** @var mixed[] $matches */
         $matches = Strings::matchAll($string->value, self::CLASS_BEFORE_STATIC_ACCESS_REGEX, \PREG_PATTERN_ORDER);
@@ -84,19 +103,6 @@ CODE_SAMPLE
         return $classNames;
     }
     /**
-     * @param string[] $classNames
-     * @return mixed[]
-     */
-    public function getParts(String_ $string, array $classNames) : array
-    {
-        $quotedClassNames = \array_map('preg_quote', $classNames);
-        // @see https://regex101.com/r/8nGS0F/1
-        $parts = Strings::split($string->value, '#(' . \implode('|', $quotedClassNames) . ')#');
-        return \array_filter($parts, static function (string $className) : bool {
-            return $className !== '';
-        });
-    }
-    /**
      * @param string[] $parts
      * @return ClassConstFetch[]|String_[]
      */
@@ -111,5 +117,15 @@ CODE_SAMPLE
             }
         }
         return $exprsToConcat;
+    }
+    /**
+     * @param string[] $classNames
+     * @return string[]
+     */
+    private function filterOurShortClasses(array $classNames) : array
+    {
+        return \array_filter($classNames, static function (string $className) : bool {
+            return \strpos($className, '\\') !== \false;
+        });
     }
 }

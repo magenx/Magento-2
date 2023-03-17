@@ -101,9 +101,7 @@ define([
             let style = {
                 color: Braintree.getColor(funding),
                 shape: Braintree.getShape(funding),
-                layout: Braintree.getLayout(funding),
                 size: Braintree.getSize(funding),
-                tagline: Braintree.getTagline(funding),
                 label: Braintree.getLabel(funding)
             };
 

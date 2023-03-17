@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 /*
  * This file is part of Composer.
@@ -27,7 +27,7 @@ class AuthHelper
     /** @var Config */
     protected $config;
     /** @var array<string, string> Map of origins to message displayed */
-    private $displayedOriginAuthentications = array();
+    private $displayedOriginAuthentications = [];
 
     public function __construct(IOInterface $io, Config $config)
     {
@@ -36,12 +36,9 @@ class AuthHelper
     }
 
     /**
-     * @param string      $origin
-     * @param string|bool $storeAuth
-     *
-     * @return void
+     * @param 'prompt'|bool $storeAuth
      */
-    public function storeAuth($origin, $storeAuth)
+    public function storeAuth(string $origin, $storeAuth): void
     {
         $store = false;
         $configSource = $this->config->getAuthConfigSource();
@@ -50,9 +47,9 @@ class AuthHelper
         } elseif ($storeAuth === 'prompt') {
             $answer = $this->io->askAndValidate(
                 'Do you want to store credentials for '.$origin.' in '.$configSource->getName().' ? [Yn] ',
-                function ($value) {
+                static function ($value): string {
                     $input = strtolower(substr(trim($value), 0, 1));
-                    if (in_array($input, array('y','n'))) {
+                    if (in_array($input, ['y','n'])) {
                         return $input;
                     }
                     throw new \RuntimeException('Please answer (y)es or (n)o');
@@ -74,17 +71,15 @@ class AuthHelper
     }
 
     /**
-     * @param  string      $url
-     * @param  string      $origin
      * @param  int         $statusCode HTTP status code that triggered this call
      * @param  string|null $reason     a message/description explaining why this was called
      * @param  string[]    $headers
      * @param  int         $retryCount the amount of retries already done on this URL
-     * @return array|null  containing retry (bool) and storeAuth (string|bool) keys, if retry is true the request should be
+     * @return array       containing retry (bool) and storeAuth (string|bool) keys, if retry is true the request should be
      *                                retried, if storeAuth is true then on a successful retry the authentication should be persisted to auth.json
-     * @phpstan-return ?array{retry: bool, storeAuth: string|bool}
+     * @phpstan-return array{retry: bool, storeAuth: 'prompt'|bool}
      */
-    public function promptAuthIfNeeded($url, $origin, $statusCode, $reason = null, $headers = array(), $retryCount = 0)
+    public function promptAuthIfNeeded(string $url, string $origin, int $statusCode, ?string $reason = null, array $headers = [], int $retryCount = 0): array
     {
         $storeAuth = false;
 
@@ -104,7 +99,7 @@ class AuthHelper
                 }
                 $this->io->ask('After authorizing your token, confirm that you would like to retry the request');
 
-                return array('retry' => true, 'storeAuth' => $storeAuth);
+                return ['retry' => true, 'storeAuth' => $storeAuth];
             }
 
             if ($rateLimited) {
@@ -141,7 +136,7 @@ class AuthHelper
             $auth = null;
             if ($this->io->hasAuthentication($origin)) {
                 $auth = $this->io->getAuthentication($origin);
-                if (in_array($auth['password'], array('gitlab-ci-token', 'private-token', 'oauth2'), true)) {
+                if (in_array($auth['password'], ['gitlab-ci-token', 'private-token', 'oauth2'], true)) {
                     throw new TransportException("Invalid credentials for '" . $url . "', aborting.", $statusCode);
                 }
             }
@@ -186,7 +181,7 @@ class AuthHelper
         } else {
             // 404s are only handled for github
             if ($statusCode === 404) {
-                return null;
+                return ['retry' => false, 'storeAuth' => false];
             }
 
             // fail if the console is not interactive
@@ -207,7 +202,7 @@ class AuthHelper
                 // if two or more requests are started together for the same host, and the first
                 // received authentication already, we let the others retry before failing them
                 if ($retryCount === 0) {
-                    return array('retry' => true, 'storeAuth' => false);
+                    return ['retry' => true, 'storeAuth' => false];
                 }
 
                 throw new TransportException("Invalid credentials (HTTP $statusCode) for '$url', aborting.", $statusCode);
@@ -220,17 +215,15 @@ class AuthHelper
             $storeAuth = $this->config->get('store-auths');
         }
 
-        return array('retry' => true, 'storeAuth' => $storeAuth);
+        return ['retry' => true, 'storeAuth' => $storeAuth];
     }
 
     /**
      * @param string[] $headers
-     * @param string   $origin
-     * @param string   $url
      *
      * @return string[] updated headers array
      */
-    public function addAuthenticationHeader(array $headers, $origin, $url)
+    public function addAuthenticationHeader(array $headers, string $origin, string $url): array
     {
         if ($this->io->hasAuthentication($origin)) {
             $authenticationDisplayMessage = null;
@@ -245,7 +238,7 @@ class AuthHelper
                 }
             } elseif (
                 in_array($origin, $this->config->get('gitlab-domains'), true)
-                && in_array($auth['password'], array('oauth2', 'private-token', 'gitlab-ci-token'), true)
+                && in_array($auth['password'], ['oauth2', 'private-token', 'gitlab-ci-token'], true)
             ) {
                 if ($auth['password'] === 'oauth2') {
                     $headers[] = 'Authorization: Bearer '.$auth['username'];
@@ -273,7 +266,7 @@ class AuthHelper
                 $this->io->writeError($authenticationDisplayMessage, true, IOInterface::DEBUG);
                 $this->displayedOriginAuthentications[$origin] = $authenticationDisplayMessage;
             }
-        } elseif (in_array($origin, array('api.bitbucket.org', 'api.github.com'), true)) {
+        } elseif (in_array($origin, ['api.bitbucket.org', 'api.github.com'], true)) {
             return $this->addAuthenticationHeader($headers, str_replace('api.', '', $origin), $url);
         }
 
@@ -287,7 +280,7 @@ class AuthHelper
      *
      * @return bool Whether the given URL is a public BitBucket download which requires no authentication.
      */
-    public function isPublicBitBucketDownload($urlToBitBucketFile)
+    public function isPublicBitBucketDownload(string $urlToBitBucketFile): bool
     {
         $domain = parse_url($urlToBitBucketFile, PHP_URL_HOST);
         if (strpos($domain, 'bitbucket.org') === false) {
@@ -302,6 +295,6 @@ class AuthHelper
         // {@link https://blog.bitbucket.org/2009/04/12/new-feature-downloads/}
         $pathParts = explode('/', $path);
 
-        return count($pathParts) >= 4 && $pathParts[3] == 'downloads';
+        return count($pathParts) >= 4 && $pathParts[3] === 'downloads';
     }
 }

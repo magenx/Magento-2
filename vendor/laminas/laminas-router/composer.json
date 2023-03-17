@@ -18,7 +18,7 @@
     "config": {
         "sort-packages": true,
         "platform": {
-            "php": "7.4.99"
+            "php": "8.0.99"
         },
         "allow-plugins": {
             "dealerdirect/phpcodesniffer-composer-installer": true
@@ -31,17 +31,17 @@
         }
     },
     "require": {
-        "php": "^7.4 || ~8.0.0 || ~8.1.0",
+        "php": "~8.0.0 || ~8.1.0 || ~8.2.0",
         "laminas/laminas-http": "^2.15",
         "laminas/laminas-servicemanager": "^3.14.0",
         "laminas/laminas-stdlib": "^3.10.1"
     },
     "require-dev": {
         "laminas/laminas-coding-standard": "~2.4.0",
-        "laminas/laminas-i18n": "^2.15.0",
-        "phpunit/phpunit": "^9.5.5",
-        "psalm/plugin-phpunit": "^0.17.0",
-        "vimeo/psalm": "^4.24.0"
+        "laminas/laminas-i18n": "^2.19.0",
+        "phpunit/phpunit": "^9.5.26",
+        "psalm/plugin-phpunit": "^0.18.0",
+        "vimeo/psalm": "^5.0.0"
     },
     "suggest": {
         "laminas/laminas-i18n": "^2.15.0 if defining translatable HTTP path segments"

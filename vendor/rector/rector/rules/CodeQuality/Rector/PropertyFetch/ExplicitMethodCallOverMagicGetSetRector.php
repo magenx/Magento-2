@@ -101,22 +101,20 @@ CODE_SAMPLE
     /**
      * @return string[]
      */
-    public function resolvePossibleGetMethodNames(string $propertyName) : array
+    private function resolvePossibleGetMethodNames(string $propertyName) : array
     {
-        return ['get' . \ucfirst($propertyName), 'has' . \ucfirst($propertyName), 'is' . \ucfirst($propertyName)];
+        $upperPropertyName = \ucfirst($propertyName);
+        return ['get' . $upperPropertyName, 'has' . $upperPropertyName, 'is' . $upperPropertyName];
     }
     private function shouldSkipPropertyFetch(PropertyFetch $propertyFetch) : bool
     {
-        $parent = $propertyFetch->getAttribute(AttributeKey::PARENT_NODE);
-        if (!$parent instanceof Assign) {
+        $parentNode = $propertyFetch->getAttribute(AttributeKey::PARENT_NODE);
+        if (!$parentNode instanceof Assign) {
             return \false;
         }
-        return $parent->var === $propertyFetch;
+        return $parentNode->var === $propertyFetch;
     }
-    /**
-     * @return \PhpParser\Node\Expr\MethodCall|null
-     */
-    private function refactorPropertyFetch(PropertyFetch $propertyFetch, Scope $scope)
+    private function refactorPropertyFetch(PropertyFetch $propertyFetch, Scope $scope) : ?\PhpParser\Node\Expr\MethodCall
     {
         $callerType = $this->getType($propertyFetch->var);
         if (!$callerType instanceof ObjectType) {
@@ -150,10 +148,7 @@ CODE_SAMPLE
         }
         return null;
     }
-    /**
-     * @return \PhpParser\Node\Expr\MethodCall|null
-     */
-    private function refactorMagicSet(Expr $expr, PropertyFetch $propertyFetch, Scope $scope)
+    private function refactorMagicSet(Expr $expr, PropertyFetch $propertyFetch, Scope $scope) : ?\PhpParser\Node\Expr\MethodCall
     {
         $propertyCallerType = $this->getType($propertyFetch->var);
         if (!$propertyCallerType instanceof ObjectType) {
@@ -177,11 +172,11 @@ CODE_SAMPLE
     }
     private function hasNoParamOrVariadic(ObjectType $objectType, string $setterMethodName, Scope $scope) : bool
     {
-        $methodReflection = $objectType->getMethod($setterMethodName, $scope);
-        if (!$methodReflection instanceof ResolvedMethodReflection) {
+        $extendedMethodReflection = $objectType->getMethod($setterMethodName, $scope);
+        if (!$extendedMethodReflection instanceof ResolvedMethodReflection) {
             return \false;
         }
-        $parametersAcceptor = ParametersAcceptorSelector::selectSingle($methodReflection->getVariants());
+        $parametersAcceptor = ParametersAcceptorSelector::selectSingle($extendedMethodReflection->getVariants());
         $parameters = $parametersAcceptor->getParameters();
         if (\count($parameters) !== 1) {
             return \true;

@@ -107,15 +107,15 @@ CODE_SAMPLE
             }
             $innerNode = $node->stmts[0] instanceof Expression ? $node->stmts[0]->expr : $node->stmts[0];
             if ($innerNode instanceof Assign || $innerNode instanceof Return_) {
+                if ($innerNode instanceof Assign && $innerNode->var instanceof ArrayDimFetch) {
+                    return null;
+                }
                 return $innerNode;
             }
             return null;
         });
     }
-    /**
-     * @return \PhpParser\Node\Stmt\Return_|null
-     */
-    private function processForeachNodeWithReturnInside(Foreach_ $foreach, Return_ $return)
+    private function processForeachNodeWithReturnInside(Foreach_ $foreach, Return_ $return) : ?\PhpParser\Node\Stmt\Return_
     {
         if (!$this->nodeComparator->areNodesEqual($foreach->valueVar, $return->expr)) {
             return null;

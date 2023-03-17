@@ -3,6 +3,7 @@ namespace GuzzleHttp\Ring\Future;
 
 use React\Promise\FulfilledPromise;
 use React\Promise\RejectedPromise;
+use React\Promise\PromiseInterface;
 
 /**
  * Represents a future value that has been resolved or rejected.
@@ -25,6 +26,9 @@ class CompletedFutureValue implements FutureInterface
         $this->error = $e;
     }
 
+    /**
+     * @return mixed
+     */
     public function wait()
     {
         if ($this->error) {
@@ -36,6 +40,9 @@ class CompletedFutureValue implements FutureInterface
 
     public function cancel() {}
 
+    /**
+     * @return PromiseInterface
+     */
     public function promise()
     {
         if (!$this->cachedPromise) {
@@ -47,6 +54,9 @@ class CompletedFutureValue implements FutureInterface
         return $this->cachedPromise;
     }
 
+    /**
+     * @return PromiseInterface
+     */
     public function then(
         callable $onFulfilled = null,
         callable $onRejected = null,

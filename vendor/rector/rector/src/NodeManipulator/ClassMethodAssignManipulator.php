@@ -5,6 +5,7 @@ namespace Rector\Core\NodeManipulator;
 
 use PhpParser\Node;
 use PhpParser\Node\Arg;
+use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\ClosureUse;
 use PhpParser\Node\Expr\FuncCall;
@@ -13,6 +14,7 @@ use PhpParser\Node\Expr\New_;
 use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\FunctionLike;
 use PhpParser\Node\Param;
+use PhpParser\Node\Scalar\Encapsed;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Expression;
 use PhpParser\Node\Stmt\Foreach_;
@@ -23,6 +25,7 @@ use Rector\Core\PhpParser\Comparing\NodeComparator;
 use Rector\Core\PhpParser\Node\BetterNodeFinder;
 use Rector\Core\PhpParser\Node\NodeFactory;
 use Rector\Core\Reflection\ReflectionResolver;
+use Rector\Core\Util\ArrayChecker;
 use Rector\Core\ValueObject\Application\File;
 use Rector\DeadCode\NodeAnalyzer\ExprUsedInNextNodeAnalyzer;
 use Rector\NodeNameResolver\NodeNameResolver;
@@ -73,7 +76,12 @@ final class ClassMethodAssignManipulator
      * @var \Rector\DeadCode\NodeAnalyzer\ExprUsedInNextNodeAnalyzer
      */
     private $exprUsedInNextNodeAnalyzer;
-    public function __construct(BetterNodeFinder $betterNodeFinder, NodeFactory $nodeFactory, NodeNameResolver $nodeNameResolver, \Rector\Core\NodeManipulator\VariableManipulator $variableManipulator, NodeComparator $nodeComparator, ReflectionResolver $reflectionResolver, \Rector\Core\NodeManipulator\ArrayDestructVariableFilter $arrayDestructVariableFilter, ExprUsedInNextNodeAnalyzer $exprUsedInNextNodeAnalyzer)
+    /**
+     * @readonly
+     * @var \Rector\Core\Util\ArrayChecker
+     */
+    private $arrayChecker;
+    public function __construct(BetterNodeFinder $betterNodeFinder, NodeFactory $nodeFactory, NodeNameResolver $nodeNameResolver, \Rector\Core\NodeManipulator\VariableManipulator $variableManipulator, NodeComparator $nodeComparator, ReflectionResolver $reflectionResolver, \Rector\Core\NodeManipulator\ArrayDestructVariableFilter $arrayDestructVariableFilter, ExprUsedInNextNodeAnalyzer $exprUsedInNextNodeAnalyzer, ArrayChecker $arrayChecker)
     {
         $this->betterNodeFinder = $betterNodeFinder;
         $this->nodeFactory = $nodeFactory;
@@ -83,6 +91,7 @@ final class ClassMethodAssignManipulator
         $this->reflectionResolver = $reflectionResolver;
         $this->arrayDestructVariableFilter = $arrayDestructVariableFilter;
         $this->exprUsedInNextNodeAnalyzer = $exprUsedInNextNodeAnalyzer;
+        $this->arrayChecker = $arrayChecker;
     }
     /**
      * @return Assign[]
@@ -95,6 +104,7 @@ final class ClassMethodAssignManipulator
         $readOnlyVariableAssigns = $this->filterOutReferencedVariables($readOnlyVariableAssigns, $classMethod);
         $readOnlyVariableAssigns = $this->filterOutMultiAssigns($readOnlyVariableAssigns);
         $readOnlyVariableAssigns = $this->filterOutForeachVariables($readOnlyVariableAssigns);
+        $readOnlyVariableAssigns = $this->filterOutUsedByEncapsed($readOnlyVariableAssigns);
         /**
          * Remove unused variable assign is task of RemoveUnusedVariableAssignRector
          * so no need to move to constant early
@@ -111,6 +121,25 @@ final class ClassMethodAssignManipulator
         $classMethod->stmts[] = new Expression($assign);
         $classMethodHash = \spl_object_hash($classMethod);
         $this->alreadyAddedClassMethodNames[$classMethodHash][] = $name;
+    }
+    /**
+     * @param Assign[] $readOnlyVariableAssigns
+     * @return Assign[]
+     */
+    private function filterOutUsedByEncapsed(array $readOnlyVariableAssigns) : array
+    {
+        $callable = function (Assign $readOnlyVariableAssign) : bool {
+            $variable = $readOnlyVariableAssign->var;
+            return !(bool) $this->betterNodeFinder->findFirstNext($readOnlyVariableAssign, function (Node $node) use($variable) : bool {
+                if (!$node instanceof Encapsed) {
+                    return \false;
+                }
+                return $this->arrayChecker->doesExist($node->parts, function (Expr $expr) use($variable) : bool {
+                    return $this->nodeComparator->areNodesEqual($expr, $variable);
+                });
+            });
+        };
+        return \array_filter($readOnlyVariableAssigns, $callable);
     }
     /**
      * @param Assign[] $readOnlyVariableAssigns
@@ -142,8 +171,8 @@ final class ClassMethodAssignManipulator
     private function filterOutMultiAssigns(array $readOnlyVariableAssigns) : array
     {
         return \array_filter($readOnlyVariableAssigns, static function (Assign $assign) : bool {
-            $parent = $assign->getAttribute(AttributeKey::PARENT_NODE);
-            return !$parent instanceof Assign;
+            $parentNode = $assign->getAttribute(AttributeKey::PARENT_NODE);
+            return !$parentNode instanceof Assign;
         });
     }
     /**
@@ -192,8 +221,8 @@ final class ClassMethodAssignManipulator
             if ($this->nodeNameResolver->isName($variable, 'this')) {
                 continue;
             }
-            $parent = $variable->getAttribute(AttributeKey::PARENT_NODE);
-            if ($parent !== null && $this->isExplicitlyReferenced($parent)) {
+            $parentNode = $variable->getAttribute(AttributeKey::PARENT_NODE);
+            if ($parentNode !== null && $this->isExplicitlyReferenced($parentNode)) {
                 $variableName = $this->nodeNameResolver->getName($variable);
                 if ($variableName === null) {
                     continue;
@@ -202,11 +231,11 @@ final class ClassMethodAssignManipulator
                 continue;
             }
             $argumentPosition = null;
-            if ($parent instanceof Arg) {
-                $argumentPosition = $parent->getAttribute(AttributeKey::ARGUMENT_POSITION);
-                $parent = $parent->getAttribute(AttributeKey::PARENT_NODE);
+            if ($parentNode instanceof Arg) {
+                $argumentPosition = $parentNode->getAttribute(AttributeKey::ARGUMENT_POSITION);
+                $parentNode = $parentNode->getAttribute(AttributeKey::PARENT_NODE);
             }
-            if (!$parent instanceof Node) {
+            if (!$parentNode instanceof Node) {
                 continue;
             }
             if ($argumentPosition === null) {
@@ -216,7 +245,7 @@ final class ClassMethodAssignManipulator
             if ($variableName === null) {
                 continue;
             }
-            if (!$this->isCallOrConstructorWithReference($parent, $variable, $argumentPosition)) {
+            if (!$this->isCallOrConstructorWithReference($parentNode, $variable, $argumentPosition)) {
                 continue;
             }
             $referencedVariables[] = $variableName;

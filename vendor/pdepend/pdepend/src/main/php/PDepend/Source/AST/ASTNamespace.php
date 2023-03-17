@@ -169,6 +169,17 @@ class ASTNamespace extends AbstractASTArtifact
     }
 
     /**
+     * Returns an iterator with all {@link ASTEnum}
+     * instances within this namespace.
+     *
+     * @return ASTArtifactList<ASTEnum>
+     */
+    public function getEnums()
+    {
+        return $this->getTypesOfType('PDepend\\Source\\AST\\ASTEnum');
+    }
+
+    /**
      * Returns an iterator with all {@link ASTInterface}
      * instances within this namespace.
      *
@@ -195,7 +206,7 @@ class ASTNamespace extends AbstractASTArtifact
     {
         $types = array();
         foreach ($this->types as $type) {
-            if (get_class($type) === $className) {
+            if ($type instanceof $className && get_class($type) === $className) {
                 $types[] = $type;
             }
         }
@@ -316,15 +327,5 @@ class ASTNamespace extends AbstractASTArtifact
     public function setPackageAnnotation($packageAnnotation)
     {
         $this->packageAnnotation = $packageAnnotation;
-    }
-
-    /**
-     * ASTVisitor method for node tree traversal.
-     *
-     * @return void
-     */
-    public function accept(ASTVisitor $visitor)
-    {
-        $visitor->visitNamespace($this);
     }
 }

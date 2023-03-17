@@ -4,6 +4,9 @@ declare (strict_types=1);
 namespace Rector\PHPUnit\Set;
 
 use Rector\Set\Contract\SetListInterface;
+/**
+ * @api
+ */
 final class PHPUnitSetList implements SetListInterface
 {
     /**
@@ -41,6 +44,10 @@ final class PHPUnitSetList implements SetListInterface
     /**
      * @var string
      */
+    public const PHPUNIT_100 = __DIR__ . '/../../config/sets/phpunit100.php';
+    /**
+     * @var string
+     */
     public const PHPUNIT_CODE_QUALITY = __DIR__ . '/../../config/sets/phpunit-code-quality.php';
     /**
      * @var string
@@ -58,4 +65,8 @@ final class PHPUnitSetList implements SetListInterface
      * @var string
      */
     public const PHPUNIT_YIELD_DATA_PROVIDER = __DIR__ . '/../../config/sets/phpunit-yield-data-provider.php';
+    /**
+     * @var string
+     */
+    public const ANNOTATIONS_TO_ATTRIBUTES = __DIR__ . '/../../config/sets/annotations-to-attributes.php';
 }

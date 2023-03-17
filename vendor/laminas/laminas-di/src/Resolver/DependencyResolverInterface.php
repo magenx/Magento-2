@@ -39,11 +39,11 @@ interface DependencyResolverInterface
     /**
      * Resolves all parameters for injection
      *
-     * @param string $class The class name to resolve the parameters for
-     * @param array  $parameters Parameters to use as provided.
+     * @param string $requestedType The class name to resolve the parameters for
+     * @param array<mixed> $callTimeParameters Parameters to use as provided.
      * @return InjectionInterface[] Returns the injection parameters as indexed array. This
      *     array contains either TypeInjection or ValueInjection instances
      * @throws MissingPropertyException  When a parameter could not be resolved.
      */
-    public function resolveParameters(string $class, array $parameters = []): array;
+    public function resolveParameters(string $requestedType, array $callTimeParameters = []): array;
 }

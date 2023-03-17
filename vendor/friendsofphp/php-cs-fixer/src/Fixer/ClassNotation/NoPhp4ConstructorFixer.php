@@ -221,7 +221,7 @@ class Foo
             ], $classStart, $classEnd, [2 => false]);
 
             if (null !== $parentSeq) {
-                // we only need indexes
+                // we only need indices
                 $parentSeq = array_keys($parentSeq);
 
                 // match either of the possibilities
@@ -242,7 +242,7 @@ class Foo
                 ], $classStart, $classEnd, [2 => false]);
 
                 if (null !== $parentSeq) {
-                    // we only need indexes
+                    // we only need indices
                     $parentSeq = array_keys($parentSeq);
 
                     // replace call with parent::__construct()
@@ -346,25 +346,31 @@ class Foo
             $sequences[] = $seq;
         }
 
-        return [$sequences,  [3 => false]];
+        return [$sequences, [3 => false]];
     }
 
     /**
      * Find a function or method matching a given name within certain bounds.
+     *
+     * Returns:
+     * - nameIndex (int): The index of the function/method name.
+     * - startIndex (int): The index of the function/method start.
+     * - endIndex (int): The index of the function/method end.
+     * - bodyIndex (int): The index of the function/method body.
+     * - modifiers (array): The modifiers as array keys and their index as the values, e.g. array(T_PUBLIC => 10)
      *
      * @param Tokens $tokens     the Tokens instance
      * @param string $name       the function/Method name
      * @param int    $startIndex the search start index
      * @param int    $endIndex   the search end index
      *
-     * @return null|array An associative array, if a match is found:
-     *
-     *     - nameIndex (int): The index of the function/method name.
-     *     - startIndex (int): The index of the function/method start.
-     *     - endIndex (int): The index of the function/method end.
-     *     - bodyIndex (int): The index of the function/method body.
-     *     - modifiers (array): The modifiers as array keys and their index as
-     *       the values, e.g. array(T_PUBLIC => 10)
+     * @return null|array{
+     *     nameIndex: int,
+     *     startIndex: int,
+     *     endIndex: int,
+     *     bodyIndex: int,
+     *     modifiers: list<int>,
+     * }
      */
     private function findFunction(Tokens $tokens, string $name, int $startIndex, int $endIndex): ?array
     {
@@ -378,7 +384,7 @@ class Foo
             return null;
         }
 
-        // keep only the indexes
+        // keep only the indices
         $function = array_keys($function);
 
         // find previous block, saving method modifiers for later use

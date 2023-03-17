@@ -432,7 +432,7 @@ class Image extends AbstractWord
      */
     protected function randomFreq()
     {
-        return mt_rand(700000, 1000000) / 15000000;
+        return mt_rand(700000, 1_000_000) / 15_000_000;
     }
 
     /**
@@ -443,7 +443,7 @@ class Image extends AbstractWord
     protected function randomPhase()
     {
         // random phase from 0 to pi
-        return mt_rand(0, 3141592) / 1000000;
+        return mt_rand(0, 3_141_592) / 1_000_000;
     }
 
     /**

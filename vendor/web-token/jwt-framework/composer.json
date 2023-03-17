@@ -14,12 +14,6 @@
             "homepage": "https://github.com/web-token/jwt-framework/contributors"
         }
     ],
-    "scripts": {
-        "test:unit": "./vendor/bin/phpunit --color",
-        "test:typing": "./vendor/bin/phpstan analyse",
-        "test:syntax": "./vendor/bin/php-cs-fixer fix --dry-run --stop-on-violation --using-cache=no",
-        "test:mutations": "./vendor/bin/infection --logger-github --git-diff-filter=AM -s --threads=$(nproc) --min-msi=0 --min-covered-msi=0"
-    },
     "autoload": {
         "psr-4": {
             "Jose\\":  "src/",
@@ -58,51 +52,57 @@
         }
     },
     "require": {
-        "php": ">=7.2",
+        "php": ">=8.1",
         "ext-json": "*",
         "ext-mbstring": "*",
         "ext-openssl": "*",
         "ext-sodium": "*",
-        "brick/math": "^0.8.17|^0.9",
-        "fgrosse/phpasn1": "^2.0",
+        "brick/math": "^0.9|^0.10|^0.11",
+        "paragonie/constant_time_encoding": "^2.4",
         "psr/event-dispatcher": "^1.0",
         "psr/http-client": "^1.0",
         "psr/http-factory": "^1.0",
-        "spomky-labs/aes-key-wrap": "^5.0|^6.0",
-        "spomky-labs/base64url": "^1.0|^2.0",
-        "symfony/config": "^4.2|^5.0",
-        "symfony/console": "^4.2|^5.0",
-        "symfony/dependency-injection": "^4.2|^5.0",
-        "symfony/event-dispatcher": "^4.2|^5.0",
-        "symfony/http-kernel": "^4.2|^5.0",
+        "spomky-labs/aes-key-wrap": "^7.0",
+        "spomky-labs/pki-framework": "^1.0",
+        "symfony/config": "^5.4|^6.0",
+        "symfony/console": "^5.4|^6.0",
+        "symfony/dependency-injection": "^5.4|^6.0",
+        "symfony/event-dispatcher": "^5.4|^6.0",
+        "symfony/http-kernel": "^5.4|^6.0",
         "symfony/polyfill-mbstring": "^1.12"
     },
     "require-dev": {
         "ext-curl": "*",
         "ext-gmp": "*",
-        "bjeavons/zxcvbn-php": "^1.0",
-        "blackfire/php-sdk": "^1.14",
-        "friendsofphp/php-cs-fixer": "^2.16",
-        "infection/infection": "^0.15|^0.16|^0.17|^0.18|^0.19|^0.20",
-        "matthiasnoback/symfony-config-test": "^3.1|^4.0",
-        "nyholm/psr7": "^1.3",
-        "php-coveralls/php-coveralls": "^2.0",
-        "php-http/mock-client": "^1.0",
-        "phpstan/phpstan": "^0.12",
-        "phpstan/phpstan-deprecation-rules": "^0.12",
-        "phpstan/phpstan-phpunit": "^0.12",
-        "phpstan/phpstan-strict-rules": "^0.12",
-        "phpunit/phpunit": "^8.0|^9.0",
-        "symfony/browser-kit": "^4.2|^5.0",
-        "symfony/finder": "^4.2|^5.0",
-        "symfony/framework-bundle": "^4.2|^5.0",
-        "symfony/http-client": "^5.2",
-        "symfony/phpunit-bridge": "^4.2|^5.0",
-        "symfony/serializer": "^4.2|^5.0",
-        "symfony/var-dumper": "^4.2|^5.0"
+        "bjeavons/zxcvbn-php": "^1.3",
+        "blackfire/php-sdk": "^1.31",
+        "ekino/phpstan-banned-code": "^1.0",
+        "infection/infection": "^0.26",
+        "matthiasnoback/symfony-config-test": "^4.3.0",
+        "nyholm/psr7": "^1.5",
+        "php-http/mock-client": "^1.5",
+        "php-parallel-lint/php-parallel-lint": "^1.3",
+        "phpbench/phpbench": "^1.2",
+        "phpstan/extension-installer": "^1.1",
+        "phpstan/phpstan": "^1.8",
+        "phpstan/phpstan-deprecation-rules": "^1.0",
+        "phpstan/phpstan-phpunit": "^1.1",
+        "phpstan/phpstan-strict-rules": "^1.4",
+        "phpunit/phpunit": "^9.5.23",
+        "qossmic/deptrac-shim": "^1.0",
+        "rector/rector": "^0.14",
+        "roave/security-advisories": "dev-latest",
+        "symfony/browser-kit": "^6.1.3",
+        "symfony/finder": "^5.4|^6.0",
+        "symfony/framework-bundle": "^6.1.3",
+        "symfony/http-client": "^5.4|^6.0",
+        "symfony/phpunit-bridge": "^6.1.3",
+        "symfony/serializer": "^6.1.3",
+        "symfony/var-dumper": "^6.1.3",
+        "symfony/yaml": "^6.1.3",
+        "symplify/easy-coding-standard": "^11.0"
     },
     "replace": {
-        "web-token/jwt-easy": "self.version",
         "web-token/jwt-core": "self.version",
         "web-token/jwt-checker": "self.version",
         "web-token/jwt-signature": "self.version",
@@ -129,21 +129,25 @@
         "web-token/jwt-encryption-algorithm-experimental": "self.version",
         "web-token/signature-pack": "self.version",
         "web-token/encryption-pack": "self.version"
-
     },
-   "suggest":{
-       "ext-sodium": "Sodium is required for OKP key creation, EdDSA signature algorithm and ECDH-ES key encryption with OKP keys",
-       "bjeavons/zxcvbn-php": "Adds key quality check for oct keys.",
-       "php-http/httplug": "To enable JKU/X5U support.",
-       "php-http/httplug-bundle": "To enable JKU/X5U support.",
-       "php-http/message-factory": "To enable JKU/X5U support.",
-       "symfony/serializer": "Use the Symfony serializer to serialize/unserialize JWS and JWE tokens.",
-       "symfony/var-dumper": "Used to show data on the debug toolbar."
-   },
+    "suggest":{
+        "ext-sodium": "Sodium is required for OKP key creation, EdDSA signature algorithm and ECDH-ES key encryption with OKP keys",
+        "bjeavons/zxcvbn-php": "Adds key quality check for oct keys.",
+        "php-http/httplug": "To enable JKU/X5U support.",
+        "php-http/httplug-bundle": "To enable JKU/X5U support.",
+        "php-http/message-factory": "To enable JKU/X5U support.",
+        "symfony/serializer": "Use the Symfony serializer to serialize/unserialize JWS and JWE tokens.",
+        "symfony/var-dumper": "Used to show data on the debug toolbar."
+    },
     "conflict": {
         "spomky-labs/jose": "*"
     },
     "config": {
-        "sort-packages": true
+        "sort-packages": true,
+        "allow-plugins": {
+            "phpstan/extension-installer": true,
+            "infection/extension-installer": true,
+            "composer/package-versions-deprecated": true
+        }
     }
 }

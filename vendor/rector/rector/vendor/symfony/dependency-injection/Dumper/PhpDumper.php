@@ -8,40 +8,40 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202208\Symfony\Component\DependencyInjection\Dumper;
+namespace RectorPrefix202303\Symfony\Component\DependencyInjection\Dumper;
 
-use RectorPrefix202208\Composer\Autoload\ClassLoader;
-use RectorPrefix202208\Symfony\Component\Debug\DebugClassLoader as LegacyDebugClassLoader;
-use RectorPrefix202208\Symfony\Component\DependencyInjection\Argument\AbstractArgument;
-use RectorPrefix202208\Symfony\Component\DependencyInjection\Argument\ArgumentInterface;
-use RectorPrefix202208\Symfony\Component\DependencyInjection\Argument\IteratorArgument;
-use RectorPrefix202208\Symfony\Component\DependencyInjection\Argument\ServiceClosureArgument;
-use RectorPrefix202208\Symfony\Component\DependencyInjection\Argument\ServiceLocator;
-use RectorPrefix202208\Symfony\Component\DependencyInjection\Argument\ServiceLocatorArgument;
-use RectorPrefix202208\Symfony\Component\DependencyInjection\Compiler\AnalyzeServiceReferencesPass;
-use RectorPrefix202208\Symfony\Component\DependencyInjection\Compiler\CheckCircularReferencesPass;
-use RectorPrefix202208\Symfony\Component\DependencyInjection\Compiler\ServiceReferenceGraphNode;
-use RectorPrefix202208\Symfony\Component\DependencyInjection\Container;
-use RectorPrefix202208\Symfony\Component\DependencyInjection\ContainerBuilder;
-use RectorPrefix202208\Symfony\Component\DependencyInjection\ContainerInterface;
-use RectorPrefix202208\Symfony\Component\DependencyInjection\Definition;
-use RectorPrefix202208\Symfony\Component\DependencyInjection\Exception\EnvParameterException;
-use RectorPrefix202208\Symfony\Component\DependencyInjection\Exception\InvalidArgumentException;
-use RectorPrefix202208\Symfony\Component\DependencyInjection\Exception\LogicException;
-use RectorPrefix202208\Symfony\Component\DependencyInjection\Exception\RuntimeException;
-use RectorPrefix202208\Symfony\Component\DependencyInjection\Exception\ServiceCircularReferenceException;
-use RectorPrefix202208\Symfony\Component\DependencyInjection\ExpressionLanguage;
-use RectorPrefix202208\Symfony\Component\DependencyInjection\LazyProxy\PhpDumper\DumperInterface as ProxyDumper;
-use RectorPrefix202208\Symfony\Component\DependencyInjection\LazyProxy\PhpDumper\NullDumper;
-use RectorPrefix202208\Symfony\Component\DependencyInjection\Loader\FileLoader;
-use RectorPrefix202208\Symfony\Component\DependencyInjection\Parameter;
-use RectorPrefix202208\Symfony\Component\DependencyInjection\Reference;
-use RectorPrefix202208\Symfony\Component\DependencyInjection\ServiceLocator as BaseServiceLocator;
-use RectorPrefix202208\Symfony\Component\DependencyInjection\TypedReference;
-use RectorPrefix202208\Symfony\Component\DependencyInjection\Variable;
-use RectorPrefix202208\Symfony\Component\ErrorHandler\DebugClassLoader;
-use RectorPrefix202208\Symfony\Component\ExpressionLanguage\Expression;
-use RectorPrefix202208\Symfony\Component\HttpKernel\Kernel;
+use RectorPrefix202303\Composer\Autoload\ClassLoader;
+use RectorPrefix202303\Symfony\Component\Debug\DebugClassLoader as LegacyDebugClassLoader;
+use RectorPrefix202303\Symfony\Component\DependencyInjection\Argument\AbstractArgument;
+use RectorPrefix202303\Symfony\Component\DependencyInjection\Argument\ArgumentInterface;
+use RectorPrefix202303\Symfony\Component\DependencyInjection\Argument\IteratorArgument;
+use RectorPrefix202303\Symfony\Component\DependencyInjection\Argument\ServiceClosureArgument;
+use RectorPrefix202303\Symfony\Component\DependencyInjection\Argument\ServiceLocator;
+use RectorPrefix202303\Symfony\Component\DependencyInjection\Argument\ServiceLocatorArgument;
+use RectorPrefix202303\Symfony\Component\DependencyInjection\Compiler\AnalyzeServiceReferencesPass;
+use RectorPrefix202303\Symfony\Component\DependencyInjection\Compiler\CheckCircularReferencesPass;
+use RectorPrefix202303\Symfony\Component\DependencyInjection\Compiler\ServiceReferenceGraphNode;
+use RectorPrefix202303\Symfony\Component\DependencyInjection\Container;
+use RectorPrefix202303\Symfony\Component\DependencyInjection\ContainerBuilder;
+use RectorPrefix202303\Symfony\Component\DependencyInjection\ContainerInterface;
+use RectorPrefix202303\Symfony\Component\DependencyInjection\Definition;
+use RectorPrefix202303\Symfony\Component\DependencyInjection\Exception\EnvParameterException;
+use RectorPrefix202303\Symfony\Component\DependencyInjection\Exception\InvalidArgumentException;
+use RectorPrefix202303\Symfony\Component\DependencyInjection\Exception\LogicException;
+use RectorPrefix202303\Symfony\Component\DependencyInjection\Exception\RuntimeException;
+use RectorPrefix202303\Symfony\Component\DependencyInjection\Exception\ServiceCircularReferenceException;
+use RectorPrefix202303\Symfony\Component\DependencyInjection\ExpressionLanguage;
+use RectorPrefix202303\Symfony\Component\DependencyInjection\LazyProxy\PhpDumper\DumperInterface;
+use RectorPrefix202303\Symfony\Component\DependencyInjection\LazyProxy\PhpDumper\NullDumper;
+use RectorPrefix202303\Symfony\Component\DependencyInjection\Loader\FileLoader;
+use RectorPrefix202303\Symfony\Component\DependencyInjection\Parameter;
+use RectorPrefix202303\Symfony\Component\DependencyInjection\Reference;
+use RectorPrefix202303\Symfony\Component\DependencyInjection\ServiceLocator as BaseServiceLocator;
+use RectorPrefix202303\Symfony\Component\DependencyInjection\TypedReference;
+use RectorPrefix202303\Symfony\Component\DependencyInjection\Variable;
+use RectorPrefix202303\Symfony\Component\ErrorHandler\DebugClassLoader;
+use RectorPrefix202303\Symfony\Component\ExpressionLanguage\Expression;
+use RectorPrefix202303\Symfony\Component\HttpKernel\Kernel;
 /**
  * PhpDumper dumps a service container as a PHP class.
  *
@@ -165,9 +165,13 @@ class PhpDumper extends Dumper
      */
     private $baseClass;
     /**
-     * @var ProxyDumper
+     * @var \Symfony\Component\DependencyInjection\LazyProxy\PhpDumper\DumperInterface
      */
     private $proxyDumper;
+    /**
+     * @var bool
+     */
+    private $hasProxyDumper = \false;
     /**
      * {@inheritdoc}
      */
@@ -181,9 +185,10 @@ class PhpDumper extends Dumper
     /**
      * Sets the dumper to be used when dumping proxies in the generated container.
      */
-    public function setProxyDumper(ProxyDumper $proxyDumper)
+    public function setProxyDumper(DumperInterface $proxyDumper)
     {
         $this->proxyDumper = $proxyDumper;
+        $this->hasProxyDumper = !$proxyDumper instanceof NullDumper;
     }
     /**
      * Dumps the service container as a PHP class.
@@ -223,7 +228,7 @@ class PhpDumper extends Dumper
             $this->baseClass = $baseClass;
         }
         $this->initializeMethodNamesMap('Container' === $baseClass ? Container::class : $baseClass);
-        if ($this->getProxyDumper() instanceof NullDumper) {
+        if (!$this->hasProxyDumper) {
             (new AnalyzeServiceReferencesPass(\true, \false))->process($this->container);
             try {
                 (new CheckCircularReferencesPass())->process($this->container);
@@ -268,8 +273,8 @@ class PhpDumper extends Dumper
             $fileTemplate = <<<EOF
 <?php
 
-use RectorPrefix202208\\Symfony\\Component\\DependencyInjection\\Argument\\RewindableGenerator;
-use RectorPrefix202208\\Symfony\\Component\\DependencyInjection\\Exception\\RuntimeException;
+use RectorPrefix202303\\Symfony\\Component\\DependencyInjection\\Argument\\RewindableGenerator;
+use RectorPrefix202303\\Symfony\\Component\\DependencyInjection\\Exception\\RuntimeException;
 
 /*{$this->docStar}
  * @internal This class has been auto-generated by the Symfony Dependency Injection Component.
@@ -338,7 +343,7 @@ EOF;
 // This file has been auto-generated by the Symfony Dependency Injection Component
 // You can reference it in the "opcache.preload" php.ini setting on PHP >= 7.4 when preloading is desired
 
-use RectorPrefix202208\\Symfony\\Component\\DependencyInjection\\Dumper\\Preloader;
+use RectorPrefix202303\\Symfony\\Component\\DependencyInjection\\Dumper\\Preloader;
 
 if (in_array(PHP_SAPI, ['cli', 'phpdbg'], true)) {
     return;
@@ -414,13 +419,13 @@ EOF;
     /**
      * Retrieves the currently set proxy dumper or instantiates one.
      */
-    private function getProxyDumper() : ProxyDumper
+    private function getProxyDumper() : DumperInterface
     {
         return $this->proxyDumper = $this->proxyDumper ?? new NullDumper();
     }
     private function analyzeReferences()
     {
-        (new AnalyzeServiceReferencesPass(\false, !$this->getProxyDumper() instanceof NullDumper))->process($this->container);
+        (new AnalyzeServiceReferencesPass(\false, $this->hasProxyDumper))->process($this->container);
         $checkedNodes = [];
         $this->circularReferences = [];
         $this->singleUsePrivateIds = [];
@@ -443,12 +448,12 @@ EOF;
         foreach ($edges as $edge) {
             $node = $edge->getDestNode();
             $id = $node->getId();
-            if ($sourceId === $id || !$node->getValue() instanceof Definition || $edge->isLazy() || $edge->isWeak()) {
+            if ($sourceId === $id || !$node->getValue() instanceof Definition || $edge->isWeak()) {
                 continue;
             }
             if (isset($path[$id])) {
                 $loop = null;
-                $loopByConstructor = $edge->isReferencedByConstructor();
+                $loopByConstructor = $edge->isReferencedByConstructor() && !$edge->isLazy();
                 $pathInLoop = [$id, []];
                 foreach ($path as $k => $pathByConstructor) {
                     if (null !== $loop) {
@@ -462,7 +467,7 @@ EOF;
                 }
                 $this->addCircularReferences($id, $loop, $loopByConstructor);
             } elseif (!isset($checkedNodes[$id])) {
-                $this->collectCircularReferences($id, $node->getOutEdges(), $checkedNodes, $loops, $path, $edge->isReferencedByConstructor());
+                $this->collectCircularReferences($id, $node->getOutEdges(), $checkedNodes, $loops, $path, $edge->isReferencedByConstructor() && !$edge->isLazy());
             } elseif (isset($loops[$id])) {
                 // we already had detected loops for this edge
                 // let's check if we have a common ancestor in one of the detected loops
@@ -482,7 +487,7 @@ EOF;
                     }
                     // we can now build the loop
                     $loop = null;
-                    $loopByConstructor = $edge->isReferencedByConstructor();
+                    $loopByConstructor = $edge->isReferencedByConstructor() && !$edge->isLazy();
                     foreach ($fillPath as $k => $pathByConstructor) {
                         if (null !== $loop) {
                             $loop[] = $k;
@@ -491,7 +496,7 @@ EOF;
                             $loop = [];
                         }
                     }
-                    $this->addCircularReferences($first, $loop, \true);
+                    $this->addCircularReferences($first, $loop, $loopByConstructor);
                     break;
                 }
             }
@@ -706,7 +711,7 @@ EOF;
             }
             $witherAssignation = '';
             if ($call[2] ?? \false) {
-                if (null !== $sharedNonLazyId && $lastWitherIndex === $k) {
+                if (null !== $sharedNonLazyId && $lastWitherIndex === $k && 'instance' === $variableName) {
                     $witherAssignation = \sprintf('$this->%s[\'%s\'] = ', $definition->isPublic() ? 'services' : 'privates', $sharedNonLazyId);
                 }
                 $witherAssignation .= \sprintf('$%s = ', $variableName);
@@ -897,7 +902,7 @@ EOF;
         if ($this->container->hasDefinition($targetId) && ($def = $this->container->getDefinition($targetId)) && !$def->isShared()) {
             return '';
         }
-        $hasSelfRef = isset($this->circularReferences[$id][$targetId]) && !isset($this->definitionVariables[$definition]);
+        $hasSelfRef = isset($this->circularReferences[$id][$targetId]) && !isset($this->definitionVariables[$definition]) && !($this->hasProxyDumper && $definition->isLazy());
         if ($hasSelfRef && !$forConstructor && !($forConstructor = !$this->circularReferences[$id][$targetId])) {
             $code = $this->addInlineService($id, $definition, $definition);
         } else {
@@ -928,7 +933,7 @@ EOTXT
         $code = '';
         if ($isSimpleInstance = $isRootInstance = null === $inlineDef) {
             foreach ($this->serviceCalls as $targetId => [$callCount, $behavior, $byConstructor]) {
-                if ($byConstructor && isset($this->circularReferences[$id][$targetId]) && !$this->circularReferences[$id][$targetId]) {
+                if ($byConstructor && isset($this->circularReferences[$id][$targetId]) && !$this->circularReferences[$id][$targetId] && !($this->hasProxyDumper && $definition->isLazy())) {
                     $code .= $this->addInlineReference($id, $definition, $targetId, $forConstructor);
                 }
             }
@@ -1064,14 +1069,14 @@ EOTXT
         $code = <<<EOF
 <?php
 {$namespaceLine}
-use RectorPrefix202208\\Symfony\\Component\\DependencyInjection\\Argument\\RewindableGenerator;
-use RectorPrefix202208\\Symfony\\Component\\DependencyInjection\\ContainerInterface;
-use RectorPrefix202208\\Symfony\\Component\\DependencyInjection\\Container;
-use RectorPrefix202208\\Symfony\\Component\\DependencyInjection\\Exception\\InvalidArgumentException;
-use RectorPrefix202208\\Symfony\\Component\\DependencyInjection\\Exception\\LogicException;
-use RectorPrefix202208\\Symfony\\Component\\DependencyInjection\\Exception\\RuntimeException;
-use RectorPrefix202208\\Symfony\\Component\\DependencyInjection\\ParameterBag\\FrozenParameterBag;
-use RectorPrefix202208\\Symfony\\Component\\DependencyInjection\\ParameterBag\\ParameterBagInterface;
+use RectorPrefix202303\\Symfony\\Component\\DependencyInjection\\Argument\\RewindableGenerator;
+use RectorPrefix202303\\Symfony\\Component\\DependencyInjection\\ContainerInterface;
+use RectorPrefix202303\\Symfony\\Component\\DependencyInjection\\Container;
+use RectorPrefix202303\\Symfony\\Component\\DependencyInjection\\Exception\\InvalidArgumentException;
+use RectorPrefix202303\\Symfony\\Component\\DependencyInjection\\Exception\\LogicException;
+use RectorPrefix202303\\Symfony\\Component\\DependencyInjection\\Exception\\RuntimeException;
+use RectorPrefix202303\\Symfony\\Component\\DependencyInjection\\ParameterBag\\FrozenParameterBag;
+use RectorPrefix202303\\Symfony\\Component\\DependencyInjection\\ParameterBag\\ParameterBagInterface;
 
 /*{$this->docStar}
  * @internal This class has been auto-generated by the Symfony Dependency Injection Component.
@@ -1820,7 +1825,7 @@ EOF;
     private function getExpressionLanguage() : ExpressionLanguage
     {
         if (!isset($this->expressionLanguage)) {
-            if (!\class_exists(\RectorPrefix202208\Symfony\Component\ExpressionLanguage\ExpressionLanguage::class)) {
+            if (!\class_exists(\RectorPrefix202303\Symfony\Component\ExpressionLanguage\ExpressionLanguage::class)) {
                 throw new LogicException('Unable to use expressions as the Symfony ExpressionLanguage component is not installed.');
             }
             $providers = $this->container->getExpressionLanguageProviders();

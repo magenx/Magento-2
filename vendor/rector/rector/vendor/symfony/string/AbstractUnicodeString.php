@@ -8,11 +8,11 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202208\Symfony\Component\String;
+namespace RectorPrefix202303\Symfony\Component\String;
 
-use RectorPrefix202208\Symfony\Component\String\Exception\ExceptionInterface;
-use RectorPrefix202208\Symfony\Component\String\Exception\InvalidArgumentException;
-use RectorPrefix202208\Symfony\Component\String\Exception\RuntimeException;
+use RectorPrefix202303\Symfony\Component\String\Exception\ExceptionInterface;
+use RectorPrefix202303\Symfony\Component\String\Exception\InvalidArgumentException;
+use RectorPrefix202303\Symfony\Component\String\Exception\RuntimeException;
 /**
  * Represents a string of abstract Unicode characters.
  *
@@ -33,8 +33,8 @@ abstract class AbstractUnicodeString extends AbstractString
     // all ASCII letters sorted by typical frequency of occurrence
     private const ASCII = " eiasntrolud][cmp'\ng|hv.fb,:=-q10C2*yx)(L9AS/P\"EjMIk3>5T<D4}B{8FwR67UGN;JzV#HOW_&!K?XQ%Y\\\tZ+~^\$@`\x00\x01\x02\x03\x04\x05\x06\x07\x08\v\f\r\x0e\x0f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f";
     // the subset of folded case mappings that is not in lower case mappings
-    private const FOLD_FROM = ['İ', 'µ', 'ſ', "ͅ", 'ς', 'ϐ', 'ϑ', 'ϕ', 'ϖ', 'ϰ', 'ϱ', 'ϵ', 'ẛ', "ι", 'ß', 'İ', 'ŉ', 'ǰ', 'ΐ', 'ΰ', 'և', 'ẖ', 'ẗ', 'ẘ', 'ẙ', 'ẚ', 'ẞ', 'ὐ', 'ὒ', 'ὔ', 'ὖ', 'ᾀ', 'ᾁ', 'ᾂ', 'ᾃ', 'ᾄ', 'ᾅ', 'ᾆ', 'ᾇ', 'ᾈ', 'ᾉ', 'ᾊ', 'ᾋ', 'ᾌ', 'ᾍ', 'ᾎ', 'ᾏ', 'ᾐ', 'ᾑ', 'ᾒ', 'ᾓ', 'ᾔ', 'ᾕ', 'ᾖ', 'ᾗ', 'ᾘ', 'ᾙ', 'ᾚ', 'ᾛ', 'ᾜ', 'ᾝ', 'ᾞ', 'ᾟ', 'ᾠ', 'ᾡ', 'ᾢ', 'ᾣ', 'ᾤ', 'ᾥ', 'ᾦ', 'ᾧ', 'ᾨ', 'ᾩ', 'ᾪ', 'ᾫ', 'ᾬ', 'ᾭ', 'ᾮ', 'ᾯ', 'ᾲ', 'ᾳ', 'ᾴ', 'ᾶ', 'ᾷ', 'ᾼ', 'ῂ', 'ῃ', 'ῄ', 'ῆ', 'ῇ', 'ῌ', 'ῒ', 'ΐ', 'ῖ', 'ῗ', 'ῢ', 'ΰ', 'ῤ', 'ῦ', 'ῧ', 'ῲ', 'ῳ', 'ῴ', 'ῶ', 'ῷ', 'ῼ', 'ﬀ', 'ﬁ', 'ﬂ', 'ﬃ', 'ﬄ', 'ﬅ', 'ﬆ', 'ﬓ', 'ﬔ', 'ﬕ', 'ﬖ', 'ﬗ'];
-    private const FOLD_TO = ['i̇', 'μ', 's', 'ι', 'σ', 'β', 'θ', 'φ', 'π', 'κ', 'ρ', 'ε', 'ṡ', 'ι', 'ss', 'i̇', 'ʼn', 'ǰ', 'ΐ', 'ΰ', 'եւ', 'ẖ', 'ẗ', 'ẘ', 'ẙ', 'aʾ', 'ss', 'ὐ', 'ὒ', 'ὔ', 'ὖ', 'ἀι', 'ἁι', 'ἂι', 'ἃι', 'ἄι', 'ἅι', 'ἆι', 'ἇι', 'ἀι', 'ἁι', 'ἂι', 'ἃι', 'ἄι', 'ἅι', 'ἆι', 'ἇι', 'ἠι', 'ἡι', 'ἢι', 'ἣι', 'ἤι', 'ἥι', 'ἦι', 'ἧι', 'ἠι', 'ἡι', 'ἢι', 'ἣι', 'ἤι', 'ἥι', 'ἦι', 'ἧι', 'ὠι', 'ὡι', 'ὢι', 'ὣι', 'ὤι', 'ὥι', 'ὦι', 'ὧι', 'ὠι', 'ὡι', 'ὢι', 'ὣι', 'ὤι', 'ὥι', 'ὦι', 'ὧι', 'ὰι', 'αι', 'άι', 'ᾶ', 'ᾶι', 'αι', 'ὴι', 'ηι', 'ήι', 'ῆ', 'ῆι', 'ηι', 'ῒ', 'ΐ', 'ῖ', 'ῗ', 'ῢ', 'ΰ', 'ῤ', 'ῦ', 'ῧ', 'ὼι', 'ωι', 'ώι', 'ῶ', 'ῶι', 'ωι', 'ff', 'fi', 'fl', 'ffi', 'ffl', 'st', 'st', 'մն', 'մե', 'մի', 'վն', 'մխ'];
+    private const FOLD_FROM = ['İ', 'µ', 'ſ', "ͅ", 'ς', 'ϐ', 'ϑ', 'ϕ', 'ϖ', 'ϰ', 'ϱ', 'ϵ', 'ẛ', "ι", 'ß', 'ŉ', 'ǰ', 'ΐ', 'ΰ', 'և', 'ẖ', 'ẗ', 'ẘ', 'ẙ', 'ẚ', 'ẞ', 'ὐ', 'ὒ', 'ὔ', 'ὖ', 'ᾀ', 'ᾁ', 'ᾂ', 'ᾃ', 'ᾄ', 'ᾅ', 'ᾆ', 'ᾇ', 'ᾈ', 'ᾉ', 'ᾊ', 'ᾋ', 'ᾌ', 'ᾍ', 'ᾎ', 'ᾏ', 'ᾐ', 'ᾑ', 'ᾒ', 'ᾓ', 'ᾔ', 'ᾕ', 'ᾖ', 'ᾗ', 'ᾘ', 'ᾙ', 'ᾚ', 'ᾛ', 'ᾜ', 'ᾝ', 'ᾞ', 'ᾟ', 'ᾠ', 'ᾡ', 'ᾢ', 'ᾣ', 'ᾤ', 'ᾥ', 'ᾦ', 'ᾧ', 'ᾨ', 'ᾩ', 'ᾪ', 'ᾫ', 'ᾬ', 'ᾭ', 'ᾮ', 'ᾯ', 'ᾲ', 'ᾳ', 'ᾴ', 'ᾶ', 'ᾷ', 'ᾼ', 'ῂ', 'ῃ', 'ῄ', 'ῆ', 'ῇ', 'ῌ', 'ῒ', 'ῖ', 'ῗ', 'ῢ', 'ῤ', 'ῦ', 'ῧ', 'ῲ', 'ῳ', 'ῴ', 'ῶ', 'ῷ', 'ῼ', 'ﬀ', 'ﬁ', 'ﬂ', 'ﬃ', 'ﬄ', 'ﬅ', 'ﬆ', 'ﬓ', 'ﬔ', 'ﬕ', 'ﬖ', 'ﬗ'];
+    private const FOLD_TO = ['i̇', 'μ', 's', 'ι', 'σ', 'β', 'θ', 'φ', 'π', 'κ', 'ρ', 'ε', 'ṡ', 'ι', 'ss', 'ʼn', 'ǰ', 'ΐ', 'ΰ', 'եւ', 'ẖ', 'ẗ', 'ẘ', 'ẙ', 'aʾ', 'ss', 'ὐ', 'ὒ', 'ὔ', 'ὖ', 'ἀι', 'ἁι', 'ἂι', 'ἃι', 'ἄι', 'ἅι', 'ἆι', 'ἇι', 'ἀι', 'ἁι', 'ἂι', 'ἃι', 'ἄι', 'ἅι', 'ἆι', 'ἇι', 'ἠι', 'ἡι', 'ἢι', 'ἣι', 'ἤι', 'ἥι', 'ἦι', 'ἧι', 'ἠι', 'ἡι', 'ἢι', 'ἣι', 'ἤι', 'ἥι', 'ἦι', 'ἧι', 'ὠι', 'ὡι', 'ὢι', 'ὣι', 'ὤι', 'ὥι', 'ὦι', 'ὧι', 'ὠι', 'ὡι', 'ὢι', 'ὣι', 'ὤι', 'ὥι', 'ὦι', 'ὧι', 'ὰι', 'αι', 'άι', 'ᾶ', 'ᾶι', 'αι', 'ὴι', 'ηι', 'ήι', 'ῆ', 'ῆι', 'ηι', 'ῒ', 'ῖ', 'ῗ', 'ῢ', 'ῤ', 'ῦ', 'ῧ', 'ὼι', 'ωι', 'ώι', 'ῶ', 'ῶι', 'ωι', 'ff', 'fi', 'fl', 'ffi', 'ffl', 'st', 'st', 'մն', 'մե', 'մի', 'վն', 'մխ'];
     // the subset of upper case mappings that map one code point to many code points
     private const UPPER_FROM = ['ß', 'ﬀ', 'ﬁ', 'ﬂ', 'ﬃ', 'ﬄ', 'ﬅ', 'ﬆ', 'և', 'ﬓ', 'ﬔ', 'ﬕ', 'ﬖ', 'ﬗ', 'ŉ', 'ΐ', 'ΰ', 'ǰ', 'ẖ', 'ẗ', 'ẘ', 'ẙ', 'ẚ', 'ὐ', 'ὒ', 'ὔ', 'ὖ', 'ᾶ', 'ῆ', 'ῒ', 'ΐ', 'ῖ', 'ῗ', 'ῢ', 'ΰ', 'ῤ', 'ῦ', 'ῧ', 'ῶ'];
     private const UPPER_TO = ['SS', 'FF', 'FI', 'FL', 'FFI', 'FFL', 'ST', 'ST', 'ԵՒ', 'ՄՆ', 'ՄԵ', 'ՄԻ', 'ՎՆ', 'ՄԽ', 'ʼN', 'Ϊ́', 'Ϋ́', 'J̌', 'H̱', 'T̈', 'W̊', 'Y̊', 'Aʾ', 'Υ̓', 'Υ̓̀', 'Υ̓́', 'Υ̓͂', 'Α͂', 'Η͂', 'Ϊ̀', 'Ϊ́', 'Ι͂', 'Ϊ͂', 'Ϋ̀', 'Ϋ́', 'Ρ̓', 'Υ͂', 'Ϋ͂', 'Ω͂'];
@@ -108,10 +108,10 @@ abstract class AbstractUnicodeString extends AbstractString
                     $s = \preg_replace("/([AUO])̈(?=\\p{Ll})/u", '$1e', $s);
                     $s = \str_replace(["ä", "ö", "ü", "Ä", "Ö", "Ü"], ['ae', 'oe', 'ue', 'AE', 'OE', 'UE'], $s);
                 } elseif (\function_exists('transliterator_transliterate')) {
-                    if (null === ($transliterator = self::$transliterators[$rule] ?? (self::$transliterators[$rule] = \Transliterator::create($rule)))) {
+                    if (null === ($transliterator = self::$transliterators[$rule] = self::$transliterators[$rule] ?? \Transliterator::create($rule))) {
                         if ('any-latin/bgn' === $rule) {
                             $rule = 'any-latin';
-                            $transliterator = self::$transliterators[$rule] ?? (self::$transliterators[$rule] = \Transliterator::create($rule));
+                            $transliterator = self::$transliterators[$rule] = self::$transliterators[$rule] ?? \Transliterator::create($rule);
                         }
                         if (null === $transliterator) {
                             throw new InvalidArgumentException(\sprintf('Unknown transliteration rule "%s".', $rule));
@@ -141,7 +141,7 @@ abstract class AbstractUnicodeString extends AbstractString
     public function camel()
     {
         $str = clone $this;
-        $str->string = \str_replace(' ', '', \preg_replace_callback('/\\b./u', static function ($m) use(&$i) {
+        $str->string = \str_replace(' ', '', \preg_replace_callback('/\\b.(?![A-Z]{2,})/u', static function ($m) use(&$i) {
             return 1 === ++$i ? 'İ' === $m[0] ? 'i̇' : \mb_strtolower($m[0], 'UTF-8') : \mb_convert_case($m[0], \MB_CASE_TITLE, 'UTF-8');
         }, \preg_replace('/[^\\pL0-9]++/u', ' ', $this->string)));
         return $str;
@@ -208,13 +208,7 @@ abstract class AbstractUnicodeString extends AbstractString
         });
         try {
             if (\false === $match($regexp . 'u', $this->string, $matches, $flags | \PREG_UNMATCHED_AS_NULL, $offset)) {
-                $lastError = \preg_last_error();
-                foreach (\get_defined_constants(\true)['pcre'] as $k => $v) {
-                    if ($lastError === $v && \substr_compare($k, '_ERROR', -\strlen('_ERROR')) === 0) {
-                        throw new RuntimeException('Matching failed with ' . $k . '.');
-                    }
-                }
-                throw new RuntimeException('Matching failed with unknown error code.');
+                throw new RuntimeException('Matching failed with error: ' . \preg_last_error_msg());
             }
         } finally {
             \restore_error_handler();
@@ -326,7 +320,7 @@ abstract class AbstractUnicodeString extends AbstractString
      */
     public function snake()
     {
-        $str = $this->camel()->title();
+        $str = $this->camel();
         $str->string = \mb_strtolower(\preg_replace(['/(\\p{Lu}+)(\\p{Lu}\\p{Ll})/u', '/([\\p{Ll}0-9])(\\p{Lu})/u'], '\1_\2', $str->string), 'UTF-8');
         return $str;
     }
@@ -495,9 +489,7 @@ abstract class AbstractUnicodeString extends AbstractString
             if (32 > $codePoint || 0x7f <= $codePoint && 0xa0 > $codePoint) {
                 return -1;
             }
-            if (null === self::$tableZero) {
-                self::$tableZero = (require __DIR__ . '/Resources/data/wcswidth_table_zero.php');
-            }
+            self::$tableZero = self::$tableZero ?? (require __DIR__ . '/Resources/data/wcswidth_table_zero.php');
             if ($codePoint >= self::$tableZero[0][0] && $codePoint <= self::$tableZero[$ubound = \count(self::$tableZero) - 1][1]) {
                 $lbound = 0;
                 while ($ubound >= $lbound) {
@@ -511,9 +503,7 @@ abstract class AbstractUnicodeString extends AbstractString
                     }
                 }
             }
-            if (null === self::$tableWide) {
-                self::$tableWide = (require __DIR__ . '/Resources/data/wcswidth_table_wide.php');
-            }
+            self::$tableWide = self::$tableWide ?? (require __DIR__ . '/Resources/data/wcswidth_table_wide.php');
             if ($codePoint >= self::$tableWide[0][0] && $codePoint <= self::$tableWide[$ubound = \count(self::$tableWide) - 1][1]) {
                 $lbound = 0;
                 while ($ubound >= $lbound) {

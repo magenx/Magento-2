@@ -11,13 +11,16 @@ use PHPStan\Reflection\BetterReflection\SourceLocator\OptimizedDirectorySourceLo
 use PHPStan\Reflection\BetterReflection\SourceLocator\OptimizedSingleFileSourceLocator;
 use Rector\NodeTypeResolver\Contract\SourceLocatorProviderInterface;
 use Rector\Testing\PHPUnit\StaticPHPUnitEnvironment;
-use RectorPrefix202208\Symplify\SmartFileSystem\SmartFileInfo;
+use RectorPrefix202303\Webmozart\Assert\Assert;
+/**
+ * @api phpstan external
+ */
 final class DynamicSourceLocatorProvider implements SourceLocatorProviderInterface
 {
     /**
      * @var string[]
      */
-    private $files = [];
+    private $filePaths = [];
     /**
      * @var array<string, string[]>
      */
@@ -41,16 +44,16 @@ final class DynamicSourceLocatorProvider implements SourceLocatorProviderInterfa
         $this->fileNodesFetcher = $fileNodesFetcher;
         $this->phpVersion = $phpVersion;
     }
-    public function setFileInfo(SmartFileInfo $fileInfo) : void
+    public function setFilePath(string $filePath) : void
     {
-        $this->files = [$fileInfo->getRealPath()];
+        $this->filePaths = [$filePath];
     }
     /**
      * @param string[] $files
      */
     public function addFiles(array $files) : void
     {
-        $this->files = \array_merge($this->files, $files);
+        $this->filePaths = \array_merge($this->filePaths, $files);
     }
     public function provide() : SourceLocator
     {
@@ -60,7 +63,7 @@ final class DynamicSourceLocatorProvider implements SourceLocatorProviderInterfa
             return $this->aggregateSourceLocator;
         }
         $sourceLocators = [];
-        foreach ($this->files as $file) {
+        foreach ($this->filePaths as $file) {
             $sourceLocators[] = new OptimizedSingleFileSourceLocator($this->fileNodesFetcher, $file);
         }
         foreach ($this->filesByDirectory as $files) {
@@ -74,6 +77,7 @@ final class DynamicSourceLocatorProvider implements SourceLocatorProviderInterfa
      */
     public function addFilesByDirectory(string $directory, array $files) : void
     {
+        Assert::allString($files);
         $this->filesByDirectory[$directory] = $files;
     }
 }

@@ -10,6 +10,7 @@ use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Exception\InputException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Serialize\Serializer\Json;
+use Magento\Store\Model\ScopeInterface;
 use PayPal\Braintree\Model\Adminhtml\Source\Environment;
 use PayPal\Braintree\Model\StoreConfigResolver;
 
@@ -38,6 +39,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     public const CODE_3DSECURE = 'three_d_secure';
     public const KEY_SKIP_ADMIN = 'skip_admin';
     public const FRAUD_PROTECTION_THRESHOLD = 'fraudprotection_threshold';
+    public const PATH_SEND_LINE_ITEMS = 'payment/braintree/send_line_items';
 
     /**
      * Get list of available dynamic descriptors keys
@@ -58,6 +60,11 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     private $storeConfigResolver;
 
     /**
+     * @var ScopeConfigInterface
+     */
+    private $scopeConfig;
+
+    /**
      * Config constructor.
      * @param ScopeConfigInterface $scopeConfig
      * @param StoreConfigResolver $storeConfigResolver
@@ -76,6 +83,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
         $this->storeConfigResolver = $storeConfigResolver;
         $this->serializer = $serializer ?: ObjectManager::getInstance()
             ->get(Json::class);
+        $this->scopeConfig = $scopeConfig;
     }
 
     /**
@@ -280,7 +288,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
      * @throws InputException
      * @throws NoSuchEntityException
      */
-    public function getMerchantId()
+    public function getMerchantId(): ?string
     {
         if ($this->getEnvironment() === Environment::ENVIRONMENT_SANDBOX) {
             return $this->getValue(
@@ -301,7 +309,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
      * @throws InputException
      * @throws NoSuchEntityException
      */
-    public function getFraudProtectionThreshold()
+    public function getFraudProtectionThreshold(): ?float
     {
         return $this->getValue(
             self::FRAUD_PROTECTION_THRESHOLD,
@@ -345,16 +353,29 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     /**
      * Get Merchant account ID
      *
-     * @param int $storeId
-     * @return mixed|null
+     * @param int|null $storeId
+     * @return string|null
      * @throws InputException
      * @throws NoSuchEntityException
      */
-    public function getMerchantAccountId(int $storeId = null)
+    public function getMerchantAccountId(int $storeId = null): ?string
     {
         return $this->getValue(
             self::KEY_MERCHANT_ACCOUNT_ID,
             $storeId ?? $this->storeConfigResolver->getStoreId()
+        );
+    }
+
+    /**
+     * Can send line items to the braintree
+     *
+     * @return bool
+     */
+    public function canSendLineItems(): bool
+    {
+        return (bool) $this->scopeConfig->getValue(
+            self::PATH_SEND_LINE_ITEMS,
+            ScopeInterface::SCOPE_STORE
         );
     }
 }

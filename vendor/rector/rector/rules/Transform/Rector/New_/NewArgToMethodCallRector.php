@@ -12,7 +12,7 @@ use Rector\Core\Rector\AbstractRector;
 use Rector\Transform\ValueObject\NewArgToMethodCall;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
-use RectorPrefix202208\Webmozart\Assert\Assert;
+use RectorPrefix202303\Webmozart\Assert\Assert;
 /**
  * @changelog https://github.com/symfony/symfony/pull/35308
  *
@@ -74,7 +74,7 @@ CODE_SAMPLE
                 continue;
             }
             unset($node->args[0]);
-            return new MethodCall($node, 'usePutenv');
+            return new MethodCall($node, $newArgToMethodCall->getMethodCall());
         }
         return null;
     }

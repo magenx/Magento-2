@@ -3,16 +3,19 @@
 declare (strict_types=1);
 namespace Rector\Core\PhpParser\Parser;
 
-use RectorPrefix202208\Nette\Utils\Strings;
+use RectorPrefix202303\Nette\Utils\FileSystem;
+use RectorPrefix202303\Nette\Utils\Strings;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\BinaryOp\Concat;
+use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Scalar\Encapsed;
 use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt;
 use Rector\Core\Contract\PhpParser\NodePrinterInterface;
+use Rector\Core\PhpParser\Node\Value\ValueResolver;
 use Rector\Core\Util\StringUtils;
+use Rector\NodeTypeResolver\Node\AttributeKey;
 use Rector\NodeTypeResolver\NodeScopeAndMetadataDecorator;
-use RectorPrefix202208\Symplify\SmartFileSystem\SmartFileSystem;
 final class InlineCodeParser
 {
     /**
@@ -41,6 +44,16 @@ final class InlineCodeParser
      */
     private const VARIABLE_IN_SINGLE_QUOTED_REGEX = '#\'(?<variable>\\$.*)\'#U';
     /**
+     * @var string
+     * @see https://regex101.com/r/1lzQZv/1
+     */
+    private const BACKREFERENCE_NO_QUOTE_REGEX = '#(?<!")(?<backreference>\\\\\\d+)(?!")#';
+    /**
+     * @var string
+     * @see https://regex101.com/r/nSO3Eq/1
+     */
+    private const BACKREFERENCE_NO_DOUBLE_QUOTE_START_REGEX = '#(?<!")(?<backreference>\\$\\d+)#';
+    /**
      * @readonly
      * @var \Rector\Core\Contract\PhpParser\NodePrinterInterface
      */
@@ -57,15 +70,15 @@ final class InlineCodeParser
     private $simplePhpParser;
     /**
      * @readonly
-     * @var \Symplify\SmartFileSystem\SmartFileSystem
+     * @var \Rector\Core\PhpParser\Node\Value\ValueResolver
      */
-    private $smartFileSystem;
-    public function __construct(NodePrinterInterface $nodePrinter, NodeScopeAndMetadataDecorator $nodeScopeAndMetadataDecorator, \Rector\Core\PhpParser\Parser\SimplePhpParser $simplePhpParser, SmartFileSystem $smartFileSystem)
+    private $valueResolver;
+    public function __construct(NodePrinterInterface $nodePrinter, NodeScopeAndMetadataDecorator $nodeScopeAndMetadataDecorator, \Rector\Core\PhpParser\Parser\SimplePhpParser $simplePhpParser, ValueResolver $valueResolver)
     {
         $this->nodePrinter = $nodePrinter;
         $this->nodeScopeAndMetadataDecorator = $nodeScopeAndMetadataDecorator;
         $this->simplePhpParser = $simplePhpParser;
-        $this->smartFileSystem = $smartFileSystem;
+        $this->valueResolver = $valueResolver;
     }
     /**
      * @return Stmt[]
@@ -74,7 +87,7 @@ final class InlineCodeParser
     {
         // to cover files too
         if (\is_file($content)) {
-            $content = $this->smartFileSystem->readFile($content);
+            $content = FileSystem::read($content);
         }
         // wrap code so php-parser can interpret it
         $content = StringUtils::isMatch($content, self::OPEN_PHP_TAG_REGEX) ? $content : '<?php ' . $content;
@@ -85,22 +98,57 @@ final class InlineCodeParser
     public function stringify(Expr $expr) : string
     {
         if ($expr instanceof String_) {
-            return $expr->value;
-        }
-        if ($expr instanceof Encapsed) {
-            // remove "
-            $expr = \trim($this->nodePrinter->print($expr), '""');
-            // use \$ → $
-            $expr = Strings::replace($expr, self::PRESLASHED_DOLLAR_REGEX, '$');
-            // use \'{$...}\' → $...
-            return Strings::replace($expr, self::CURLY_BRACKET_WRAPPER_REGEX, '$1');
-        }
-        if ($expr instanceof Concat) {
-            $string = $this->stringify($expr->left) . $this->stringify($expr->right);
-            return Strings::replace($string, self::VARIABLE_IN_SINGLE_QUOTED_REGEX, static function (array $match) {
-                return $match['variable'];
+            if (!StringUtils::isMatch($expr->value, self::BACKREFERENCE_NO_QUOTE_REGEX)) {
+                return Strings::replace($expr->value, self::BACKREFERENCE_NO_DOUBLE_QUOTE_START_REGEX, static function (array $match) : string {
+                    return '"' . $match['backreference'] . '"';
+                });
+            }
+            return Strings::replace($expr->value, self::BACKREFERENCE_NO_QUOTE_REGEX, static function (array $match) : string {
+                return '"\\' . $match['backreference'] . '"';
             });
         }
+        if ($expr instanceof Encapsed) {
+            return $this->resolveEncapsedValue($expr);
+        }
+        if ($expr instanceof Concat) {
+            return $this->resolveConcatValue($expr);
+        }
         return $this->nodePrinter->print($expr);
+    }
+    private function resolveEncapsedValue(Encapsed $encapsed) : string
+    {
+        $value = '';
+        $isRequirePrint = \false;
+        foreach ($encapsed->parts as $part) {
+            $partValue = (string) $this->valueResolver->getValue($part);
+            if (\substr_compare($partValue, "'", -\strlen("'")) === 0) {
+                $isRequirePrint = \true;
+                break;
+            }
+            $value .= $partValue;
+        }
+        $printedExpr = $isRequirePrint ? $this->nodePrinter->print($encapsed) : $value;
+        // remove "
+        $printedExpr = \trim($printedExpr, '""');
+        // use \$ → $
+        $printedExpr = Strings::replace($printedExpr, self::PRESLASHED_DOLLAR_REGEX, '$');
+        // use \'{$...}\' → $...
+        return Strings::replace($printedExpr, self::CURLY_BRACKET_WRAPPER_REGEX, '$1');
+    }
+    private function resolveConcatValue(Concat $concat) : string
+    {
+        if ($concat->left instanceof Concat && $concat->right instanceof String_ && \strncmp($concat->right->value, '$', \strlen('$')) === 0) {
+            $concat->right->value = '.' . $concat->right->value;
+        }
+        if ($concat->right instanceof String_ && \strncmp($concat->right->value, '($', \strlen('($')) === 0) {
+            $node = $concat->getAttribute(AttributeKey::NEXT_NODE);
+            if ($node instanceof Variable) {
+                $concat->right->value .= '.';
+            }
+        }
+        $string = $this->stringify($concat->left) . $this->stringify($concat->right);
+        return Strings::replace($string, self::VARIABLE_IN_SINGLE_QUOTED_REGEX, static function (array $match) {
+            return $match['variable'];
+        });
     }
 }

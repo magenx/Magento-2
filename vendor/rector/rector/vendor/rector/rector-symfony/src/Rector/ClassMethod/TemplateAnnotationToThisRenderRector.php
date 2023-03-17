@@ -35,7 +35,7 @@ use Rector\Symfony\TypeAnalyzer\ArrayUnionResponseTypeAnalyzer;
 use Rector\Symfony\TypeDeclaration\ReturnTypeDeclarationUpdater;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
-use RectorPrefix202208\Webmozart\Assert\Assert;
+use RectorPrefix202303\Webmozart\Assert\Assert;
 /**
  * @see https://github.com/symfony/symfony-docs/pull/12387#discussion_r329551967
  * @see https://symfony.com/doc/current/bundles/SensioFrameworkExtraBundle/annotations/view.html
@@ -166,7 +166,7 @@ CODE_SAMPLE
                 return null;
             }
             foreach (NodeTypeGroup::STMTS_AWARE as $stmtsAwareType) {
-                if (!\is_a($node, $stmtsAwareType, \true)) {
+                if (!$node instanceof $stmtsAwareType) {
                     continue;
                 }
                 $this->refactorStmtsAwareNode($node, $templateDoctrineAnnotationTagValueNode, $hasThisRenderOrReturnsResponse, $classMethod);

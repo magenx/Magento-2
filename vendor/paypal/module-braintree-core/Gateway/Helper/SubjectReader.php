@@ -112,9 +112,24 @@ class SubjectReader
     public function readPayPal(Transaction $transaction): array
     {
         if (!isset($transaction->paypal)) {
-            throw new InvalidArgumentException('Transaction has\'t paypal attribute');
+            throw new InvalidArgumentException(__('Transaction has not paypal attribute'));
         }
 
         return $transaction->paypal;
+    }
+
+    /**
+     * Reads Local Payment details from transaction object
+     *
+     * @param Transaction $transaction
+     * @return array
+     */
+    public function readLocalPayment(Transaction $transaction): array
+    {
+        if (!isset($transaction->localPayment)) {
+            throw new InvalidArgumentException(__('Transaction has not localPayment attribute'));
+        }
+
+        return $transaction->localPayment;
     }
 }

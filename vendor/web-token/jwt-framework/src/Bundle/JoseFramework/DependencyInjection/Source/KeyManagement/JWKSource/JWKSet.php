@@ -2,18 +2,12 @@
 
 declare(strict_types=1);
 
-/*
- * The MIT License (MIT)
- *
- * Copyright (c) 2014-2020 Spomky-Labs
- *
- * This software may be modified and distributed under the terms
- * of the MIT license.  See the LICENSE file for details.
- */
-
 namespace Jose\Bundle\JoseFramework\DependencyInjection\Source\KeyManagement\JWKSource;
 
+use function is_int;
+use function is_string;
 use Jose\Bundle\JoseFramework\DependencyInjection\Source\AbstractSource;
+use Jose\Component\Core\JWK;
 use Jose\Component\KeyManagement\JWKFactory;
 use Symfony\Component\Config\Definition\Builder\NodeDefinition;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -22,13 +16,13 @@ use Symfony\Component\DependencyInjection\Reference;
 
 class JWKSet extends AbstractSource implements JWKSource
 {
+    /**
+     * @param array<string, mixed> $config
+     */
     public function createDefinition(ContainerBuilder $container, array $config): Definition
     {
-        $definition = new Definition(\Jose\Component\Core\JWK::class);
-        $definition->setFactory([
-            new Reference(JWKFactory::class),
-            'createFromKeySet',
-        ]);
+        $definition = new Definition(JWK::class);
+        $definition->setFactory([new Reference(JWKFactory::class), 'createFromKeySet']);
         $definition->setArguments([new Reference($config['key_set']), $config['index']]);
         $definition->addTag('jose.jwk');
 
@@ -47,12 +41,16 @@ class JWKSet extends AbstractSource implements JWKSource
             ->children()
             ->scalarNode('key_set')
             ->info('The key set service.')
-            ->isRequired()->end()
-            ->integerNode('index')
+            ->isRequired()
+            ->end()
+            ->variableNode('index')
+            ->validate()
+            ->ifTrue(fn (mixed $v): bool => ! is_int($v) && ! is_string($v))
+            ->thenInvalid('Invalid keyset index.')
+            ->end()
             ->info('The index of the key in the key set.')
             ->isRequired()
             ->end()
-            ->end()
-        ;
+            ->end();
     }
 }

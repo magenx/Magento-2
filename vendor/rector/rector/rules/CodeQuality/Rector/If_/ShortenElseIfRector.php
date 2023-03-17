@@ -7,7 +7,9 @@ use PhpParser\Node;
 use PhpParser\Node\Stmt\Else_;
 use PhpParser\Node\Stmt\ElseIf_;
 use PhpParser\Node\Stmt\If_;
+use PhpParser\Node\Stmt\Nop;
 use Rector\Core\Rector\AbstractRector;
+use Rector\NodeTypeResolver\Node\AttributeKey;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
@@ -78,6 +80,15 @@ CODE_SAMPLE
         $refactored = $this->shortenElseIf($if);
         if ($refactored !== null) {
             $if = $refactored;
+        }
+        if ($if->stmts === []) {
+            $nop = new Nop();
+            $nop->setAttribute(AttributeKey::COMMENTS, $if->getComments());
+            $if->stmts[] = $nop;
+        } else {
+            $currentStmt = \current($if->stmts);
+            $mergedComments = \array_merge($if->getComments(), $currentStmt->getComments());
+            $currentStmt->setAttribute(AttributeKey::COMMENTS, $mergedComments);
         }
         $node->elseifs[] = new ElseIf_($if->cond, $if->stmts);
         $node->else = $if->else;

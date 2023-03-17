@@ -38,31 +38,22 @@ final class Error
      */
     public const TYPE_LINT = 3;
 
-    /**
-     * @var int
-     */
-    private $type;
+    private int $type;
+
+    private string $filePath;
+
+    private ?\Throwable $source;
 
     /**
-     * @var string
+     * @var list<string>
      */
-    private $filePath;
+    private array $appliedFixers;
+
+    private ?string $diff;
 
     /**
-     * @var null|\Throwable
+     * @param list<string> $appliedFixers
      */
-    private $source;
-
-    /**
-     * @var array
-     */
-    private $appliedFixers;
-
-    /**
-     * @var null|string
-     */
-    private $diff;
-
     public function __construct(int $type, string $filePath, ?\Throwable $source = null, array $appliedFixers = [], ?string $diff = null)
     {
         $this->type = $type;
@@ -87,6 +78,9 @@ final class Error
         return $this->type;
     }
 
+    /**
+     * @return list<string>
+     */
     public function getAppliedFixers(): array
     {
         return $this->appliedFixers;

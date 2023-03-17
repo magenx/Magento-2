@@ -21,13 +21,13 @@
         },
         "sort-packages": true,
         "platform": {
-            "php": "7.3.99"
+            "php": "8.0.99"
         }
     },
     "extra": {
     },
     "require": {
-        "php": "^7.3 || ~8.0.0 || ~8.1.0",
+        "php": "~8.0.0 || ~8.1.0 || ~8.2.0",
         "brick/varexporter": "^0.3.2",
         "laminas/laminas-config": "^3.7",
         "laminas/laminas-eventmanager": "^3.4",
@@ -36,12 +36,12 @@
     },
     "require-dev": {
         "laminas/laminas-coding-standard": "^2.3",
-        "laminas/laminas-loader": "^2.8",
-        "laminas/laminas-mvc": "^3.1.1",
-        "laminas/laminas-servicemanager": "^3.7",
-        "phpunit/phpunit": "^9.5.5",
-        "psalm/plugin-phpunit": "^0.16.1",
-        "vimeo/psalm": "^4.10"
+        "laminas/laminas-loader": "^2.9.0",
+        "laminas/laminas-mvc": "^3.5.0",
+        "laminas/laminas-servicemanager": "^3.19.0",
+        "phpunit/phpunit": "^9.5.25",
+        "psalm/plugin-phpunit": "^0.17.0",
+        "vimeo/psalm": "^4.29"
     },
     "suggest": {
         "laminas/laminas-console": "Laminas\\Console component",

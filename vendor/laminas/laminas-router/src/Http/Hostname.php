@@ -21,13 +21,30 @@ use function strlen;
 
 /**
  * Hostname route.
+ *
+ * Note: the following type is recursive, but Psalm doesn't understand array shape recursion (yet). For now, we only
+ *       represented recursion of the 'optional' part type to 1 level, to ease analysis.
+ *
+ * @psalm-type Parts = list<
+ *     array{
+ *      'literal',
+ *      string,
+ *      string|null
+ *     }|array{
+ *      'parameter',
+ *      string
+ *     }|array{
+ *      'optional',
+ *      list<array{'literal', string, string|null}|array{'parameter', string}|array{'optional', array}>
+ *     }
+ * >
  */
 class Hostname implements RouteInterface
 {
     /**
      * Parts of the route.
      *
-     * @var array
+     * @var Parts
      */
     protected $parts;
 
@@ -55,9 +72,17 @@ class Hostname implements RouteInterface
     /**
      * List of assembled parameters.
      *
-     * @var array
+     * @var list<string>
      */
     protected $assembledParams = [];
+
+    /**
+     * @internal
+     * @deprecated Since 3.9.0 This property will be removed or made private in version 4.0
+     *
+     * @var int|null
+     */
+    public $priority;
 
     /**
      * Create a new hostname route.
@@ -78,7 +103,7 @@ class Hostname implements RouteInterface
      *
      * @see    \Laminas\Router\RouteInterface::factory()
      *
-     * @param  array|Traversable $options
+     * @param  iterable $options
      * @return Hostname
      * @throws Exception\InvalidArgumentException
      */
@@ -112,7 +137,7 @@ class Hostname implements RouteInterface
      * Parse a route definition.
      *
      * @param  string $def
-     * @return array
+     * @return Parts
      * @throws Exception\RuntimeException
      */
     protected function parseRouteDefinition($def)
@@ -124,7 +149,7 @@ class Hostname implements RouteInterface
         $level      = 0;
 
         while ($currentPos < $length) {
-            if (! preg_match('(\G(?P<literal>[a-z0-9-.]*)(?P<token>[:{\[\]]|$))', $def, $matches, 0, $currentPos)) {
+            if (! preg_match('(\G(?P<literal>[a-z0-9-.]*)(?P<token>[:\[\]]|$))', $def, $matches, 0, $currentPos)) {
                 throw new Exception\RuntimeException('Matched hostname literal contains a disallowed character');
             }
 
@@ -181,9 +206,9 @@ class Hostname implements RouteInterface
     /**
      * Build the matching regex from parsed parts.
      *
-     * @param  array   $parts
-     * @param  array   $constraints
-     * @param  int $groupIndex
+     * @param Parts $parts
+     * @param array $constraints
+     * @param int   $groupIndex
      * @return string
      * @throws Exception\RuntimeException
      */
@@ -223,9 +248,9 @@ class Hostname implements RouteInterface
     /**
      * Build host.
      *
-     * @param  array   $parts
-     * @param  array   $mergedParams
-     * @param  bool    $isOptional
+     * @param Parts                 $parts
+     * @param array<string, string> $mergedParams
+     * @param bool                  $isOptional
      * @return string
      * @throws Exception\RuntimeException
      * @throws Exception\InvalidArgumentException
@@ -349,7 +374,7 @@ class Hostname implements RouteInterface
      *
      * @see    RouteInterface::getAssembledParams
      *
-     * @return array
+     * @return list<string>
      */
     public function getAssembledParams()
     {

@@ -1,0 +1,33 @@
+<?php
+
+namespace Psr\Container;
+
+/**
+ * Stub for giving psalm additional info about PSR containers
+ */
+interface ContainerInterface
+{
+    /**
+     * @template T
+     * @param string|class-string<T> $id
+     * @return T
+     * @throws ContainerExceptionInterface Error while retrieving the entry.
+     * @throws NotFoundExceptionInterface  No entry was found for **this** identifier.
+     */
+    public function get($id);
+
+    /**
+     * @param string $id
+     * @return bool
+     */
+    public function has($id);
+}
+
+/**
+ * Workaround to allow catching exceptions that implement this interface
+ *
+ * @see https://github.com/php-fig/container/issues/40
+ */
+interface ContainerExceptionInterface extends \Throwable
+{
+}

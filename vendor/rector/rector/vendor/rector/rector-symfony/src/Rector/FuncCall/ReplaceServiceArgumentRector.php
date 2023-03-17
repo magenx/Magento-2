@@ -12,7 +12,7 @@ use Rector\Core\Rector\AbstractRector;
 use Rector\Symfony\ValueObject\ReplaceServiceArgument;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
-use RectorPrefix202208\Webmozart\Assert\Assert;
+use RectorPrefix202303\Webmozart\Assert\Assert;
 /**
  * @see \Rector\Symfony\Tests\Rector\FuncCall\ReplaceServiceArgumentRector\ReplaceServiceArgumentRectorTest
  */
@@ -46,7 +46,7 @@ CODE_SAMPLE
     /**
      * @param FuncCall $node
      */
-    public function refactor(Node $node)
+    public function refactor(Node $node) : ?FuncCall
     {
         if (!$this->isName($node, 'Symfony\\Component\\DependencyInjection\\Loader\\Configurator\\service')) {
             return null;

@@ -2,15 +2,16 @@
 
 /**
  * @see       https://github.com/laminas/laminas-server for the canonical source repository
- * @copyright https://github.com/laminas/laminas-server/blob/master/COPYRIGHT.md
- * @license   https://github.com/laminas/laminas-server/blob/master/LICENSE.md New BSD License
  */
 
 namespace Laminas\Server;
 
 /**
  * Server Interface
+ *
  * @deprecated Since 2.9.0; Server is replaced by ServerInterface and will be removed in 3.0.
+ *
+ * @method void addFunction(string $function, string $namespace = '', array $parameters = null)
  */
 interface Server
 {
@@ -20,10 +21,12 @@ interface Server
      * Namespacing is primarily for xmlrpc, but may be used with other
      * implementations to prevent naming collisions.
      *
+     * Note: this method accepts an additional parameter that contains parameters
+     *       to pass to the callback at dispatch, if provided. This is documented
+     *       in the {@see Server} docblock.
+     *
      * @param  string $function
      * @param  string $namespace
-     * @param  null|array Optional array of arguments to pass to callback at
-     *                    dispatch.
      * @return void
      */
     public function addFunction($function, $namespace = '');
@@ -38,13 +41,13 @@ interface Server
      * Namespacing is primarily for xmlrpc, but could be used for other
      * implementations as well.
      *
-     * @param  mixed $class Class name or object instance to examine and attach
-     *                      to the server.
-     * @param  string $namespace Optional namespace with which to prepend method
-     *                           names in the dispatch table.
-     *                           methods in the class will be valid callbacks.
-     * @param  null|array Optional array of arguments to pass to callbacks at
-     *                    dispatch.
+     * @param mixed      $class     Class name or object instance to examine and attach
+     *                              to the server.
+     * @param string     $namespace Optional namespace with which to prepend method
+     *                              names in the dispatch table.
+     *                              methods in the class will be valid callbacks.
+     * @param null|array $argv      Optional array of arguments to pass to callbacks at
+     *                              dispatch.
      * @return void
      */
     public function setClass($class, $namespace = '', $argv = null);

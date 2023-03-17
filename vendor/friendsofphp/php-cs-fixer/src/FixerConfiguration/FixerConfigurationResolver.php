@@ -21,14 +21,14 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 final class FixerConfigurationResolver implements FixerConfigurationResolverInterface
 {
     /**
-     * @var FixerOptionInterface[]
+     * @var list<FixerOptionInterface>
      */
-    private $options = [];
+    private array $options = [];
 
     /**
-     * @var string[]
+     * @var list<string>
      */
-    private $registeredNames = [];
+    private array $registeredNames = [];
 
     /**
      * @param iterable<FixerOptionInterface> $options
@@ -39,7 +39,7 @@ final class FixerConfigurationResolver implements FixerConfigurationResolverInte
             $this->addOption($option);
         }
 
-        if (empty($this->registeredNames)) {
+        if (0 === \count($this->registeredNames)) {
             throw new \LogicException('Options cannot be empty.');
         }
     }

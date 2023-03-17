@@ -4,6 +4,8 @@ declare (strict_types=1);
 namespace PHPStan\Type\PHPUnit\Assert;
 
 use Closure;
+use Countable;
+use EmptyIterator;
 use PhpParser\Node\Arg;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\BinaryOp\Identical;
@@ -12,11 +14,11 @@ use PhpParser\Node\Expr\ConstFetch;
 use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Expr\Instanceof_;
 use PhpParser\Node\Name;
+use PhpParser\Node\Scalar\LNumber;
 use PHPStan\Analyser\Scope;
 use PHPStan\Analyser\SpecifiedTypes;
 use PHPStan\Analyser\TypeSpecifier;
 use PHPStan\Analyser\TypeSpecifierContext;
-use PHPStan\Type\Constant\ConstantStringType;
 use ReflectionObject;
 use function array_key_exists;
 use function count;
@@ -91,10 +93,11 @@ class AssertTypeSpecifyingExtensionHelper
         if (self::$resolvers === null) {
             self::$resolvers = ['InstanceOf' => static function (Scope $scope, Arg $class, Arg $object) : ?Instanceof_ {
                 $classType = $scope->getType($class->value);
-                if (!$classType instanceof ConstantStringType) {
+                $classNames = $classType->getConstantStrings();
+                if (count($classNames) !== 1) {
                     return null;
                 }
-                return new Instanceof_($object->value, new Name($classType->getValue()));
+                return new Instanceof_($object->value, new Name($classNames[0]->getValue()));
             }, 'Same' => static function (Scope $scope, Arg $expected, Arg $actual) : Identical {
                 return new Identical($expected->value, $actual->value);
             }, 'True' => static function (Scope $scope, Arg $actual) : Identical {
@@ -103,6 +106,8 @@ class AssertTypeSpecifyingExtensionHelper
                 return new Identical($actual->value, new ConstFetch(new Name('false')));
             }, 'Null' => static function (Scope $scope, Arg $actual) : Identical {
                 return new Identical($actual->value, new ConstFetch(new Name('null')));
+            }, 'Empty' => static function (Scope $scope, Arg $actual) : Expr\BinaryOp\BooleanOr {
+                return new Expr\BinaryOp\BooleanOr(new Instanceof_($actual->value, new Name(EmptyIterator::class)), new Expr\BinaryOp\BooleanOr(new Expr\BinaryOp\BooleanAnd(new Instanceof_($actual->value, new Name(Countable::class)), new Identical(new FuncCall(new Name('count'), [new Arg($actual->value)]), new LNumber(0))), new Expr\Empty_($actual->value)));
             }, 'IsArray' => static function (Scope $scope, Arg $actual) : FuncCall {
                 return new FuncCall(new Name('is_array'), [$actual]);
             }, 'IsBool' => static function (Scope $scope, Arg $actual) : FuncCall {
@@ -126,11 +131,11 @@ class AssertTypeSpecifyingExtensionHelper
             }, 'IsScalar' => static function (Scope $scope, Arg $actual) : FuncCall {
                 return new FuncCall(new Name('is_scalar'), [$actual]);
             }, 'InternalType' => static function (Scope $scope, Arg $type, Arg $value) : ?FuncCall {
-                $typeType = $scope->getType($type->value);
-                if (!$typeType instanceof ConstantStringType) {
+                $typeNames = $scope->getType($type->value)->getConstantStrings();
+                if (count($typeNames) !== 1) {
                     return null;
                 }
-                switch ($typeType->getValue()) {
+                switch ($typeNames[0]->getValue()) {
                     case 'numeric':
                         $functionName = 'is_numeric';
                         break;

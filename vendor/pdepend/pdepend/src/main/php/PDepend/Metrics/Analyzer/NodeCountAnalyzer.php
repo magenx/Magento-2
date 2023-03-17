@@ -109,7 +109,7 @@ class NodeCountAnalyzer extends AbstractAnalyzer implements AnalyzerFilterAware,
     /**
      * Collected node metrics
      *
-     * @var array<string, array>
+     * @var array<string, array<string, int>>
      */
     private $nodeMetrics = null;
 
@@ -165,8 +165,6 @@ class NodeCountAnalyzer extends AbstractAnalyzer implements AnalyzerFilterAware,
 
     /**
      * Processes all {@link ASTNamespace} code nodes.
-     *
-     * @param ASTNamespace[] $namespaces
      *
      * @return void
      */

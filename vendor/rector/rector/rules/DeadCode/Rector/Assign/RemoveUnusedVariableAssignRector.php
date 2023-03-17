@@ -196,6 +196,9 @@ CODE_SAMPLE
         if (!$expr instanceof CallLike) {
             return $this->isUsedInPreviousAssign($assign, $expr);
         }
+        if ($expr->isFirstClassCallable()) {
+            return \false;
+        }
         foreach ($expr->getArgs() as $arg) {
             $variable = $arg->value;
             if ($this->isUsedInPreviousAssign($assign, $variable)) {
@@ -217,10 +220,7 @@ CODE_SAMPLE
         }
         return \false;
     }
-    /**
-     * @return null|\PhpParser\Node\Expr
-     */
-    private function refactorUsedVariable(Assign $assign)
+    private function refactorUsedVariable(Assign $assign) : ?\PhpParser\Node\Expr
     {
         $parentNode = $assign->getAttribute(AttributeKey::PARENT_NODE);
         if (!$parentNode instanceof Expression) {

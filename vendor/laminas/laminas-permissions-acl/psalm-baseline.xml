@@ -1,0 +1,500 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<files psalm-version="5.0.0@4e177bf0c9f03c17d2fbfd83b7cc9c47605274d8">
+  <file src="src/Acl.php">
+    <InvalidNullableReturnType occurrences="1">
+      <code>bool</code>
+    </InvalidNullableReturnType>
+    <InvalidReturnType occurrences="3">
+      <code>bool|void</code>
+      <code>bool|void</code>
+      <code>bool|void</code>
+    </InvalidReturnType>
+    <MixedArgument occurrences="15">
+      <code>$child</code>
+      <code>$childId</code>
+      <code>$dfs['stack']</code>
+      <code>$dfs['stack']</code>
+      <code>$privilege</code>
+      <code>$privilege</code>
+      <code>$resource</code>
+      <code>$resource</code>
+      <code>$resource</code>
+      <code>$resource</code>
+      <code>$resource</code>
+      <code>$role</code>
+      <code>$role</code>
+      <code>$role</code>
+      <code>$visitor</code>
+    </MixedArgument>
+    <MixedArrayAccess occurrences="33">
+      <code>$rule['assert']</code>
+      <code>$rule['assert']</code>
+      <code>$rule['type']</code>
+      <code>$rule['type']</code>
+      <code>$rules['allPrivileges']['type']</code>
+      <code>$rules['byPrivilegeId'][$privilege]['type']</code>
+      <code>$this-&gt;resources[$id]['children']</code>
+      <code>$this-&gt;resources[$parentId]['parent']</code>
+      <code>$this-&gt;resources[$resource-&gt;getResourceId()]['parent']</code>
+      <code>$this-&gt;resources[$resource-&gt;getResourceId()]['parent']</code>
+      <code>$this-&gt;resources[$resourceId]['children']</code>
+      <code>$this-&gt;resources[$resourceId]['instance']</code>
+      <code>$this-&gt;resources[$resourceId]['parent']</code>
+      <code>$this-&gt;resources[$resourceId]['parent']</code>
+      <code>$this-&gt;resources[$resourceParent-&gt;getResourceId()]['children']</code>
+      <code>$this-&gt;rules['allResources']['byRoleId']</code>
+      <code>$this-&gt;rules['allResources']['byRoleId']</code>
+      <code>$this-&gt;rules['allResources']['byRoleId']</code>
+      <code>$this-&gt;rules['allResources']['byRoleId']</code>
+      <code>$this-&gt;rules['allResources']['byRoleId'][$roleIdCurrent]</code>
+      <code>$this-&gt;rules['allResources']['byRoleId'][$roleIdCurrent]</code>
+      <code>$this-&gt;rules['byResourceId'][$resourceIdCurrent]</code>
+      <code>$this-&gt;rules['byResourceId'][$resourceIdCurrent]</code>
+      <code>$this-&gt;rules['byResourceId'][$resourceIdCurrent]</code>
+      <code>$this-&gt;rules['byResourceId'][$resourceIdCurrent]['byRoleId']</code>
+      <code>$this-&gt;rules['byResourceId'][$resourceIdCurrent]['byRoleId']</code>
+      <code>$this-&gt;rules['byResourceId'][$resourceIdCurrent]['byRoleId'][$roleIdCurrent]</code>
+      <code>$this-&gt;rules['byResourceId'][$resourceIdCurrent]['byRoleId'][$roleIdCurrent]</code>
+      <code>$this-&gt;rules['byResourceId'][$resourceId]</code>
+      <code>$this-&gt;rules['byResourceId'][$resourceId]</code>
+      <code>$visitor['allRoles']</code>
+      <code>$visitor['byRoleId']</code>
+      <code>$visitor['byRoleId'][$roleId]</code>
+    </MixedArrayAccess>
+    <MixedArrayAssignment occurrences="10">
+      <code>$dfs['stack'][]</code>
+      <code>$dfs['stack'][]</code>
+      <code>$dfs['visited'][$role-&gt;getRoleId()]</code>
+      <code>$dfs['visited'][$role-&gt;getRoleId()]</code>
+      <code>$this-&gt;resources[$resourceParentId]['children']</code>
+      <code>$this-&gt;resources[$resourceParentId]['children'][$resourceId]</code>
+      <code>$this-&gt;rules['byResourceId'][$resourceId]</code>
+      <code>$visitor['allRoles']</code>
+      <code>$visitor['byRoleId']</code>
+      <code>$visitor['byRoleId'][$roleId]</code>
+    </MixedArrayAssignment>
+    <MixedArrayOffset occurrences="13">
+      <code>$dfs['visited'][$role-&gt;getRoleId()]</code>
+      <code>$dfs['visited'][$role-&gt;getRoleId()]</code>
+      <code>$rules['byPrivilegeId'][$privilege]</code>
+      <code>$rules['byPrivilegeId'][$privilege]</code>
+      <code>$rules['byPrivilegeId'][$privilege]</code>
+      <code>$this-&gt;resources[$parentId]</code>
+      <code>$this-&gt;resources[$parentId]</code>
+      <code>$this-&gt;resources[$resourceParent-&gt;getResourceId()]</code>
+      <code>$this-&gt;rules['allResources']['byRoleId'][$roleIdCurrent]</code>
+      <code>$this-&gt;rules['byResourceId'][$resourceIdCurrent]</code>
+      <code>$this-&gt;rules['byResourceId'][$resourceIdCurrent]</code>
+      <code>$this-&gt;rules['byResourceId'][$resourceIdCurrent]</code>
+      <code>$this-&gt;rules['byResourceId'][$resourceIdCurrent]['byRoleId'][$roleIdCurrent]</code>
+    </MixedArrayOffset>
+    <MixedAssignment occurrences="42">
+      <code>$child</code>
+      <code>$child</code>
+      <code>$childId</code>
+      <code>$children</code>
+      <code>$dfs['stack'][]</code>
+      <code>$dfs['stack'][]</code>
+      <code>$parentId</code>
+      <code>$parentId</code>
+      <code>$privilege</code>
+      <code>$privilege</code>
+      <code>$privilege</code>
+      <code>$privilege</code>
+      <code>$resource</code>
+      <code>$resource</code>
+      <code>$resource</code>
+      <code>$resource</code>
+      <code>$resourceIdCurrent</code>
+      <code>$resourceIdCurrent</code>
+      <code>$resourceIdCurrent</code>
+      <code>$resourceIdRemoved</code>
+      <code>$resourceParent</code>
+      <code>$resourcesRemoved[]</code>
+      <code>$role</code>
+      <code>$role</code>
+      <code>$role</code>
+      <code>$roleIdCurrent</code>
+      <code>$roleIdCurrent</code>
+      <code>$roleIdCurrent</code>
+      <code>$roleIdCurrent</code>
+      <code>$roleParent</code>
+      <code>$roleParent</code>
+      <code>$rule</code>
+      <code>$rule</code>
+      <code>$rule</code>
+      <code>$rule</code>
+      <code>$rules</code>
+      <code>$rules</code>
+      <code>$rules</code>
+      <code>$rules</code>
+      <code>$rules</code>
+      <code>$visitor</code>
+      <code>$visitor</code>
+    </MixedAssignment>
+    <MixedInferredReturnType occurrences="3">
+      <code>ResourceInterface</code>
+      <code>array|null</code>
+      <code>string|null</code>
+    </MixedInferredReturnType>
+    <MixedMethodCall occurrences="5">
+      <code>getResourceId</code>
+      <code>getResourceId</code>
+      <code>getResourceId</code>
+      <code>getRoleId</code>
+      <code>getRoleId</code>
+    </MixedMethodCall>
+    <MixedReturnStatement occurrences="6">
+      <code>$rule['type']</code>
+      <code>$this-&gt;resources[$resourceId]['instance']</code>
+      <code>$visitor['allRoles']</code>
+      <code>$visitor['allRoles']</code>
+      <code>$visitor['byRoleId'][$roleId]</code>
+      <code>$visitor['byRoleId'][$roleId]</code>
+    </MixedReturnStatement>
+    <PossiblyInvalidPropertyAssignmentValue occurrences="2">
+      <code>$resource</code>
+      <code>$role</code>
+    </PossiblyInvalidPropertyAssignmentValue>
+    <PossiblyNullArgument occurrences="2">
+      <code>$dfs['stack']</code>
+      <code>$dfs['stack']</code>
+    </PossiblyNullArgument>
+    <PossiblyNullArrayAccess occurrences="2">
+      <code>$dfs['stack']</code>
+      <code>$dfs['stack']</code>
+    </PossiblyNullArrayAccess>
+    <PossiblyNullArrayAssignment occurrences="2">
+      <code>$rules['allPrivileges']</code>
+      <code>$rules['byPrivilegeId']</code>
+    </PossiblyNullArrayAssignment>
+    <PossiblyNullReference occurrences="2">
+      <code>getResourceId</code>
+      <code>getResourceId</code>
+    </PossiblyNullReference>
+    <PossiblyUndefinedVariable occurrences="1">
+      <code>$resourceParentId</code>
+    </PossiblyUndefinedVariable>
+    <RedundantCastGivenDocblockType occurrences="2">
+      <code>(string) $resource</code>
+      <code>(string) $resource</code>
+    </RedundantCastGivenDocblockType>
+    <UnsupportedReferenceUsage occurrences="2">
+      <code>$rules =&amp; $this-&gt;getRules($resource, $role)</code>
+      <code>$rules =&amp; $this-&gt;getRules($resource, $role, true)</code>
+    </UnsupportedReferenceUsage>
+    <UnusedForeachValue occurrences="9">
+      <code>$child</code>
+      <code>$resource</code>
+      <code>$rule</code>
+      <code>$rule</code>
+      <code>$rules</code>
+      <code>$rules</code>
+      <code>$rules</code>
+      <code>$rules</code>
+      <code>$rules</code>
+    </UnusedForeachValue>
+    <UnusedVariable occurrences="1">
+      <code>$rules</code>
+    </UnusedVariable>
+  </file>
+  <file src="src/Assertion/AssertionAggregate.php">
+    <MixedAssignment occurrences="1">
+      <code>$assertion</code>
+    </MixedAssignment>
+    <MixedMethodCall occurrences="2">
+      <code>assert</code>
+      <code>new $assertion()</code>
+    </MixedMethodCall>
+    <MixedOperand occurrences="1">
+      <code>$assertion</code>
+    </MixedOperand>
+  </file>
+  <file src="src/Assertion/AssertionManager.php">
+    <MissingReturnType occurrences="1">
+      <code>validatePlugin</code>
+    </MissingReturnType>
+    <NonInvariantDocblockPropertyType occurrences="1">
+      <code>$instanceOf</code>
+    </NonInvariantDocblockPropertyType>
+  </file>
+  <file src="src/Assertion/ExpressionAssertion.php">
+    <InvalidNullableReturnType occurrences="1">
+      <code>bool</code>
+    </InvalidNullableReturnType>
+    <InvalidReturnType occurrences="1">
+      <code>bool|void</code>
+    </InvalidReturnType>
+    <MissingReturnType occurrences="2">
+      <code>validateOperand</code>
+      <code>validateOperator</code>
+    </MissingReturnType>
+    <MixedArgument occurrences="12">
+      <code>$contextProperty</code>
+      <code>$contextProperty</code>
+      <code>$contextProperty</code>
+      <code>$expression['operator']</code>
+      <code>$left</code>
+      <code>$left</code>
+      <code>$object</code>
+      <code>$object</code>
+      <code>$right</code>
+      <code>$right</code>
+      <code>$right</code>
+      <code>$right</code>
+    </MixedArgument>
+    <MixedArrayOffset occurrences="1">
+      <code>$context[$contextProperty]</code>
+    </MixedArrayOffset>
+    <MixedAssignment occurrences="4">
+      <code>$contextProperty</code>
+      <code>$left</code>
+      <code>$object</code>
+      <code>$right</code>
+    </MixedAssignment>
+    <MixedPropertyFetch occurrences="1">
+      <code>$object-&gt;$field</code>
+    </MixedPropertyFetch>
+    <NullableReturnStatement occurrences="1">
+      <code>static::evaluateExpression($left, $this-&gt;operator, $right)</code>
+    </NullableReturnStatement>
+  </file>
+  <file src="src/Resource/GenericResource.php">
+    <RedundantCastGivenDocblockType occurrences="1">
+      <code>(string) $resourceId</code>
+    </RedundantCastGivenDocblockType>
+  </file>
+  <file src="src/Role/GenericRole.php">
+    <RedundantCastGivenDocblockType occurrences="1">
+      <code>(string) $roleId</code>
+    </RedundantCastGivenDocblockType>
+  </file>
+  <file src="src/Role/Registry.php">
+    <InvalidPropertyAssignmentValue occurrences="1">
+      <code>$this-&gt;roles</code>
+    </InvalidPropertyAssignmentValue>
+    <MixedArgument occurrences="3">
+      <code>$parentId</code>
+      <code>$roleParentId</code>
+      <code>$roleParentId</code>
+    </MixedArgument>
+    <MixedArrayAccess occurrences="2">
+      <code>$this-&gt;roles[$childId]['parents'][$roleId]</code>
+      <code>$this-&gt;roles[$parentId]['children'][$roleId]</code>
+    </MixedArrayAccess>
+    <MixedArrayAssignment occurrences="1">
+      <code>$this-&gt;roles[$roleParentId]['children'][$roleId]</code>
+    </MixedArrayAssignment>
+    <MixedArrayOffset occurrences="5">
+      <code>$roleParents[$roleParentId]</code>
+      <code>$this-&gt;roles[$childId]</code>
+      <code>$this-&gt;roles[$parentId]</code>
+      <code>$this-&gt;roles[$roleParentId]</code>
+      <code>$this-&gt;roles[$roleParentId]</code>
+    </MixedArrayOffset>
+    <MixedArrayTypeCoercion occurrences="1">
+      <code>$this-&gt;roles[$roleParentId]</code>
+    </MixedArrayTypeCoercion>
+    <MixedAssignment occurrences="8">
+      <code>$child</code>
+      <code>$childId</code>
+      <code>$parent</code>
+      <code>$parent</code>
+      <code>$parent</code>
+      <code>$parentId</code>
+      <code>$parentId</code>
+      <code>$roleParentId</code>
+    </MixedAssignment>
+    <MixedInferredReturnType occurrences="2">
+      <code>RoleInterface</code>
+      <code>array</code>
+    </MixedInferredReturnType>
+    <MixedPropertyTypeCoercion occurrences="1">
+      <code>$this-&gt;roles</code>
+    </MixedPropertyTypeCoercion>
+    <MixedReturnStatement occurrences="2">
+      <code>$this-&gt;roles[$roleId]['instance']</code>
+      <code>$this-&gt;roles[$roleId]['parents']</code>
+    </MixedReturnStatement>
+    <PossiblyUndefinedVariable occurrences="1">
+      <code>$roleParentId</code>
+    </PossiblyUndefinedVariable>
+    <RedundantCastGivenDocblockType occurrences="2">
+      <code>(string) $role</code>
+      <code>(string) $role</code>
+    </RedundantCastGivenDocblockType>
+    <UndefinedInterfaceMethod occurrences="10">
+      <code>$this-&gt;roles[$childId]</code>
+      <code>$this-&gt;roles[$parentId]</code>
+      <code>$this-&gt;roles[$roleId]</code>
+      <code>$this-&gt;roles[$roleId]</code>
+      <code>$this-&gt;roles[$roleId]</code>
+      <code>$this-&gt;roles[$roleId]</code>
+      <code>$this-&gt;roles[$roleId]</code>
+      <code>$this-&gt;roles[$roleId]</code>
+      <code>$this-&gt;roles[$roleParentId]</code>
+      <code>$this-&gt;roles[$roleParentId]</code>
+    </UndefinedInterfaceMethod>
+    <UnusedForeachValue occurrences="3">
+      <code>$child</code>
+      <code>$parent</code>
+      <code>$parent</code>
+    </UnusedForeachValue>
+  </file>
+  <file src="test/AclTest.php">
+    <InvalidArgument occurrences="2">
+      <code>new stdClass()</code>
+      <code>new stdClass()</code>
+    </InvalidArgument>
+    <MissingReturnType occurrences="4">
+      <code>testAclResourcePermissionsAreInheritedWithMultilevelResourcesAndDenyPolicy</code>
+      <code>testAllowNullPermissionAfterResourcesExistShouldAllowAllPermissionsForRole</code>
+      <code>testRemoveDenyWithNullResourceAppliesToAllResources</code>
+      <code>testSetRuleWorksWithResourceInterface</code>
+    </MissingReturnType>
+    <MixedAssignment occurrences="2">
+      <code>$roleParent</code>
+      <code>$roleParent</code>
+    </MixedAssignment>
+    <MixedMethodCall occurrences="1">
+      <code>getRoleId</code>
+    </MixedMethodCall>
+    <TooManyArguments occurrences="1">
+      <code>new Resource\GenericResource('profiles', 'gallery')</code>
+    </TooManyArguments>
+    <UndefinedClass occurrences="2">
+      <code>$assertion-&gt;assertReturnValue</code>
+      <code>$assertion-&gt;assertReturnValue</code>
+    </UndefinedClass>
+    <UndefinedDocblockClass occurrences="5">
+      <code>$assertion</code>
+      <code>$assertion</code>
+      <code>$assertion-&gt;lastAssertResource</code>
+      <code>$assertion-&gt;lastAssertRole</code>
+      <code>$assertion-&gt;lastAssertRole</code>
+    </UndefinedDocblockClass>
+    <UnusedForeachValue occurrences="2">
+      <code>$roleParent</code>
+      <code>$roleParent</code>
+    </UnusedForeachValue>
+  </file>
+  <file src="test/Assertion/AssertionAggregateTest.php">
+    <DeprecatedMethod occurrences="6">
+      <code>setMethods</code>
+      <code>setMethods</code>
+      <code>setMethods</code>
+      <code>setMethods</code>
+      <code>setMethods</code>
+      <code>setMethods</code>
+    </DeprecatedMethod>
+    <MissingReturnType occurrences="1">
+      <code>testClearAssertions</code>
+    </MissingReturnType>
+    <MixedArgument occurrences="4">
+      <code>$assertion</code>
+      <code>$assertion</code>
+      <code>$assertion</code>
+      <code>$assertion</code>
+    </MixedArgument>
+    <MixedArgumentTypeCoercion occurrences="1">
+      <code>$assertions</code>
+    </MixedArgumentTypeCoercion>
+    <MixedAssignment occurrences="4">
+      <code>$assertion</code>
+      <code>$assertion</code>
+      <code>$assertion</code>
+      <code>$assertion</code>
+    </MixedAssignment>
+    <MixedMethodCall occurrences="48">
+      <code>expects</code>
+      <code>expects</code>
+      <code>expects</code>
+      <code>expects</code>
+      <code>expects</code>
+      <code>expects</code>
+      <code>expects</code>
+      <code>expects</code>
+      <code>expects</code>
+      <code>expects</code>
+      <code>expects</code>
+      <code>expects</code>
+      <code>method</code>
+      <code>method</code>
+      <code>method</code>
+      <code>method</code>
+      <code>method</code>
+      <code>method</code>
+      <code>method</code>
+      <code>method</code>
+      <code>method</code>
+      <code>method</code>
+      <code>method</code>
+      <code>method</code>
+      <code>will</code>
+      <code>will</code>
+      <code>will</code>
+      <code>will</code>
+      <code>will</code>
+      <code>will</code>
+      <code>will</code>
+      <code>will</code>
+      <code>will</code>
+      <code>will</code>
+      <code>will</code>
+      <code>will</code>
+      <code>with</code>
+      <code>with</code>
+      <code>with</code>
+      <code>with</code>
+      <code>with</code>
+      <code>with</code>
+      <code>with</code>
+      <code>with</code>
+      <code>with</code>
+      <code>with</code>
+      <code>with</code>
+      <code>with</code>
+    </MixedMethodCall>
+    <PossiblyUndefinedVariable occurrences="5">
+      <code>$assertions</code>
+      <code>$assertions</code>
+      <code>$assertions</code>
+      <code>$assertions</code>
+      <code>$assertions</code>
+    </PossiblyUndefinedVariable>
+  </file>
+  <file src="test/Assertion/CallbackAssertionTest.php">
+    <MissingClosureParamType occurrences="9">
+      <code>$aclArg</code>
+      <code>$aclArg</code>
+      <code>$privilegeArg</code>
+      <code>$privilegeArg</code>
+      <code>$resourceArg</code>
+      <code>$resourceArg</code>
+      <code>$roleArg</code>
+      <code>$roleArg</code>
+      <code>$value</code>
+    </MissingClosureParamType>
+    <MissingClosureReturnType occurrences="2">
+      <code>static fn($aclArg, $roleArg, $resourceArg, $privilegeArg) =&gt; $value</code>
+      <code>static fn($value) =&gt; static fn($aclArg, $roleArg, $resourceArg, $privilegeArg) =&gt; $value</code>
+    </MissingClosureReturnType>
+    <UnusedClosureParam occurrences="4">
+      <code>$aclArg</code>
+      <code>$privilegeArg</code>
+      <code>$resourceArg</code>
+      <code>$roleArg</code>
+    </UnusedClosureParam>
+  </file>
+  <file src="test/Assertion/ExpressionAssertionTest.php">
+    <MissingReturnType occurrences="1">
+      <code>testExpressionsEvaluation</code>
+    </MissingReturnType>
+  </file>
+  <file src="test/TestAsset/StandardUseCase/UserIsBlogPostOwnerAssertion.php">
+    <ParamNameMismatch occurrences="2">
+      <code>$blogPost</code>
+      <code>$user</code>
+    </ParamNameMismatch>
+  </file>
+</files>

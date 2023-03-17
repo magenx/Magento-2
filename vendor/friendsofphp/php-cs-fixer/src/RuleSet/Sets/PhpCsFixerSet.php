@@ -24,6 +24,7 @@ final class PhpCsFixerSet extends AbstractRuleSetDescription
     public function getRules(): array
     {
         return [
+            '@PER' => true,
             '@Symfony' => true,
             'align_multiline_comment' => true,
             'array_indentation' => true,
@@ -38,12 +39,15 @@ final class PhpCsFixerSet extends AbstractRuleSetDescription
                     'goto',
                     'include',
                     'include_once',
+                    'phpdoc',
                     'require',
                     'require_once',
                     'return',
                     'switch',
                     'throw',
                     'try',
+                    'yield',
+                    'yield_from',
                 ],
             ],
             'combine_consecutive_issets' => true,
@@ -63,6 +67,7 @@ final class PhpCsFixerSet extends AbstractRuleSetDescription
             ],
             'no_extra_blank_lines' => [
                 'tokens' => [
+                    'attribute',
                     'break',
                     'case',
                     'continue',
@@ -79,6 +84,20 @@ final class PhpCsFixerSet extends AbstractRuleSetDescription
             ],
             'no_null_property_initialization' => true,
             'no_superfluous_elseif' => true,
+            'no_unneeded_control_parentheses' => [
+                'statements' => [
+                    'break',
+                    'clone',
+                    'continue',
+                    'echo_print',
+                    'negative_instanceof',
+                    'others',
+                    'return',
+                    'switch_case',
+                    'yield',
+                    'yield_from',
+                ],
+            ],
             'no_useless_else' => true,
             'no_useless_return' => true,
             'operator_linebreak' => [
@@ -89,14 +108,13 @@ final class PhpCsFixerSet extends AbstractRuleSetDescription
             'php_unit_test_class_requires_covers' => true,
             'phpdoc_add_missing_param_annotation' => true,
             'phpdoc_no_empty_return' => true,
-            'phpdoc_order' => true,
             'phpdoc_order_by_value' => true,
             'phpdoc_types_order' => true,
             'phpdoc_var_annotation_correct_order' => true,
             'return_assignment' => true,
-            'simple_to_complex_string_variable' => true,
             'single_line_comment_style' => true,
             'single_line_throw' => false,
+            'whitespace_after_comma_in_array' => ['ensure_single_space' => true],
         ];
     }
 

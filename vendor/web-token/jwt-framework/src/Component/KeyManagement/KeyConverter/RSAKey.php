@@ -2,51 +2,35 @@
 
 declare(strict_types=1);
 
-/*
- * The MIT License (MIT)
- *
- * Copyright (c) 2014-2020 Spomky-Labs
- *
- * This software may be modified and distributed under the terms
- * of the MIT license.  See the LICENSE file for details.
- */
-
 namespace Jose\Component\KeyManagement\KeyConverter;
 
 use function array_key_exists;
-use Base64Url\Base64Url;
 use function extension_loaded;
 use function in_array;
 use InvalidArgumentException;
 use function is_array;
 use Jose\Component\Core\JWK;
 use Jose\Component\Core\Util\BigInteger;
+use ParagonIE\ConstantTime\Base64UrlSafe;
 use RuntimeException;
 
 /**
  * @internal
  */
-class RSAKey
+final class RSAKey
 {
-    /**
-     * @var array
-     */
-    private $values = [];
+    private array $values = [];
 
-    /**
-     * RSAKey constructor.
-     */
     private function __construct(array $data)
     {
         $this->loadJWK($data);
     }
 
-    /**
-     * @return RSAKey
-     */
     public static function createFromKeyDetails(array $details): self
     {
-        $values = ['kty' => 'RSA'];
+        $values = [
+            'kty' => 'RSA',
+        ];
         $keys = [
             'n' => 'n',
             'e' => 'e',
@@ -59,7 +43,7 @@ class RSAKey
         ];
         foreach ($details as $key => $value) {
             if (in_array($key, $keys, true)) {
-                $value = Base64Url::encode($value);
+                $value = Base64UrlSafe::encodeUnpadded($value);
                 $values[array_search($key, $keys, true)] = $value;
             }
         }
@@ -67,36 +51,27 @@ class RSAKey
         return new self($values);
     }
 
-    /**
-     * @throws RuntimeException         if the extension OpenSSL is not available
-     * @throws InvalidArgumentException if the key cannot be loaded
-     *
-     * @return RSAKey
-     */
     public static function createFromPEM(string $pem): self
     {
-        if (!extension_loaded('openssl')) {
+        if (! extension_loaded('openssl')) {
             throw new RuntimeException('Please install the OpenSSL extension');
         }
         $res = openssl_pkey_get_private($pem);
-        if (false === $res) {
+        if ($res === false) {
             $res = openssl_pkey_get_public($pem);
         }
-        if (false === $res) {
+        if ($res === false) {
             throw new InvalidArgumentException('Unable to load the key.');
         }
 
         $details = openssl_pkey_get_details($res);
-        if (!is_array($details) || !isset($details['rsa'])) {
+        if (! is_array($details) || ! isset($details['rsa'])) {
             throw new InvalidArgumentException('Unable to load the key.');
         }
 
         return self::createFromKeyDetails($details['rsa']);
     }
 
-    /**
-     * @return RSAKey
-     */
     public static function createFromJWK(JWK $jwk): self
     {
         return new self($jwk->all());
@@ -104,14 +79,9 @@ class RSAKey
 
     public function isPublic(): bool
     {
-        return !array_key_exists('d', $this->values);
+        return ! array_key_exists('d', $this->values);
     }
 
-    /**
-     * @param RSAKey $private
-     *
-     * @return RSAKey
-     */
     public static function toPublic(self $private): self
     {
         $data = $private->toArray();
@@ -136,8 +106,8 @@ class RSAKey
     }
 
     /**
-     * This method will try to add Chinese Remainder Theorem (CRT) parameters.
-     * With those primes, the decryption process is really fast.
+     * This method will try to add Chinese Remainder Theorem (CRT) parameters. With those primes, the decryption process
+     * is really fast.
      */
     public function optimize(): void
     {
@@ -146,15 +116,12 @@ class RSAKey
         }
     }
 
-    /**
-     * @throws InvalidArgumentException if the key is invalid or not an RSA key
-     */
     private function loadJWK(array $jwk): void
     {
-        if (!array_key_exists('kty', $jwk)) {
+        if (! array_key_exists('kty', $jwk)) {
             throw new InvalidArgumentException('The key parameter "kty" is missing.');
         }
-        if ('RSA' !== $jwk['kty']) {
+        if ($jwk['kty'] !== 'RSA') {
             throw new InvalidArgumentException('The JWK is not a RSA key.');
         }
 
@@ -162,38 +129,39 @@ class RSAKey
     }
 
     /**
-     * This method adds Chinese Remainder Theorem (CRT) parameters if primes 'p' and 'q' are available.
-     * If 'p' and 'q' are missing, they are computed and added to the key data.
+     * This method adds Chinese Remainder Theorem (CRT) parameters if primes 'p' and 'q' are available. If 'p' and 'q'
+     * are missing, they are computed and added to the key data.
      */
     private function populateCRT(): void
     {
-        if (!array_key_exists('p', $this->values) && !array_key_exists('q', $this->values)) {
-            $d = BigInteger::createFromBinaryString(Base64Url::decode($this->values['d']));
-            $e = BigInteger::createFromBinaryString(Base64Url::decode($this->values['e']));
-            $n = BigInteger::createFromBinaryString(Base64Url::decode($this->values['n']));
+        if (! array_key_exists('p', $this->values) && ! array_key_exists('q', $this->values)) {
+            $d = BigInteger::createFromBinaryString(Base64UrlSafe::decode($this->values['d']));
+            $e = BigInteger::createFromBinaryString(Base64UrlSafe::decode($this->values['e']));
+            $n = BigInteger::createFromBinaryString(Base64UrlSafe::decode($this->values['n']));
 
             [$p, $q] = $this->findPrimeFactors($d, $e, $n);
-            $this->values['p'] = Base64Url::encode($p->toBytes());
-            $this->values['q'] = Base64Url::encode($q->toBytes());
+            $this->values['p'] = Base64UrlSafe::encodeUnpadded($p->toBytes());
+            $this->values['q'] = Base64UrlSafe::encodeUnpadded($q->toBytes());
         }
 
-        if (array_key_exists('dp', $this->values) && array_key_exists('dq', $this->values) && array_key_exists('qi', $this->values)) {
+        if (array_key_exists('dp', $this->values) && array_key_exists('dq', $this->values) && array_key_exists(
+            'qi',
+            $this->values
+        )) {
             return;
         }
 
         $one = BigInteger::createFromDecimal(1);
-        $d = BigInteger::createFromBinaryString(Base64Url::decode($this->values['d']));
-        $p = BigInteger::createFromBinaryString(Base64Url::decode($this->values['p']));
-        $q = BigInteger::createFromBinaryString(Base64Url::decode($this->values['q']));
+        $d = BigInteger::createFromBinaryString(Base64UrlSafe::decode($this->values['d']));
+        $p = BigInteger::createFromBinaryString(Base64UrlSafe::decode($this->values['p']));
+        $q = BigInteger::createFromBinaryString(Base64UrlSafe::decode($this->values['q']));
 
-        $this->values['dp'] = Base64Url::encode($d->mod($p->subtract($one))->toBytes());
-        $this->values['dq'] = Base64Url::encode($d->mod($q->subtract($one))->toBytes());
-        $this->values['qi'] = Base64Url::encode($q->modInverse($p)->toBytes());
+        $this->values['dp'] = Base64UrlSafe::encodeUnpadded($d->mod($p->subtract($one))->toBytes());
+        $this->values['dq'] = Base64UrlSafe::encodeUnpadded($d->mod($q->subtract($one))->toBytes());
+        $this->values['qi'] = Base64UrlSafe::encodeUnpadded($q->modInverse($p)->toBytes());
     }
 
     /**
-     * @throws RuntimeException if the prime factors cannot be found
-     *
      * @return BigInteger[]
      */
     private function findPrimeFactors(BigInteger $d, BigInteger $e, BigInteger $n): array
@@ -202,7 +170,8 @@ class RSAKey
         $one = BigInteger::createFromDecimal(1);
         $two = BigInteger::createFromDecimal(2);
 
-        $k = $d->multiply($e)->subtract($one);
+        $k = $d->multiply($e)
+            ->subtract($one);
 
         if ($k->isEven()) {
             $r = $k;
@@ -247,11 +216,12 @@ class RSAKey
                     break;
                 }
             }
-            if (null === $y) {
+            if ($y === null) {
                 throw new InvalidArgumentException('Unable to find prime factors.');
             }
-            if (true === $found) {
-                $p = $y->subtract($one)->gcd($n);
+            if ($found === true) {
+                $p = $y->subtract($one)
+                    ->gcd($n);
                 $q = $n->divide($p);
 
                 return [$p, $q];

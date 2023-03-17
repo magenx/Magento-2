@@ -5,15 +5,17 @@
  * Copyright (c) 2004 David Grudl (https://davidgrudl.com)
  */
 declare (strict_types=1);
-namespace RectorPrefix202208\Nette\Neon\Node;
+namespace RectorPrefix202303\Nette\Neon\Node;
 
-use RectorPrefix202208\Nette;
-use RectorPrefix202208\Nette\Neon\Node;
+use RectorPrefix202303\Nette;
+use RectorPrefix202303\Nette\Neon\Node;
 /** @internal */
 final class StringNode extends Node
 {
     private const EscapeSequences = ['t' => "\t", 'n' => "\n", 'r' => "\r", 'f' => "\f", 'b' => "\x08", '"' => '"', '\\' => '\\', '/' => '/', '_' => " "];
-    /** @var string */
+    /**
+     * @var string
+     */
     public $value;
     public function __construct(string $value)
     {
@@ -39,18 +41,15 @@ final class StringNode extends Node
         if ($s[0] === "'") {
             return $res;
         }
-        return \preg_replace_callback('#\\\\(?:ud[89ab][0-9a-f]{2}\\\\ud[c-f][0-9a-f]{2}|u[0-9a-f]{4}|x[0-9a-f]{2}|.)#i', function (array $m) : string {
+        return \preg_replace_callback('#\\\\(?:ud[89ab][0-9a-f]{2}\\\\ud[c-f][0-9a-f]{2}|u[0-9a-f]{4}|.)#i', function (array $m) : string {
             $sq = $m[0];
             if (isset(self::EscapeSequences[$sq[1]])) {
                 return self::EscapeSequences[$sq[1]];
             } elseif ($sq[1] === 'u' && \strlen($sq) >= 6) {
-                if (($res = \json_decode('"' . $sq . '"')) !== null) {
-                    return $res;
+                if (\json_decode('"' . $sq . '"') !== null) {
+                    throw new Nette\Neon\Exception("Invalid UTF-8 sequence {$sq}");
                 }
-                throw new Nette\Neon\Exception("Invalid UTF-8 sequence {$sq}");
-            } elseif ($sq[1] === 'x' && \strlen($sq) === 4) {
-                \trigger_error("Neon: '{$sq}' is deprecated, use '\\uXXXX' instead.", \E_USER_DEPRECATED);
-                return \chr(\hexdec(\substr($sq, 2)));
+                return \json_decode('"' . $sq . '"');
             } else {
                 throw new Nette\Neon\Exception("Invalid escaping sequence {$sq}");
             }

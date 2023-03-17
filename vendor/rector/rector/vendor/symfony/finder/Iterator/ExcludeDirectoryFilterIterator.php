@@ -8,15 +8,16 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202208\Symfony\Component\Finder\Iterator;
+namespace RectorPrefix202303\Symfony\Component\Finder\Iterator;
 
-use RectorPrefix202208\Symfony\Component\Finder\SplFileInfo;
+use RectorPrefix202303\Symfony\Component\Finder\SplFileInfo;
 /**
  * ExcludeDirectoryFilterIterator filters out directories.
  *
  * @author Fabien Potencier <fabien@symfony.com>
  *
  * @extends \FilterIterator<string, SplFileInfo>
+ *
  * @implements \RecursiveIterator<string, SplFileInfo>
  */
 class ExcludeDirectoryFilterIterator extends \FilterIterator implements \RecursiveIterator

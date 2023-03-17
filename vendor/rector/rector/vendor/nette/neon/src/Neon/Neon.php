@@ -5,7 +5,7 @@
  * Copyright (c) 2004 David Grudl (https://davidgrudl.com)
  */
 declare (strict_types=1);
-namespace RectorPrefix202208\Nette\Neon;
+namespace RectorPrefix202303\Nette\Neon;
 
 /**
  * Simple parser & generator for Nette Object Notation.
@@ -13,11 +13,14 @@ namespace RectorPrefix202208\Nette\Neon;
  */
 final class Neon
 {
-    public const BLOCK = Encoder::BLOCK;
     public const Chain = '!!chain';
+    /** @deprecated use Neon::Chain */
     public const CHAIN = self::Chain;
+    /** @deprecated use parameter $blockMode */
+    public const BLOCK = Encoder::BLOCK;
     /**
      * Returns value converted to NEON.
+     * @param mixed $value
      */
     public static function encode($value, bool $blockMode = \false, string $indentation = "\t") : string
     {
@@ -41,10 +44,12 @@ final class Neon
      */
     public static function decodeFile(string $file)
     {
-        if (!\is_file($file)) {
-            throw new Exception("File '{$file}' does not exist.");
+        $input = @\file_get_contents($file);
+        // @ is escalated to exception
+        if ($input === \false) {
+            $error = \preg_replace('#^\\w+\\(.*?\\): #', '', \error_get_last()['message'] ?? '');
+            throw new Exception("Unable to read file '{$file}'. {$error}");
         }
-        $input = \file_get_contents($file);
         if (\substr($input, 0, 3) === "﻿") {
             // BOM
             $input = \substr($input, 3);

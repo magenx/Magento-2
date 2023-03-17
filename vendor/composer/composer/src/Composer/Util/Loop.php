@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 /*
  * This file is part of Composer.
@@ -26,11 +26,11 @@ class Loop
     /** @var ProcessExecutor|null */
     private $processExecutor;
     /** @var PromiseInterface[][] */
-    private $currentPromises = array();
+    private $currentPromises = [];
     /** @var int */
     private $waitIndex = 0;
 
-    public function __construct(HttpDownloader $httpDownloader, ProcessExecutor $processExecutor = null)
+    public function __construct(HttpDownloader $httpDownloader, ?ProcessExecutor $processExecutor = null)
     {
         $this->httpDownloader = $httpDownloader;
         $this->httpDownloader->enableAsync();
@@ -41,18 +41,12 @@ class Loop
         }
     }
 
-    /**
-     * @return HttpDownloader
-     */
-    public function getHttpDownloader()
+    public function getHttpDownloader(): HttpDownloader
     {
         return $this->httpDownloader;
     }
 
-    /**
-     * @return ProcessExecutor|null
-     */
-    public function getProcessExecutor()
+    public function getProcessExecutor(): ?ProcessExecutor
     {
         return $this->processExecutor;
     }
@@ -60,17 +54,16 @@ class Loop
     /**
      * @param  PromiseInterface[] $promises
      * @param  ?ProgressBar       $progress
-     * @return void
      */
-    public function wait(array $promises, ProgressBar $progress = null)
+    public function wait(array $promises, ?ProgressBar $progress = null): void
     {
         /** @var \Exception|null */
         $uncaught = null;
 
         \React\Promise\all($promises)->then(
-            function () {
+            static function (): void {
             },
-            function ($e) use (&$uncaught) {
+            static function ($e) use (&$uncaught): void {
                 $uncaught = $e;
             }
         );
@@ -119,10 +112,7 @@ class Loop
         }
     }
 
-    /**
-     * @return void
-     */
-    public function abortJobs()
+    public function abortJobs(): void
     {
         foreach ($this->currentPromises as $promiseGroup) {
             foreach ($promiseGroup as $promise) {

@@ -21,6 +21,7 @@ use Rector\DeadCode\TypeNodeAnalyzer\GenericTypeNodeAnalyzer;
 use Rector\DeadCode\TypeNodeAnalyzer\MixedArrayTypeNodeAnalyzer;
 use Rector\NodeNameResolver\NodeNameResolver;
 use Rector\NodeTypeResolver\TypeComparator\TypeComparator;
+use Rector\TypeDeclaration\NodeAnalyzer\ParamAnalyzer;
 final class DeadParamTagValueNodeAnalyzer
 {
     /**
@@ -43,16 +44,22 @@ final class DeadParamTagValueNodeAnalyzer
      * @var \Rector\DeadCode\TypeNodeAnalyzer\MixedArrayTypeNodeAnalyzer
      */
     private $mixedArrayTypeNodeAnalyzer;
-    public function __construct(NodeNameResolver $nodeNameResolver, TypeComparator $typeComparator, GenericTypeNodeAnalyzer $genericTypeNodeAnalyzer, MixedArrayTypeNodeAnalyzer $mixedArrayTypeNodeAnalyzer)
+    /**
+     * @readonly
+     * @var \Rector\TypeDeclaration\NodeAnalyzer\ParamAnalyzer
+     */
+    private $paramAnalyzer;
+    public function __construct(NodeNameResolver $nodeNameResolver, TypeComparator $typeComparator, GenericTypeNodeAnalyzer $genericTypeNodeAnalyzer, MixedArrayTypeNodeAnalyzer $mixedArrayTypeNodeAnalyzer, ParamAnalyzer $paramAnalyzer)
     {
         $this->nodeNameResolver = $nodeNameResolver;
         $this->typeComparator = $typeComparator;
         $this->genericTypeNodeAnalyzer = $genericTypeNodeAnalyzer;
         $this->mixedArrayTypeNodeAnalyzer = $mixedArrayTypeNodeAnalyzer;
+        $this->paramAnalyzer = $paramAnalyzer;
     }
     public function isDead(ParamTagValueNode $paramTagValueNode, FunctionLike $functionLike) : bool
     {
-        $param = $this->matchParamByName($paramTagValueNode->parameterName, $functionLike);
+        $param = $this->paramAnalyzer->getParamByName($paramTagValueNode->parameterName, $functionLike);
         if (!$param instanceof Param) {
             return \false;
         }
@@ -84,15 +91,15 @@ final class DeadParamTagValueNodeAnalyzer
         if ($paramTagValueNode->description !== '') {
             return \false;
         }
-        $parent = $paramTagValueNode->getAttribute(PhpDocAttributeKey::PARENT);
-        if (!$parent instanceof PhpDocTagNode) {
+        $parentNode = $paramTagValueNode->getAttribute(PhpDocAttributeKey::PARENT);
+        if (!$parentNode instanceof PhpDocTagNode) {
             return \true;
         }
-        $parent = $parent->getAttribute(PhpDocAttributeKey::PARENT);
-        if (!$parent instanceof PhpDocNode) {
+        $parentNode = $parentNode->getAttribute(PhpDocAttributeKey::PARENT);
+        if (!$parentNode instanceof PhpDocNode) {
             return \true;
         }
-        $children = $parent->children;
+        $children = $parentNode->children;
         foreach ($children as $key => $child) {
             if ($child instanceof PhpDocTagNode && $node instanceof FullyQualified) {
                 return $this->isUnionIdentifier($child);
@@ -128,16 +135,5 @@ final class DeadParamTagValueNodeAnalyzer
             }
         }
         return \true;
-    }
-    private function matchParamByName(string $desiredParamName, FunctionLike $functionLike) : ?Param
-    {
-        foreach ($functionLike->getParams() as $param) {
-            $paramName = $this->nodeNameResolver->getName($param);
-            if ('$' . $paramName !== $desiredParamName) {
-                continue;
-            }
-            return $param;
-        }
-        return null;
     }
 }

@@ -8,6 +8,16 @@ namespace Braintree;
 class TransactionSearch
 {
     /*
+     * Create a new range node for cosmos ach return response created at
+     *
+     * @return RangeNode
+     */
+    public static function achReturnResponsesCreatedAt()
+    {
+        return new RangeNode("achReturnResponsesCreatedAt");
+    }
+
+    /*
      * Create a new range node for amount
      *
      * @return RangeNode
@@ -421,6 +431,16 @@ class TransactionSearch
     }
 
     /*
+     * Create a new multiple value node for reason codes
+     *
+     * @return MultipleValueNode
+     */
+    public static function reasonCode()
+    {
+        return new MultipleValueNode('reason_code');
+    }
+
+    /*
      * Create a new key value node for refund
      *
      * @return KeyValueNode
@@ -428,6 +448,16 @@ class TransactionSearch
     public static function refund()
     {
         return new KeyValueNode("refund");
+    }
+
+    /*
+     * Create a new text node for SEPA direct debit PayPal V2 order ID
+     *
+     * @return TextNode
+     */
+    public static function sepaDebitPaypalV2OrderId()
+    {
+        return new TextNode('sepa_debit_paypal_v2_order_id');
     }
 
     /*

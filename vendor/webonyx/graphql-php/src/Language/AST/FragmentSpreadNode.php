@@ -1,17 +1,19 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 namespace GraphQL\Language\AST;
 
 class FragmentSpreadNode extends Node implements SelectionNode
 {
-    /** @var string */
-    public $kind = NodeKind::FRAGMENT_SPREAD;
+    public string $kind = NodeKind::FRAGMENT_SPREAD;
 
-    /** @var NameNode */
-    public $name;
+    public NameNode $name;
 
     /** @var NodeList<DirectiveNode> */
-    public $directives;
+    public NodeList $directives;
+
+    public function __construct(array $vars)
+    {
+        parent::__construct($vars);
+        $this->directives ??= new NodeList([]);
+    }
 }

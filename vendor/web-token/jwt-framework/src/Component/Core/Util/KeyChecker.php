@@ -2,26 +2,18 @@
 
 declare(strict_types=1);
 
-/*
- * The MIT License (MIT)
- *
- * Copyright (c) 2014-2020 Spomky-Labs
- *
- * This software may be modified and distributed under the terms
- * of the MIT license.  See the LICENSE file for details.
- */
-
 namespace Jose\Component\Core\Util;
 
 use function in_array;
 use InvalidArgumentException;
 use function is_array;
+use function is_string;
 use Jose\Component\Core\JWK;
 
 /**
  * @internal
  */
-class KeyChecker
+final class KeyChecker
 {
     public static function checkKeyUsage(JWK $key, string $usage): void
     {
@@ -33,53 +25,59 @@ class KeyChecker
         }
     }
 
-    /**
-     * @throws InvalidArgumentException if the key is not suitable for the selected algorithm
-     */
     public static function checkKeyAlgorithm(JWK $key, string $algorithm): void
     {
-        if (!$key->has('alg')) {
+        if (! $key->has('alg')) {
             return;
         }
-        if ($key->get('alg') !== $algorithm) {
-            throw new InvalidArgumentException(sprintf('Key is only allowed for algorithm "%s".', $key->get('alg')));
+        $alg = $key->get('alg');
+        if (! is_string($alg)) {
+            throw new InvalidArgumentException('Invalid algorithm.');
+        }
+        if ($alg !== $algorithm) {
+            throw new InvalidArgumentException(sprintf('Key is only allowed for algorithm "%s".', $alg));
         }
     }
 
-    /**
-     * @throws InvalidArgumentException if the key is not suitable for the selected operation
-     */
     private static function checkOperation(JWK $key, string $usage): void
     {
         $ops = $key->get('key_ops');
-        if (!is_array($ops)) {
+        if (! is_array($ops)) {
             throw new InvalidArgumentException('Invalid key parameter "key_ops". Should be a list of key operations');
         }
 
         switch ($usage) {
             case 'verification':
-                if (!in_array('verify', $ops, true)) {
+                if (! in_array('verify', $ops, true)) {
                     throw new InvalidArgumentException('Key cannot be used to verify a signature');
                 }
 
                 break;
 
             case 'signature':
-                if (!in_array('sign', $ops, true)) {
+                if (! in_array('sign', $ops, true)) {
                     throw new InvalidArgumentException('Key cannot be used to sign');
                 }
 
                 break;
 
             case 'encryption':
-                if (!in_array('encrypt', $ops, true) && !in_array('wrapKey', $ops, true) && !in_array('deriveKey', $ops, true)) {
+                if (! in_array('encrypt', $ops, true) && ! in_array('wrapKey', $ops, true) && ! in_array(
+                    'deriveKey',
+                    $ops,
+                    true
+                )) {
                     throw new InvalidArgumentException('Key cannot be used to encrypt');
                 }
 
                 break;
 
             case 'decryption':
-                if (!in_array('decrypt', $ops, true) && !in_array('unwrapKey', $ops, true) && !in_array('deriveBits', $ops, true)) {
+                if (! in_array('decrypt', $ops, true) && ! in_array('unwrapKey', $ops, true) && ! in_array(
+                    'deriveBits',
+                    $ops,
+                    true
+                )) {
                     throw new InvalidArgumentException('Key cannot be used to decrypt');
                 }
 
@@ -90,9 +88,6 @@ class KeyChecker
         }
     }
 
-    /**
-     * @throws InvalidArgumentException if the key is not suitable for the selected operation
-     */
     private static function checkUsage(JWK $key, string $usage): void
     {
         $use = $key->get('use');
@@ -100,7 +95,7 @@ class KeyChecker
         switch ($usage) {
             case 'verification':
             case 'signature':
-                if ('sig' !== $use) {
+                if ($use !== 'sig') {
                     throw new InvalidArgumentException('Key cannot be used to sign or verify a signature.');
                 }
 
@@ -108,7 +103,7 @@ class KeyChecker
 
             case 'encryption':
             case 'decryption':
-                if ('enc' !== $use) {
+                if ($use !== 'enc') {
                     throw new InvalidArgumentException('Key cannot be used to encrypt or decrypt.');
                 }
 

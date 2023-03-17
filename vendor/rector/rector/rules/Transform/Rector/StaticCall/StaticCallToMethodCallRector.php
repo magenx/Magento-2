@@ -17,7 +17,7 @@ use Rector\Transform\NodeAnalyzer\FuncCallStaticCallToMethodCallAnalyzer;
 use Rector\Transform\ValueObject\StaticCallToMethodCall;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
-use RectorPrefix202208\Webmozart\Assert\Assert;
+use RectorPrefix202303\Webmozart\Assert\Assert;
 /**
  * @see \Rector\Tests\Transform\Rector\StaticCall\StaticCallToMethodCallRector\StaticCallToMethodCallRectorTest
  */
@@ -50,7 +50,7 @@ class SomeClass
 }
 CODE_SAMPLE
 , <<<'CODE_SAMPLE'
-use Symplify\SmartFileSystem\SmartFileSystem;
+use App\Custom\SmartFileSystem;
 
 class SomeClass
 {
@@ -70,7 +70,7 @@ class SomeClass
     }
 }
 CODE_SAMPLE
-, [new StaticCallToMethodCall('Nette\\Utils\\FileSystem', 'write', 'Symplify\\SmartFileSystem\\SmartFileSystem', 'dumpFile')])]);
+, [new StaticCallToMethodCall('Nette\\Utils\\FileSystem', 'write', 'App\\Custom\\SmartFileSystem', 'dumpFile')])]);
     }
     /**
      * @return array<class-string<Node>>

@@ -1,9 +1,9 @@
 <?php
 
-namespace RectorPrefix202208\React\Socket;
+namespace RectorPrefix202303\React\Socket;
 
-use RectorPrefix202208\Evenement\EventEmitter;
-use RectorPrefix202208\React\EventLoop\LoopInterface;
+use RectorPrefix202303\Evenement\EventEmitter;
+use RectorPrefix202303\React\EventLoop\LoopInterface;
 final class SocketServer extends EventEmitter implements ServerInterface
 {
     private $server;
@@ -86,13 +86,17 @@ final class SocketServer extends EventEmitter implements ServerInterface
      */
     public static function accept($socket)
     {
-        $newSocket = @\stream_socket_accept($socket, 0);
-        if (\false === $newSocket) {
+        $errno = 0;
+        $errstr = '';
+        \set_error_handler(function ($_, $error) use(&$errno, &$errstr) {
             // Match errstr from PHP's warning message.
             // stream_socket_accept(): accept failed: Connection timed out
-            $error = \error_get_last();
-            $errstr = \preg_replace('#.*: #', '', $error['message']);
-            $errno = self::errno($errstr);
+            $errstr = \preg_replace('#.*: #', '', $error);
+            $errno = SocketServer::errno($errstr);
+        });
+        $newSocket = \stream_socket_accept($socket, 0);
+        \restore_error_handler();
+        if (\false === $newSocket) {
             throw new \RuntimeException('Unable to accept new connection: ' . $errstr . self::errconst($errno), $errno);
         }
         return $newSocket;

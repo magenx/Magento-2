@@ -1,17 +1,15 @@
 <?php
 
 declare (strict_types=1);
-namespace RectorPrefix202208\Doctrine\Inflector\Rules\French;
+namespace RectorPrefix202303\Doctrine\Inflector\Rules\French;
 
-use RectorPrefix202208\Doctrine\Inflector\Rules\Pattern;
-use RectorPrefix202208\Doctrine\Inflector\Rules\Substitution;
-use RectorPrefix202208\Doctrine\Inflector\Rules\Transformation;
-use RectorPrefix202208\Doctrine\Inflector\Rules\Word;
+use RectorPrefix202303\Doctrine\Inflector\Rules\Pattern;
+use RectorPrefix202303\Doctrine\Inflector\Rules\Substitution;
+use RectorPrefix202303\Doctrine\Inflector\Rules\Transformation;
+use RectorPrefix202303\Doctrine\Inflector\Rules\Word;
 class Inflectible
 {
-    /**
-     * @return Transformation[]
-     */
+    /** @return Transformation[] */
     public static function getSingular() : iterable
     {
         (yield new Transformation(new Pattern('/(b|cor|ém|gemm|soupir|trav|vant|vitr)aux$/'), '\\1ail'));
@@ -20,9 +18,7 @@ class Inflectible
         (yield new Transformation(new Pattern('/(bijou|caillou|chou|genou|hibou|joujou|pou|au|eu|eau)x$/'), '\\1'));
         (yield new Transformation(new Pattern('/s$/'), ''));
     }
-    /**
-     * @return Transformation[]
-     */
+    /** @return Transformation[] */
     public static function getPlural() : iterable
     {
         (yield new Transformation(new Pattern('/(s|x|z)$/'), '\\1'));
@@ -34,9 +30,7 @@ class Inflectible
         (yield new Transformation(new Pattern('/(bijou|caillou|chou|genou|hibou|joujou|lieu|pou|au|eu|eau)$/'), '\\1x'));
         (yield new Transformation(new Pattern('/$/'), 's'));
     }
-    /**
-     * @return Substitution[]
-     */
+    /** @return Substitution[] */
     public static function getIrregular() : iterable
     {
         (yield new Substitution(new Word('monsieur'), new Word('messieurs')));
