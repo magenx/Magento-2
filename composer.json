@@ -94,6 +94,7 @@
         "magento/module-bundle-graph-ql": "*",
         "magento/module-cardinal-commerce": "*",
         "magento/module-catalog-analytics": "*",
+        "magento/module-order-cancellation-graph-ql": "*",
         "magento/module-catalog-cms-graph-ql": "*",
         "magento/module-catalog-customer-graph-ql": "*",
         "magento/module-catalog-customer-ql": "*",
