@@ -8553,36 +8553,6 @@
             "description": "N/A"
         },
         {
-            "name": "magento/module-order-cancellation-graph-ql",
-            "version": "100.4.0",
-            "dist": {
-                "type": "zip",
-                "url": "https://repo.magento.com/archives/magento/module-order-cancellation-graph-ql/magento-module-order-cancellation-graph-ql-100.4.0.0.zip",
-                "shasum": "28b101d085f7b2103ac4a872ec25dbbf3cd559d2"
-            },
-            "require": {
-                "magento/framework": "103.0.*",
-                "magento/module-order-cancellation": "100.4.*",
-                "magento/module-sales": "103.0.*",
-                "magento/module-sales-graph-ql": "100.4.*",
-                "php": "~8.1.0||~8.2.0||~8.3.0"
-            },
-            "type": "magento2-module",
-            "autoload": {
-                "files": [
-                    "registration.php"
-                ],
-                "psr-4": {
-                    "Magento\\OrderCancellationGraphQl\\": ""
-                }
-            },
-            "license": [
-                "OSL-3.0",
-                "AFL-3.0"
-            ],
-            "description": "N/A"
-        },
-        {
             "name": "magento/module-order-cancellation-ui",
             "version": "100.4.0",
             "dist": {
@@ -11296,7 +11266,6 @@
                 "magento/module-offline-shipping": "100.4.6",
                 "magento/module-open-search": "100.4.1",
                 "magento/module-order-cancellation": "100.4.0",
-                "magento/module-order-cancellation-graph-ql": "100.4.0",
                 "magento/module-order-cancellation-ui": "100.4.0",
                 "magento/module-page-cache": "100.4.7",
                 "magento/module-payment": "100.4.7",
