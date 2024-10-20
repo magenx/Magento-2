@@ -1,0 +1,18 @@
+name: Create Orphan Branch
+
+on:
+  workflow_dispatch:
+
+jobs:
+  create-orphan-branch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create orphan branch
+        run: |
+          git checkout --orphan buildspec
+          git rm -rf .
+          git commit --allow-empty -m "buildspec"
+          git push origin buildspec
