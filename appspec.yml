@@ -1,0 +1,38 @@
+version: 0.0
+os: linux
+files:
+  - source: /
+    destination: /home/{brand}/releases/{deployment_id}
+file_exists_behavior: OVERWRITE
+permissions:
+  - object: /home/{brand}/releases/{deployment_id}
+    pattern: "**"
+    owner: {brand}
+    group: php-{brand}
+    mode: 660
+    type:
+      - file
+  - object: /home/{brand}/releases/{deployment_id}
+    pattern: "**"
+    owner: {brand}
+    group: php-{brand}
+    mode: 2770
+    type:
+      - directory
+hooks:
+  BeforeInstall:
+    - location: setup.sh
+      timeout: 60
+      runas: root
+  AfterInstall:
+    - location: deploy.sh
+      timeout: 60
+      runas: {brand}
+  ApplicationStart:
+    - location: upgrade.sh
+      timeout: 60
+      runas: {brand}
+  ValidateService:
+    - location: cleanup.sh
+      timeout: 60
+      runas: root
