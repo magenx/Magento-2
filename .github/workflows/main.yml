@@ -20,7 +20,8 @@ jobs:
           branches=("nginx" "mariadb" "redis" "opensearch" "rabbitmq" "system")
           for branch in "${branches[@]}"; do
             git checkout --orphan "${branch}"
+            git rm -rf . || true
             git commit --allow-empty -m "${branch}"
             git push origin "${branch}"
-            git checkout php
+            git checkout main
           done
