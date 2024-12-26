@@ -17,7 +17,7 @@ jobs:
 
       - name: Create orphan branches
         run: |
-          branches=("nginx" "mariadb" "redis" "opensearch" "rabbitmq" "system")
+          branches=("instance")
           for branch in "${branches[@]}"; do
             git checkout --orphan "${branch}"
             git rm -rf . || true
