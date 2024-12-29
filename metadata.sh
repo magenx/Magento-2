@@ -13,7 +13,7 @@ metadata() {
     local FIELD=$1
     # Fetch the token
     TOKEN=$(curl -sSf -X PUT "${METADATA_URL}/api/token" \
-        -H "X-aws-ec2-metadata-token-ttl-seconds: 21600") || {
+        -H "X-aws-ec2-metadata-token-ttl-seconds: 300") || {
         echo "Error: Unable to fetch token. Ensure IMDSv2 is enabled." >&2
         exit 1
     }
