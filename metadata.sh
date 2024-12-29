@@ -7,20 +7,30 @@
 # Fetch metadata
 cat <<END > /usr/local/bin/metadata
 #!/bin/bash
-AWSTOKEN=\$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 600")
-REGION=\$(curl -s -H "X-aws-ec2-metadata-token: \${AWSTOKEN}" http://169.254.169.254/latest/meta-data/placement/region)
-INSTANCE_ID=\$(curl -s -H "X-aws-ec2-metadata-token: \${AWSTOKEN}" http://169.254.169.254/latest/meta-data/instance-id)
-INSTANCE_HOSTNAME=\$(curl -s -H "X-aws-ec2-metadata-token: \${AWSTOKEN}" http://169.254.169.254/latest/meta-data/tags/instance/Hostname)
-INSTANCE_NAME=\$(curl -s -H "X-aws-ec2-metadata-token: \${AWSTOKEN}" http://169.254.169.254/latest/meta-data/tags/instance/Instance_Name)
-INSTANCE_TYPE=\$(curl -s -H "X-aws-ec2-metadata-token: \${AWSTOKEN}" http://169.254.169.254/latest/meta-data/instance-type)
-INSTANCE_IP=\$(curl -s -H "X-aws-ec2-metadata-token: \${AWSTOKEN}" http://169.254.169.254/latest/meta-data/local-ipv4)
-
-# Export variables
-export REGION="\${REGION}"
-export INSTANCE_ID="\${INSTANCE_ID}"
-export INSTANCE_HOSTNAME="\${INSTANCE_HOSTNAME}"
-export INSTANCE_NAME="\${INSTANCE_NAME}"
-export INSTANCE_TYPE="\${INSTANCE_TYPE}"
-export INSTANCE_IP="\${INSTANCE_IP}"
+METADATA_URL="http://169.254.169.254/latest"
+# Function to get metadata
+metadata() {
+    local FIELD=\$1
+    # Fetch the token
+    TOKEN=$(curl -sSf -X PUT "\${METADATA_URL}/api/token" \
+        -H "X-aws-ec2-metadata-token-ttl-seconds: 21600") || {
+        echo "Error: Unable to fetch token. Ensure IMDSv2 is enabled." >&2
+        exit 1
+    }
+    # Fetch the metadata value
+    curl -sSf -X GET "\${METADATA_URL}/meta-data/\${FIELD}" \
+        -H "X-aws-ec2-metadata-token: \${TOKEN}" || {
+        echo "Error: Unable to fetch metadata for field '\${FIELD}'." >&2
+        exit 1
+    }
+}
+if [ "$#" -eq 0 ]; then
+    echo "Usage: $0 <metadata-field>"
+    echo "Example: $0 instance-id"
+    exit 1
+fi
+FIELD=\$1
+metadata "$FIELD"
 END
+
 chmod +x /usr/local/bin/metadata
