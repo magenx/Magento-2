@@ -17,11 +17,7 @@ apt -qqy update
 apt -qq -y install ${LINUX_PACKAGES}
 
 # EFS UTILS
-aws ssm send-command \
-    --document-name "AWS-ConfigureAWSPackage" \
-    --instance-ids "instance-IDs" \
-    --parameters '{"action":["Install"],"name":["AmazonEFSUtils"],"installationType":["In-place update"]}' \
-    --comment "Install AmazonEFSUtils"
+
 
 # NGINX INSTALLATION
 echo "deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] http://nginx.org/packages/mainline/debian `lsb_release -cs` nginx" > /etc/apt/sources.list.d/nginx.list
