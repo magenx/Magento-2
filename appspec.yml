@@ -2,14 +2,14 @@ version: 0.0
 os: linux
 hooks:
   BeforeInstall:
-    - location: setup.sh
+    - location: deploy/setup.sh
       timeout: 60
       runas: root
   AfterInstall:
-    - location: deploy.sh
+    - location: deploy/deploy.sh
       timeout: 60
       runas: {brand}
   ApplicationStart:
-    - location: upgrade.sh
+    - location: deploy/upgrade.sh
       timeout: 60
       runas: {brand}
